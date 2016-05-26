@@ -1,0 +1,20 @@
+#canvas, #canvas2 {
+    box-shadow: 0 0 1px gray;
+}
+#img {
+    box-shadow: 0 0 1px gold;
+}
+#dochref {
+   text-decoration: none;
+   border: 1px solid blue;
+   padding: 3px;
+   margin: 3px;
+   border-radius: 5px;
+   color: blue;
+   display: inline-block;
+}
+
+#dochref:hover {
+    color: white;
+    background: blue;
+}
