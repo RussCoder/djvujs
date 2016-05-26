@@ -109,9 +109,6 @@ function ZPtest() {
     }
     console.log(arr);
     console.log("Full length = ", n, " Coded length = ", bs.length);
-
-
-
 }
 
 

@@ -166,9 +166,11 @@ class ByteStreamWriter {
     
     checkOffset(bytes) {
         bytes = bytes || 0;
-        if (this.offset + bytes >= this.bufferLength) {
+        var bool = this.offset + bytes >= this.bufferLength;
+        if (bool) {
             this.extense();
         }
+        return bool;
     }
     
     extense() {
@@ -203,9 +205,10 @@ class ByteStreamWriter {
     writeByteStream(bs) {
         //не трогаем исходный объект
         bs = new ByteStream(bs.buffer,bs.offsetx,bs.length);
-        while (!bs.isEmpty()) {
-            this.writeByte(bs.getUint8());
-        }
+        var arr = bs.getUint8Array();
+        while (this.checkOffset(arr.length - 1)) {}
+        new Uint8Array(this.buffer).set(arr, this.offset);
+        this.offset += arr.length;
     }
     
     writeStrNT(str) {

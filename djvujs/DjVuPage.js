@@ -12,10 +12,14 @@ class DjVuPage {
         this.bgimage = null ;
         // список всех кусков - для toString
         this.iffchunks = [];
-        this.init();
+        //this.init();
     }
     
     init() {
+        //чтобы не вызывалось более 1 раза
+        if (this.info) {
+            return this;
+        }
         this.info = new InfoChunk(this.bs.fork(18));
         while (!this.bs.isEmpty()) {
             var chunk;
@@ -49,6 +53,7 @@ class DjVuPage {
             //тут все порции в том порядке в каком встретились, кроме info
             this.iffchunks.push(chunk);
         }
+        return this;
     }
     
     getImage() {
@@ -66,6 +71,7 @@ class DjVuPage {
             }
             //это вряд ли может быть но на всякий случай
              
+            
             else if (this.fgimage) {
                 return this.fgimage.getImage();
             } 
@@ -160,7 +166,7 @@ class DjVuPage {
     
     toString() {
         var str = this.id + ' ' + this.length + "\n";
-        str += this.info.toString();
+        str += this.info ? this.info.toString() : '';
         for (var i = 0; i < this.iffchunks.length; i++) {
             str += this.iffchunks[i].toString();
         }

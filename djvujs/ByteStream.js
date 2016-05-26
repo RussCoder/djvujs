@@ -36,9 +36,6 @@ class ByteStream {
     
     reset() {
         this.offset = 0;
-        this.curbyte = this.viewer.getUint8(this.offset);
-        this.bitmask = 128;
-        this.shift = 7;
     }
     
     byte() {
