@@ -74,7 +74,7 @@ class INCLChunk extends IFFChunk {
         super(bs);
         this.ref = '';
         var byte;
-        var tmp = this.bs.getUint8Array();
+        var tmp = this.bs.getUint8Array().slice(0);
         this.ref = String.fromCharCode(...tmp);
     }
     toString() {

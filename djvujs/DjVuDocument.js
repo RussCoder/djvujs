@@ -87,6 +87,51 @@ class DjVuDocument {
             this.pages.push(new DjVuPage(this.bs.fork(this.length + 8)));
         }
     }
+
+
+    countFiles() {
+        var count = 0;
+        var bs = this.bs.clone();
+        bs.jump(16);
+        while (!bs.isEmpty()) {
+            var chunk;
+            var id = bs.readStr4();
+            var length = bs.getInt32();
+            bs.jump(-8);
+            // вернулись назад
+            var chunkBs = bs.fork(length + 8);
+            bs.jump(8 + length + (length & 1 ? 1 : 0));
+            // перепрыгнули к следующей порции
+            /*if (id == "FG44") {
+                chunk = this.fg44 = new ColorChunk(chunkBs);
+            } 
+            else if (id == "BG44") {
+                this.bg44arr.push(chunk = new ColorChunk(chunkBs));
+            } 
+            else if (id == 'Sjbz') {
+                chunk = this.sjbz = new JB2Image(chunkBs);
+            } 
+            else if (id === "INCL") {
+                chunk = this.incl = new INCLChunk(chunkBs);
+                var inclChunk = Globals.getINCLChunk(this.incl.ref);
+                inclChunk.id === "Djbz" ? this.djbz = inclChunk : this.iffchunks.push(inclChunk);
+                this.dependencies.push(chunk.ref);
+            } 
+            else if (id === "CIDa") {
+                chunk = new CIDaChunk(chunkBs);
+            } 
+            else {
+                chunk = new IFFChunk(chunkBs);
+            }
+            //тут все порции в том порядке в каком встретились, кроме info
+            this.iffchunks.push(chunk);*/
+            if(id === 'FORM') {
+                count++;
+            }
+        }
+        return count;
+    }
+
     toString() {
         var str = this.formatID + '\n';
         if (this.dirm) {
@@ -110,6 +155,7 @@ class DjVuDocument {
     
     // создает новый документ со страницы from включая ее до to невключая
     slice(from, to) {
+        Globals.Timer.start('sliceTime');
         from = from || 0;
         to = to || this.pages.length;
         var djvuWriter = new DjVuWriter();
@@ -123,6 +169,34 @@ class DjVuDocument {
         var chuckBS = [];
         var pageCount = 0;
         var addedPageCount = 0;
+        // все зависимости страниц в новом документе
+        // нужно чтобы не копировать лишние словари
+        var dependencies = {};
+        
+        // находим все зависимости в первом проходе
+        for (var i = 0; i < this.dirm.nfiles && addedPageCount < pageNumber; i++) {
+            //если это страница
+            if (this.dirm.flags[i] & 1) {
+                pageCount++;
+                //если она не входит в заданный дапазон
+                if (!(addedPageCount < pageNumber && pageCount > from)) {
+                    continue;
+                } 
+                else {
+                    addedPageCount++;
+                    var cbs = new ByteStream(this.buffer,this.dirm.offsets[i],this.dirm.sizes[i]);
+                    var deps = new DjVuPage(cbs).getDependencies();
+                    cbs.reset();
+                    for (var j = 0; j < deps.length; j++) {
+                        dependencies[deps[j]] = 1;
+                    }
+                }
+            }
+        }
+        
+        pageCount = 0;
+        addedPageCount = 0;
+        // теперь все словари и страницы, которые нужны
         for (var i = 0; i < this.dirm.nfiles && addedPageCount < pageNumber; i++) {
             //если это страница
             if (this.dirm.flags[i] & 1) {
@@ -136,24 +210,29 @@ class DjVuDocument {
                 }
             }
             
-            //все словари и эскизы копируем
-            dirm.flags.push(this.dirm.flags[i]);
-            dirm.sizes.push(this.dirm.sizes[i]);
-            dirm.ids.push(this.dirm.ids[i]);
-            chuckBS.push(new ByteStream(this.buffer, this.dirm.offsets[i], this.dirm.sizes[i]));
-        
+            //копируем страницы и словари. Эскизы пропускаем пока что
+            if (this.dirm.ids[i] in dependencies || this.dirm.flags[i] & 1) {
+                dirm.flags.push(this.dirm.flags[i]);
+                dirm.sizes.push(this.dirm.sizes[i]);
+                dirm.ids.push(this.dirm.ids[i]);
+                var cbs = new ByteStream(this.buffer,this.dirm.offsets[i],this.dirm.sizes[i]);
+                chuckBS.push(cbs);
+            }
+            
+            if (!(this.dirm.ids[i] in dependencies) && !(this.dirm.flags[i] & 1)) {
+                console.log("Excess dict ", this.dirm.ids[i]);
+            }
         }
+        
         djvuWriter.writeDirmChunk(dirm);
         
-        for(var i=0; i<chuckBS.length; i++) {
+        for (var i = 0; i < chuckBS.length; i++) {
             djvuWriter.writeFormChunkBS(chuckBS[i]);
         }
         var newbuffer = djvuWriter.getBuffer();
         console.log("New Buffer size = ", newbuffer.byteLength);
         var doc = new DjVuDocument(newbuffer);
+        Globals.Timer.end('sliceTime');
         return doc;
-    
-    
     }
-
 }

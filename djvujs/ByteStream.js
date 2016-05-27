@@ -23,11 +23,17 @@ class ByteStream {
         //this.shift = 7;
     }
     
+    // "читает" следующие length байт в массив 
     getUint8Array(length) {
         length = length || this.restLength();
         var off = this.offset;
         this.offset += length;
         return new Uint8Array(this.buffer,this.offsetx + off,length);
+    }
+    
+    // возвращает массив полностью представляющий весь поток
+    toUint8Array() {
+        return new Uint8Array(this.buffer,this.offsetx,this.length);
     }
     
     restLength() {
@@ -105,6 +111,10 @@ class ByteStream {
     
     fork(length) {
         return this.getSubStream(length);
+    }
+
+    clone() {
+        return new ByteStream(this.buffer, this.offsetx, this.length);
     }
     
     getSubStream(_length) {

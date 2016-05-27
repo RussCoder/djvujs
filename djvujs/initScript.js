@@ -40,7 +40,7 @@ function readDjvu(buf) {
     console.log("Buffer length = " + buf.byteLength);
     var canvas = document.getElementById('canvas');
     var c = canvas.getContext('2d');
-    Globals.time = {};
+    Globals.Timer = new DebugTimer();
     Globals.canvas = canvas;
     Globals.canvasCtx = c;
     Globals.dict = [];
@@ -58,18 +58,20 @@ function readDjvu(buf) {
         // console.log(this.canvas.parentNode);
         (tmp = this.canvas.parentNode) ? tmp.removeChild(this.canvas) : 0;
     }
-    
+
     //BZZtest();
     var doc = new DjVuDocument(buf);
-    writeln(doc.toString());
-    var ndoc = doc.slice((doc.pages.length / 2) >> 0, doc.pages.length);
+    console.log("REAL COUNT ", doc.countFiles());
+    //var ndoc = doc.slice(0, (doc.pages.length / 2) >> 2);
     //Globals.drawImage(ndoc.pages[16].getImage());
     
-    link.href = ndoc.createObjectURL();
+    //link.href = ndoc.createObjectURL();
+
+    writeln(doc.toString());
     // c.putImageData(doc.pages[0].getImage(), 0, 0);
     //writeln(djvuPage.toString());
     //ZPtest();
-    console.log('Globals.time = ', Globals.time);
+    console.log(Globals.Timer.toString());
     console.log("Total execution time = ", performance.now() - time)
     
 }

@@ -1,5 +1,54 @@
 'use strict';
 
+
+//класс для измерения времени с точностью до микросекунд
+class DebugTimer {
+    constructor() {
+        this.timers = {};
+    }
+    
+    start(id) {
+        var timer;
+        if (this.timers[id]) {
+            timer = this.timers[id];
+        } 
+        else {
+            timer = {
+                totalTime: 0,
+                timeArray: [],
+                startTime: 0
+            };
+            this.timers[id] = timer;
+        }
+        
+        timer.startTime = performance.now();
+    }
+    
+    end(id, print) {
+        if (!this.timers[id]) {
+            console.log("Несуществующий таймер: ", id);
+        }
+        var timer = this.timers[id];
+        var time = performance.now() - timer.startTime
+        timer.totalTime += time;
+        timer.timeArray.push(time);
+        if (print) {
+            console.log("Timer '", id, "'", time);
+        }
+    }
+    
+    toString() {
+        var str = '**DebugTimer**\n';
+        for (var p in this.timers) {
+            str += ">>" + p + " " + this.timers[p].totalTime 
+            + "\n" + JSON.stringify(this.timers[p].timeArray) + '\n' + '<<\n';
+        }
+        str += "**DebugTimer**\n";
+        return str;
+    }
+}
+
+
 /*
 * Псевдо ZPСoder для того чтобы видеть битовый поток.
 */
@@ -165,212 +214,4 @@ function tmpFunc() {
     console.log(r);
     console.log(c);
 
-}
-/*
-class TMP {
-    constructor() {
-        this.a = +(new Date());
-    }
-    get b() {
-        return 1;
-    }
-    write() {
-        console.log(this.a + this.field);
-    }
-
-}
-
-TMP.prototype.field = "FieLD";
-
-class TMP2 extends TMP {
-    constructor(a) {
-        super();
-       // if(a) this.a = a;
-    }
-    write() {
-        console.log(this.a + this.field);
-    }
-}
-var tmp = new TMP2();
-tmp.write();
-var tmp2 = new TMP2(3);
-tmp2.write();
-console.log(tmp.hasOwnProperty('field'));
-console.log(tmp2.hasOwnProperty('field'));
-
-TMP.prototype.field = "FieLD++";
-
-tmp.write();
-tmp2.write();
-console.log(tmp.hasOwnProperty('field'));
-console.log(tmp2.hasOwnProperty('field'));
-*/
-
-
-
-/*
-
-class ByteStreamWriter {
-    constructor(length) {
-        //должен быть кратен 8 для быстрого копирования буферов
-        length = length ? length - lengt % 2 : 0;
-        //начальная длина
-        this.initLength = length || 1024 * 1024 * 2;
-        //шаг роста длины
-        //this.lengthStep = lengthStep || this.initLength;
-        this.fullBuffersViewers = [];
-        this.fullBuffersOffsets = [];
-        //коэф роста буффера отноительно шага роста длины
-        this.growStep = 1;
-        //ограничение на рост шага роста
-        this.stepLimit = 4;
-        this.buffer = new ArrayBuffer(this.initLength);
-        this.viewer = new DataView(this.buffer);
-        this.offset = 0;
-        this.fullBuffersLength = 0;
-    }
-    
-    get length() {
-        return this.fullBuffersLength + this.offset;
-    }
-    
-    get bufferLength() {
-        return this.buffer.byteLength;
-    }
-    
-    writeByte(byte) {
-        this.checkOffset();
-        this.viewer.setUint8(this.offset++, byte);
-        return this;
-    }
-    
-    writeStr(str) {
-        var byte;
-        for (var i = 0; i < str.length; i++) {
-            byte = str.charCodeAt(i);
-            this.writeByte(byte);
-        }
-        return this;
-    }
-    
-    writeInt32(val) {
-        this.checkOffset(3);
-        this.viewer.setInt32(this.offset, val);
-        this.offset += 4;
-        return this;
-    }
-    rewriteInt32(off, val) {
-        this.viewer.setInt32(off, val);
-    }
-    
-    getBuffer() {
-        var time = performance.now();
-        //return this.buffer.slice(0, this.offset);
-        var eBuff = new ArrayBuffer(this.length);
-        var rw = new ByteStreamRewriter(eBuff);
-        for (var i = 0; i < this.fullBuffersViewers.length; i++) {
-            var v = this.fullBuffersViewers[i];
-            var off = this.fullBuffersOffsets[i];
-            for (var j = 0; j < off; j++) {
-                rw.rewriteByte(v.getUint8(j));
-            }
-        }        
-        for (var j = 0; j < this.offset; j++) {
-            rw.rewriteByte(this.viewer.getUint8(j));
-        }
-        
-        time = performance.now() - time;
-        console.log('Buffer created in ', time);
-        return eBuff;
-    }
-    
-    checkOffset(bytes) {
-        bytes = bytes || 0;
-        if (this.offset + bytes >= this.bufferLength) {
-            this.extense();
-        }
-    }
-    
-    extense() {
-        var time = performance.now();
-        /*var newlength = this.growStep * this.lengthStep + this.buffer.byteLength;
-        if (this.growStep < this.stepLimit) {
-            this.growStep++;
-        }
-        this.fullBuffersViewers.push(this.viewer);
-        this.fullBuffersOffsets.push(this.offset);
-        this.fullBuffersLength += this.offset;
-        this.offset = 0;
-        this.buffer = new ArrayBuffer(this.initLength);
-        this.viewer = new DataView(this.buffer);
-        
-        time = performance.now() - time;
-        //console.log('ByteStream extensed in ', time);
-        Globals.time.extenseTime = (Globals.time.extenseTime ? Globals.time.extenseTime : 0) + time;
-    }
-    
-    //смещение на length байт
-    jump(length) {
-        length = +length;
-        while(length > 0) {
-            this.writeByte(0);
-            length--;
-        }
-        return this;
-    }
-    
-    writeByteStream(bs) {
-        //не трогаем исходный объект
-        bs = new ByteStream(bs.buffer,bs.offsetx,bs.length);
-        while (!bs.isEmpty()) {
-            this.writeByte(bs.getUint8());
-        }
-    }
-    
-    writeStrNT(str) {
-        this.writeStr(str);
-        this.writeByte(0);
-    }
-    
-    writeInt16(val) {
-        this.checkOffset(1);
-        this.viewer.setInt16(this.offset, val);
-        this.offset += 2;
-        return this;
-    }
-    
-    writeInt24(val) {
-        this.writeByte((val >> 16) & 0xff)
-        .writeByte((val >> 8) & 0xff)
-        .writeByte(val & 0xff);
-        return this;
-    }
-}
-
-
-class ByteStreamRewriter {
-    constructor(buffer) {
-        this.buffer = buffer;
-        this.viewer = new DataView(buffer);
-        this.offset = 0;
-    }
-    
-    setOffset(off) {
-        this.offset = off;
-    }
-    
-    rewriteByte(val) {
-        this.viewer.setUint8(this.offset++, val);
-    }
-
-    rewriteInt32(val) {
-        this.viewer.setInt32(this.offset, val);
-        this.offset += 4;
-    }
-
-    rewriteFloat64(val) {
-        this.viewer.setFloat64(this.offset, val);
-        this.offset += 8;
-    }
-}
-*/
+}*/

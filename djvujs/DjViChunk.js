@@ -19,7 +19,10 @@ class DjViChunk {
             let chunkBs = this.bs.fork(length + 8);
             // перепрыгнули к следующей порции
             this.bs.jump(8 + length + (length & 1 ? 1 : 0));          
-            this.innerChunk = id === 'Djbz' ? new JB2Dict(chunkBs) : new IFFChunk(chunkBs);       
+            this.innerChunk = id === 'Djbz' ? new JB2Dict(chunkBs) : new IFFChunk(chunkBs); 
+            if(id != 'Djbz')  {
+                console.log("DJVI new chunk!!!");
+            }     
         }
     }
     

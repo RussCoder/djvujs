@@ -109,7 +109,7 @@ class DjVuWriter {
     getBuffer() {
         //пишем длину файла
         this.bsw.rewriteInt32(8, this.bsw.offset - 8);
-        if (this.dirm.offsets.length !== this.dirm.flags.length) {
+        if (this.dirm.offsets.length !== (this.dirm.flags.length)) {
             throw new Error("Записаны не все страницы и словари !!!");
         }
         for (var i = 0; i < this.dirm.offsets.length; i++) {
@@ -175,7 +175,7 @@ class ByteStreamWriter {
     
     extense() {
         //this.fullBuffers.push(this.buffer);
-        var time = performance.now();
+        Globals.Timer.start("extenseTime");
         var newlength = this.bufferLength + this.buffer.byteLength;
         var nb = new ArrayBuffer(newlength);
         /*var oldViewer = this.viewer;
@@ -188,24 +188,24 @@ class ByteStreamWriter {
         new Uint8Array(nb).set(new Uint8Array(this.buffer));
         //console.log("BL ", this.buffer.byteLength);
         this.buffer = nb;
-        this.viewer = new DataView(this.buffer);
-        time = performance.now() - time;
+        this.viewer = new DataView(this.buffer);       
         //console.log("BL ", oldViewer.byteLength);
         // console.log('ByteStream extensed in ', performance.now() - time);
-        Globals.time.extenseTime = (Globals.time.extenseTime ? Globals.time.extenseTime : 0) + time;
+        Globals.Timer.end("extenseTime");
     }
     
     //смещение на length байт
     jump(length) {
         length = +length;
+        if(length > 0) {
+            this.checkOffset(length - 1);
+        }
         this.offset += length;
         return this;
     }
     
     writeByteStream(bs) {
-        //не трогаем исходный объект
-        bs = new ByteStream(bs.buffer,bs.offsetx,bs.length);
-        var arr = bs.getUint8Array();
+        var arr = bs.toUint8Array();
         while (this.checkOffset(arr.length - 1)) {}
         new Uint8Array(this.buffer).set(arr, this.offset);
         this.offset += arr.length;

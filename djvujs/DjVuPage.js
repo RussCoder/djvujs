@@ -12,7 +12,35 @@ class DjVuPage {
         this.bgimage = null ;
         // список всех кусков - для toString
         this.iffchunks = [];
+        // id разделяемых данных (в частности словарей)
+        this.dependencies = null ;
         //this.init();
+    }
+    
+    // метод поиска зависимостей, то есть INCLChunk
+    // возвращает массив id 
+    getDependencies() {
+        //чтобы не вызывалось более 1 раза
+        if (this.info || this.dependencies) {
+            return this.dependencies;
+        }
+        this.dependencies = [];
+        var bs = this.bs.fork();
+        while (!bs.isEmpty()) {
+            var chunk;
+            var id = bs.readStr4();
+            var length = bs.getInt32();
+            bs.jump(-8);
+            // вернулись назад
+            var chunkBs = bs.fork(length + 8);
+            bs.jump(8 + length + (length & 1 ? 1 : 0));
+            // перепрыгнули к следующей порции
+            if (id === "INCL") {
+                chunk = new INCLChunk(chunkBs);
+                this.dependencies.push(chunk.ref);
+            }
+        }
+        return this.dependencies;
     }
     
     init() {
@@ -20,6 +48,7 @@ class DjVuPage {
         if (this.info) {
             return this;
         }
+        this.dependencies = [];
         this.info = new InfoChunk(this.bs.fork(18));
         while (!this.bs.isEmpty()) {
             var chunk;
@@ -43,6 +72,7 @@ class DjVuPage {
                 chunk = this.incl = new INCLChunk(chunkBs);
                 var inclChunk = Globals.getINCLChunk(this.incl.ref);
                 inclChunk.id === "Djbz" ? this.djbz = inclChunk : this.iffchunks.push(inclChunk);
+                this.dependencies.push(chunk.ref);
             } 
             else if (id === "CIDa") {
                 chunk = new CIDaChunk(chunkBs);
@@ -57,6 +87,7 @@ class DjVuPage {
     }
     
     getImage() {
+        this.init();
         var image = Globals.canvasCtx.createImageData(this.info.width, this.info.height);
         this.decode();
         var time = performance.now();
@@ -71,6 +102,8 @@ class DjVuPage {
             }
             //это вряд ли может быть но на всякий случай
              
+            
+            
             
             else if (this.fgimage) {
                 return this.fgimage.getImage();
