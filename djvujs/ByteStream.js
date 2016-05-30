@@ -11,16 +11,6 @@ class ByteStream {
             console.log("Incorrect length");
         }
         this.viewer = new DataView(this.buffer,this.offsetx,this.length);
-        /*try {
-            
-        } 
-        catch (e) {
-            this.viewer = new DataView(buffer,offsetx);
-        }*/
-        
-        //this.curbyte = this.viewer.getUint8(this.offset);
-        //this.bitmask = 128;
-        //this.shift = 7;
     }
     
     // "читает" следующие length байт в массив 
@@ -109,20 +99,16 @@ class ByteStream {
     }
     
     
-    fork(length) {
-        return this.getSubStream(length);
+    fork(_length) {
+        var length = _length || (this.length - this.offset);
+        var tmp = new ByteStream(this.buffer,this.offsetx + this.offset,length);
+        return tmp;
     }
 
     clone() {
         return new ByteStream(this.buffer, this.offsetx, this.length);
     }
-    
-    getSubStream(_length) {
-        let length = _length || (this.length - this.offset);
-        let tmp = new ByteStream(this.buffer,this.offsetx + this.offset,length);
-        return tmp;
-    }
-    
+
     isEmpty() {
         return this.offset >= this.length;
     }

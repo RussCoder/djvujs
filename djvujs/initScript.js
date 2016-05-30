@@ -12,7 +12,7 @@ var output;
 window.onload = function() {
     output = document.getElementById("output");
     var xhr = new XMLHttpRequest();
-    xhr.open("GET", "samples/cs.djvu");
+    xhr.open("GET", "samples/js.djvu");
     xhr.responseType = "arraybuffer";
     xhr.onload = function(e) {
         console.log(e.loaded);
@@ -40,40 +40,30 @@ function readDjvu(buf) {
     console.log("Buffer length = " + buf.byteLength);
     var canvas = document.getElementById('canvas');
     var c = canvas.getContext('2d');
+    Globals.defaultDPI = 100;
     Globals.Timer = new DebugTimer();
     Globals.canvas = canvas;
     Globals.canvasCtx = c;
     Globals.dict = [];
-    Globals.img = document.getElementById('img');
-    Globals.drawImage = function(image, scale) {
-        var tmp;
-        scale = scale || 4;
-        Globals.canvas.width = image.width;
-        this.canvas.height = image.height;
-        Globals.canvasCtx.putImageData(image, 0, 0);
-        var time = performance.now();
-        this.img.src = this.canvas.toDataURL();
-        console.log("DataURL creating time = ", performance.now() - time);
-        this.img.width = image.width / scale;
-        // console.log(this.canvas.parentNode);
-        (tmp = this.canvas.parentNode) ? tmp.removeChild(this.canvas) : 0;
-    }
-
+    Globals.img = document.getElementById('img');  
+    
     //BZZtest();
     var doc = new DjVuDocument(buf);
-    console.log("REAL COUNT ", doc.countFiles());
-    //var ndoc = doc.slice(0, (doc.pages.length / 2) >> 2);
-    //Globals.drawImage(ndoc.pages[16].getImage());
+    //console.log("REAL COUNT ", doc.countFiles());
+    var ndoc = doc.slice(0, doc.pages.length / 2);
+    //var page = doc.pages[10];
+    //Globals.drawImageSmooth(page.getImage(), page.dpi);
+    //Globals.drawImageSmooth(page.getImage(), page.dpi);
     
-    //link.href = ndoc.createObjectURL();
-
+    link.href = ndoc.createObjectURL();
+    
     writeln(doc.toString());
     // c.putImageData(doc.pages[0].getImage(), 0, 0);
     //writeln(djvuPage.toString());
     //ZPtest();
     console.log(Globals.Timer.toString());
     console.log("Total execution time = ", performance.now() - time)
-    
+
 }
 
 function main(file) {
@@ -81,4 +71,3 @@ function main(file) {
     readFile(file);
     writeln(file.size);
 }
-

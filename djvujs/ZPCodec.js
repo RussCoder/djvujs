@@ -8,7 +8,7 @@ class ZPEncoder extends ZPCodecBaseClass {
     constructor(bsw) {
         super();
         //byteStreamWriter
-        this.bsw = bsw;
+        this.bsw = bsw || new ByteStreamWriter();
         this.a = 0;
         this.scount = 0;
         this.byte = 0;
@@ -133,7 +133,8 @@ class ZPEncoder extends ZPCodecBaseClass {
     {
         // IWEncoder()
         var z = 0x8000 + ((this.a + this.a + this.a) >> 3);
-        var z = 0x8000 + (this.a >> 1);        // просто Encoder()
+        var z = 0x8000 + (this.a >> 1);
+        // просто Encoder()
         if (bit) 
         {
             //encode_lps_simple(z);

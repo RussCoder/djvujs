@@ -1,8 +1,5 @@
 'use strict';
 
-// вспомогательный класс для быстрого доступа к разделяемым ресурсам
-var Globals = {};
-
 // простейший шаблон порции данных
 class IFFChunk {
     constructor(bs) {
@@ -86,3 +83,12 @@ class INCLChunk extends IFFChunk {
 
 class CIDaChunk extends INCLChunk {}
 
+// оглавление человеко-читаемое
+class NAVMChunk extends IFFChunk{
+    constructor(bs) {
+        super(bs);
+    }
+    toString() {
+        return super.toString();
+    }
+}

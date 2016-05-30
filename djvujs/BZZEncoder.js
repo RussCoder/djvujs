@@ -1,8 +1,12 @@
 'use strict';
 
+/*
+* Предполагается, что все данные будут закодированы одним блоком.
+* Причем блок уже будет оканчиваться дополнительным 0 в качестве конечного символа
+*/
 class BZZEncoder {
     constructor(zp) {
-        this.zp = zp;
+        this.zp = zp || new ZPEncoder();
         this.minblock = 10;
         this.maxblock = 4096;
         this.FREQMAX = 4;
@@ -11,10 +15,10 @@ class BZZEncoder {
         this.size = 0;
         this.blocksize = 0;
         this.FREQS0 = 100000;
-        this.FREQS1 = 1000000;
-    
+        this.FREQS1 = 1000000;    
     }
     
+    // сортировка на основе встроенной функции, может быть не очень оптимальна
     blocksort(arr) {
         var length = arr.length;
         //массив смещений
@@ -147,7 +151,7 @@ class BZZEncoder {
             mtfno = rmtf[c];
             if (i == markerpos)
                 mtfno = 256;
-            // Encode using ZPCoder
+            // Encode using ZPEncoder
             var b;
             //вместо BitContext *cx = ctx; на С++
             var ctxoff = 0;

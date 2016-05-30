@@ -1,33 +1,30 @@
 'use strict';
 
-class DirmChunk {
+class DIRMChunk extends IFFChunk {
     constructor(bs) {
-        this.id = bs.readStr4();
-        this.length = bs.getInt32();
+        super(bs);
         this.dflags = bs.byte();
         this.nfiles = bs.getInt16();
         this.offsets = [];
         this.sizes = [];
         this.flags = [];
         this.ids = [];
-        for (let i = 0; i < this.nfiles; i++) {
+        for (var i = 0; i < this.nfiles; i++) {
             this.offsets.push(bs.getInt32());
         }
-        let bsbs = bs.fork(this.length - 3 - 4 * this.nfiles);
-        let bzz = new BZZCodec(new ZPCoder(bsbs));
-        bzz.decode();
-        let bsz = bzz.getByteStream();
-        for (let i = 0; i < this.nfiles; i++) {
+        var bsbs = bs.fork(this.length - 3 - 4 * this.nfiles);
+        var bzz = new BZZDecoder(new ZPCoder(bsbs));
+        var bsz = bzz.getByteStream();
+        for (var i = 0; i < this.nfiles; i++) {
             this.sizes.push(bsz.getUint24());
         }
-        for (let i = 0; i < this.nfiles; i++) {
+        for (var i = 0; i < this.nfiles; i++) {
             this.flags.push(bsz.byte());
         }
-        for (let i = 0; i < this.nfiles && !bsz.isEmpty(); i++) {
+        for (var i = 0; i < this.nfiles && !bsz.isEmpty(); i++) {
             //todo проверять hasname и hastitle
             this.ids.push(bsz.readStrNT());
         }
-    
     }
     toString() {
         var str = this.id + " " + this.length + '\n';
@@ -53,7 +50,13 @@ class DjVuDocument {
         this.id = this.bs.readStr4();
         this.length = this.bs.getInt32();
         this.id += this.bs.readStr4();
-        this.dirm = this.id == 'FORMDJVM' ? new DirmChunk(this.bs) : null ;
+        if (this.id == 'FORMDJVM') {
+            var id = this.bs.readStr4();
+            var length = this.bs.getInt32();
+            this.bs.jump(-8);
+            this.dirm = new DIRMChunk(this.bs.fork(length + 8));
+            this.bs.jump(8 + length + (length & 1 ? 1 : 0));
+        }
         Globals._doc = this;
         Globals.getINCLChunk = function(id) {
             return Globals._doc.djvi[id].innerChunk;
@@ -62,7 +65,14 @@ class DjVuDocument {
         this.pages = [];
         //разделяемые ресурсы
         this.djvi = {};
+        
         if (this.dirm) {
+            var id = this.bs.readStr4();
+            var length = this.bs.getInt32();
+            this.bs.jump(-8);
+            if (id == 'NAVM') {
+                this.navm = new NAVMChunk(this.bs.fork(length + 8))
+            }
             for (var i = 0; i < this.dirm.offsets.length; i++) {
                 this.bs.setOffset(this.dirm.offsets[i]);
                 var id = this.bs.readStr4();
@@ -87,8 +97,8 @@ class DjVuDocument {
             this.pages.push(new DjVuPage(this.bs.fork(this.length + 8)));
         }
     }
-
-
+    
+    
     countFiles() {
         var count = 0;
         var bs = this.bs.clone();
@@ -100,43 +110,24 @@ class DjVuDocument {
             bs.jump(-8);
             // вернулись назад
             var chunkBs = bs.fork(length + 8);
-            bs.jump(8 + length + (length & 1 ? 1 : 0));
             // перепрыгнули к следующей порции
-            /*if (id == "FG44") {
-                chunk = this.fg44 = new ColorChunk(chunkBs);
-            } 
-            else if (id == "BG44") {
-                this.bg44arr.push(chunk = new ColorChunk(chunkBs));
-            } 
-            else if (id == 'Sjbz') {
-                chunk = this.sjbz = new JB2Image(chunkBs);
-            } 
-            else if (id === "INCL") {
-                chunk = this.incl = new INCLChunk(chunkBs);
-                var inclChunk = Globals.getINCLChunk(this.incl.ref);
-                inclChunk.id === "Djbz" ? this.djbz = inclChunk : this.iffchunks.push(inclChunk);
-                this.dependencies.push(chunk.ref);
-            } 
-            else if (id === "CIDa") {
-                chunk = new CIDaChunk(chunkBs);
-            } 
-            else {
-                chunk = new IFFChunk(chunkBs);
-            }
-            //тут все порции в том порядке в каком встретились, кроме info
-            this.iffchunks.push(chunk);*/
-            if(id === 'FORM') {
+            bs.jump(8 + length + (length & 1 ? 1 : 0));
+            if (id === 'FORM') {
                 count++;
             }
         }
         return count;
     }
-
+    
     toString() {
         var str = this.formatID + '\n';
         if (this.dirm) {
             str += this.id + " " + this.length + '\n';
             str += this.dirm.toString();
+        }
+        
+        if (this.navm) {
+            str += this.navm.toString();
         }
         
         for (var prop in this.djvi) {
@@ -210,7 +201,7 @@ class DjVuDocument {
                 }
             }
             
-            //копируем страницы и словари. Эскизы пропускаем пока что
+            //копируем страницы и словари. Эскизы пропускаем - пока что это не реализовано
             if (this.dirm.ids[i] in dependencies || this.dirm.flags[i] & 1) {
                 dirm.flags.push(this.dirm.flags[i]);
                 dirm.sizes.push(this.dirm.sizes[i]);
@@ -225,6 +216,9 @@ class DjVuDocument {
         }
         
         djvuWriter.writeDirmChunk(dirm);
+        if(this.navm) {
+            djvuWriter.writeChunk(this.navm);
+        }
         
         for (var i = 0; i < chuckBS.length; i++) {
             djvuWriter.writeFormChunkBS(chuckBS[i]);

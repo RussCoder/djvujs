@@ -1,6 +1,6 @@
 'use strict';
 
-class BZZCodec {
+class BZZDecoder {
     constructor(zp) {
         this.zp = zp;
         this.minblock = 10;
@@ -15,6 +15,7 @@ class BZZCodec {
         this.size = 0;
         this.blocksize = 0;
         this.data = null ;
+        this.decoded = false;
     }
     
     decode_raw(bits) {
@@ -43,7 +44,7 @@ class BZZCodec {
         return n - m;
     }
     
-    decode() {
+    _decode() {
         this.size = this.decode_raw(24);
         if (!this.size) {
             //сработать должно если читать несколько блоков
@@ -309,7 +310,17 @@ class BZZCodec {
     
     
     getByteStream() {
-        return new ByteStream(this.data.buffer);
+        var bsw, size;
+        while (size = this._decode()) {
+            if(!bsw) {
+                bsw = new ByteStreamWriter(size - 1);
+                var arr = new Uint8Array(this.data.buffer, 0, this.data.length - 1);
+                bsw.writeArray(arr);
+            }
+        }
+        // для высвобождения памяти.
+        this.data = null;
+        return new ByteStream(bsw.getBuffer());
     }
 
 }

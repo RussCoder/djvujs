@@ -17,6 +17,10 @@ class DjVuPage {
         //this.init();
     }
     
+    get dpi() {
+        return this.info.dpi;
+    }
+
     // метод поиска зависимостей, то есть INCLChunk
     // возвращает массив id 
     getDependencies() {
