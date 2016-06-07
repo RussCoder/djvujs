@@ -106,6 +106,13 @@ class ByteStreamWriter {
         this.offset += 2;
         return this;
     }
+
+    writeUint16(val) {
+        this.checkOffset(1);
+        this.viewer.setUint16(this.offset, val);
+        this.offset += 2;
+        return this;
+    }
     
     writeInt24(val) {
         this.writeByte((val >> 16) & 0xff)

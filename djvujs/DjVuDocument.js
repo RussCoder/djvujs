@@ -94,7 +94,8 @@ class DjVuDocument {
         } 
         else {
             this.bs.jump(-12);
-            this.pages.push(new DjVuPage(this.bs.fork(this.length + 8)));
+            // 4 - так как есть 4 байта формата
+            this.pages.push(new DjVuPage(this.bs.fork(this.length + 4)));
         }
     }
     

@@ -21,7 +21,7 @@ class IWImage {
             this.info.slices = header.slices;
         }
         
-        for (let i = 0; i < this.info.slices; i++) {
+        for (var i = 0; i < this.info.slices; i++) {
             this.cslice++;
             this.ycodec.decodeSlice(zp, header);
             if (this.crcodec && this.cbcodec && this.cslice > this.info.delayInit) {

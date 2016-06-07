@@ -22,7 +22,7 @@ class IWCodec extends IWCodecBaseClass {
         else {
             this.info.slices = imageinfo.slices;
         }
-        this.zpcoder = zp;
+        this.zp = zp;
         
         if (!this.is_null_slice()) {
             // по блокам идем        
@@ -42,13 +42,14 @@ class IWCodec extends IWCodecBaseClass {
         this.finish_code_slice();
     
     }
-
-       
-    previouslyActiveCoefficientDecodingPass(block, band) {
+    
+    
+    previouslyActiveCoefficientDecodingPass(block) {
         var boff = 0;
         var step = this.quant_hi[this.curband];
-        var indices = this.getBandBuckets(band);
-        for (var i = indices.from; i <= indices.to; i++) {
+        var indices = this.getBandBuckets(this.curband);
+        for (var i = indices.from; i <= indices.to; i++,
+        boff++) {
             for (var j = 0; j < 16; j++) {
                 if (this.coeffstate[boff][j] & this.ACTIVE) {
                     if (!this.curband) {
@@ -57,12 +58,12 @@ class IWCodec extends IWCodecBaseClass {
                     var des = 0;
                     var coef = Math.abs(block.buckets[i][j]);
                     if (coef <= 3 * step) {
-                        des = this.zpcoder.decode(this.inreaseCoefCtx, 0);
+                        des = this.zp.decode(this.inreaseCoefCtx, 0);
                         //djvulibre не делает этого
                         coef += step >> 2;
                     } 
                     else {
-                        des = this.zpcoder.decode();
+                        des = this.zp.decode();
                     }
                     
                     if (!coef)
@@ -77,12 +78,10 @@ class IWCodec extends IWCodecBaseClass {
                     block.buckets[i][j] = block.buckets[i][j] < 0 ? -coef : coef;
                 }
             }
-            boff++;
         }
     }
     
     newlyActiveCoefficientDecodingPass(block, band) {
-        //this.checking(block);
         //bucket offset
         var boff = 0;
         var indices = this.getBandBuckets(band);
@@ -93,7 +92,7 @@ class IWCodec extends IWCodecBaseClass {
             if (this.bucketstate[boff] & this.NEW) {
                 var shift = 0;
                 
-                if (this.bucketstate[boff] & this.ACTIVE) {                    
+                if (this.bucketstate[boff] & this.ACTIVE) {
                     shift = 8;
                 }
                 var bucket = block.buckets[i];
@@ -107,9 +106,9 @@ class IWCodec extends IWCodecBaseClass {
                 for (var j = 0; j < 16; j++) {
                     if (this.coeffstate[boff][j] & this.UNK) {
                         var ip = Math.min(7, np);
-                        var des = this.zpcoder.decode(this.activateCoefCtx, shift + ip);
+                        var des = this.zp.decode(this.activateCoefCtx, shift + ip);
                         if (des) {
-                            var sign = this.zpcoder.decode() ? -1 : 1;
+                            var sign = this.zp.decode() ? -1 : 1;
                             np = 0;
                             if (!this.curband) {
                                 step = this.quant_lo[j];
@@ -126,19 +125,6 @@ class IWCodec extends IWCodecBaseClass {
         }
     }
     
-    checking(block) {
-        var indices = this.getBandBuckets(band);
-        var boff = 0;
-        for (var i = indices.from; i <= indices.to; i++,
-        boff++) {
-            for (var j = 0; j > 16; j++) {
-                if (this.coeffstate[boff][j] & this.ACTIVE) {
-
-                }
-            }
-        }
-    }
-    
     bucketDecodingPass(block, band) {
         var indices = this.getBandBuckets(band);
         // смещение сегмента
@@ -147,7 +133,7 @@ class IWCodec extends IWCodecBaseClass {
         boff++) {
             
             // проверка потенциального флага сегмента         
-            if (!(this.bucketstate[boff] & this.UNK)) {               
+            if (!(this.bucketstate[boff] & this.UNK)) {
                 continue;
             }
             //вычисляем номер контекста
@@ -167,37 +153,36 @@ class IWCodec extends IWCodecBaseClass {
                 //как и + 4
                 n |= 4;
             }
-            if (this.zpcoder.decode(this.decodeCoefCtx, n + band * 8)) {
+            if (this.zp.decode(this.decodeCoefCtx, n + band * 8)) {
                 this.bucketstate[boff] |= this.NEW;
-            } 
+            }
         }
     }
     
-    blockBandDecodingPass(block, band) {
-        var indices = this.getBandBuckets(band);
+    blockBandDecodingPass() {
+        var indices = this.getBandBuckets(this.curband);
         var bcount = indices.to - indices.from + 1;
         if (bcount < 16 || (this.bbstate & this.ACTIVE)) {
             this.bbstate |= this.NEW;
         } 
         else if (this.bbstate & this.UNK) {
-            if (this.zpcoder.decode(this.decodeBucketCtx, 0)) {
+            if (this.zp.decode(this.decodeBucketCtx, 0)) {
                 this.bbstate |= this.NEW;
             }
         }
-        //console.log("//");
         return this.bbstate & this.NEW;
     }
     
     preliminaryFlagComputation(block) {
         this.bbstate = 0;
-        
+        var bstatetmp = 0;
         var indices = this.getBandBuckets(this.curband);
         if (this.curband) {
             //смещение сегмента в массиве флагов
             var boff = 0;
             for (var j = indices.from; j <= indices.to; j++,
             boff++) {
-                var bstatetmp = 0;
+                bstatetmp = 0;
                 var bucket = block.buckets[j];
                 
                 for (var k = 0; k < bucket.length; k++) {
