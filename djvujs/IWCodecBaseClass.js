@@ -7,18 +7,18 @@ class Block {
         for (var i = 0; i < 64; i++) {
             this.buckets.push(new Int16Array(16));
         }
-        this.activeCoefFlags = new Uint8Array(1024);
+        /*this.activeCoefFlags = new Uint8Array(1024);
         this.potentialCoefFlags = new Uint8Array(1024);
         this.activeBucketFlags = new Uint8Array(64);
         this.potentialBucketFlags = new Uint8Array(64);
         this.coefDecodingFlags = new Uint8Array(64);
         this.activeBandFlags = new Uint8Array(10);
-        this.potentialBandFlags = new Uint8Array(10);
+        this.potentialBandFlags = new Uint8Array(10);*/
         
         // в этих массивах хранятся флаги
-        this.coefFlags = new Uint8Array(1024);
+       /* this.coefFlags = new Uint8Array(1024);
         this.bucketFlags = new Uint8Array(64);
-        this.bandFlags = new Uint8Array(10);
+        this.bandFlags = new Uint8Array(10);*/
     }
     
     getCoef(n) {
@@ -49,12 +49,14 @@ class IWCodecBaseClass {
         0x010000, 0x010000, 0x010000, 0x010000, 
         0x010000, 0x010000, 0x010000, 0x010000, 
         0x020000, 0x020000, 0x020000, 0x020000];
+        
         this.quant_hi = [0, 0x020000, 0x020000, 0x040000, 
         0x040000, 0x040000, 0x080000, 
         0x040000, 0x040000, 0x080000];
         
         this.bucketstate = new Uint8Array(16);
-        this.coeffstate = new Uint8Array(256);
+        this.coeffstate = new Array(16);
+        for (var i = 0; i < 16; this.coeffstate[i++] = new Uint8Array(16)) {}
         this.bbstate = 0;
         
         this.decodeBucketCtx = new Uint8Array(1);
@@ -126,10 +128,10 @@ class IWCodecBaseClass {
             {
                 var threshold = this.quant_lo[i];
                 //чтобы не проверять потом этот коэффициент
-                this.coeffstate[i] = this.ZERO;
+                this.coeffstate[0][i] = this.ZERO;
                 if (threshold > 0 && threshold < 0x8000) 
                 {
-                    this.coeffstate[i] = this.UNK;
+                    this.coeffstate[0][i] = this.UNK;
                     is_null = 0;
                 }
             }
@@ -153,7 +155,7 @@ class IWCodecBaseClass {
             }
             for (var i = 0; i < 16; i++)
                 this.quant_lo[i] = this.quant_lo[i] >> 1;
-        } 
+        }
         else {
             this.steps[this.curband + 6] = Math.floor(this.steps[this.curband + 6] / 2);
         }
@@ -168,37 +170,44 @@ class IWCodecBaseClass {
     getStep(i) {
         
         if (i === 0) {
-            return this.steps[0];
+            return this.quant_lo[0];
+
         } else if (i === 1) {
-            return this.steps[1];
+            return this.quant_lo[1];
+
         } else if (i === 2) {
-            return this.steps[2];
+            return this.quant_lo[2];
+
         } else if (i === 3) {
-            return this.steps[3];
+            return this.quant_lo[3];
+
         } else if (i >= 4 && i <= 7) {
-            return this.steps[4];
+            return this.quant_lo[4];
+
         } else if (i >= 8 && i <= 11) {
-            return this.steps[5];
+            return this.quant_lo[8];
+
         } else if (i >= 12 && i <= 15) {
-            return this.steps[6];
+            return this.quant_lo[12];
+
         } else if (i >= 16 && i <= 31) {
-            return this.steps[7];
+            return this.quant_hi[1];;
         } else if (i >= 32 && i <= 47) {
-            return this.steps[8];
+            return this.quant_hi[2];
         } else if (i >= 48 && i <= 63) {
-            return this.steps[9];
+           return this.quant_hi[3];
         } else if (i >= 64 && i <= 127) {
-            return this.steps[10];
+            return this.quant_hi[4];
         } else if (i >= 128 && i <= 191) {
-            return this.steps[11];
+           return this.quant_hi[5];
         } else if (i >= 192 && i <= 255) {
-            return this.steps[12];
+           return this.quant_hi[6];
         } else if (i >= 256 && i <= 511) {
-            return this.steps[13];
+            return this.quant_hi[7];
         } else if (i >= 512 && i <= 767) {
-            return this.steps[14];
+            return this.quant_hi[8];
         } else if (i >= 768 && i <= 1023) {
-            return this.steps[15];
+           return this.quant_hi[9];
         } 
         else {
             throw new Error("Too big coefficient index!");
