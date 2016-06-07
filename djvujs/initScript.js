@@ -31,14 +31,14 @@ window.onload = function() {
     Globals.canvasCtx = c;
     Globals.dict = [];
     Globals.img = document.getElementById('img');
-    //loadDjVu();
+    loadDjVu();
     loadPicture();
 }
 
 function loadDjVu() {
     
     var xhr = new XMLHttpRequest();
-    xhr.open("GET", "samples/js.djvu");
+    xhr.open("GET", "samples/r1.djvu");
     xhr.responseType = "arraybuffer";
     xhr.onload = function(e) {
         console.log(e.loaded);
@@ -67,10 +67,11 @@ function readPicture(buffer) {
     var pictureTotalTime = performance.now();
     createImageBitmap(new Blob([buffer]))
     .then(function(image) {
-        Globals.canvasCtx.drawImage(image, 0, 0);
-        var imageData = Globals.canvasCtx.getImageData(0, 0, 192, 256);
-        var  iwiw = new IWImageWriter(imageData);
-        Globals.canvasCtx.putImageData(iwiw.test(), 0, 0);
+        var c = document.getElementById('canvas2').getContext('2d');
+        c.drawImage(image, 0, 0);        
+        var imageData = c.getImageData(0, 0, 192, 256);
+        var iwiw = new IWImageWriter(imageData);        
+        c.putImageData(iwiw.test(), 0, 0);
     });
     console.log('pictureTotalTime = ', performance.now() - pictureTotalTime);
 }
@@ -88,7 +89,7 @@ function readDjvu(buf) {
     //var page = doc.pages[10];
     //Globals.drawImageSmooth(page.getImage(), page.dpi);
     //Globals.drawImageSmooth(page.getImage(), page.dpi);
-    
+    var imageData = Globals.canvasCtx.putImageData(doc.pages[0].getImage(), 0, 0);
     //link.href = ndoc.createObjectURL();
     
     writeln(doc.toString());

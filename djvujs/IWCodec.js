@@ -1,22 +1,8 @@
 'use strict';
 
-class IWCodec {
+class IWCodec extends IWCodecBaseClass {
     constructor() {
-        
-        this.steps = [0x004000, 
-        0x008000, 0x008000, 0x010000, 
-        0x010000, 0x010000, 0x020000, 
-        0x020000, 0x020000, 0x040000, 
-        0x040000, 0x040000, 0x080000, 
-        0x040000, 0x040000, 0x080000];
-        
-        this.decodeBucketCtx = new Uint8Array(1);
-        this.decodeCoefCtx = new Uint8Array(80);
-        this.activateCoefCtx = new Uint8Array(16);
-        this.inreaseCoefCtx = new Uint8Array(1);
-        this.curBand = 0;
-        
-        this.initTables();
+        super();
     }
     
     init(imageinfo) {
@@ -38,37 +24,26 @@ class IWCodec {
         }
         this.zpcoder = zp;
         
-        // по slice'ам идем
-        this.preliminaryFlagComputation(this.curBand);
-        for (let i = 0; i < this.blocks.length; i++) {
-            let block = this.blocks[i];
-            
-            // четыре подхода декодирования
-            if (this.blockBandDecodingPass(block, this.curBand)) {
-                this.bucketDecodingPass(block, this.curBand);
-                this.newlyActiveCoefficientDecodingPass(block, this.curBand);
+        if (!this.is_null_slice()) {
+            // по блокам идем        
+            for (var i = 0; i < this.blocks.length; i++) {
+                var block = this.blocks[i];
+                
+                this.preliminaryFlagComputation(block);
+                // четыре подхода декодирования
+                if (this.blockBandDecodingPass(block, this.curband)) {
+                    this.bucketDecodingPass(block, this.curband);
+                    this.newlyActiveCoefficientDecodingPass(block, this.curband);
+                }
+                this.previouslyActiveCoefficientDecodingPass(block, this.curband);
             }
-            this.previouslyActiveCoefficientDecodingPass(block, this.curBand);
         }
         // уменьшаем шаги 
-        this.reduceSteps(this.curBand);
-        this.curBand++;
-        if (this.curBand === 10) {
-            this.curBand = 0;
-        }
+        this.finish_code_slice();
+    
     }
     
-    //уменьшение шага после обработки одной порции данных
-    reduceSteps(band) {
-        if (band === 0) {
-            for (let i = 0; i <= 6; i++) {
-                this.steps[i] = Math.floor(this.steps[i] / 2);
-            }
-        } 
-        else {
-            this.steps[band + 6] = Math.floor(this.steps[band + 6] / 2);
-        }
-    }
+    
     
     previouslyActiveCoefficientDecodingPass(block, band) {
         var indices = this.getBandBuckets(band);
@@ -81,6 +56,7 @@ class IWCodec {
                     var coef = Math.abs(block.buckets[i][j]);
                     if (coef <= 3 * step) {
                         des = this.zpcoder.decode(this.inreaseCoefCtx, 0);
+                        //djvulibre не делает этого
                         coef += step >> 2;
                     } 
                     else {
@@ -127,6 +103,7 @@ class IWCodec {
                             let sign = this.zpcoder.decode() ? -1 : 1;
                             np = 0;
                             let step = this.getStep(index);
+                            //todo сравнить нужно ли 2 слагаемое
                             bucket[j] = sign * (step + (step >> 1) - (step >> 3));
                             //console.log("!");
                         }
@@ -148,11 +125,8 @@ class IWCodec {
             if (!block.potentialBucketFlags[i]) {
                 continue;
             }
+            //вычисляем номер контекста
             var n = 0;
-            var shift = 0;
-            if (block.activeBandFlags[band]) {
-                shift = 4;
-            }
             if (band) {
                 var t = 4 * i;
                 for (var j = t; j < t + 4; j++) {
@@ -164,7 +138,11 @@ class IWCodec {
                     n--;
                 }
             }
-            block.coefDecodingFlags[i] = this.zpcoder.decode(this.decodeCoefCtx, shift + n + band * 8);
+            if (block.activeBandFlags[band]) {
+                //как и + 4
+                n |= 4;
+            }
+            block.coefDecodingFlags[i] = this.zpcoder.decode(this.decodeCoefCtx, n + band * 8);
         }
     }
     
@@ -180,140 +158,48 @@ class IWCodec {
         return 0;
     }
     
-    preliminaryFlagComputation(band) {
-        var indices = this.getBandBuckets(band);
-        for (let i = 0; i < this.blocks.length; i++) {
-            let block = this.blocks[i];
-            for (let j = indices.from; j <= indices.to; j++) {
-                let bucket = block.buckets[j];
-                //снимаем флаги для тукущего ведра
-                block.potentialBucketFlags[j] = 0;
-                block.activeBucketFlags[j] = 0;
+    preliminaryFlagComputation(block) {
+        var indices = this.getBandBuckets(this.curband);
+        
+        for (var j = indices.from; j <= indices.to; j++) {
+            var bucket = block.buckets[j];
+            //снимаем флаги для тукущего ведра
+            block.potentialBucketFlags[j] = 0;
+            block.activeBucketFlags[j] = 0;
+            
+            for (var k = 0; k < bucket.length; k++) {
+                var index = k + 16 * j;
+                var step = this.getStep(index);
+                //опускаем все флаги
+                block.activeCoefFlags[index] = 0;
+                block.potentialCoefFlags[index] = 0;
                 
-                for (let k = 0; k < bucket.length; k++) {
-                    let index = k + 16 * j;
-                    let step = this.getStep(index);
-                    //опускаем все флаги
+                if (step === 0 || step >= 0x8000) {
                     block.activeCoefFlags[index] = 0;
                     block.potentialCoefFlags[index] = 0;
-                    
-                    if (step === 0 || step >= 0x8000) {
-                        block.activeCoefFlags[index] = 0;
-                        block.potentialCoefFlags[index] = 0;
+                } 
+                else {
+                    if (bucket[k] === 0) {
+                        block.potentialCoefFlags[index] = 1;
+                        block.potentialBucketFlags[j] = 1;
                     } 
                     else {
-                        if (bucket[k] === 0) {
-                            block.potentialCoefFlags[index] = 1;
-                            block.potentialBucketFlags[j] = 1;
-                        } 
-                        else {
-                            block.activeCoefFlags[index] = 1;
-                            block.activeBucketFlags[j] = 1;
-                        }
+                        block.activeCoefFlags[index] = 1;
+                        block.activeBucketFlags[j] = 1;
                     }
                 }
             }
-            
-            block.activeBandFlags[band] = 0;
-            block.potentialBandFlags[band] = 0;
-            for (let j = indices.from; j <= indices.to; j++) {
-                block.activeBandFlags[band] = block.activeBucketFlags[j] || block.activeBandFlags[band];
-                block.potentialBandFlags[band] = block.potentialBandFlags[band] || block.potentialBucketFlags[j];
-            }        
         }
+        
+        block.activeBandFlags[this.curband] = 0;
+        block.potentialBandFlags[this.curband] = 0;
+        for (var j = indices.from; j <= indices.to; j++) {
+            block.activeBandFlags[this.curband] = block.activeBucketFlags[j] || block.activeBandFlags[this.curband];
+            block.potentialBandFlags[this.curband] = block.potentialBandFlags[this.curband] || block.potentialBucketFlags[j];
+        }
+    
     }
     
-    getBandBuckets(band) {
-        let a = 0;
-        let b = 0;
-        switch (band) {
-        case 0:
-            break;
-        case 1:
-            a = 1;
-            b = 1;
-            break;
-        case 2:
-            a = 2;
-            b = 2;
-            break;
-        case 3:
-            a = 3;
-            b = 3;
-            break;
-        case 4:
-            a = 4;
-            b = 7;
-            break;
-        case 5:
-            a = 8;
-            b = 11;
-            break;
-        case 6:
-            a = 12;
-            b = 15;
-            break;
-        case 7:
-            a = 16;
-            b = 31;
-            break;
-        case 8:
-            a = 32;
-            b = 47;
-            break;
-        case 9:
-            a = 48;
-            b = 63;
-            break;
-        default:
-            throw new Error("Incorrect band index: " + band);
-            break;
-        }
-        return {
-            from: a,
-            to: b
-        };
-    }
-    
-    //возвращает шаг коэффициентов по их индексу от 0 до 1023
-    getStep(i) {
-        if (i === 0) {
-            return this.steps[0];
-        } else if (i === 1) {
-            return this.steps[1];
-        } else if (i === 2) {
-            return this.steps[2];
-        } else if (i === 3) {
-            return this.steps[3];
-        } else if (i >= 4 && i <= 7) {
-            return this.steps[4];
-        } else if (i >= 8 && i <= 11) {
-            return this.steps[5];
-        } else if (i >= 12 && i <= 15) {
-            return this.steps[6];
-        } else if (i >= 16 && i <= 31) {
-            return this.steps[7];
-        } else if (i >= 32 && i <= 47) {
-            return this.steps[8];
-        } else if (i >= 48 && i <= 63) {
-            return this.steps[9];
-        } else if (i >= 64 && i <= 127) {
-            return this.steps[10];
-        } else if (i >= 128 && i <= 191) {
-            return this.steps[11];
-        } else if (i >= 192 && i <= 255) {
-            return this.steps[12];
-        } else if (i >= 256 && i <= 511) {
-            return this.steps[13];
-        } else if (i >= 512 && i <= 767) {
-            return this.steps[14];
-        } else if (i >= 768 && i <= 1023) {
-            return this.steps[15];
-        } 
-        else {
-            throw new Error("Too big coefficient index!");
-        }
-    }
     
     getBytemap(noInverse) {
         
@@ -350,6 +236,7 @@ class IWCodec {
     
     
     inverseWaveletTransform(bitmap) {
+        return;
         var s = 16;
         while (s) {
             //для столбцов
@@ -458,162 +345,5 @@ class IWCodec {
             s >>= 1;
             // деление на 2
         }
-    }
-    
-    initTables() {
-        this.zigzagRow = new Uint8Array(
-        [0, 0, 16, 16, 0, 0, 16, 16, 8, 8, 24, 24, 8, 8, 24, 24, 
-        0, 0, 16, 16, 0, 0, 16, 16, 8, 8, 24, 24, 8, 8, 24, 24, 
-        4, 4, 20, 20, 4, 4, 20, 20, 12, 12, 28, 28, 12, 12, 28, 28, 
-        4, 4, 20, 20, 4, 4, 20, 20, 12, 12, 28, 28, 12, 12, 28, 28, 
-        0, 0, 16, 16, 0, 0, 16, 16, 8, 8, 24, 24, 8, 8, 24, 24, 
-        0, 0, 16, 16, 0, 0, 16, 16, 8, 8, 24, 24, 8, 8, 24, 24, 
-        4, 4, 20, 20, 4, 4, 20, 20, 12, 12, 28, 28, 12, 12, 28, 28, 
-        4, 4, 20, 20, 4, 4, 20, 20, 12, 12, 28, 28, 12, 12, 28, 28, 
-        2, 2, 18, 18, 2, 2, 18, 18, 10, 10, 26, 26, 10, 10, 26, 26, 
-        2, 2, 18, 18, 2, 2, 18, 18, 10, 10, 26, 26, 10, 10, 26, 26, 
-        6, 6, 22, 22, 6, 6, 22, 22, 14, 14, 30, 30, 14, 14, 30, 30, 
-        6, 6, 22, 22, 6, 6, 22, 22, 14, 14, 30, 30, 14, 14, 30, 30, 
-        2, 2, 18, 18, 2, 2, 18, 18, 10, 10, 26, 26, 10, 10, 26, 26, 
-        2, 2, 18, 18, 2, 2, 18, 18, 10, 10, 26, 26, 10, 10, 26, 26, 
-        6, 6, 22, 22, 6, 6, 22, 22, 14, 14, 30, 30, 14, 14, 30, 30, 
-        6, 6, 22, 22, 6, 6, 22, 22, 14, 14, 30, 30, 14, 14, 30, 30, 
-        0, 0, 16, 16, 0, 0, 16, 16, 8, 8, 24, 24, 8, 8, 24, 24, 
-        0, 0, 16, 16, 0, 0, 16, 16, 8, 8, 24, 24, 8, 8, 24, 24, 
-        4, 4, 20, 20, 4, 4, 20, 20, 12, 12, 28, 28, 12, 12, 28, 28, 
-        4, 4, 20, 20, 4, 4, 20, 20, 12, 12, 28, 28, 12, 12, 28, 28, 
-        0, 0, 16, 16, 0, 0, 16, 16, 8, 8, 24, 24, 8, 8, 24, 24, 
-        0, 0, 16, 16, 0, 0, 16, 16, 8, 8, 24, 24, 8, 8, 24, 24, 
-        4, 4, 20, 20, 4, 4, 20, 20, 12, 12, 28, 28, 12, 12, 28, 28, 
-        4, 4, 20, 20, 4, 4, 20, 20, 12, 12, 28, 28, 12, 12, 28, 28, 
-        2, 2, 18, 18, 2, 2, 18, 18, 10, 10, 26, 26, 10, 10, 26, 26, 
-        2, 2, 18, 18, 2, 2, 18, 18, 10, 10, 26, 26, 10, 10, 26, 26, 
-        6, 6, 22, 22, 6, 6, 22, 22, 14, 14, 30, 30, 14, 14, 30, 30, 
-        6, 6, 22, 22, 6, 6, 22, 22, 14, 14, 30, 30, 14, 14, 30, 30, 
-        2, 2, 18, 18, 2, 2, 18, 18, 10, 10, 26, 26, 10, 10, 26, 26, 
-        2, 2, 18, 18, 2, 2, 18, 18, 10, 10, 26, 26, 10, 10, 26, 26, 
-        6, 6, 22, 22, 6, 6, 22, 22, 14, 14, 30, 30, 14, 14, 30, 30, 
-        6, 6, 22, 22, 6, 6, 22, 22, 14, 14, 30, 30, 14, 14, 30, 30, 
-        1, 1, 17, 17, 1, 1, 17, 17, 9, 9, 25, 25, 9, 9, 25, 25, 
-        1, 1, 17, 17, 1, 1, 17, 17, 9, 9, 25, 25, 9, 9, 25, 25, 
-        5, 5, 21, 21, 5, 5, 21, 21, 13, 13, 29, 29, 13, 13, 29, 29, 
-        5, 5, 21, 21, 5, 5, 21, 21, 13, 13, 29, 29, 13, 13, 29, 29, 
-        1, 1, 17, 17, 1, 1, 17, 17, 9, 9, 25, 25, 9, 9, 25, 25, 
-        1, 1, 17, 17, 1, 1, 17, 17, 9, 9, 25, 25, 9, 9, 25, 25, 
-        5, 5, 21, 21, 5, 5, 21, 21, 13, 13, 29, 29, 13, 13, 29, 29, 
-        5, 5, 21, 21, 5, 5, 21, 21, 13, 13, 29, 29, 13, 13, 29, 29, 
-        3, 3, 19, 19, 3, 3, 19, 19, 11, 11, 27, 27, 11, 11, 27, 27, 
-        3, 3, 19, 19, 3, 3, 19, 19, 11, 11, 27, 27, 11, 11, 27, 27, 
-        7, 7, 23, 23, 7, 7, 23, 23, 15, 15, 31, 31, 15, 15, 31, 31, 
-        7, 7, 23, 23, 7, 7, 23, 23, 15, 15, 31, 31, 15, 15, 31, 31, 
-        3, 3, 19, 19, 3, 3, 19, 19, 11, 11, 27, 27, 11, 11, 27, 27, 
-        3, 3, 19, 19, 3, 3, 19, 19, 11, 11, 27, 27, 11, 11, 27, 27, 
-        7, 7, 23, 23, 7, 7, 23, 23, 15, 15, 31, 31, 15, 15, 31, 31, 
-        7, 7, 23, 23, 7, 7, 23, 23, 15, 15, 31, 31, 15, 15, 31, 31, 
-        1, 1, 17, 17, 1, 1, 17, 17, 9, 9, 25, 25, 9, 9, 25, 25, 
-        1, 1, 17, 17, 1, 1, 17, 17, 9, 9, 25, 25, 9, 9, 25, 25, 
-        5, 5, 21, 21, 5, 5, 21, 21, 13, 13, 29, 29, 13, 13, 29, 29, 
-        5, 5, 21, 21, 5, 5, 21, 21, 13, 13, 29, 29, 13, 13, 29, 29, 
-        1, 1, 17, 17, 1, 1, 17, 17, 9, 9, 25, 25, 9, 9, 25, 25, 
-        1, 1, 17, 17, 1, 1, 17, 17, 9, 9, 25, 25, 9, 9, 25, 25, 
-        5, 5, 21, 21, 5, 5, 21, 21, 13, 13, 29, 29, 13, 13, 29, 29, 
-        5, 5, 21, 21, 5, 5, 21, 21, 13, 13, 29, 29, 13, 13, 29, 29, 
-        3, 3, 19, 19, 3, 3, 19, 19, 11, 11, 27, 27, 11, 11, 27, 27, 
-        3, 3, 19, 19, 3, 3, 19, 19, 11, 11, 27, 27, 11, 11, 27, 27, 
-        7, 7, 23, 23, 7, 7, 23, 23, 15, 15, 31, 31, 15, 15, 31, 31, 
-        7, 7, 23, 23, 7, 7, 23, 23, 15, 15, 31, 31, 15, 15, 31, 31, 
-        3, 3, 19, 19, 3, 3, 19, 19, 11, 11, 27, 27, 11, 11, 27, 27, 
-        3, 3, 19, 19, 3, 3, 19, 19, 11, 11, 27, 27, 11, 11, 27, 27, 
-        7, 7, 23, 23, 7, 7, 23, 23, 15, 15, 31, 31, 15, 15, 31, 31, 
-        7, 7, 23, 23, 7, 7, 23, 23, 15, 15, 31, 31, 15, 15, 31, 31]);
-        
-        this.zigzagCol = new Uint8Array(
-        [0, 16, 0, 16, 8, 24, 8, 24, 0, 16, 0, 16, 8, 24, 8, 24, 
-        4, 20, 4, 20, 12, 28, 12, 28, 4, 20, 4, 20, 12, 28, 12, 28, 
-        0, 16, 0, 16, 8, 24, 8, 24, 0, 16, 0, 16, 8, 24, 8, 24, 
-        4, 20, 4, 20, 12, 28, 12, 28, 4, 20, 4, 20, 12, 28, 12, 28, 
-        2, 18, 2, 18, 10, 26, 10, 26, 2, 18, 2, 18, 10, 26, 10, 26, 
-        6, 22, 6, 22, 14, 30, 14, 30, 6, 22, 6, 22, 14, 30, 14, 30, 
-        2, 18, 2, 18, 10, 26, 10, 26, 2, 18, 2, 18, 10, 26, 10, 26, 
-        6, 22, 6, 22, 14, 30, 14, 30, 6, 22, 6, 22, 14, 30, 14, 30, 
-        0, 16, 0, 16, 8, 24, 8, 24, 0, 16, 0, 16, 8, 24, 8, 24, 
-        4, 20, 4, 20, 12, 28, 12, 28, 4, 20, 4, 20, 12, 28, 12, 28, 
-        0, 16, 0, 16, 8, 24, 8, 24, 0, 16, 0, 16, 8, 24, 8, 24, 
-        4, 20, 4, 20, 12, 28, 12, 28, 4, 20, 4, 20, 12, 28, 12, 28, 
-        2, 18, 2, 18, 10, 26, 10, 26, 2, 18, 2, 18, 10, 26, 10, 26, 
-        6, 22, 6, 22, 14, 30, 14, 30, 6, 22, 6, 22, 14, 30, 14, 30, 
-        2, 18, 2, 18, 10, 26, 10, 26, 2, 18, 2, 18, 10, 26, 10, 26, 
-        6, 22, 6, 22, 14, 30, 14, 30, 6, 22, 6, 22, 14, 30, 14, 30, 
-        1, 17, 1, 17, 9, 25, 9, 25, 1, 17, 1, 17, 9, 25, 9, 25, 
-        5, 21, 5, 21, 13, 29, 13, 29, 5, 21, 5, 21, 13, 29, 13, 29, 
-        1, 17, 1, 17, 9, 25, 9, 25, 1, 17, 1, 17, 9, 25, 9, 25, 
-        5, 21, 5, 21, 13, 29, 13, 29, 5, 21, 5, 21, 13, 29, 13, 29, 
-        3, 19, 3, 19, 11, 27, 11, 27, 3, 19, 3, 19, 11, 27, 11, 27, 
-        7, 23, 7, 23, 15, 31, 15, 31, 7, 23, 7, 23, 15, 31, 15, 31, 
-        3, 19, 3, 19, 11, 27, 11, 27, 3, 19, 3, 19, 11, 27, 11, 27, 
-        7, 23, 7, 23, 15, 31, 15, 31, 7, 23, 7, 23, 15, 31, 15, 31, 
-        1, 17, 1, 17, 9, 25, 9, 25, 1, 17, 1, 17, 9, 25, 9, 25, 
-        5, 21, 5, 21, 13, 29, 13, 29, 5, 21, 5, 21, 13, 29, 13, 29, 
-        1, 17, 1, 17, 9, 25, 9, 25, 1, 17, 1, 17, 9, 25, 9, 25, 
-        5, 21, 5, 21, 13, 29, 13, 29, 5, 21, 5, 21, 13, 29, 13, 29, 
-        3, 19, 3, 19, 11, 27, 11, 27, 3, 19, 3, 19, 11, 27, 11, 27, 
-        7, 23, 7, 23, 15, 31, 15, 31, 7, 23, 7, 23, 15, 31, 15, 31, 
-        3, 19, 3, 19, 11, 27, 11, 27, 3, 19, 3, 19, 11, 27, 11, 27, 
-        7, 23, 7, 23, 15, 31, 15, 31, 7, 23, 7, 23, 15, 31, 15, 31, 
-        0, 16, 0, 16, 8, 24, 8, 24, 0, 16, 0, 16, 8, 24, 8, 24, 
-        4, 20, 4, 20, 12, 28, 12, 28, 4, 20, 4, 20, 12, 28, 12, 28, 
-        0, 16, 0, 16, 8, 24, 8, 24, 0, 16, 0, 16, 8, 24, 8, 24, 
-        4, 20, 4, 20, 12, 28, 12, 28, 4, 20, 4, 20, 12, 28, 12, 28, 
-        2, 18, 2, 18, 10, 26, 10, 26, 2, 18, 2, 18, 10, 26, 10, 26, 
-        6, 22, 6, 22, 14, 30, 14, 30, 6, 22, 6, 22, 14, 30, 14, 30, 
-        2, 18, 2, 18, 10, 26, 10, 26, 2, 18, 2, 18, 10, 26, 10, 26, 
-        6, 22, 6, 22, 14, 30, 14, 30, 6, 22, 6, 22, 14, 30, 14, 30, 
-        0, 16, 0, 16, 8, 24, 8, 24, 0, 16, 0, 16, 8, 24, 8, 24, 
-        4, 20, 4, 20, 12, 28, 12, 28, 4, 20, 4, 20, 12, 28, 12, 28, 
-        0, 16, 0, 16, 8, 24, 8, 24, 0, 16, 0, 16, 8, 24, 8, 24, 
-        4, 20, 4, 20, 12, 28, 12, 28, 4, 20, 4, 20, 12, 28, 12, 28, 
-        2, 18, 2, 18, 10, 26, 10, 26, 2, 18, 2, 18, 10, 26, 10, 26, 
-        6, 22, 6, 22, 14, 30, 14, 30, 6, 22, 6, 22, 14, 30, 14, 30, 
-        2, 18, 2, 18, 10, 26, 10, 26, 2, 18, 2, 18, 10, 26, 10, 26, 
-        6, 22, 6, 22, 14, 30, 14, 30, 6, 22, 6, 22, 14, 30, 14, 30, 
-        1, 17, 1, 17, 9, 25, 9, 25, 1, 17, 1, 17, 9, 25, 9, 25, 
-        5, 21, 5, 21, 13, 29, 13, 29, 5, 21, 5, 21, 13, 29, 13, 29, 
-        1, 17, 1, 17, 9, 25, 9, 25, 1, 17, 1, 17, 9, 25, 9, 25, 
-        5, 21, 5, 21, 13, 29, 13, 29, 5, 21, 5, 21, 13, 29, 13, 29, 
-        3, 19, 3, 19, 11, 27, 11, 27, 3, 19, 3, 19, 11, 27, 11, 27, 
-        7, 23, 7, 23, 15, 31, 15, 31, 7, 23, 7, 23, 15, 31, 15, 31, 
-        3, 19, 3, 19, 11, 27, 11, 27, 3, 19, 3, 19, 11, 27, 11, 27, 
-        7, 23, 7, 23, 15, 31, 15, 31, 7, 23, 7, 23, 15, 31, 15, 31, 
-        1, 17, 1, 17, 9, 25, 9, 25, 1, 17, 1, 17, 9, 25, 9, 25, 
-        5, 21, 5, 21, 13, 29, 13, 29, 5, 21, 5, 21, 13, 29, 13, 29, 
-        1, 17, 1, 17, 9, 25, 9, 25, 1, 17, 1, 17, 9, 25, 9, 25, 
-        5, 21, 5, 21, 13, 29, 13, 29, 5, 21, 5, 21, 13, 29, 13, 29, 
-        3, 19, 3, 19, 11, 27, 11, 27, 3, 19, 3, 19, 11, 27, 11, 27, 
-        7, 23, 7, 23, 15, 31, 15, 31, 7, 23, 7, 23, 15, 31, 15, 31, 
-        3, 19, 3, 19, 11, 27, 11, 27, 3, 19, 3, 19, 11, 27, 11, 27, 
-        7, 23, 7, 23, 15, 31, 15, 31, 7, 23, 7, 23, 15, 31, 15, 31]);
-    }
-
-}
-
-class Block {
-    constructor() {
-        this.buckets = [];
-        for (var i = 0; i < 64; i++) {
-            this.buckets.push(new Int16Array(16));
-        }
-        this.activeCoefFlags = new Uint8Array(1024);
-        this.potentialCoefFlags = new Uint8Array(1024);
-        this.activeBucketFlags = new Uint8Array(64);
-        this.potentialBucketFlags = new Uint8Array(64);
-        this.coefDecodingFlags = new Uint8Array(64);
-        this.activeBandFlags = new Uint8Array(10);
-        this.potentialBandFlags = new Uint8Array(10);
-    }
-    
-    getCoef(n) {
-        let b = n >> 4;
-        let i = n % 16;
-        return this.buckets[b][i];
     }
 }
