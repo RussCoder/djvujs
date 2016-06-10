@@ -1,10 +1,8 @@
 'use strict';
-
 class IWCodec extends IWCodecBaseClass {
     constructor() {
         super();
     }
-    
     init(imageinfo) {
         // инициализируем на первой порции данных
         this.info = imageinfo;
@@ -14,21 +12,20 @@ class IWCodec extends IWCodecBaseClass {
             this.blocks[i] = new Block();
         }
     }
-    
     decodeSlice(zp, imageinfo) {
         if (!this.info) {
             this.init(imageinfo);
-        } 
-        else {
+        } else {
             this.info.slices = imageinfo.slices;
         }
         this.zp = zp;
-        
+        if (Globals.iwiw) {
+            Globals.iwiw.encodeSlice();
+        }
         if (!this.is_null_slice()) {
             // по блокам идем        
             for (var i = 0; i < this.blocks.length; i++) {
                 var block = this.blocks[i];
-                
                 this.preliminaryFlagComputation(block);
                 // четыре подхода декодирования
                 if (this.blockBandDecodingPass(block, this.curband)) {
@@ -40,10 +37,7 @@ class IWCodec extends IWCodecBaseClass {
         }
         // уменьшаем шаги 
         this.finish_code_slice();
-    
     }
-    
-    
     previouslyActiveCoefficientDecodingPass(block) {
         var boff = 0;
         var step = this.quant_hi[this.curband];
@@ -61,18 +55,14 @@ class IWCodec extends IWCodecBaseClass {
                         des = this.zp.decode(this.inreaseCoefCtx, 0);
                         //djvulibre не делает этого
                         coef += step >> 2;
-                    } 
-                    else {
+                    } else {
                         des = this.zp.decode();
                     }
-                    
                     if (!coef)
                         console.log("!!");
-                    
                     if (des) {
                         coef += step >> 1;
-                    } 
-                    else {
+                    } else {
                         coef += -step + (step >> 1);
                     }
                     block.buckets[i][j] = block.buckets[i][j] < 0 ? -coef : coef;
@@ -80,7 +70,6 @@ class IWCodec extends IWCodecBaseClass {
             }
         }
     }
-    
     newlyActiveCoefficientDecodingPass(block, band) {
         //bucket offset
         var boff = 0;
@@ -91,7 +80,6 @@ class IWCodec extends IWCodecBaseClass {
         boff++) {
             if (this.bucketstate[boff] & this.NEW) {
                 var shift = 0;
-                
                 if (this.bucketstate[boff] & this.ACTIVE) {
                     shift = 8;
                 }
@@ -102,7 +90,6 @@ class IWCodec extends IWCodecBaseClass {
                         np++;
                     }
                 }
-                
                 for (var j = 0; j < 16; j++) {
                     if (this.coeffstate[boff][j] & this.UNK) {
                         var ip = Math.min(7, np);
@@ -115,6 +102,8 @@ class IWCodec extends IWCodecBaseClass {
                             }
                             //todo сравнить нужно ли 2 слагаемое
                             bucket[j] = sign * (step + (step >> 1) - (step >> 3));
+                            if (this.curband) {//console.log("IIIISSSSS");
+                            }
                         }
                         if (np) {
                             np--;
@@ -124,14 +113,12 @@ class IWCodec extends IWCodecBaseClass {
             }
         }
     }
-    
     bucketDecodingPass(block, band) {
         var indices = this.getBandBuckets(band);
         // смещение сегмента
         var boff = 0;
         for (var i = indices.from; i <= indices.to; i++,
         boff++) {
-            
             // проверка потенциального флага сегмента         
             if (!(this.bucketstate[boff] & this.UNK)) {
                 continue;
@@ -158,21 +145,18 @@ class IWCodec extends IWCodecBaseClass {
             }
         }
     }
-    
     blockBandDecodingPass() {
         var indices = this.getBandBuckets(this.curband);
         var bcount = indices.to - indices.from + 1;
         if (bcount < 16 || (this.bbstate & this.ACTIVE)) {
             this.bbstate |= this.NEW;
-        } 
-        else if (this.bbstate & this.UNK) {
+        } else if (this.bbstate & this.UNK) {
             if (this.zp.decode(this.decodeBucketCtx, 0)) {
                 this.bbstate |= this.NEW;
             }
         }
         return this.bbstate & this.NEW;
     }
-    
     preliminaryFlagComputation(block) {
         this.bbstate = 0;
         var bstatetmp = 0;
@@ -184,13 +168,11 @@ class IWCodec extends IWCodecBaseClass {
             boff++) {
                 bstatetmp = 0;
                 var bucket = block.buckets[j];
-                
                 for (var k = 0; k < bucket.length; k++) {
                     //var index = k + 16 * boff;
                     if (bucket[k] === 0) {
                         this.coeffstate[boff][k] = this.UNK;
-                    } 
-                    else {
+                    } else {
                         this.coeffstate[boff][k] = this.ACTIVE;
                     }
                     bstatetmp |= this.coeffstate[boff][k];
@@ -198,18 +180,15 @@ class IWCodec extends IWCodecBaseClass {
                 this.bucketstate[boff] = bstatetmp;
                 this.bbstate |= bstatetmp;
             }
-        } 
-        else {
+        } else {
             //если нулевая группа            
             var bucket = block.buckets[0];
-            
             for (var k = 0; k < bucket.length; k++) {
                 //если шаг в допустимых пределах
                 if (this.coeffstate[0][k] !== this.ZERO) {
                     if (bucket[k] === 0) {
                         this.coeffstate[0][k] = this.UNK;
-                    } 
-                    else {
+                    } else {
                         this.coeffstate[0][k] = this.ACTIVE;
                     }
                 }
@@ -218,7 +197,6 @@ class IWCodec extends IWCodecBaseClass {
             this.bucketstate[0] = bstatetmp;
             this.bbstate |= bstatetmp;
         }
-        
         /*block.activeBandFlags[this.curband] = 0;
         block.potentialBandFlags[this.curband] = 0;
         for (var j = indices.from; j <= indices.to; j++) {
@@ -265,25 +243,19 @@ class IWCodec extends IWCodecBaseClass {
             block.potentialBandFlags[this.curband] = block.potentialBandFlags[this.curband] || block.potentialBucketFlags[j];
         }
     */
-    
     }
-    
-    
     getBytemap(noInverse) {
-        
-        let fullWidth = Math.ceil(this.info.width / 32) * 32;
-        let fullHeight = Math.ceil(this.info.height / 32) * 32;
-        
-        let blockRows = Math.ceil(this.info.height / 32);
-        let blockCols = Math.ceil(this.info.width / 32);
+        var fullWidth = Math.ceil(this.info.width / 32) * 32;
+        var fullHeight = Math.ceil(this.info.height / 32) * 32;
+        var blockRows = Math.ceil(this.info.height / 32);
+        var blockCols = Math.ceil(this.info.width / 32);
         // полный двумерный массив пикселей
         var bitmap = new Array(fullHeight);
-        for (let i = 0; i < fullHeight; i++) {
+        for (var i = 0; i < fullHeight; i++) {
             bitmap[i] = new Float32Array(fullWidth);
         }
-        
-        for (let r = 0; r < blockRows; r++) {
-            for (let c = 0; c < blockCols; c++) {
+        for (var r = 0; r < blockRows; r++) {
+            for (var c = 0; c < blockCols; c++) {
                 let block = this.blocks[r * blockCols + c];
                 for (var i = 0; i < 1024; i++) {
                     /*var bits = [];
@@ -301,8 +273,6 @@ class IWCodec extends IWCodecBaseClass {
         }
         return bitmap;
     }
-    
-    
     inverseWaveletTransform(bitmap) {
         //return;
         var s = 16;
@@ -316,29 +286,25 @@ class IWCodec extends IWCodecBaseClass {
                     //-------------
                     if (k - 1 < 0) {
                         a = 0;
-                    } 
-                    else {
+                    } else {
                         a = bitmap[(k - 1) * s][i];
                     }
                     //-------------
                     if (k - 3 < 0) {
                         c = 0;
-                    } 
-                    else {
+                    } else {
                         c = bitmap[(k - 3) * s][i];
                     }
                     //-------------
                     if (k + 1 > kmax) {
                         b = 0;
-                    } 
-                    else {
+                    } else {
                         b = bitmap[(k + 1) * s][i];
                     }
                     //-------------
                     if (k + 3 > kmax) {
                         d = 0;
-                    } 
-                    else {
+                    } else {
                         d = bitmap[(k + 3) * s][i];
                     }
                     //-------------
@@ -347,20 +313,14 @@ class IWCodec extends IWCodecBaseClass {
                 //Prediction 
                 for (var k = 1; k <= kmax; k += 2) {
                     if ((k - 3 >= 0) && (k + 3 <= kmax)) {
-                        bitmap[k * s][i] += (9 * (bitmap[(k - 1) * s][i] 
-                        + bitmap[(k + 1) * s][i]) - (bitmap[(k - 3) * s][i] 
-                        + bitmap[(k + 3) * s][i]) + 8) >> 4;
-                    } 
-                    else if (k + 1 <= kmax) {
-                        bitmap[k * s][i] += (bitmap[(k - 1) * s][i] 
-                        + bitmap[(k + 1) * s][i] + 1) >> 1;
-                    } 
-                    else {
+                        bitmap[k * s][i] += (9 * (bitmap[(k - 1) * s][i] + bitmap[(k + 1) * s][i]) - (bitmap[(k - 3) * s][i] + bitmap[(k + 3) * s][i]) + 8) >> 4;
+                    } else if (k + 1 <= kmax) {
+                        bitmap[k * s][i] += (bitmap[(k - 1) * s][i] + bitmap[(k + 1) * s][i] + 1) >> 1;
+                    } else {
                         bitmap[k * s][i] += bitmap[(k - 1) * s][i];
                     }
                 }
             }
-            
             //для строк
             kmax = Math.floor((this.info.width - 1) / s);
             for (var i = 0; i < this.info.height; i += s) {
@@ -369,26 +329,22 @@ class IWCodec extends IWCodecBaseClass {
                     var a, b, c, d;
                     if (k - 1 < 0) {
                         a = 0;
-                    } 
-                    else {
+                    } else {
                         a = bitmap[i][(k - 1) * s];
                     }
                     if (k - 3 < 0) {
                         c = 0;
-                    } 
-                    else {
+                    } else {
                         c = bitmap[i][(k - 3) * s];
                     }
                     if (k + 1 > kmax) {
                         b = 0;
-                    } 
-                    else {
+                    } else {
                         b = bitmap[i][(k + 1) * s];
                     }
                     if (k + 3 > kmax) {
                         d = 0;
-                    } 
-                    else {
+                    } else {
                         d = bitmap[i][(k + 3) * s];
                     }
                     bitmap[i][k * s] -= (9 * (a + b) - (c + d) + 16) >> 5;
@@ -396,20 +352,14 @@ class IWCodec extends IWCodecBaseClass {
                 //Prediction 
                 for (var k = 1; k <= kmax; k += 2) {
                     if ((k - 3 >= 0) && (k + 3 <= kmax)) {
-                        bitmap[i][k * s] += (9 * (bitmap[i][(k - 1) * s] 
-                        + bitmap[i][(k + 1) * s]) - (bitmap[i][(k - 3) * s] 
-                        + bitmap[i][(k + 3) * s]) + 8) >> 4;
-                    } 
-                    else if (k + 1 <= kmax) {
-                        bitmap[i][k * s] += (bitmap[i][(k - 1) * s] 
-                        + bitmap[i][(k + 1) * s] + 1) >> 1;
-                    } 
-                    else {
+                        bitmap[i][k * s] += (9 * (bitmap[i][(k - 1) * s] + bitmap[i][(k + 1) * s]) - (bitmap[i][(k - 3) * s] + bitmap[i][(k + 3) * s]) + 8) >> 4;
+                    } else if (k + 1 <= kmax) {
+                        bitmap[i][k * s] += (bitmap[i][(k - 1) * s] + bitmap[i][(k + 1) * s] + 1) >> 1;
+                    } else {
                         bitmap[i][k * s] += bitmap[i][(k - 1) * s];
                     }
                 }
             }
-            
             s >>= 1;
             // деление на 2
         }

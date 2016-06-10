@@ -135,11 +135,17 @@ class IWCodecBaseClass {
                     is_null = 0;
                 }
             }
+            if(is_null) {
+               // console.log('null slice curband = ', this.curband);
+            }
             return is_null;
         } 
         else // иначе просто смотрим шаг группы
         {
             var threshold = this.quant_hi[this.curband];
+            if(!(threshold > 0 && threshold < 0x8000)) {
+                //console.log('null slice curband = ', this.curband);
+            }
             return ( !(threshold > 0 && threshold < 0x8000)) ;
         }
     }

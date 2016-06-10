@@ -10,6 +10,9 @@ class IWImage {
     }
     
     decodeChunk(zp, header) {
+        if(Globals.iwiw) {
+        Globals.iwiw.initEncode();
+        }
         if (!this.info) {
             this.info = header;
             if (!header.grayscale) {
@@ -19,6 +22,11 @@ class IWImage {
         } 
         else {
             this.info.slices = header.slices;
+        }
+
+        if(Globals.pzp) {
+            zp = Globals.pzp;
+            console.log("PZP in doing !!!!");
         }
         
         for (var i = 0; i < this.info.slices; i++) {
@@ -33,9 +41,13 @@ class IWImage {
     
     createPixelmap() {
         if (!this.pixelmap) {
-            let ybitmap = this.ycodec.getBytemap();
-            let cbbitmap = this.cbcodec ? this.cbcodec.getBytemap() : null ;
-            let crbitmap = this.crcodec ? this.crcodec.getBytemap() : null ;
+            var ybitmap = this.ycodec.getBytemap();
+            //Globals.iwiw.blocks =Globals.iwiw.eblocks;
+            if(Globals.iwiw) {
+            //ybitmap = this.ycodec.getBytemap.call(Globals.iwiw);
+            }
+            var cbbitmap = this.cbcodec ? this.cbcodec.getBytemap() : null ;
+            var crbitmap = this.crcodec ? this.crcodec.getBytemap() : null ;
             this.pixelmap = new Pixelmap(ybitmap,cbbitmap,crbitmap);
         }
     }

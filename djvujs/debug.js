@@ -1,18 +1,14 @@
 'use strict';
-
-
 //класс для измерения времени с точностью до микросекунд
 class DebugTimer {
     constructor() {
         this.timers = {};
     }
-    
     start(id) {
         var timer;
         if (this.timers[id]) {
             timer = this.timers[id];
-        } 
-        else {
+        } else {
             timer = {
                 totalTime: 0,
                 timeArray: [],
@@ -20,10 +16,8 @@ class DebugTimer {
             };
             this.timers[id] = timer;
         }
-        
         timer.startTime = performance.now();
     }
-    
     end(id, print) {
         if (!this.timers[id]) {
             console.log("Несуществующий таймер: ", id);
@@ -36,19 +30,15 @@ class DebugTimer {
             console.log("Timer '", id, "'", time);
         }
     }
-    
     toString() {
         var str = '**DebugTimer**\n';
         for (var p in this.timers) {
-            str += ">>" + p + " " + this.timers[p].totalTime 
-            + "\n" + JSON.stringify(this.timers[p].timeArray) + '\n' + '<<\n';
+            str += ">>" + p + " " + this.timers[p].totalTime + "\n" + JSON.stringify(this.timers[p].timeArray) + '\n' + '<<\n';
         }
         str += "**DebugTimer**\n";
         return str;
     }
 }
-
-
 /*
 * Псевдо ZPСoder для того чтобы видеть битовый поток.
 */
@@ -57,7 +47,6 @@ class PseudoZP {
         this.log = [];
         this.offset = 0;
     }
-    
     encode(bit, ctx, n) {
         bit = +bit;
         if (ctx) {
@@ -67,8 +56,7 @@ class PseudoZP {
                 off: n,
                 len: this.log.length
             };
-        } 
-        else {
+        } else {
             var tmp = {
                 bit: bit,
                 ctx: -1,
@@ -78,33 +66,29 @@ class PseudoZP {
         }
         this.log.push(tmp);
     }
-    
     decode(ctx, n) {
         var tmp = this.log[this.offset++];
+        if(!tmp) { Globals.counter++; return 1;}
         if (ctx) {
             var cv = ctx[n];
             if (!(tmp.ctx === cv && n === tmp.off && tmp.len === (this.offset - 1))) {
-                throw new Exception("Context dismatch");
+                4;
+                throw new Error("Context dismatch");
             }
-        } 
-        else {
+        } else {
             if (!(tmp.ctx === -1 && tmp.off === -1 && tmp.len === (this.offset - 1))) {
-                throw new Exception("Context dismatch");
+                throw new Error("Context dismatch");
             }
         }
         return tmp.bit;
-    
     }
-    
     eflush() {
         console.log("PseudoZP eflushed");
     }
 }
-
 function tmpFunc(doc) {
     var writer = new DjVuWriter(1000000);
     writer.writeStr("AT&T");
-    
     writer.writeStr("FORM");
     //todo переделать
     writer.writeInt32(0);
@@ -114,7 +98,6 @@ function tmpFunc(doc) {
     for (var i = 0; i < page.bg44arr.length; i++) {
         writer.writeChunk(page.bg44arr[i]);
     }
-    
     var bs = writer.getByteStream();
     console.log(bs.readStr4());
     var link = document.querySelector('#dochref');
@@ -125,7 +108,6 @@ function tmpFunc(doc) {
     var dd = new DjVuDocument(nb);
     Globals.drawImage(dd.pages[0].getImage())
 }
-
 function ZPtest() {
     var bsw = new ByteStreamWriter(100000);
     var zp = new ZPEncoder(bsw);
@@ -159,17 +141,13 @@ function ZPtest() {
     console.log(arr);
     console.log("Full length = ", n, " Coded length = ", bs.length);
 }
-
-
 function BZZtest() {
     var bs = new ByteStreamWriter();
     var zp = new ZPEncoder(bs);
     var pzp = new PseudoZP();
     var bzz = new BZZEncoder(zp);
-    
     var data = Uint8Array.of(11, 3, 2, 10, 2, 10, 2, 0);
     bzz.encode(data.buffer);
-    
     var bsbs = new ByteStream(bs.getBuffer());
     var zp2 = new ZPCoder(bsbs);
     zp2.pzp = zp.pzp;
@@ -179,7 +157,6 @@ function BZZtest() {
     data = new Uint8Array(bsz.buffer);
     console.log(data);
 }
-
 /*
 function tmpFunc() {
     var zigzagRow = [];

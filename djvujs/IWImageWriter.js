@@ -6,6 +6,9 @@ class IWImageWriter extends IWCodecBaseClass {
         this.imageData = imageData;
         this.bs = new ByteStreamWriter(10 * 1024);
         this.zp = new ZPEncoder(this.bs);
+        this.info = {};
+        this.info.width = 192;
+        this.info.height = 256;
     }
     
     get width() {
@@ -14,6 +17,20 @@ class IWImageWriter extends IWCodecBaseClass {
     
     get height() {
         return this.imageData.height;
+    }
+
+    test() {
+        this.RGBtoY();
+        this.inverseWaveletTransform(this.y);
+        this.createBlocks(this.y);
+        var buf = this.encodeChunk(this.bs);
+        console.log('Coded buffer length', buf.byteLength);
+        var doc = new DjVuDocument(buf);
+        return doc;
+        console.log(this.blocks.length);
+        this.y = this.getBytemap();
+        //this.inverseWaveletTransform2(this.y);
+        return this.YtoRGB();
     }
     
     RGBtoY() {
@@ -41,9 +58,10 @@ class IWImageWriter extends IWCodecBaseClass {
         {
             for (var j = 0; j < width; j++) 
             {
-                var index = (i * width + j) << 2;
+                //сразу разворачиваем в прямые координаты
+                var index = ((height - i - 1) * width + j) << 2;
                 var y = rmul[255 - data[index]] + gmul[255 - data[index + 1]] + bmul[255 - data[index + 2]] + 32768;
-                this.y[i][j] = (y >> 16) - 128;
+                this.y[i][j] = ((y >> 16) - 128) << 6;
             }
         }
     }
@@ -55,7 +73,7 @@ class IWImageWriter extends IWCodecBaseClass {
         for (var i = 0; i < this.imageData.height; i++) {
             for (var j = 0; j < this.imageData.height; j++) {
                 var v = (this.y[i][j] + 32) >> 6;
-                v = this.y[i][j];
+                //v = this.y[i][j];
                 if (v < -128) {
                     v = -128;
                 } 
@@ -196,6 +214,34 @@ class IWImageWriter extends IWCodecBaseClass {
         }
     
     }
+    getBytemap() {
+        
+        
+        var blockRows = Math.ceil(this.height / 32);
+        var blockCols = Math.ceil(this.width / 32);
+        // полный двумерный массив пикселей
+        var bitmap = new Bytemap(this.width, this.height);
+       /* for (var i = 0; i < fullHeight; i++) {
+            bitmap[i] = new Float32Array(fullWidth);
+        }*/
+        
+        for (var r = 0; r < blockRows; r++) {
+            for (var c = 0; c < blockCols; c++) {
+                let block = this.blocks[r * blockCols + c];
+                for (var i = 0; i < 1024; i++) {
+                    /*var bits = [];
+                    for (let j = 0; j < 10; j++) {
+                        bits.push((i & Math.pow(2, j)) >> j);
+                    }
+                    let row = 16 * bits[1] + 8 * bits[3] + 4 * bits[5] + 2 * bits[7] + bits[9];
+                    let col = 16 * bits[0] + 8 * bits[2] + 4 * bits[4] + 2 * bits[6] + bits[8];*/
+                    bitmap[this.zigzagRow[i] + 32 * r][this.zigzagCol[i] + 32 * c] = block.getCoef(i);
+                }
+            }
+        }
+        
+        return bitmap;
+    }
     
     // переводим матрицу в блоки
     createBlocks(bitmap) {
@@ -227,18 +273,6 @@ class IWImageWriter extends IWCodecBaseClass {
         }
     }
     
-    test() {
-        this.RGBtoY();
-        this.inverseWaveletTransform();
-        this.createBlocks(this.y);
-        var buf = this.encodeChunk(this.bs);
-        console.log('Coded buffer length', buf.byteLength);
-        var doc = new DjVuDocument(buf);
-        return doc.pages[0].getImage();
-        console.log(this.blocks.length);
-        return this.YtoRGB();
-    }
-    
     writeINFOChunk(bsw) {
         bsw.writeStr('INFO').writeInt32(10)
         .writeInt16(this.imageData.width)
@@ -255,6 +289,20 @@ class IWImageWriter extends IWCodecBaseClass {
         this.dpi |= bs.getUint8() << 8;
         this.gamma = bs.getInt8();
         this.flags = bs.getInt8();*/
+    }
+
+    initEncode() {
+        this.RGBtoY();
+        this.inverseWaveletTransform(this.y);
+        this.createBlocks(this.y);
+        this.bs.writeStr('AT&T').writeStr('FORM').jump(4).writeStr('DJVU');
+        this.writeINFOChunk(this.bs);
+
+        this.bs.writeStr('BG44').jump(4);
+        //пишем заголовок
+        this.bs.writeByte(0).writeByte(100).writeByte(129)
+        .writeByte(2).writeUint16(192).writeUint16(256).writeByte(0);
+        this.zp = new ZPEncoder(this.bs);
     }
     
     encodeChunk(bsw) {
@@ -280,9 +328,11 @@ class IWImageWriter extends IWCodecBaseClass {
         }*/
 
         this.zp = new ZPEncoder(bsw);
+        this.zp = new PseudoZP();
         for(var i = 0; i<100; i++) {
             this.encodeSlice();
         }
+        Globals.pzp = this.zp;
         this.zp.eflush();
         bsw.rewriteInt32(8, bsw.offset - 12); 
         bsw.rewriteInt32(38, bsw.offset - 42);
@@ -335,7 +385,7 @@ class IWImageWriter extends IWCodecBaseClass {
                     var ecoef = eblock.buckets[i][j];
                     
                     var pix = coef >= ecoef ? 1 : 0;
-                    if (coef <= 3 * step) {
+                    if (ecoef <= 3 * step) {
                         this.zp.encode(pix, this.inreaseCoefCtx, 0);
                         //djvulibre не делает этого
                         //coef += step >> 2;
@@ -379,7 +429,7 @@ class IWImageWriter extends IWCodecBaseClass {
                 for (var j = 0; j < 16; j++) {
                     if (this.coeffstate[boff][j] & this.UNK) {
                         var ip = Math.min(7, np);
-                        this.zp.encode(this.coeffstate[boff][j] & this.NEW ? 1 : 0, this.activateCoefCtx, shift + ip);
+                        this.zp.encode((this.coeffstate[boff][j] & this.NEW) ? 1 : 0, this.activateCoefCtx, shift + ip);
                         if (this.coeffstate[boff][j] & this.NEW) {
                             this.zp.encode((bucket[j] < 0) ? 1 : 0);
                             np = 0;
@@ -498,6 +548,121 @@ class IWImageWriter extends IWCodecBaseClass {
             }
             this.bucketstate[0] = bstatetmp;
             this.bbstate |= bstatetmp;
+        }
+    }
+
+
+
+
+     inverseWaveletTransform2(bitmap) {
+        //return;
+        var s = 16;
+        while (s) {
+            //для столбцов
+            var kmax = Math.floor((this.height - 1) / s);
+            for (var i = 0; i < this.width; i += s) {
+                //Lifting
+                for (var k = 0; k <= kmax; k += 2) {
+                    var a, b, c, d;
+                    //-------------
+                    if (k - 1 < 0) {
+                        a = 0;
+                    } 
+                    else {
+                        a = bitmap[(k - 1) * s][i];
+                    }
+                    //-------------
+                    if (k - 3 < 0) {
+                        c = 0;
+                    } 
+                    else {
+                        c = bitmap[(k - 3) * s][i];
+                    }
+                    //-------------
+                    if (k + 1 > kmax) {
+                        b = 0;
+                    } 
+                    else {
+                        b = bitmap[(k + 1) * s][i];
+                    }
+                    //-------------
+                    if (k + 3 > kmax) {
+                        d = 0;
+                    } 
+                    else {
+                        d = bitmap[(k + 3) * s][i];
+                    }
+                    //-------------
+                    bitmap[k * s][i] -= (9 * (a + b) - (c + d) + 16) >> 5;
+                }
+                //Prediction 
+                for (var k = 1; k <= kmax; k += 2) {
+                    if ((k - 3 >= 0) && (k + 3 <= kmax)) {
+                        bitmap[k * s][i] += (9 * (bitmap[(k - 1) * s][i] 
+                        + bitmap[(k + 1) * s][i]) - (bitmap[(k - 3) * s][i] 
+                        + bitmap[(k + 3) * s][i]) + 8) >> 4;
+                    } 
+                    else if (k + 1 <= kmax) {
+                        bitmap[k * s][i] += (bitmap[(k - 1) * s][i] 
+                        + bitmap[(k + 1) * s][i] + 1) >> 1;
+                    } 
+                    else {
+                        bitmap[k * s][i] += bitmap[(k - 1) * s][i];
+                    }
+                }
+            }
+            
+            //для строк
+            kmax = Math.floor((this.width - 1) / s);
+            for (var i = 0; i < this.height; i += s) {
+                //Lifting
+                for (var k = 0; k <= kmax; k += 2) {
+                    var a, b, c, d;
+                    if (k - 1 < 0) {
+                        a = 0;
+                    } 
+                    else {
+                        a = bitmap[i][(k - 1) * s];
+                    }
+                    if (k - 3 < 0) {
+                        c = 0;
+                    } 
+                    else {
+                        c = bitmap[i][(k - 3) * s];
+                    }
+                    if (k + 1 > kmax) {
+                        b = 0;
+                    } 
+                    else {
+                        b = bitmap[i][(k + 1) * s];
+                    }
+                    if (k + 3 > kmax) {
+                        d = 0;
+                    } 
+                    else {
+                        d = bitmap[i][(k + 3) * s];
+                    }
+                    bitmap[i][k * s] -= (9 * (a + b) - (c + d) + 16) >> 5;
+                }
+                //Prediction 
+                for (var k = 1; k <= kmax; k += 2) {
+                    if ((k - 3 >= 0) && (k + 3 <= kmax)) {
+                        bitmap[i][k * s] += (9 * (bitmap[i][(k - 1) * s] 
+                        + bitmap[i][(k + 1) * s]) - (bitmap[i][(k - 3) * s] 
+                        + bitmap[i][(k + 3) * s]) + 8) >> 4;
+                    } 
+                    else if (k + 1 <= kmax) {
+                        bitmap[i][k * s] += (bitmap[i][(k - 1) * s] 
+                        + bitmap[i][(k + 1) * s] + 1) >> 1;
+                    } 
+                    else {
+                        bitmap[i][k * s] += bitmap[i][(k - 1) * s];
+                    }
+                }
+            }
+            
+            s >>= 1;
+            // деление на 2
         }
     }
 
