@@ -25,7 +25,7 @@ class IWImage {
         }
 
         if(Globals.pzp) {
-            zp = Globals.pzp;
+            //zp.pzp = Globals.pzp;
             console.log("PZP in doing !!!!");
         }
         

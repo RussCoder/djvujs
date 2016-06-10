@@ -81,7 +81,9 @@ class ZPEncoder extends ZPCodecBaseClass {
         this.pzp.encode(bit, ctx, n);
         bit = +bit;
         if (!ctx) {
-            return this.ptencode(bit);
+            //return this.IWencode(bit);
+            // можно было бы использовать IWencode всегда, но так сделано в djvulibre видимо для оптимизации
+            return this._ptencode(bit,  0x8000 + (this.a >> 1));
         }
         var z = this.a + this.p[ctx[n]];
         if (bit != (ctx[n] & 1)) 
@@ -128,13 +130,20 @@ class ZPEncoder extends ZPCodecBaseClass {
         }
     }
     
+    //используется для кодирования изображений, может всегда использоваться как показала практика
+    IWencode(bit) {
+        this.pzp.encode(bit);
+        this._ptencode(bit, 0x8000 + ((this.a + this.a + this.a) >> 3));
+    }
+
     // тут скопировано с IWEncoder() может нужен просто Encoder()
-    ptencode(bit) 
+    _ptencode(bit, z) 
     {
         // IWEncoder()
-        var z = 0x8000 + ((this.a + this.a + this.a) >> 3);
-        var z = 0x8000 + (this.a >> 1);
+        //var z = 0x8000 + ((this.a + this.a + this.a) >> 3);
         // просто Encoder()
+        //var z = 0x8000 + (this.a >> 1);
+        
         if (bit) 
         {
             //encode_lps_simple(z);
@@ -234,7 +243,8 @@ class ZPCoder extends ZPCodecBaseClass {
     /* Функции реализованы не как в документации, а скопированы из djvulibre */
     decode(ctx, n) {
         if (!ctx) {
-            return this.ptdecode();
+            //упрощенный декодер, но можно было использовать IWdecode
+            return this._ptdecode(0x8000 + (this.a >> 1));
         }
         this.b = ctx[n] & 1;
         this.z = this.a + this.p[ctx[n]];
@@ -300,15 +310,20 @@ class ZPCoder extends ZPCodecBaseClass {
         
         return this.b;
     }
+
+    // для раскодирования картинок, но вообще можно всегда использовать
+    IWdecode() {
+        return this._ptdecode(0x8000 + ((this.a + this.a + this.a) >> 3));
+    }
     
-    ptdecode() {
-        this.z = 0x8000 + ((this.a + this.a + this.a) >> 3);
+    _ptdecode(z) {
+        //z = 0x8000 + ((this.a + this.a + this.a) >> 3);
         this.b = 0;
-        if (this.z > this.c) {
+        if (z > this.c) {
             this.b = 1;
-            this.z = 0x10000 - this.z;
-            this.a += this.z;
-            this.c += this.z;
+            z = 0x10000 - z;
+            this.a += z;
+            this.c += z;
             
             var shift = this.ffz(this.a);
             this.scount -= shift;
@@ -320,7 +335,7 @@ class ZPCoder extends ZPCodecBaseClass {
         else {
             this.b = 0;
             this.scount--;
-            this.a = 0xffff & (this.z << 1);
+            this.a = 0xffff & (z << 1);
             this.c = 0xffff & (
             (this.c << 1) | ((this.buffer >> this.scount) & 1)
             );

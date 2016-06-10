@@ -53,10 +53,9 @@ class IWCodec extends IWCodecBaseClass {
                     var coef = Math.abs(block.buckets[i][j]);
                     if (coef <= 3 * step) {
                         des = this.zp.decode(this.inreaseCoefCtx, 0);
-                        //djvulibre не делает этого
                         coef += step >> 2;
                     } else {
-                        des = this.zp.decode();
+                        des = this.zp.IWdecode();
                     }
                     if (!coef)
                         console.log("!!");
@@ -95,15 +94,13 @@ class IWCodec extends IWCodecBaseClass {
                         var ip = Math.min(7, np);
                         var des = this.zp.decode(this.activateCoefCtx, shift + ip);
                         if (des) {
-                            var sign = this.zp.decode() ? -1 : 1;
+                            var sign = this.zp.IWdecode() ? -1 : 1;
                             np = 0;
                             if (!this.curband) {
                                 step = this.quant_lo[j];
                             }
                             //todo сравнить нужно ли 2 слагаемое
                             bucket[j] = sign * (step + (step >> 1) - (step >> 3));
-                            if (this.curband) {//console.log("IIIISSSSS");
-                            }
                         }
                         if (np) {
                             np--;

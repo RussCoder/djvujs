@@ -328,11 +328,11 @@ class IWImageWriter extends IWCodecBaseClass {
         }*/
 
         this.zp = new ZPEncoder(bsw);
-        this.zp = new PseudoZP();
+        //this.zp = new PseudoZP();
         for(var i = 0; i<100; i++) {
             this.encodeSlice();
         }
-        Globals.pzp = this.zp;
+        Globals.pzp = this.zp.pzp;
         this.zp.eflush();
         bsw.rewriteInt32(8, bsw.offset - 12); 
         bsw.rewriteInt32(38, bsw.offset - 42);
@@ -387,12 +387,11 @@ class IWImageWriter extends IWCodecBaseClass {
                     var pix = coef >= ecoef ? 1 : 0;
                     if (ecoef <= 3 * step) {
                         this.zp.encode(pix, this.inreaseCoefCtx, 0);
-                        //djvulibre не делает этого
+                        //djvulibre не делает этого при кодировании
                         //coef += step >> 2;
                     } 
                     else {
-                        //тут IWEncoder но и так он по умолчанию
-                        this.zp.encode(pix);
+                        this.zp.IWencode(pix);
                     }
                     
                     eblock.buckets[i][j] = ecoef - (pix ? 0 : step) + (step >> 1);
@@ -431,13 +430,15 @@ class IWImageWriter extends IWCodecBaseClass {
                         var ip = Math.min(7, np);
                         this.zp.encode((this.coeffstate[boff][j] & this.NEW) ? 1 : 0, this.activateCoefCtx, shift + ip);
                         if (this.coeffstate[boff][j] & this.NEW) {
-                            this.zp.encode((bucket[j] < 0) ? 1 : 0);
+                            //кодируем знак
+                            this.zp.IWencode((bucket[j] < 0) ? 1 : 0);
                             np = 0;
                             if (!this.curband) {
                                 step = this.quant_lo[j];
                             }
                             //todo сравнить нужно ли 2 слагаемое
                             ebucket[j] = (step + (step >> 1) - (step >> 3));
+                            ebucket[j] = (step + (step >> 1));
                         }
                         if (np) {
                             np--;

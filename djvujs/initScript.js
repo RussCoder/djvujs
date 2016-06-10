@@ -65,6 +65,8 @@ function readPicture(buffer) {
         Globals.iwiw = new IWImageWriter(imageData);
         console.log("PC1");
         var doc = iwiw.test();
+        var link = document.querySelector('#dochref');
+        link.href = doc.createObjectURL();
 
         c.putImageData(doc.pages[0].getImage(), 0, 0);
         console.log('Counter', Globals.counter);
