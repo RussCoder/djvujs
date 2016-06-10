@@ -18,10 +18,7 @@ class IWCodec extends IWCodecBaseClass {
         } else {
             this.info.slices = imageinfo.slices;
         }
-        this.zp = zp;
-        if (Globals.iwiw) {
-            Globals.iwiw.encodeSlice();
-        }
+        this.zp = zp;     
         if (!this.is_null_slice()) {
             // по блокам идем        
             for (var i = 0; i < this.blocks.length; i++) {
@@ -57,8 +54,6 @@ class IWCodec extends IWCodecBaseClass {
                     } else {
                         des = this.zp.IWdecode();
                     }
-                    if (!coef)
-                        console.log("!!");
                     if (des) {
                         coef += step >> 1;
                     } else {

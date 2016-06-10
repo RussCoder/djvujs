@@ -1,5 +1,4 @@
 'use strict';
-
 class DjVuPage {
     constructor(bs) {
         this.id = "FORM:DJVU";
@@ -16,11 +15,9 @@ class DjVuPage {
         this.dependencies = null ;
         //this.init();
     }
-    
     get dpi() {
         return this.info.dpi;
     }
-
     // метод поиска зависимостей, то есть INCLChunk
     // возвращает массив id 
     getDependencies() {
@@ -46,7 +43,6 @@ class DjVuPage {
         }
         return this.dependencies;
     }
-    
     init() {
         //чтобы не вызывалось более 1 раза
         if (this.info) {
@@ -65,23 +61,18 @@ class DjVuPage {
             // перепрыгнули к следующей порции
             if (id == "FG44") {
                 chunk = this.fg44 = new ColorChunk(chunkBs);
-            } 
-            else if (id == "BG44") {
+            } else if (id == "BG44") {
                 this.bg44arr.push(chunk = new ColorChunk(chunkBs));
-            } 
-            else if (id == 'Sjbz') {
+            } else if (id == 'Sjbz') {
                 chunk = this.sjbz = new JB2Image(chunkBs);
-            } 
-            else if (id === "INCL") {
+            } else if (id === "INCL") {
                 chunk = this.incl = new INCLChunk(chunkBs);
                 var inclChunk = Globals.getINCLChunk(this.incl.ref);
                 inclChunk.id === "Djbz" ? this.djbz = inclChunk : this.iffchunks.push(inclChunk);
                 this.dependencies.push(chunk.ref);
-            } 
-            else if (id === "CIDa") {
+            } else if (id === "CIDa") {
                 chunk = new CIDaChunk(chunkBs);
-            } 
-            else {
+            } else {
                 chunk = new IFFChunk(chunkBs);
             }
             //тут все порции в том порядке в каком встретились, кроме info
@@ -89,7 +80,6 @@ class DjVuPage {
         }
         return this;
     }
-    
     getImage() {
         this.init();
         var image = Globals.canvasCtx.createImageData(this.info.width, this.info.height);
@@ -98,21 +88,14 @@ class DjVuPage {
         //достаем маску
         if (this.sjbz) {
             var bm = this.sjbz.bitmap;
-        } 
-        else {
+        } else {
             //если только фоновый слой
             if (this.bgimage) {
                 return this.bgimage.getImage();
-            }
-            //это вряд ли может быть но на всякий случай
-             
-            
-            
-            
+            }//это вряд ли может быть но на всякий случай   
             else if (this.fgimage) {
                 return this.fgimage.getImage();
-            } 
-            else {
+            } else {
                 return null ;
             }
         }
@@ -130,8 +113,7 @@ class DjVuPage {
                     var is = Math.floor(i / fgscale);
                     var js = Math.floor(j / fgscale);
                     pixel = this.fgimage.pixelmap.getPixel(is, js);
-                } 
-                else {
+                } else {
                     var is = Math.floor(i / bgscale);
                     var js = Math.floor(j / bgscale);
                     pixel = this.bgimage.pixelmap.getPixel(is, js);
@@ -146,7 +128,6 @@ class DjVuPage {
         console.log("DataImage creating time = ", performance.now() - time);
         return image;
     }
-    
     //раскодируем все слои
     decode() {
         var time = performance.now();
@@ -172,7 +153,6 @@ class DjVuPage {
         }
         console.log("Foreground decoding time = ", performance.now() - time);
     }
-    
     //фоновое изображение
     getBackgroundImage() {
         if (this.bg44arr.length) {
@@ -182,25 +162,20 @@ class DjVuPage {
             }
             );
             return this.bgimage.getImage();
-        } 
-        else {
+        } else {
             return null ;
         }
     }
-    
     getForegroundImage() {
         if (this.fg44) {
             this.fgimage = new IWImage();
             let zp = new ZPCoder(this.fg44.bs);
             this.fgimage.decodeChunk(zp, this.fg44.header);
             return this.fgimage.getImage();
-        } 
-        else {
+        } else {
             return null ;
         }
     }
-    
-    
     toString() {
         var str = this.id + ' ' + this.length + "\n";
         str += this.info ? this.info.toString() : '';

@@ -45,7 +45,7 @@ function loadDjVu() {
 }
 function loadPicture() {
     var xhr = new XMLHttpRequest();
-    xhr.open("GET", "samples/r.jpg");
+    xhr.open("GET", "samples/col.jpg");
     xhr.responseType = "arraybuffer";
     xhr.onload = function(e) {
         console.log(e.loaded);
@@ -56,15 +56,21 @@ function loadPicture() {
     xhr.send();
 }
 function readPicture(buffer) {
-    var pictureTotalTime = performance.now();
+    
     createImageBitmap(new Blob([buffer])).then(function(image) {
-        var c = document.getElementById('canvas2').getContext('2d');
+        var pictureTotalTime = performance.now();
+        var canvas = document.getElementById('canvas2');
+        var c = canvas.getContext('2d');
+        canvas.width = image.width;
+        canvas.height = image.height;
+
         c.drawImage(image, 0, 0);
-        var imageData = c.getImageData(0, 0, 192, 256);
+        var imageData = c.getImageData(0, 0, image.width, image.height);
         var iwiw = new IWImageWriter(imageData);
         Globals.iwiw = new IWImageWriter(imageData);
         console.log("PC1");
         var doc = iwiw.test();
+        console.log('docCreateTime = ', performance.now() - pictureTotalTime);
         var link = document.querySelector('#dochref');
         link.href = doc.createObjectURL();
 
@@ -72,8 +78,9 @@ function readPicture(buffer) {
         console.log('Counter', Globals.counter);
         console.log('PZP', Globals.pzp.log.length, ' ', Globals.pzp.offset );
         writeln(doc.toString());
+        console.log('pictureTotalTime = ', performance.now() - pictureTotalTime);
     });
-    console.log('pictureTotalTime = ', performance.now() - pictureTotalTime);
+    
 }
 function readDjvu(buf) {
     return;

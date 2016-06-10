@@ -10,9 +10,6 @@ class IWImage {
     }
     
     decodeChunk(zp, header) {
-        if(Globals.iwiw) {
-        Globals.iwiw.initEncode();
-        }
         if (!this.info) {
             this.info = header;
             if (!header.grayscale) {
@@ -24,10 +21,10 @@ class IWImage {
             this.info.slices = header.slices;
         }
 
-        if(Globals.pzp) {
+        /*if(Globals.pzp) {
             //zp.pzp = Globals.pzp;
             console.log("PZP in doing !!!!");
-        }
+        }*/
         
         for (var i = 0; i < this.info.slices; i++) {
             this.cslice++;
