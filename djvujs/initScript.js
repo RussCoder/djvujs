@@ -1,17 +1,22 @@
 "use strict";
+
 var fileSize = 0;
 var output;
-Globals.counter = 0
-function include(url) {
+Globals.counter = 0;
+
+// comment
+function include(url)
+ {
     var script = document.createElement('script');
     script.src = url;
-    document.head.appendChild(script);
+    document.head.appendChild(script);  
     console.log("included: " + url);
 }
 function writeln(str) {
     str = str || "";
     output.innerHTML += str + "<br>";
 }
+
 function write(str) {
     output.innerHTML += str;
 }
@@ -66,17 +71,16 @@ function readPicture(buffer) {
 
         c.drawImage(image, 0, 0);
         var imageData = c.getImageData(0, 0, image.width, image.height);
-        var iwiw = new IWImageWriter(imageData);
-        Globals.iwiw = new IWImageWriter(imageData);
+        var iwiw = new IWImageWriter();
         console.log("PC1");
-        var doc = iwiw.test();
+        var doc = iwiw.createOnePageDocument(imageData);
         console.log('docCreateTime = ', performance.now() - pictureTotalTime);
         var link = document.querySelector('#dochref');
         link.href = doc.createObjectURL();
 
         c.putImageData(doc.pages[0].getImage(), 0, 0);
         console.log('Counter', Globals.counter);
-        console.log('PZP', Globals.pzp.log.length, ' ', Globals.pzp.offset );
+        //console.log('PZP', Globals.pzp.log.length, ' ', Globals.pzp.offset );
         writeln(doc.toString());
         console.log('pictureTotalTime = ', performance.now() - pictureTotalTime);
     });

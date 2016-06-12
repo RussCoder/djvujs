@@ -3,23 +3,23 @@
 // вспомогательный класс для быстрого доступа к разделяемым ресурсам
 var Globals = {};
 
-Globals.drawImage = function(image, dpi) {
+Globals.drawImage = function (image, dpi) {
     var tmp;
     var scale = dpi ? dpi / Globals.defaultDPI : 1;
     var time = performance.now();
     Globals.canvas.width = image.width / scale;
     this.canvas.height = image.height / scale;
-    
+
     var oc = document.createElement('canvas');
     var octx = oc.getContext('2d');
     oc.width = image.width;
     oc.height = image.height;
     octx.putImageData(image, 0, 0);
-    
+
     var tmpH, tmpW, tmpH2, tmpW2;
     tmpH = tmpH2 = oc.height;
     tmpW = tmpW2 = oc.width;
-    
+
     if (scale > 4) {
         tmpH = oc.height / scale * 4;
         tmpW = oc.width / scale * 4;
@@ -33,8 +33,8 @@ Globals.drawImage = function(image, dpi) {
         octx.drawImage(oc, 0, 0, tmpW, tmpH, 0, 0, tmpW2, tmpH2);
     }
     //итоговое сжатие
-    this.canvasCtx.drawImage(oc, 0, 0, tmpW2, tmpH2, 
-    0, 0, canvas.width, canvas.height);
+    this.canvasCtx.drawImage(oc, 0, 0, tmpW2, tmpH2,
+        0, 0, canvas.width, canvas.height);
     console.log("Canvas resizing time = ", performance.now() - time);
     /*Globals.canvasCtx.putImageData(image, 0, 0);
         
@@ -45,14 +45,14 @@ Globals.drawImage = function(image, dpi) {
         (tmp = this.canvas.parentNode) ? tmp.removeChild(this.canvas) : 0;*/
 }
 
-Globals.drawImageNS = function(image, dpi) {
+Globals.drawImageNS = function (image, dpi) {
     Globals.Timer.start('drawImageNS');
     var tmp;
     var scale = dpi ? Globals.defaultDPI / dpi : 1;
     var time = performance.now();
     Globals.canvas.width = image.width / scale;
     this.canvas.height = image.height / scale;
-    
+
     var oc = document.createElement('canvas');
     var octx = oc.getContext('2d');
     oc.width = image.width;
@@ -65,16 +65,16 @@ Globals.drawImageNS = function(image, dpi) {
     Globals.Timer.end('drawImageNS');
 }
 
-Globals.drawImageSmooth = function(image, dpi) {
+Globals.drawImageSmooth = function (image, dpi) {
     var time = performance.now();
     var tmp;
     var scale = dpi ? dpi / Globals.defaultDPI : 1;
-    
+
     Globals.canvas.width = image.width;
     this.canvas.height = image.height;
-    
+
     Globals.canvasCtx.putImageData(image, 0, 0);
-    
+
     this.img.src = this.canvas.toDataURL();
     console.log("DataURL creating time = ", performance.now() - time);
     this.img.width = image.width / scale;
@@ -96,23 +96,23 @@ function downScaleCanvas(cv, scale) {
     var th = Math.floor(sh * scale);
     // target image height
     var sx = 0
-      , sy = 0
-      , sIndex = 0;
+        , sy = 0
+        , sIndex = 0;
     // source x,y, index within source array
     var tx = 0
-      , ty = 0
-      , yIndex = 0
-      , tIndex = 0;
+        , ty = 0
+        , yIndex = 0
+        , tIndex = 0;
     // target x,y, x,y index within target array
     var tX = 0
-      , tY = 0;
+        , tY = 0;
     // rounded tx, ty
     var w = 0
-      , nw = 0
-      , wx = 0
-      , nwx = 0
-      , wy = 0
-      , nwy = 0;
+        , nw = 0
+        , wx = 0
+        , nwx = 0
+        , wy = 0
+        , nwy = 0;
     // weight / next weight x / y
     // weight is weight of current source point within target.
     // next weight is weight of current source point within next target's point.
@@ -121,17 +121,17 @@ function downScaleCanvas(cv, scale) {
     var crossY = false;
     // does scaled px cross its current px bottom border ?
     var sBuffer = cv.getContext('2d').
-    getImageData(0, 0, sw, sh).data;
+        getImageData(0, 0, sw, sh).data;
     // source buffer 8 bit rgba
     var tBuffer = new Float32Array(3 * tw * th);
     // target buffer Float32 rgb
     var sR = 0
-      , sG = 0
-      , sB = 0;
+        , sG = 0
+        , sB = 0;
     // source's current point r,g,b
     /* untested !
     var sA = 0;  //source alpha  */
-    
+
     for (sy = 0; sy < sh; sy++) {
         ty = sy * scale;
         // y src position within target
@@ -147,8 +147,8 @@ function downScaleCanvas(cv, scale) {
             nwy = (ty + scale - tY - 1);
             // ... within y+1 target pixel
         }
-        for (sx = 0; sx < sw; sx++,
-        sIndex += 4) {
+        for (sx = 0; sx < sw; sx++ ,
+            sIndex += 4) {
             tx = sx * scale;
             // x src position within target
             tX = 0 | tx;
@@ -167,7 +167,7 @@ function downScaleCanvas(cv, scale) {
             // retrieving r,g,b for curr src px.
             sG = sBuffer[sIndex + 1];
             sB = sBuffer[sIndex + 2];
-            
+
             /* !! untested : handling alpha !!
                sA = sBuffer[sIndex + 3];
                if (!sA) continue;
@@ -234,7 +234,7 @@ function downScaleCanvas(cv, scale) {
         // end for sx 
     }
     // end for sy
-    
+
     // create result canvas
     var resCV = document.createElement('canvas');
     resCV.width = tw;
@@ -246,9 +246,9 @@ function downScaleCanvas(cv, scale) {
     var pxIndex = 0;
     //  
     for (sIndex = 0,
-    tIndex = 0; pxIndex < tw * th; sIndex += 3,
-    tIndex += 4,
-    pxIndex++) {
+        tIndex = 0; pxIndex < tw * th; sIndex += 3,
+        tIndex += 4,
+        pxIndex++) {
         tByteBuffer[tIndex] = Math.ceil(tBuffer[sIndex]);
         tByteBuffer[tIndex + 1] = Math.ceil(tBuffer[sIndex + 1]);
         tByteBuffer[tIndex + 2] = Math.ceil(tBuffer[sIndex + 2]);

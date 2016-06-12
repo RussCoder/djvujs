@@ -17,7 +17,7 @@ class ZPEncoder extends ZPCodecBaseClass {
         this.buffer = 0xffffff;
         this.nrun = 0;
         
-        this.pzp = new PseudoZP();
+        //this.pzp = new PseudoZP();
     }
     
     outbit(bit) 
@@ -78,7 +78,7 @@ class ZPEncoder extends ZPCodecBaseClass {
     //откопировано из djvulibre
     encode(bit, ctx, n) 
     {
-        this.pzp.encode(bit, ctx, n);
+        //this.pzp.encode(bit, ctx, n);
         bit = +bit;
         if (!ctx) {
             //return this.IWencode(bit);
@@ -132,7 +132,7 @@ class ZPEncoder extends ZPCodecBaseClass {
     
     //используется для кодирования изображений, может всегда использоваться как показала практика
     IWencode(bit) {
-        this.pzp.encode(bit);
+        //this.pzp.encode(bit);
         this._ptencode(bit, 0x8000 + ((this.a + this.a + this.a) >> 3));
     }
 
@@ -724,7 +724,7 @@ ZPCodecBaseClass.prototype.m = new Uint16Array([0x0000,
 0x0000, 
 0x0000]);
 
-ZPCodecBaseClass.prototype.up = new Uint8Array([84, 
+ZPCodecBaseClass.prototype.up =  Uint8Array.of(84, 
 3, 
 4, 
 5, 
@@ -974,9 +974,9 @@ ZPCodecBaseClass.prototype.up = new Uint8Array([84,
 249, 
 10, 
 89, 
-230]);
+230);
 
-ZPCodecBaseClass.prototype.dn = new Uint8Array([145, 
+ZPCodecBaseClass.prototype.dn =  Uint8Array.of(145, 
 4, 
 3, 
 1, 
@@ -1222,4 +1222,4 @@ ZPCodecBaseClass.prototype.dn = new Uint8Array([145,
 245, 
 2, 
 1, 
-83, 250, 2, 143, 246]);
+83, 250, 2, 143, 246);

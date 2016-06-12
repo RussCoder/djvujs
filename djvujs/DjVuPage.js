@@ -1,18 +1,20 @@
 'use strict';
+
 class DjVuPage {
     constructor(bs) {
         this.id = "FORM:DJVU";
         this.length = bs.length - 8;
         this.bs = bs;
         this.bs.jump(12);
-        this.djbz = null ;
+        this.djbz = null;
         this.bg44arr = new Array();
-        this.fg44 = null ;
-        this.bgimage = null ;
+        this.fg44 = null;
+        this.bgimage = null;
+        
         // список всех кусков - для toString
         this.iffchunks = [];
         // id разделяемых данных (в частности словарей)
-        this.dependencies = null ;
+        this.dependencies = null;
         //this.init();
     }
     get dpi() {
@@ -96,7 +98,7 @@ class DjVuPage {
             else if (this.fgimage) {
                 return this.fgimage.getImage();
             } else {
-                return null ;
+                return null;
             }
         }
         if (!this.bgimage && !this.fgimage) {
@@ -136,7 +138,7 @@ class DjVuPage {
         time = performance.now();
         if (this.bg44arr.length) {
             this.bgimage = new IWImage();
-            this.bg44arr.forEach((chunk)=>{
+            this.bg44arr.forEach((chunk) => {
                 let zp = new ZPCoder(chunk.bs);
                 this.bgimage.decodeChunk(zp, chunk.header);
             }
@@ -156,14 +158,14 @@ class DjVuPage {
     //фоновое изображение
     getBackgroundImage() {
         if (this.bg44arr.length) {
-            this.bg44arr.forEach((chunk)=>{
+            this.bg44arr.forEach((chunk) => {
                 let zp = new ZPCoder(chunk.bs);
                 this.bgimage.decodeChunk(zp, chunk.header);
             }
             );
             return this.bgimage.getImage();
         } else {
-            return null ;
+            return null;
         }
     }
     getForegroundImage() {
@@ -173,7 +175,7 @@ class DjVuPage {
             this.fgimage.decodeChunk(zp, this.fg44.header);
             return this.fgimage.getImage();
         } else {
-            return null ;
+            return null;
         }
     }
     toString() {
