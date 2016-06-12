@@ -71,8 +71,7 @@ function readPicture(buffer) {
 
         c.drawImage(image, 0, 0);
         var imageData = c.getImageData(0, 0, image.width, image.height);
-        var iwiw = new IWImageWriter();
-        console.log("PC1");
+        var iwiw = new IWImageWriter(100, 0, 0);
         var doc = iwiw.createOnePageDocument(imageData);
         console.log('docCreateTime = ', performance.now() - pictureTotalTime);
         var link = document.querySelector('#dochref');

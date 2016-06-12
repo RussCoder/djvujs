@@ -12,15 +12,10 @@ class IFFChunk {
     }
 }
 
-class ColorChunk {
+class ColorChunk extends IFFChunk{
     constructor(bs) {
-        this.id = bs.readStr4();
-        this.length = bs.getInt32();
-        this.bs = bs;
+        super(bs);
         this.header = new СolorChunkDataHeader(bs);
-        let headerLen = this.header.width ? 9 : 2;
-        
-        //bs.jump(this.length - headerLen + (this.length % 2 ? 1 : 0));
     }
     toString() {
         return this.id + " " + this.length + this.header.toString();
