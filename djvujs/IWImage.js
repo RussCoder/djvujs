@@ -49,7 +49,7 @@ class IWImage {
         this.pixelmap ? this.createPixelmap() : 0;
         var width = this.info.width;
         var height = this.info.height;
-        var image = Globals.canvasCtx.createImageData(width, height);
+        var image = new ImageData(width, height);
         
         for (var i = 0; i < height; i++) {
             for (var j = 0; j < width; j++) {

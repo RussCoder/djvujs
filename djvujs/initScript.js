@@ -33,8 +33,9 @@ window.onload = function() {
     Globals.canvasCtx = c;
     Globals.dict = [];
     Globals.img = document.getElementById('img');
+   // testFunc();
     loadDjVu();
-    loadPicture();
+    //loadPicture();
 }
 function loadDjVu() {
     var xhr = new XMLHttpRequest();
@@ -86,37 +87,30 @@ function readPicture(buffer) {
     
 }
 function readDjvu(buf) {
-    return;
     console.log("DJ1");
     var link = document.querySelector('#dochref');
     var time = performance.now();
     console.log("Buffer length = " + buf.byteLength);
-    //BZZtest();
-    var doc = new DjVuDocument(buf);
-    //console.log("REAL COUNT ", doc.countFiles());
-    //var ndoc = doc.slice(0, doc.pages.length / 2);
-    //var page = doc.pages[10];
-    //Globals.drawImageSmooth(page.getImage(), page.dpi);
-    //Globals.drawImageSmooth(page.getImage(), page.dpi);
+    //var doc = new DjVuDocument(buf);
     Globals.counter = 0;
-    if (!Globals.iwiw) {
-        setTimeout(function() {
-            Globals.canvasCtx.putImageData(new DjVuDocument(buf).pages[0].getImage(), 0, 0);
-            console.log('Counter', Globals.counter)
-        }, 100)
-    } 
-    var imageData = Globals.canvasCtx.putImageData(doc.pages[0].getImage(), 0, 0);
+    var worker = new DjVuWorker();
+    worker.createDocument(buf);
+    worker.getPageImageData(0, function (imageData) {
+        Globals.canvasCtx.putImageData(imageData, 0, 0);
+    });
+    //Globals.canvasCtx.putImageData(doc.pages[0].getImage(), 0, 0);
     //link.href = ndoc.createObjectURL();
-    writeln(doc.toString());
-    // c.putImageData(doc.pages[0].getImage(), 0, 0);
+    //writeln(doc.toString());
     //writeln(djvuPage.toString());
-    //ZPtest();
     console.log(Globals.Timer.toString());
-    console.log("Total execution time = ", performance.now() - time)
-    
+    console.log("Total execution time = ", performance.now() - time);   
 }
 function main(file) {
     clear();
     readFile(file);
     writeln(file.size);
+}
+
+function testFunc() {
+    var worker = new DjVuWorker();   
 }

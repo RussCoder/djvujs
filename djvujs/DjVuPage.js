@@ -84,7 +84,7 @@ class DjVuPage {
     }
     getImage() {
         this.init();
-        var image = Globals.canvasCtx.createImageData(this.info.width, this.info.height);
+        var image = new ImageData(this.info.width, this.info.height);
         this.decode();
         var time = performance.now();
         //достаем маску
