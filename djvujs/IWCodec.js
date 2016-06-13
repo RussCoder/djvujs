@@ -1,5 +1,5 @@
 'use strict';
-class IWCodec extends IWCodecBaseClass {
+class IWDecoder extends IWCodecBaseClass {
     constructor() {
         super();
     }

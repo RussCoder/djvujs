@@ -27,7 +27,17 @@ class IWImageWriter {
 
         // пропускаем 4 байта для длины файла
         bsw.writeStr('AT&T').writeStr('FORM').jump(4).writeStr('DJVU');
-        this.writeINFOChunk(bsw);
+        // записываем порцию информации
+        bsw.writeStr('INFO')
+            .writeInt32(10)
+            .writeInt16(imageData.width)
+            .writeInt16(imageData.height)
+            .writeByte(24).writeByte(0)
+            .writeByte(100 & 0xff)
+            .writeByte(100 >> 8)
+            .writeByte(22).writeByte(1);
+        
+        //начинаем запись порции цветной
         bsw.writeStr('BG44').jump(4);
         //пишем заголовок
         bsw.writeByte(0)
@@ -59,16 +69,6 @@ class IWImageWriter {
         return new DjVuDocument(bsw.getBuffer());
     }
 
-    writeINFOChunk(bsw) {
-        bsw.writeStr('INFO')
-            .writeInt32(10)
-            .writeInt16(imageData.width)
-            .writeInt16(imageData.height)
-            .writeByte(24).writeByte(0)
-            .writeByte(100 & 0xff)
-            .writeByte(100 >> 8)
-            .writeByte(22).writeByte(1);
-    }
 
     /**
      * Перевод RGB в Y откопировано из djvulibre

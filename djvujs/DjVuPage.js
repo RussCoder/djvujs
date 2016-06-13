@@ -139,7 +139,7 @@ class DjVuPage {
         if (this.bg44arr.length) {
             this.bgimage = new IWImage();
             this.bg44arr.forEach((chunk) => {
-                var zp = new ZPCoder(chunk.bs);
+                var zp = new ZPDecoder(chunk.bs);
                 this.bgimage.decodeChunk(zp, chunk.header);
             }
             );

@@ -2,7 +2,7 @@
 
 class IWImage {
     constructor() {
-        this.ycodec = new IWCodec();
+        this.ycodec = new IWDecoder();
         this.cslice = 0;
         // current slice
         this.info = null ;
@@ -13,8 +13,8 @@ class IWImage {
         if (!this.info) {
             this.info = header;
             if (!header.grayscale) {
-                this.crcodec = new IWCodec();
-                this.cbcodec = new IWCodec();
+                this.crcodec = new IWDecoder();
+                this.cbcodec =new IWDecoder();
             }
         } 
         else {
@@ -39,10 +39,6 @@ class IWImage {
     createPixelmap() {
         if (!this.pixelmap) {
             var ybitmap = this.ycodec.getBytemap();
-            //Globals.iwiw.blocks =Globals.iwiw.eblocks;
-            if(Globals.iwiw) {
-            //ybitmap = this.ycodec.getBytemap.call(Globals.iwiw);
-            }
             var cbbitmap = this.cbcodec ? this.cbcodec.getBytemap() : null ;
             var crbitmap = this.crcodec ? this.crcodec.getBytemap() : null ;
             this.pixelmap = new Pixelmap(ybitmap,cbbitmap,crbitmap);
