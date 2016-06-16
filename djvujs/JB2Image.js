@@ -194,9 +194,7 @@ class JB2Image extends JB2Codec {
     
     getImage() {
         var time = performance.now();
-        var image = document.createElement('canvas')
-        .getContext('2d')
-        .createImageData(this.width, this.height);
+        var image = new ImageData(this.width, this.height);
         for (var i = 0; i < this.height; i++) {
             for (var j = 0; j < this.width; j++) {
                 var v = this.bitmap.get(i, j) ? 0 : 255;

@@ -149,7 +149,7 @@ class DjVuPage {
         time = performance.now();
         if (this.fg44) {
             this.fgimage = new IWImage();
-            let zp = new ZPCoder(this.fg44.bs);
+            let zp = new ZPDecoder(this.fg44.bs);
             this.fgimage.decodeChunk(zp, this.fg44.header);
             this.fgimage.createPixelmap();
         }

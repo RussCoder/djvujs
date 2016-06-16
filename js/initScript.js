@@ -34,12 +34,12 @@ window.onload = function() {
     Globals.dict = [];
     Globals.img = document.getElementById('img');
    // testFunc();
-    loadDjVu();
-    //loadPicture();
+    //loadDjVu();
+    loadPicture();
 }
 function loadDjVu() {
     var xhr = new XMLHttpRequest();
-    xhr.open("GET", "samples/r1.djvu");
+    xhr.open("GET", "samples/colorbook.djvu");
     xhr.responseType = "arraybuffer";
     xhr.onload = function(e) {
         console.log(e.loaded);
@@ -51,7 +51,7 @@ function loadDjVu() {
 }
 function loadPicture() {
     var xhr = new XMLHttpRequest();
-    xhr.open("GET", "samples/col.jpg");
+    xhr.open("GET", "samples/bear.jpg");
     xhr.responseType = "arraybuffer";
     xhr.onload = function(e) {
         console.log(e.loaded);
@@ -72,7 +72,7 @@ function readPicture(buffer) {
 
         c.drawImage(image, 0, 0);
         var imageData = c.getImageData(0, 0, image.width, image.height);
-        var iwiw = new IWImageWriter(100, 0, 0);
+        var iwiw = new IWImageWriter(90, 0, 0);
         var doc = iwiw.createOnePageDocument(imageData);
         console.log('docCreateTime = ', performance.now() - pictureTotalTime);
         var link = document.querySelector('#dochref');
@@ -91,17 +91,22 @@ function readDjvu(buf) {
     var link = document.querySelector('#dochref');
     var time = performance.now();
     console.log("Buffer length = " + buf.byteLength);
-    //var doc = new DjVuDocument(buf);
+    var doc = new DjVuDocument(buf);
     Globals.counter = 0;
-    var worker = new DjVuWorker();
-    worker.createDocument(buf);
-    worker.getPageImageData(0, function (imageData) {
-        Globals.canvasCtx.putImageData(imageData, 0, 0);
-    });
+    /*var worker = new DjVuWorker();
+    worker.createDocument(buf);*/
+    /*worker.getPageImageData(3, function (imageData) {
+        //Globals.canvasCtx.putImageData(imageData, 0, 0);
+        Globals.drawImageSmooth(imageData, 600);
+        console.log("Total execution time = ", performance.now() - time);
+    });*/
     //Globals.canvasCtx.putImageData(doc.pages[0].getImage(), 0, 0);
     //link.href = ndoc.createObjectURL();
     //writeln(doc.toString());
     //writeln(djvuPage.toString());
+
+    Globals.drawImageSmooth(doc.pages[3].getImage(), 600);
+    writeln(doc.toString());
     console.log(Globals.Timer.toString());
     console.log("Total execution time = ", performance.now() - time);   
 }

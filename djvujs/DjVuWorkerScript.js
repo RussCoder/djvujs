@@ -12,7 +12,7 @@ importScripts(
   "BZZDecoder.js",
   "BZZEncoder.js",
   "IWCodecBaseClass.js",
-  "IWCodec.js",
+  "IWDecoder.js",
   "IWEncoder.js",
   "IWImage.js",
   "JB2Codec.js",

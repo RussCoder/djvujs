@@ -81,7 +81,7 @@ class NumContext {
 class JB2Codec extends IFFChunk {
     constructor(bs) {
         super(bs);
-        this.zp = new ZPCoder(this.bs);
+        this.zp = new ZPDecoder(this.bs);
         this.recordTypeCtx = new NumContext();
         this.imageSizeCtx = new NumContext();
         this.symbolWidthCtx = new NumContext();
