@@ -148,7 +148,7 @@ class DjVuDocument {
         return url;
     }
     
-    // создает новый документ со страницы from включая ее до to невключая
+    // создает новый документ со страницы from включая ее до to не включая
     slice(from, to) {
         Globals.Timer.start('sliceTime');
         from = from || 0;
@@ -235,6 +235,35 @@ class DjVuDocument {
     }
 
     static concat(doc1, doc2) {
-        
+        var dirm = {};
+        var length = doc1.pages.length  + doc2.pages.length;
+        dirm.dflags = 129;
+        dirm.flags = [];
+        dirm.sizes = [];
+        dirm.ids = [];
+        var pages = [];
+        for(var i = 0; i < doc1.pages.length; i++) {
+            dirm.flags.push(doc1.dirm.flags[i]);
+            dirm.sizes.push(doc1.dirm.sizes[i]);
+            dirm.ids.push(doc1.dirm.ids[i]);
+            pages.push(doc1.pages[i]);
+        }
+
+        for(var i = 0; i < doc2.pages.length; i++) {
+            dirm.flags.push(doc2.dirm.flags[i]);
+            dirm.sizes.push(doc2.dirm.sizes[i]);
+            dirm.ids.push(doc2.dirm.ids[i]);
+            pages.push(doc2.pages[i]);
+        }
+
+        var dw = new DjVuWriter();
+        dw.startDJVM();
+        dw.writeDirmChunk(dirm);
+        for(var i = 0; i< length; i++) {
+            dw.writeFormChunkBS(pages[i].bs);
+        }
+
+        return new DjVuDocument(dw.getBuffer());
+
     }
 }

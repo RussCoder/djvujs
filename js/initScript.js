@@ -5,11 +5,10 @@ var output;
 Globals.counter = 0;
 
 // comment
-function include(url)
- {
+function include(url) {
     var script = document.createElement('script');
     script.src = url;
-    document.head.appendChild(script);  
+    document.head.appendChild(script);
     console.log("included: " + url);
 }
 function writeln(str) {
@@ -23,7 +22,7 @@ function write(str) {
 function clear() {
     output.innerHTML = "";
 }
-window.onload = function() {
+window.onload = function () {
     output = document.getElementById("output");
     var canvas = document.getElementById('canvas');
     var c = canvas.getContext('2d');
@@ -33,7 +32,7 @@ window.onload = function() {
     Globals.canvasCtx = c;
     Globals.dict = [];
     Globals.img = document.getElementById('img');
-   // testFunc();
+    // testFunc();
     //loadDjVu();
     loadPicture();
 }
@@ -41,7 +40,7 @@ function loadDjVu() {
     var xhr = new XMLHttpRequest();
     xhr.open("GET", "samples/colorbook.djvu");
     xhr.responseType = "arraybuffer";
-    xhr.onload = function(e) {
+    xhr.onload = function (e) {
         console.log(e.loaded);
         fileSize = e.loaded;
         var buf = xhr.response;
@@ -53,7 +52,7 @@ function loadPicture() {
     var xhr = new XMLHttpRequest();
     xhr.open("GET", "samples/bear.jpg");
     xhr.responseType = "arraybuffer";
-    xhr.onload = function(e) {
+    xhr.onload = function (e) {
         console.log(e.loaded);
         fileSize = e.loaded;
         var buf = xhr.response;
@@ -62,8 +61,8 @@ function loadPicture() {
     xhr.send();
 }
 function readPicture(buffer) {
-    
-    createImageBitmap(new Blob([buffer])).then(function(image) {
+
+    createImageBitmap(new Blob([buffer])).then(function (image) {
         var pictureTotalTime = performance.now();
         var canvas = document.getElementById('canvas2');
         var c = canvas.getContext('2d');
@@ -74,7 +73,7 @@ function readPicture(buffer) {
         var imageData = c.getImageData(0, 0, image.width, image.height);
         var iwiw = new IWImageWriter(90, 0, 0);
         var doc = iwiw.createMultyPageDocument([imageData, imageData, imageData]);
-       // var doc = iwiw.createOnePageDocument(imageData);
+        // var doc = iwiw.createOnePageDocument(imageData);
         console.log('docCreateTime = ', performance.now() - pictureTotalTime);
         var link = document.querySelector('#dochref');
         link.href = doc.createObjectURL();
@@ -85,7 +84,7 @@ function readPicture(buffer) {
         writeln(doc.toString());
         console.log('pictureTotalTime = ', performance.now() - pictureTotalTime);
     });
-    
+
 }
 function readDjvu(buf) {
     console.log("DJ1");
@@ -109,14 +108,37 @@ function readDjvu(buf) {
     Globals.drawImageSmooth(doc.pages[3].getImage(), 600);
     writeln(doc.toString());
     console.log(Globals.Timer.toString());
-    console.log("Total execution time = ", performance.now() - time);   
-}
-function main(file) {
-    clear();
-    readFile(file);
-    writeln(file.size);
+    console.log("Total execution time = ", performance.now() - time);
 }
 
-function testFunc() {
-    var worker = new DjVuWorker();   
+/**
+ * Функция для работы с файлами загруженными вручную.
+ */
+function main(files) {
+    clear();
+    console.log(files.length);
+    //readFile(file);
+    var fileReader = new FileReader();
+    var doc1, doc2;
+    fileReader.onload = function () {
+        if (!doc1) {
+            doc1 = new DjVuDocument(this.result);
+            fileReader.readAsArrayBuffer(files[1]);
+            return;
+        }
+
+        doc2 = new DjVuDocument(this.result);
+        testFunc(doc1, doc2);
+        
+    };
+    fileReader.readAsArrayBuffer(files[0]);
+}
+
+function testFunc(doc1, doc2) {
+    var doc = DjVuDocument.concat(doc1, doc2);
+    Globals.drawImageSmooth(doc.pages[0].getImage(), 600);
+    writeln(doc.toString());
+     var link = document.querySelector('#dochref');
+        link.href = doc.createObjectURL();
+
 }
