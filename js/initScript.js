@@ -131,7 +131,9 @@ function main(files) {
         testFunc(doc1, doc2);
         
     };
+    if(files.length > 0) {
     fileReader.readAsArrayBuffer(files[0]);
+    }
 }
 
 function testFunc(doc1, doc2) {

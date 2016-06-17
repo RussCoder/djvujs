@@ -38,7 +38,7 @@ class IWImageWriter {
             pageBuffers[i] = buffer;
             tbsw.reset();
             dirm.flags[i] = 1; // страница без имени и заголовка
-            dirm.ids[i] = 'b' + i; // просто уникальный id
+            dirm.ids[i] = 'p' + i; // просто уникальный id
             dirm.sizes[i] = buffer.byteLength; // размеры
         }
         dw.writeDirmChunk(dirm);
