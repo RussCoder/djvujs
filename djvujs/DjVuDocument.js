@@ -139,6 +139,9 @@ class DjVuDocument {
         return str;
     }
     
+    /**
+     * Создает ссылку для скачивания документа
+     */
     createObjectURL() {
         var blob = new Blob([this.bs.buffer]);
         var url = URL.createObjectURL(blob);
@@ -229,5 +232,9 @@ class DjVuDocument {
         var doc = new DjVuDocument(newbuffer);
         Globals.Timer.end('sliceTime');
         return doc;
+    }
+
+    static concat(doc1, doc2) {
+        
     }
 }

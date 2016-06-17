@@ -19,10 +19,8 @@ class IWImageWriter {
     }
 
     createMultyPageDocument(imageArray) {
-        var bsw = new ByteStreamWriter();
-        bsw.writeStr('AT&T').writeStr('FORM')
-            .saveOffsetMark('fileSize').jump(4)
-            .writeStr('DJVM');
+        var dw = new DjVuWriter();
+        dw.startDJVM();
 
         var pageBuffers = new Array(imageArray.length);
         var dirm = {};
@@ -43,77 +41,13 @@ class IWImageWriter {
             dirm.ids[i] = 'p' + i; // просто уникальный id
             dirm.sizes[i] = buffer.byteLength; // размеры
         }
-        this.bsw = bsw;
-        this.writeDirmChunk(dirm);
+        dw.writeDirmChunk(dirm);
         for (var i = 0; i < imageArray.length; i++) {
-            this.writeFormChunkBuffer(pageBuffers[i]);
+            dw.writeFormChunkBuffer(pageBuffers[i]);
         }
-
-        for (var i = 0; i < imageArray.length; i++) {
-            bsw.rewriteInt32('DIRMoffsets', this.dirm.offsets[i]);
-        }
-
-        bsw.rewriteInt32('fileSize', bsw.offset - 4);
-        return new DjVuDocument(bsw.getBuffer());
-    }
-
-    writeFormChunkBuffer(buffer) {
-        //проверка на четную границу
-        if (this.bsw.offset & 1) {
-            this.bsw.writeByte(0);
-        }
-        var off = this.bsw.offset;
-        this.dirm.offsets.push(off);
-        this.bsw.writeBuffer(buffer);
-
-    }
-
-
-    //выполняет предварительную запись dirm без записи его длины и смещений
-    writeDirmChunk(dirm) {
-        this.dirm = dirm;
-        this.bsw.writeStr('DIRM').jump(4);
-
-        var startOffset = this.bsw.offset;
-        this.dirm.lengthOffset = startOffset - 4;
-        this.dirm.offsets = [];
-
-        this.bsw.writeByte(dirm.dflags)
-            .writeInt16(dirm.flags.length)
-            .saveOffsetMark('DIRMoffsets')
-            .jump(4 * dirm.flags.length);
-        this.dirm.offsetsOffset = startOffset + 3;
-
-        //начинаем фазу кодирования bzz;
-
-        var tmpBS = new ByteStreamWriter();
-        for (var i = 0; i < dirm.sizes.length; i++) {
-            tmpBS.writeInt24(dirm.sizes[i]);
-        }
-        for (var i = 0; i < dirm.flags.length; i++) {
-            tmpBS.writeByte(dirm.flags[i]);
-        }
-        for (var i = 0; i < dirm.ids.length; i++) {
-            tmpBS.writeStrNT(dirm.ids[i]);
-        }
-        //todo для BWT конечный символ EOB - временный код
-        tmpBS.writeByte(0);
-
-        var tmpBuffer = tmpBS.getBuffer();
-
-        var bzzBS = new ByteStreamWriter();
-        var zp = new ZPEncoder(bzzBS);
-        var bzz = new BZZEncoder(zp);
-        bzz.encode(tmpBuffer);
-        var encodedBuffer = bzzBS.getBuffer();
-
-        //записываем полученный буфер в основной поток
-        var tmpBS = new ByteStream(encodedBuffer);
-        this.bsw.writeByteStream(tmpBS);
-
-        //записали длину 
-        this.bsw.rewriteInt32(this.dirm.lengthOffset, this.bsw.offset - startOffset);
-    }
+        
+        return new DjVuDocument(dw.getBuffer());
+    }    
 
     /**
      * Кодирует и записывает в поток 1 картинку
@@ -160,8 +94,8 @@ class IWImageWriter {
             }
         }
         zp.eflush();
-        bsw.rewriteInt32('formSize', bsw.offset - bsw.offsetMarks['formSize'] - 4);
-        bsw.rewriteInt32('BG44Size', bsw.offset - bsw.offsetMarks['BG44Size'] - 4);
+        bsw.rewriteSize('formSize');
+        bsw.rewriteSize('BG44Size');
     }
 
     createOnePageDocument(imageData) {

@@ -50,7 +50,7 @@ class ByteStreamWriter {
     }
 
     /**
-     * Переазапись числа. Принимает смещение или метку смещения и число
+     * Перезапись числа. Принимает смещение или метку смещения и число
      */
     rewriteInt32(off, val) {
         var xoff = off;
@@ -59,6 +59,16 @@ class ByteStreamWriter {
             this.offsetMarks[off] += 4;
         }
         this.viewer.setInt32(xoff, val);
+    }
+
+
+    /**
+     * Перезапись размера в 4 байта по сохраненной метке
+     */
+    rewriteSize(offmark) {
+        if (!this.offsetMarks[offmark]) throw new Error('Unexisting offset mark');
+        var xoff = this.offsetMarks[offmark];
+        this.viewer.setInt32(xoff, this.offset - xoff - 4);
     }
 
     getBuffer() {
