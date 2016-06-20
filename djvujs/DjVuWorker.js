@@ -11,7 +11,7 @@ class DjVuWorker {
         this.worker.onmessage = (event) => {
             this.messageHandler(event);
         };
-        this.getPageImageDataCallback = null;
+        this.callbacks = new TempRepository();
     }
 
     _postMessage(message) {
@@ -20,10 +20,15 @@ class DjVuWorker {
 
     messageHandler(event) {
         var obj = event.data;
+        var callback = this.callbacks.fetch(obj.id);
         switch (obj.command) {
             case 'getPageImageData':
-                if (this.getPageImageDataCallback)
-                    this.getPageImageDataCallback(obj.imageData);
+                console.log(+new Date());
+                // производим "сборку" ImageData
+                callback(new ImageData(new Uint8ClampedArray(obj.buffer), obj.width, obj.height));
+                console.log('--**', +new Date());
+            case 'createDocument':
+                callback();
                 break;
             default:
                 console.log("Unexpected message from DjVuWorker: ", obj);
@@ -31,13 +36,40 @@ class DjVuWorker {
     }
 
     createDocument(buffer) {
-        console.log(buffer.byteLength);
-        this.worker.postMessage({ command: 'createDocument', buffer: buffer }, [buffer]);
-        console.log(buffer.byteLength);
+        return new Promise((resolve, reject) => {
+            console.log(buffer.byteLength);
+            var id = this.callbacks.add(resolve);
+            console.log(+new Date());
+            this.worker.postMessage({ command: 'createDocument', id: id, buffer: buffer }, [buffer]);
+            console.log(buffer.byteLength);
+            console.log('/**/', +new Date());
+        });
     }
 
-    getPageImageData(pagenumber, callback) {
-        this.worker.postMessage({ command: 'getPageImageData', pagenumber: pagenumber });
-        this.getPageImageDataCallback = callback;
+    getPageImageData(pagenumber) {
+        return new Promise((resolve, reject) => {
+            var id = this.callbacks.add(resolve);
+            this.worker.postMessage({ command: 'getPageImageData', id: id, pagenumber: pagenumber });
+        });
+    }
+}
+
+class TempRepository {
+    constructor() {
+        this.data = {};
+        this.id = 0;
+    }
+
+    add(obj) {
+        var id = this.id++;
+        this.data[id] = obj;
+        return id;
+    }
+
+    fetch(id) {
+        id = +id;
+        var obj = this.data[id];
+        delete this.data[id];
+        return obj;
     }
 }

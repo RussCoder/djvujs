@@ -25,7 +25,7 @@ importScripts(
   "ByteStreamWriter.js",
   "IWImageWriter.js",
   "DjVuWriter.js");
-  
+
 var djvuDocument; // главный объект документа
 
 // обрабочик приема событий
@@ -33,7 +33,7 @@ onmessage = function (oEvent) {
   var obj = oEvent.data;
   switch (obj.command) {
     case 'createDocument':
-      djvuDocument = new DjVuDocument(obj.buffer);
+      createDocument(obj);
       break;
     case 'getPageImageData':
       getPageImageData(obj);
@@ -43,8 +43,25 @@ onmessage = function (oEvent) {
   }
 };
 
+function createDocument(obj) {
+  var time = performance.now();
+  console.log(+new Date());
+  djvuDocument = new DjVuDocument(obj.buffer);
+  console.log('Creation Worker', performance.now() - time);
+  postMessage({ command: 'createDocument', id: obj.id });
+}
+
 function getPageImageData(obj) {
   var pagenum = +obj.pagenumber;
   var imageData = djvuDocument.pages[pagenum].getImage();
-  postMessage({ command: 'getPageImageData', imageData: imageData });
+  console.log('ImageDataSize ', imageData.data.byteLength);
+  console.log(+new Date());
+  postMessage({
+    command: 'getPageImageData',
+    id: obj.id,
+    buffer: imageData.data.buffer,
+    width: imageData.width,
+    height: imageData.height
+  }, [imageData.data.buffer]);
+  console.log('ImageDataSize ', imageData.data.byteLength);
 }
