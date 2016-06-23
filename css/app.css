@@ -1,0 +1,34 @@
+.head {
+    width: 700px;
+    margin: 5px auto;  
+    box-shadow: 0 0 1px gray;
+    padding: 20px;
+    color: gray;   
+}
+
+.body {
+    width: 700px;
+    margin: 0 auto;
+    box-shadow: 0 0 1px gray;
+    padding: 20px;
+    overflow: hidden;
+}
+
+.funcelem {
+    float: left;
+    width: 100px;
+    height: 70px;
+    box-shadow: 0 0 1px gray;
+    vertical-align: middle;
+    text-align: center;
+    font-weight: bold;
+    font-size:  large;
+    color: gray;
+    margin: 15px;
+    padding: 20px;
+}
+
+.funcelem:hover {
+    cursor: pointer;
+    background: #eee;
+}

@@ -91,10 +91,24 @@ function readDjvu(buf) {
     var link = document.querySelector('#dochref');
     var time = performance.now();
     console.log("Buffer length = " + buf.byteLength);
-    var doc = new DjVuDocument(buf);
+    //var doc = new DjVuDocument(buf);
     Globals.counter = 0;
-    /*var worker = new DjVuWorker();
-    worker.createDocument(buf);*/
+    var worker = new DjVuWorker();
+
+    setTimeout(() => {
+        Globals.Timer.start('TotalTime');
+
+        worker.createDocument(buf)
+            .then(() => {
+                Globals.Timer.end('TotalTime', true);
+                return worker.getPageImageData(3);
+            })
+            .then((imageData) => {
+                Globals.drawImageSmooth(imageData, 600);
+                Globals.Timer.end('TotalTime', true);
+            });
+    }, 1000);
+    /* */
     /*worker.getPageImageData(3, function (imageData) {
         //Globals.canvasCtx.putImageData(imageData, 0, 0);
         Globals.drawImageSmooth(imageData, 600);
@@ -105,8 +119,8 @@ function readDjvu(buf) {
     //writeln(doc.toString());
     //writeln(djvuPage.toString());
 
-    Globals.drawImageSmooth(doc.pages[3].getImage(), 600);
-    writeln(doc.toString());
+    //Globals.drawImageSmooth(doc.pages[3].getImage(), 600);
+    // writeln(doc.toString());
     console.log(Globals.Timer.toString());
     console.log("Total execution time = ", performance.now() - time);
 }
@@ -129,10 +143,10 @@ function main(files) {
 
         doc2 = new DjVuDocument(this.result);
         testFunc(doc1, doc2);
-        
+
     };
-    if(files.length > 0) {
-    fileReader.readAsArrayBuffer(files[0]);
+    if (files.length > 0) {
+        fileReader.readAsArrayBuffer(files[0]);
     }
 }
 
@@ -140,7 +154,7 @@ function testFunc(doc1, doc2) {
     var doc = DjVuDocument.concat(doc1, doc2);
     Globals.drawImageSmooth(doc.pages[0].getImage(), 600);
     writeln(doc.toString());
-     var link = document.querySelector('#dochref');
-        link.href = doc.createObjectURL();
+    var link = document.querySelector('#dochref');
+    link.href = doc.createObjectURL();
 
 }
