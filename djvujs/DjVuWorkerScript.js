@@ -27,6 +27,8 @@ importScripts(
   "DjVuWriter.js");
 
 var djvuDocument; // главный объект документа
+var Globals = {};
+Globals.Timer = new DebugTimer();
 
 // обрабочик приема событий
 onmessage = function (oEvent) {
@@ -38,17 +40,27 @@ onmessage = function (oEvent) {
     case 'getPageImageData':
       getPageImageData(obj);
       break;
+    case 'slice':
+      slice(obj);
+      break;
     default:
       postMessage({ command: 'Error', data: 'Undefiend command' });
   }
 };
+
+function slice(obj) {
+  var ndoc = djvuDocument.slice(obj.from, obj.to);
+  console.log("Slice" , +new Date());
+  postMessage({command: 'slice', id: obj.id, buffer: ndoc.buffer}, [ndoc.buffer]);
+  console.log("Slice" , +new Date());
+}
 
 function createDocument(obj) {
   var time = performance.now();
   console.log(+new Date());
   djvuDocument = new DjVuDocument(obj.buffer);
   console.log('Creation Worker', performance.now() - time);
-  postMessage({ command: 'createDocument', id: obj.id });
+  postMessage({ command: 'createDocument', id: obj.id, pagenumber: djvuDocument.pages.length});
 }
 
 function getPageImageData(obj) {

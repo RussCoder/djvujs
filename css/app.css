@@ -3,15 +3,17 @@
     margin: 5px auto;  
     box-shadow: 0 0 1px gray;
     padding: 20px;
-    color: gray;   
+       
 }
 
 .body {
+    color: gray;
     width: 700px;
     margin: 0 auto;
     box-shadow: 0 0 1px gray;
     padding: 20px;
     overflow: hidden;
+    margin: 5px auto;
 }
 
 .funcelem {
@@ -31,4 +33,42 @@
 .funcelem:hover {
     cursor: pointer;
     background: #eee;
+}
+
+.inputext {
+    display: inline-block;
+    margin: 5px;
+    width: 150px;
+}
+
+#sitename:hover {
+    cursor: pointer;
+    text-shadow: 0 0 1px gray;
+}
+
+#finput {
+    margin: 10px;
+}
+
+.filehref, #filehref {
+    text-decoration: none;
+    border: 1px solid orangered;
+    padding: 3px;
+    margin: 3px;
+    border-radius: 5px;
+    color: orangered;
+    display: none;
+}
+
+.filehref:hover, #filehref:hover {
+    text-shadow: 0 0 1px orangered;
+}
+
+#sliceblock, #funcblock {
+    display: none;
+}
+
+#warnmess {
+    color: orangered;
+    font-weight: bold;
 }

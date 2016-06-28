@@ -98,7 +98,7 @@ function readDjvu(buf) {
     setTimeout(() => {
         Globals.Timer.start('TotalTime');
 
-        worker.createDocument(buf)
+        /*worker.createDocument(buf)
             .then(() => {
                 Globals.Timer.end('TotalTime', true);
                 return worker.getPageImageData(3);
@@ -106,7 +106,18 @@ function readDjvu(buf) {
             .then((imageData) => {
                 Globals.drawImageSmooth(imageData, 600);
                 Globals.Timer.end('TotalTime', true);
+            });*/
+
+            worker.createDocument(buf)
+            .then(() => {
+                Globals.Timer.end('TotalTime', true);
+                return worker.slice(5, 1000);
+            })
+            .then((buffer) => {              
+                link.href = DjVuWorker.createArrayBufferURL(buffer)
+                Globals.Timer.end('TotalTime', true);
             });
+
     }, 1000);
     /* */
     /*worker.getPageImageData(3, function (imageData) {
