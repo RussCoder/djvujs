@@ -46,30 +46,23 @@ onmessage = function (oEvent) {
         break;
     }
   } catch (error) {
-      postMessage({ command: 'Error', data: 'Undefiend command', id: obj.id, message: error.message });
+    postMessage({ command: 'Error', data: 'Undefiend command', id: obj.id, message: error.message });
   }
 };
 
 function slice(obj) {
   var ndoc = djvuDocument.slice(obj.from, obj.to);
-  console.log("Slice", +new Date());
   postMessage({ command: 'slice', id: obj.id, buffer: ndoc.buffer }, [ndoc.buffer]);
-  console.log("Slice", +new Date());
 }
 
 function createDocument(obj) {
-  var time = performance.now();
-  console.log(+new Date());
   djvuDocument = new DjVuDocument(obj.buffer);
-  console.log('Creation Worker', performance.now() - time);
   postMessage({ command: 'createDocument', id: obj.id, pagenumber: djvuDocument.pages.length });
 }
 
 function getPageImageData(obj) {
   var pagenum = +obj.pagenumber;
   var imageData = djvuDocument.pages[pagenum].getImage();
-  console.log('ImageDataSize ', imageData.data.byteLength);
-  console.log(+new Date());
   postMessage({
     command: 'getPageImageData',
     id: obj.id,
@@ -77,5 +70,4 @@ function getPageImageData(obj) {
     width: imageData.width,
     height: imageData.height
   }, [imageData.data.buffer]);
-  console.log('ImageDataSize ', imageData.data.byteLength);
 }

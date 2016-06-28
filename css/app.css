@@ -81,7 +81,7 @@
     color: blue;
 }
 
-#sitemenu a {
+#sitemenu a, .hrefbut {
     margin: 5px;
     padding: 5px;
     text-decoration: none;
@@ -91,6 +91,6 @@
     color: gray;
 }
 
-#sitemenu a:hover {
+#sitemenu a:hover, .hrefbut:hover {
     background: #eee;
 }
