@@ -1,5 +1,11 @@
 'use strict';
 
+class DjVuError {
+    constructor(message) {
+        this.message = message;
+    }
+}
+
 class DIRMChunk extends IFFChunk {
     constructor(bs) {
         super(bs);
@@ -47,6 +53,9 @@ class DjVuDocument {
         this.buffer = arraybuffer;
         this.bs = new ByteStream(arraybuffer);
         this.formatID = this.bs.readStr4();
+        if(this.formatID !== 'AT&T') {
+            throw new DjVuError("Incorrect file format");
+        }
         this.id = this.bs.readStr4();
         this.length = this.bs.getInt32();
         this.id += this.bs.readStr4();

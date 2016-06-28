@@ -16,6 +16,10 @@
         <p style="font-style: italic">
             Сайт находится в тестовом режиме. Некоторые функции могут работать некорректно.
         </p>
+        <div id="sitemenu">
+            <a href="/">Главная</a>
+            <a href="/about.html">О сайте</a>
+        </div>
     </div>
     <div class="body" id="funcmenublock">
         <div id="slicefunc" class="funcelem">
@@ -24,17 +28,22 @@
         <div id="picturefunc" class="funcelem">
             Картинки в DjVu
         </div>
-        <div id="cancatfunc" class="funcelem">
+        <div id="cancatfunc" class="disabledfunc">
             Объединить DjVu
         </div>
-        <div id="addpicfunc" class="funcelem">
+        <div id="addpicfunc" class="disabledfunc">
             Добавить картинки к DjVu
         </div>
     </div>
-    <div id="funcblock" class="body">
+    <div id="funcblock" class="body funcblock">
         <input type="file" id="finput"><br>
         <p id="warnmess"></p>
         <div class="funcblock" id="sliceblock">
+            <p class="describing">
+                Выберите djvu документ. Введите номер первой и последней страницы, которые Вы хотите поместить в новый документ.
+            </p>
+            <p class="info"></p>
+            <p class="message"></p>
             <span class="inputext">Номер первой страницы</span>
             <input type="number" id="firstnum"><br>
             <span class="inputext">Номер последней страницы</span>

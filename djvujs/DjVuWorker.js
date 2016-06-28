@@ -11,6 +11,10 @@ class DjVuWorker {
         this.worker.onmessage = (event) => {
             this.messageHandler(event);
         };
+
+        this.worker.onerror = (event) => {
+            this.errorHandler(event);
+        };
         this.callbacks = new TempRepository();
         this.pagenumber;
     }
@@ -19,22 +23,29 @@ class DjVuWorker {
         this.worker.postMessage(message);
     }
 
+    errorHandler(event) {
+
+    }
+
     messageHandler(event) {
         var obj = event.data;
-        var callback = this.callbacks.fetch(obj.id).resolve;
+        var callback = this.callbacks.fetch(obj.id);
         switch (obj.command) {
+            case 'Error':
+                callback.reject(obj);
+            break;
             case 'getPageImageData':
                 console.log(+new Date());
                 // производим "сборку" ImageData
-                callback(new ImageData(new Uint8ClampedArray(obj.buffer), obj.width, obj.height));
+                callback.resolve(new ImageData(new Uint8ClampedArray(obj.buffer), obj.width, obj.height));
                 console.log('--**', +new Date());
                 break;
             case 'createDocument':
                 this.pagenumber = obj.pagenumber;
-                callback();
+                callback.resolve();
                 break;
             case 'slice':
-                callback(obj.buffer);
+                callback.resolve(obj.buffer);
                 break;
             default:
                 console.log("Unexpected message from DjVuWorker: ", obj);
@@ -45,10 +56,8 @@ class DjVuWorker {
         return new Promise((resolve, reject) => {
             console.log(buffer.byteLength);
             var id = this.callbacks.add({ resolve: resolve, reject: reject });
-            console.log('/**/', +new Date());
             this.worker.postMessage({ command: 'createDocument', id: id, buffer: buffer }, [buffer]);
-            //console.log(buffer.byteLength);
-            console.log('/**/', +new Date());
+
         });
     }
 
@@ -80,6 +89,10 @@ class TempRepository {
     constructor() {
         this.data = {};
         this.id = 0;
+    }
+
+    get lastID() {
+        return this.id - 1;
     }
 
     add(obj) {

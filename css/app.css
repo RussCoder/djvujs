@@ -16,7 +16,7 @@
     margin: 5px auto;
 }
 
-.funcelem {
+.funcelem, .disabledfunc {
     float: left;
     width: 100px;
     height: 70px;
@@ -28,6 +28,11 @@
     color: gray;
     margin: 15px;
     padding: 20px;
+}
+
+.disabledfunc {
+    text-shadow: 0 0 1px gray;
+    background: #eee;
 }
 
 .funcelem:hover {
@@ -71,4 +76,21 @@
 #warnmess {
     color: orangered;
     font-weight: bold;
+}
+#procmess {
+    color: blue;
+}
+
+#sitemenu a {
+    margin: 5px;
+    padding: 5px;
+    text-decoration: none;
+    cursor: pointer;
+    border-radius: 3px;
+    box-shadow: 0 0 1px gray;
+    color: gray;
+}
+
+#sitemenu a:hover {
+    background: #eee;
 }
