@@ -6,8 +6,8 @@
  */
 class DjVuWorker {
     constructor(path) {
-        path = path || 'djvujs/DjVuWorkerScript.js';
-        this.worker = new Worker(path);
+        this.path = path || 'djvujs/DjVuWorkerScript.js';
+        this.worker = new Worker(this.path);
         this.worker.onmessage = (event) => {
             this.messageHandler(event);
         };
@@ -17,6 +17,18 @@ class DjVuWorker {
         };
         this.callbacks = new TempRepository();
         this.pagenumber;
+    }
+
+    reset() {
+        this.worker.terminate();
+        this.worker = new Worker(this.path);
+        this.worker.onmessage = (event) => {
+            this.messageHandler(event);
+        };
+
+        this.worker.onerror = (event) => {
+            this.errorHandler(event);
+        };
     }
 
     _postMessage(message) {
@@ -81,7 +93,7 @@ class DjVuWorker {
         });
     }
 
-    createDocumentFromPictures(imageArray) {
+    createDocumentFromPictures(imageArray, slicenumber, delayInit, grayscale) {
         var simpleImages = new Array(imageArray.length);
         var buffers = new Array(imageArray.length);
         for (var i = 0; i < imageArray.length; i++) {
@@ -100,6 +112,9 @@ class DjVuWorker {
                 command: 'createDocumentFromPictures',
                 id: id,
                 images: simpleImages,
+                slicenumber: slicenumber,
+                delayInit: delayInit,
+                grayscale: grayscale
             }, buffers);
         });
     }
@@ -131,7 +146,7 @@ class TempRepository {
     }
 
     fetch(id) {
-        if(id === undefined) {
+        if (id === undefined) {
             return null;
         }
         id = +id;

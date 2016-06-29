@@ -34,6 +34,12 @@
         <div id="addpicfunc" class="disabledfunc">
             Добавить картинки к DjVu
         </div>
+        <div id="viewfunc" class="disabledfunc">
+            Просмотреть DjVu
+        </div>
+        <div id="metadatafunc" class="disabledfunc">
+           Метаданные DjVu
+        </div>
     </div>
     <div id="funcblock" class="body funcblock">
         <input type="file" id="finput"><br>
@@ -53,12 +59,19 @@
 
         <div class="funcblock" id="pictureblock">
             <p class="describing">
-                Выберите одну или несколько картинок для создания djvu документа. 
-                Можно настраивать качество изображение (влияет на размер файла).
+                Выберите одну или несколько картинок для создания djvu документа. Можно настраивать качество изображение (влияет на размер
+                файла).
             </p>
             <p class="info"></p>
-            <p class="message"></p>
-        
+            <p>Выбетите качество кодирования. При хорошем качестве изображение в djvu весит примерно вдвое меньше, чем в формате
+                jpeg. Другие варианты, еще более экономичны.</p>
+            <form>
+                <input name="imagequality" type="radio" value="100">Хорошее
+                <input name="imagequality" type="radio" value="90" checked>Среднее
+                <input name="imagequality" type="radio" value="80">Плохое
+            </form><br><br>
+            <input type="checkbox" id="grayscale" value="1">Серое изображение (отбросить цвета при кодировании)
+            <br><br>
             <input type="button" value="Создать документ" id="picturebut" disabled>
         </div>
 

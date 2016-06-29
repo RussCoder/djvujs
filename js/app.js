@@ -11,6 +11,12 @@ function reset(event) {
     event.stopPropagation();
     $('.funcblock').hide(400);
     $('#funcmenublock').show(400);
+    $('#finput').wrap('<form>').closest('form').get(0).reset();
+    $('#finput').unwrap().removeAttr('multiple');
+    $('.info').text('');
+    $('#procmess').text('');
+    $('#filehref').hide();
+    djvuWorker.reset();
 }
 
 
@@ -28,6 +34,7 @@ function pictureFuncPrepare() {
 
 function readImagesAndCreateDocument() {
     var files = $('#finput')[0].files;
+    $('#filehref').hide();
     var i = 0;
     var canvas = document.createElement('canvas');
     var ctx = canvas.getContext('2d');
@@ -57,7 +64,11 @@ function readImagesAndCreateDocument() {
 }
 
 function createPicDocument(imageArray) {
-    djvuWorker.createDocumentFromPictures(imageArray)
+    var delayInit = 0;
+    var slices = +$('input[name=imagequality]:checked').val();
+    var grayscale = $('#grayscale').prop('checked') ? 1 : 0;
+
+    djvuWorker.createDocumentFromPictures(imageArray, slices, delayInit, grayscale)
         .then((buffer) => {
             $("#procmess").text("Задание выполненено !!!");
             $('#filehref').prop('href', DjVuWorker.createArrayBufferURL(buffer)).show(400);

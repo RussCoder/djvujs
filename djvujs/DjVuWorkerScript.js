@@ -60,7 +60,7 @@ function createDocumentFromPictures(obj) {
   for (var i = 0; i < sims.length; i++) {
     imageArray[i] = new ImageData(new Uint8ClampedArray(sims[i].buffer), sims[i].width, sims[i].height);
   }
-  var iw = new IWImageWriter();
+  var iw = new IWImageWriter(obj.slicenumber, obj.delayInit, obj.grayscale);
   iw.onprocess = (percent) => {
     postMessage({command: 'Process', percent: percent});
   }
