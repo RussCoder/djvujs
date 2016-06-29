@@ -46,6 +46,12 @@
     width: 150px;
 }
 
+#sitename {
+    text-decoration: none;
+    color: gray;
+    font-size:  xx-large;
+    font-weight: bold;
+}
 #sitename:hover {
     cursor: pointer;
     text-shadow: 0 0 1px gray;
@@ -69,7 +75,7 @@
     text-shadow: 0 0 1px orangered;
 }
 
-#sliceblock, #funcblock {
+#sliceblock, .funcblock {
     display: none;
 }
 

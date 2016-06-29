@@ -44,11 +44,30 @@ onmessage = function (oEvent) {
       case 'slice':
         slice(obj);
         break;
+      case 'createDocumentFromPictures':
+        createDocumentFromPictures(obj);
+        break;
     }
   } catch (error) {
     postMessage({ command: 'Error', data: 'Undefiend command', id: obj.id, message: error.message });
   }
 };
+
+function createDocumentFromPictures(obj) {
+  var sims = obj.images;
+  var imageArray = new Array(sims.length);
+  // собираем объекты ImageData
+  for (var i = 0; i < sims.length; i++) {
+    imageArray[i] = new ImageData(new Uint8ClampedArray(sims[i].buffer), sims[i].width, sims[i].height);
+  }
+  var iw = new IWImageWriter();
+  iw.onprocess = (percent) => {
+    postMessage({command: 'Process', percent: percent});
+  }
+  var ndoc = iw.createMultyPageDocument(imageArray);
+  postMessage({ command: 'createDocumentFromPictures', id: obj.id, buffer: ndoc.buffer }, [ndoc.buffer]);
+}
+
 
 function slice(obj) {
   var ndoc = djvuDocument.slice(obj.from, obj.to);

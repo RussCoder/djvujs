@@ -33,7 +33,10 @@ class DjVuWorker {
         switch (obj.command) {
             case 'Error':
                 callback.reject(obj);
-            break;
+                break;
+            case 'Process':
+                this.onprocess ? this.onprocess(obj.percent) : 0;
+                break;
             case 'getPageImageData':
                 console.log(+new Date());
                 // производим "сборку" ImageData
@@ -45,6 +48,9 @@ class DjVuWorker {
                 callback.resolve();
                 break;
             case 'slice':
+                callback.resolve(obj.buffer);
+                break;
+            case 'createDocumentFromPictures':
                 callback.resolve(obj.buffer);
                 break;
             default:
@@ -75,6 +81,29 @@ class DjVuWorker {
         });
     }
 
+    createDocumentFromPictures(imageArray) {
+        var simpleImages = new Array(imageArray.length);
+        var buffers = new Array(imageArray.length);
+        for (var i = 0; i < imageArray.length; i++) {
+            // разлагаем картинки для передачи в фоновый поток по частям
+            simpleImages[i] = {
+                buffer: imageArray[i].data.buffer,
+                width: imageArray[i].width,
+                height: imageArray[i].height
+            };
+            buffers[i] = imageArray[i].data.buffer;
+        }
+
+        return new Promise((resolve, reject) => {
+            var id = this.callbacks.add({ resolve: resolve, reject: reject });
+            this.worker.postMessage({
+                command: 'createDocumentFromPictures',
+                id: id,
+                images: simpleImages,
+            }, buffers);
+        });
+    }
+
     static createArrayBufferURL(buffer) {
         var blob = new Blob([buffer]);
         var url = URL.createObjectURL(blob);
@@ -102,6 +131,9 @@ class TempRepository {
     }
 
     fetch(id) {
+        if(id === undefined) {
+            return null;
+        }
         id = +id;
         var obj = this.data[id];
         delete this.data[id];

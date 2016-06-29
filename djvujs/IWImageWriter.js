@@ -9,6 +9,7 @@ class IWImageWriter {
         this.grayscale = grayscale || 0;
         // задержка кодирования цветовой информации
         this.delayInit = (delayInit & 127) || 0;
+        this.onprocess = undefined; // обработчик события записи страницы
     }
 
     get width() {
@@ -21,7 +22,7 @@ class IWImageWriter {
     createMultyPageDocument(imageArray) {
         var dw = new DjVuWriter();
         dw.startDJVM();
-
+        var length = imageArray.length;
         var pageBuffers = new Array(imageArray.length);
         var dirm = {};
         this.dirm = dirm;
@@ -40,14 +41,15 @@ class IWImageWriter {
             dirm.flags[i] = 1; // страница без имени и заголовка
             dirm.ids[i] = 'p' + i; // просто уникальный id
             dirm.sizes[i] = buffer.byteLength; // размеры
+            this.onprocess ? this.onprocess((i + 1) / length) : 0; // событие обработки очередной страницы
         }
         dw.writeDirmChunk(dirm);
         for (var i = 0; i < imageArray.length; i++) {
             dw.writeFormChunkBuffer(pageBuffers[i]);
         }
-        
+
         return new DjVuDocument(dw.getBuffer());
-    }    
+    }
 
     /**
      * Кодирует и записывает в поток 1 картинку
