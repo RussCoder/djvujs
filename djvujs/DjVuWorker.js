@@ -65,14 +65,61 @@ class DjVuWorker {
             case 'createDocumentFromPictures':
                 callback.resolve(obj.buffer);
                 break;
+            case 'startMultyPageDocument':
+                callback.resolve();
+                break;
+            case 'addPageToDocument':
+                callback.resolve();
+                break;
+            case 'endMultyPageDocument':
+                callback.resolve(obj.buffer);
+                break;
             default:
                 console.log("Unexpected message from DjVuWorker: ", obj);
         }
     }
 
+    startMultyPageDocument(slicenumber, delayInit, grayscale) {
+        return new Promise((resolve, reject) => {
+            var id = this.callbacks.add({ resolve: resolve, reject: reject });
+            this.worker.postMessage({
+                command: 'startMultyPageDocument',
+                id: id,
+                slicenumber: slicenumber,
+                delayInit: delayInit,
+                grayscale: grayscale
+            });
+        });
+    }
+
+    addPageToDocument(imageData) {
+        var simpleImage = {
+            buffer: imageData.data.buffer,
+            width: imageData.width,
+            height: imageData.height
+        };
+        return new Promise((resolve, reject) => {
+            var id = this.callbacks.add({ resolve: resolve, reject: reject });
+            this.worker.postMessage({
+                command: 'addPageToDocument',
+                id: id,
+                simpleImage: simpleImage
+            }, [simpleImage.buffer]);
+        });
+    }
+
+    endMultyPageDocument() {
+        return new Promise((resolve, reject) => {
+            var id = this.callbacks.add({ resolve: resolve, reject: reject });
+            this.worker.postMessage({
+                command: 'endMultyPageDocument',
+                id: id
+            });
+        });
+    }
+
     createDocument(buffer) {
         return new Promise((resolve, reject) => {
-            console.log(buffer.byteLength);
             var id = this.callbacks.add({ resolve: resolve, reject: reject });
             this.worker.postMessage({ command: 'createDocument', id: id, buffer: buffer }, [buffer]);
 

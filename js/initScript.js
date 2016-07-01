@@ -33,8 +33,8 @@ window.onload = function () {
     Globals.dict = [];
     Globals.img = document.getElementById('img');
     // testFunc();
-    loadDjVu();
-    //loadPicture();
+    //loadDjVu();
+    loadPicture();
 }
 function loadDjVu() {
     var xhr = new XMLHttpRequest();
@@ -50,7 +50,7 @@ function loadDjVu() {
 }
 function loadPicture() {
     var xhr = new XMLHttpRequest();
-    xhr.open("GET", "samples/bear.jpg");
+    xhr.open("GET", "samples/bigfoto.jpg");
     xhr.responseType = "arraybuffer";
     xhr.onload = function (e) {
         console.log(e.loaded);
@@ -71,17 +71,22 @@ function readPicture(buffer) {
 
         c.drawImage(image, 0, 0);
         var imageData = c.getImageData(0, 0, image.width, image.height);
-        var iwiw = new IWImageWriter(90, 0, 0);
-        var doc = iwiw.createMultyPageDocument([imageData, imageData, imageData]);
+        var iwiw = new IWImageWriter(90, 0, 1);
+        // var doc = iwiw.createMultyPageDocument([imageData, imageData, imageData]);
+        iwiw.startMultyPageDocument();
+        iwiw.addPageToDocument(imageData);
+        //for (var i = 0; i < 5; i++) 
+        var buffer = iwiw.endMultyPageDocument();
+        //var doc = new DjVuDocument(buffer);
         // var doc = iwiw.createOnePageDocument(imageData);
         console.log('docCreateTime = ', performance.now() - pictureTotalTime);
         var link = document.querySelector('#dochref');
-        link.href = doc.createObjectURL();
+        link.href = DjVuWorker.createArrayBufferURL(buffer);
 
-        c.putImageData(doc.pages[0].getImage(), 0, 0);
+       // c.putImageData(doc.pages[0].getImage(), 0, 0);
         console.log('Counter', Globals.counter);
         //console.log('PZP', Globals.pzp.log.length, ' ', Globals.pzp.offset );
-        writeln(doc.toString());
+       // writeln(doc.toString());
         console.log('pictureTotalTime = ', performance.now() - pictureTotalTime);
     });
 
@@ -129,10 +134,10 @@ function main(files) {
 
         doc2 = new DjVuDocument(this.result);
         testFunc(doc1, doc2);
-        
+
     };
-    if(files.length > 0) {
-    fileReader.readAsArrayBuffer(files[0]);
+    if (files.length > 0) {
+        fileReader.readAsArrayBuffer(files[0]);
     }
 }
 
@@ -140,7 +145,7 @@ function testFunc(doc1, doc2) {
     var doc = DjVuDocument.concat(doc1, doc2);
     Globals.drawImageSmooth(doc.pages[0].getImage(), 600);
     writeln(doc.toString());
-     var link = document.querySelector('#dochref');
-        link.href = doc.createObjectURL();
+    var link = document.querySelector('#dochref');
+    link.href = doc.createObjectURL();
 
 }

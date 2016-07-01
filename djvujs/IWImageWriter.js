@@ -19,6 +19,43 @@ class IWImageWriter {
         return this.imageData.height;
     }
 
+    startMultyPageDocument() {
+        this.dw = new DjVuWriter();
+        this.dw.startDJVM();
+        this.pageBuffers = [];
+        var dirm = {};
+        this.dirm = dirm;
+        dirm.offsets = [];
+        dirm.dflags = 129; // 1000 0001
+        dirm.flags = [];
+        dirm.ids = [];
+        dirm.sizes = [];
+
+    }
+
+    addPageToDocument(imageData) {
+        var tbsw = new ByteStreamWriter(); // временный буфер для записи
+        this.writeImagePage(tbsw, imageData);
+        var buffer = tbsw.getBuffer();
+        this.pageBuffers.push(buffer);
+        this.dirm.flags.push(1); // страница без имени и заголовка
+        this.dirm.ids.push('p' + this.dirm.ids.length); // просто уникальный id
+        this.dirm.sizes.push(buffer.byteLength); // размеры
+    }
+
+    endMultyPageDocument() {
+        this.dw.writeDirmChunk(this.dirm);
+        var len = this.pageBuffers.length;
+        for (var i = 0; i < len; i++) {
+            this.dw.writeFormChunkBuffer(this.pageBuffers.shift());
+        }
+        var buffer = this.dw.getBuffer();
+        delete this.dw;
+        delete this.pageBuffers;
+        delete this.dirm;
+        return buffer;
+    }
+
     createMultyPageDocument(imageArray) {
         var dw = new DjVuWriter();
         dw.startDJVM();

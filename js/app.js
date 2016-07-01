@@ -33,13 +33,18 @@ function pictureFuncPrepare() {
 }
 
 function readImagesAndCreateDocument() {
+    var delayInit = 0;
+    var slices = +$('input[name=imagequality]:checked').val();
+    var grayscale = $('#grayscale').prop('checked') ? 1 : 0;
+
     var files = $('#finput')[0].files;
+    djvuWorker.startMultyPageDocument(slices, delayInit, grayscale)
     $('#filehref').hide();
     var i = 0;
     var canvas = document.createElement('canvas');
     var ctx = canvas.getContext('2d');
-    var imageArray = new Array(files.length);
-    $("#procmess").text("Загрузка файлов ...");
+    $("#procmess").text("Задание выполняется ...");
+
     var func = () => {
         createImageBitmap(files[i])
             .then((image) => {
@@ -47,21 +52,29 @@ function readImagesAndCreateDocument() {
                 canvas.height = image.height;
                 ctx.drawImage(image, 0, 0);
                 var imageData = ctx.getImageData(0, 0, image.width, image.height);
-                imageArray[i++] = imageData;
-                if (i < files.length) {
-                    func();
-                }
-                else {
-                    createPicDocument(imageArray);
-                    $("#procmess").text("Задание выполняется ...");
-                }
+                return djvuWorker.addPageToDocument(imageData);
             },
             (e) => {
                 $("#procmess").text("Ошибка при загрузке файлов! " + e.message);
+            })
+            .then(() => {
+                if (++i < files.length) {                    
+                    $("#procmess").text("Задание выполняется ... " + Math.round(i / files.length * 100) + ' %');
+                    func();
+                }
+                else {
+                    $("#procmess").text("Сборка файла ... ");
+                    djvuWorker.endMultyPageDocument()
+                        .then((buffer) => {
+                            $("#procmess").text("Задание выполненено !!!");
+                            $('#filehref').prop('href', DjVuWorker.createArrayBufferURL(buffer)).show(400);
+                        });
+                }
             });
     }
     func();
 }
+
 
 function createPicDocument(imageArray) {
     var delayInit = 0;

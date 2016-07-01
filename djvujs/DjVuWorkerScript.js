@@ -27,6 +27,7 @@ importScripts(
   "DjVuWriter.js");
 
 var djvuDocument; // главный объект документа
+var iwiw; // объект записи документов
 var Globals = {};
 Globals.Timer = new DebugTimer();
 
@@ -47,11 +48,37 @@ onmessage = function (oEvent) {
       case 'createDocumentFromPictures':
         createDocumentFromPictures(obj);
         break;
+      case 'startMultyPageDocument':
+        startMultyPageDocument(obj)
+        break;
+      case 'addPageToDocument':
+        addPageToDocument(obj);
+        break;
+      case 'endMultyPageDocument':
+        endMultyPageDocument(obj);
+        break;
     }
   } catch (error) {
-    postMessage({ command: 'Error', data: 'Undefiend command', id: obj.id, message: error.message });
+    postMessage({ command: 'Error', id: obj.id, message: error.message });
   }
 };
+
+function startMultyPageDocument(obj) {
+  iwiw = new IWImageWriter(obj.slicenumber, obj.delayInit, obj.grayscale);
+  iwiw.startMultyPageDocument();
+  postMessage({ command: 'createDocumentFromPictures', id: obj.id });
+}
+
+function addPageToDocument(obj) {
+  var imageData = new ImageData(new Uint8ClampedArray(obj.simpleImage.buffer), obj.simpleImage.width, obj.simpleImage.height);
+  iwiw.addPageToDocument(imageData);
+  postMessage({ command: 'addPageToDocument', id: obj.id });
+}
+
+function endMultyPageDocument(obj) {
+  var buffer = iwiw.endMultyPageDocument();
+  postMessage({ command: 'endMultyPageDocument', id: obj.id, buffer: buffer}, [buffer]);
+}
 
 function createDocumentFromPictures(obj) {
   var sims = obj.images;
@@ -62,7 +89,7 @@ function createDocumentFromPictures(obj) {
   }
   var iw = new IWImageWriter(obj.slicenumber, obj.delayInit, obj.grayscale);
   iw.onprocess = (percent) => {
-    postMessage({command: 'Process', percent: percent});
+    postMessage({ command: 'Process', percent: percent });
   }
   var ndoc = iw.createMultyPageDocument(imageArray);
   postMessage({ command: 'createDocumentFromPictures', id: obj.id, buffer: ndoc.buffer }, [ndoc.buffer]);
