@@ -233,12 +233,12 @@ class ZPDecoder extends ZPCodecBaseClass {
             this.a = this.z;
             //console.log("123");
 
-            if (this.pzp) {
-                var tmp = this.pzp.decode(ctx, n);
-                if (tmp != this.b) {
-                    throw new Exception('Bit dismatch');
-                }
-            }
+            /* if (this.pzp) {
+                 var tmp = this.pzp.decode(ctx, n);
+                 if (tmp != this.b) {
+                     throw new Exception('Bit dismatch');
+                 }
+             }*/
 
             return this.b;
         }
@@ -250,12 +250,12 @@ class ZPDecoder extends ZPCodecBaseClass {
 
         if (this.z > this.c) {
             this.b = 1 - this.b;
-            if (this.pzp) {
+            /*if (this.pzp) {
                 var tmp = this.pzp.decode(ctx, n);
                 if (tmp != this.b) {
                     throw new Exception('Bit dismatch');
                 }
-            }
+            }*/
             this.z = 0x10000 - this.z;
             this.a += this.z;
             this.c += this.z;
@@ -269,12 +269,12 @@ class ZPDecoder extends ZPCodecBaseClass {
             );
         }
         else {
-            if (this.pzp) {
+            /*if (this.pzp) {
                 var tmp = this.pzp.decode(ctx, n);
                 if (tmp != this.b) {
                     throw new Exception('Bit dismatch');
                 }
-            }
+            }*/
             if (this.a >= this.m[ctx[n]]) {
                 ctx[n] = this.up[ctx[n]];
             }
@@ -325,12 +325,12 @@ class ZPDecoder extends ZPCodecBaseClass {
             this.preload();
         this.f = Math.min(this.c, 0x7fff);
 
-        if (this.pzp) {
-            var tmp = this.pzp.decode();
-            if (tmp != this.b) {
-                throw new Exception('Bit dismatch');
-            }
-        }
+        /* if (this.pzp) {
+             var tmp = this.pzp.decode();
+             if (tmp != this.b) {
+                 throw new Exception('Bit dismatch');
+             }
+         }*/
 
         return this.b;
     }

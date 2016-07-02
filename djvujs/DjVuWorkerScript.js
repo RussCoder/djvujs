@@ -77,7 +77,7 @@ function addPageToDocument(obj) {
 
 function endMultyPageDocument(obj) {
   var buffer = iwiw.endMultyPageDocument();
-  postMessage({ command: 'endMultyPageDocument', id: obj.id, buffer: buffer}, [buffer]);
+  postMessage({ command: 'endMultyPageDocument', id: obj.id, buffer: buffer }, [buffer]);
 }
 
 function createDocumentFromPictures(obj) {

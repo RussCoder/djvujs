@@ -285,10 +285,9 @@ class IWEncoder extends IWCodecBaseClass {
         var indices = this.getBandBuckets(this.curband);
         var step = this.quant_hi[this.curband];
         if (this.curband) {
-            //смещение сегмента в массиве флагов
+            //смещение сегмента (bucket'а - bucket offset) в массиве флагов
             var boff = 0;
-            for (var j = indices.from; j <= indices.to; j++ ,
-                boff++) {
+            for (var j = indices.from; j <= indices.to; j++ , boff++) {
                 bstatetmp = 0;
                 var bucket = block.buckets[j];
                 var ebucket = eblock.buckets[j];
