@@ -12,22 +12,22 @@ class Bytemap extends Array {
 }
 
 //блок - структурная единица исходного изображения
-class Block {
+class Block extends Int16Array {
     constructor() {
+        super(1024);
+        var buffer = this.buffer;
         this.buckets = new Array(64);
+        var offset = 0;
         for (var i = 0; i < 64; i++) {
-            this.buckets[i] = new Int16Array(16);
+            this.buckets[i] = new Int16Array(buffer, offset, 16);
+            offset += 32;
         }
     }
     getCoef(n) {
-        var b = n >> 4;
-        var i = n % 16;
-        return this.buckets[b][i];
+        return this[n];
     }
     setCoef(n, val) {
-        var b = n >> 4;
-        var i = n % 16;
-        this.buckets[b][i] = val;
+        this[n] = val;
     }
 }
 
@@ -83,7 +83,7 @@ class IWCodecBaseClass {
         if (this.curband === 0) {
             for (var i = 0; i < 16; i++)
                 this.quant_lo[i] = this.quant_lo[i] >> 1;
-        } 
+        }
         this.curband++;
         if (this.curband === 10) {
             this.curband = 0;
