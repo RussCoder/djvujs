@@ -115,11 +115,13 @@ class IWEncoder extends IWCodecBaseClass {
     createBlocks(bitmap) {
         var blockRows = Math.ceil(this.height / 32);
         var blockCols = Math.ceil(this.width / 32);
+        var length = blockRows * blockCols;
+        var buffer = new ArrayBuffer(length << 11);  // выделяем память под все блоки
         // блоки исходного изображения
         this.blocks = [];
         for (var r = 0; r < blockRows; r++) {
             for (var c = 0; c < blockCols; c++) {
-                var block = new Block();
+                var block = new Block(buffer, (r * blockCols + c) << 11);
                 for (var i = 0; i < 1024; i++) {
                     /*var bits = [];
                     for (var j = 0; j < 10; j++) {
@@ -139,10 +141,11 @@ class IWEncoder extends IWCodecBaseClass {
                 this.blocks.push(block);
             }
         }
+        buffer = new ArrayBuffer(length << 11); // выделяем память под все блоки
         // блоки в которые будем класть закодированные биты
-        this.eblocks = new Array(this.blocks.length);
-        for (var i = 0; i < this.eblocks.length; i++) {
-            this.eblocks[i] = new Block();
+        this.eblocks = new Array(length);
+        for (var i = 0; i < length; i++) {
+            this.eblocks[i] = new Block(buffer, i << 11);
         }
     }
 

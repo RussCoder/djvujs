@@ -13,13 +13,12 @@ class Bytemap extends Array {
 
 //блок - структурная единица исходного изображения
 class Block extends Int16Array {
-    constructor() {
-        super(1024);
-        var buffer = this.buffer;
+    constructor(buffer, offset) {
+        super(buffer, offset, 1024);
         this.buckets = new Array(64);
-        var offset = 0;
+        var boff = 0; // bucket offset
         for (var i = 0; i < 64; i++) {
-            this.buckets[i] = new Int16Array(buffer, offset, 16);
+            this.buckets[i] = new Int16Array(buffer, offset | boff, 16);
             offset += 32;
         }
     }
