@@ -1,59 +1,11 @@
 'use strict';
 
-class DjVuError {
-    constructor(message) {
-        this.message = message;
-    }
-}
-
-class DIRMChunk extends IFFChunk {
-    constructor(bs) {
-        super(bs);
-        this.dflags = bs.byte();
-        this.nfiles = bs.getInt16();
-        this.offsets = [];
-        this.sizes = [];
-        this.flags = [];
-        this.ids = [];
-        for (var i = 0; i < this.nfiles; i++) {
-            this.offsets.push(bs.getInt32());
-        }
-        var bsbs = bs.fork(this.length - 3 - 4 * this.nfiles);
-        var bzz = new BZZDecoder(new ZPDecoder(bsbs));
-        var bsz = bzz.getByteStream();
-        for (var i = 0; i < this.nfiles; i++) {
-            this.sizes.push(bsz.getUint24());
-        }
-        for (var i = 0; i < this.nfiles; i++) {
-            this.flags.push(bsz.byte());
-        }
-        for (var i = 0; i < this.nfiles && !bsz.isEmpty(); i++) {
-            //todo проверять hasname и hastitle
-            this.ids.push(bsz.readStrNT());
-        }
-    }
-    toString() {
-        var str = this.id + " " + this.length + '\n';
-        str += "Files: " + this.nfiles + '\n';
-        str += "offsets: ";
-        this.offsets.forEach(item => str += item + " ");
-        str += '\n';
-        str += "sizes: ";
-        str += this.sizes.join(' ') + '\n';
-        str += "flags: ";
-        str += this.flags.join(' ') + '\n';
-        str += "ids: ";
-        str += this.ids.join(' ') + '\n\n';
-        return str + '\n';
-    }
-}
-
 class DjVuDocument {
     constructor(arraybuffer) {
         this.buffer = arraybuffer;
         this.bs = new ByteStream(arraybuffer);
         this.formatID = this.bs.readStr4();
-        if(this.formatID !== 'AT&T') {
+        if (this.formatID !== 'AT&T') {
             throw new DjVuError("Incorrect file format");
         }
         this.id = this.bs.readStr4();
@@ -90,11 +42,11 @@ class DjVuDocument {
                 this.bs.jump(-12);
                 switch (id) {
                     case "FORMDJVU":
-                        this.pages.push(new DjVuPage(this.bs.fork(length + 8)));
+                        this.pages.push(new DjVuPage(this.bs.fork(length + 8), this.dirm.ids[i]));
                         break;
                     case "FORMDJVI":
                         //через строчку id chunk INCL ссылается на нужный ресурс
-                        this.djvi[this.dirm.ids[i]] = new DjViChunk(this.bs.fork(length + 8));
+                        this.djvi[this.dirm.ids[i]] = new DjViChunk(this.bs.fork(length + 8), this.dirm.ids[i]);
                         break;
                     default:
                         console.log(id);
@@ -132,14 +84,12 @@ class DjVuDocument {
     toString() {
         var str = this.formatID + '\n';
         if (this.dirm) {
-            str += this.id + " " + this.length + '\n';
+            str += this.id + " " + this.length + '\n\n';
             str += this.dirm.toString();
         }
-
         if (this.navm) {
             str += this.navm.toString();
         }
-
         for (var prop in this.djvi) {
             str += this.djvi[prop];
         }

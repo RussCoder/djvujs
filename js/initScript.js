@@ -33,8 +33,8 @@ window.onload = function () {
     Globals.dict = [];
     Globals.img = document.getElementById('img');
     // testFunc();
-    //loadDjVu();
-    loadPicture();
+    loadDjVu();
+    //loadPicture();
 }
 function loadDjVu() {
     var xhr = new XMLHttpRequest();
@@ -83,10 +83,10 @@ function readPicture(buffer) {
         var link = document.querySelector('#dochref');
         link.href = DjVuWorker.createArrayBufferURL(buffer);
 
-       // c.putImageData(doc.pages[0].getImage(), 0, 0);
+        // c.putImageData(doc.pages[0].getImage(), 0, 0);
         console.log('Counter', Globals.counter);
         //console.log('PZP', Globals.pzp.log.length, ' ', Globals.pzp.offset );
-       // writeln(doc.toString());
+        // writeln(doc.toString());
         console.log('pictureTotalTime = ', performance.now() - pictureTotalTime);
     });
 
@@ -110,7 +110,19 @@ function readDjvu(buf) {
     //writeln(doc.toString());
     //writeln(djvuPage.toString());
 
-    Globals.drawImageSmooth(doc.pages[3].getImage(), 600);
+   /* var dpi = doc.pages[3].init().dpi;
+    var image = doc.pages[3].getImageData();
+    var canvas = document.getElementById('canvas');
+    var ctx = canvas.getContext('2d');
+    canvas.width = image.width;
+    canvas.height = image.height;
+    var scale = dpi / 100;
+    
+    ctx.putImageData(image, 0, 0);
+    canvas.style.maxWidth = image.width * 2 / scale + "px";
+    canvas.style.maxWidth = image.width  / scale + "px";*/
+
+   // Globals.drawImageSmooth(doc.pages[3].getImageData(), 600);
     writeln(doc.toString());
     console.log(Globals.Timer.toString());
     console.log("Total execution time = ", performance.now() - time);

@@ -69,7 +69,7 @@ class JB2Image extends JB2Codec {
     
     toString() {
         let str = super.toString();
-        str += "width: " + this.width + " height: " + this.height + '\n';
+        str += "{width: " + this.width + ", height: " + this.height + '}\n';
         return str;
     }
     

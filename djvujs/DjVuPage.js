@@ -1,25 +1,37 @@
 'use strict';
 
+/**
+ * Страница документа
+ */
 class DjVuPage {
-    constructor(bs) {
-        this.id = "FORM:DJVU";
+    /**
+     * Принимает байтовый поток и id из машинного оглавлени документа. 
+     */
+    constructor(bs, dirmID) {
+        this.id = "FORM:DJVU"; // данная информация была проверена в DjVuDocument
         this.length = bs.length - 8;
+        this.dirmID = dirmID; // нужно для метаданных
         this.bs = bs;
         this.bs.jump(12);
         this.djbz = null;
         this.bg44arr = new Array();
         this.fg44 = null;
         this.bgimage = null;
-        
-        // список всех кусков - для toString
+
+        // список всех порций данных - для toString
         this.iffchunks = [];
         // id разделяемых данных (в частности словарей)
         this.dependencies = null;
         //this.init();
     }
+
+    /**
+     * Свойство необходимое для корректного отображения страницы - влияет на 100% масштаб.
+     */
     get dpi() {
-        return this.info.dpi;
+        return this.info ? this.info.dpi : undefined;
     }
+
     // метод поиска зависимостей, то есть INCLChunk
     // возвращает массив id 
     getDependencies() {
@@ -45,13 +57,20 @@ class DjVuPage {
         }
         return this.dependencies;
     }
+
+    /**
+     * Метод предварительного разбора страницы.
+     * Вызывается вручную или автоматически
+     */
     init() {
         //чтобы не вызывалось более 1 раза
         if (this.info) {
             return this;
         }
         this.dependencies = [];
-        this.info = new InfoChunk(this.bs.fork(18));
+        this.info = new INFOChunk(this.bs.fork(18));
+        this.bs.jump(18);
+        this.iffchunks.push(this.info);
         while (!this.bs.isEmpty()) {
             var chunk;
             let id = this.bs.readStr4();
@@ -77,12 +96,16 @@ class DjVuPage {
             } else {
                 chunk = new IFFChunk(chunkBs);
             }
-            //тут все порции в том порядке в каком встретились, кроме info
+            //тут все порции в том порядке, в каком встретились при разборе 
             this.iffchunks.push(chunk);
         }
         return this;
     }
-    getImage() {
+
+    /**
+     * Метод генерации изображения для общего случая (все 3 слоя)
+     */
+    getImageData() {
         this.init();
         var image = new ImageData(this.info.width, this.info.height);
         this.decode();
@@ -179,8 +202,9 @@ class DjVuPage {
         }
     }
     toString() {
-        var str = this.id + ' ' + this.length + "\n";
-        str += this.info ? this.info.toString() : '';
+        var str = '[DirmID: "' + this.dirmID + '"]\n';
+        str += this.id + ' ' + this.length + "\n";
+        this.init();
         for (var i = 0; i < this.iffchunks.length; i++) {
             str += this.iffchunks[i].toString();
         }
