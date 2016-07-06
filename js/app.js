@@ -26,8 +26,11 @@ function metaDataFuncPrepare() {
     $('#funcblock').show(400);
     var mtblock = $('#metaDataBlock').show(400);
     $("#finput").change(metaDataFunc);
+<<<<<<< HEAD
     $("#procmess").text("");
     $("#metaDataBlock #metadata").html('');
+=======
+>>>>>>> 1dba12f79d63432dea6b9379bb881090257ce5a8
 }
 
 function metaDataFunc() {
@@ -55,7 +58,11 @@ function metaDataFunc() {
                     $("#procmess").text("Задание выполнено !");
                     $("#metaDataBlock #metadata").html(str);
                 })
+<<<<<<< HEAD
 
+=======
+                
+>>>>>>> 1dba12f79d63432dea6b9379bb881090257ce5a8
                 .catch(() => {
                     $("#procmess").text("Ошибка при обработке файла !!!");
                 });
