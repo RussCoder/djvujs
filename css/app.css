@@ -100,3 +100,9 @@
 #sitemenu a:hover, .hrefbut:hover {
     background: #eee;
 }
+
+#metaDataBlock #metadata {
+    color: black;
+    border: dotted 1px black;
+    padding: 5px;
+}
