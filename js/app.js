@@ -5,6 +5,7 @@ var djvuWorker = new DjVuWorker();
 $('#sitename, #mainpagehref').click(reset);
 $('#slicefunc').click(sliceFuncPrepare);
 $('#picturefunc').click(pictureFuncPrepare);
+$('#metadatafunc').click(metaDataFuncPrepare);
 
 function reset(event) {
     event.preventDefault();
@@ -12,13 +13,55 @@ function reset(event) {
     $('.funcblock').hide(400);
     $('#funcmenublock').show(400);
     $('#finput').wrap('<form>').closest('form').get(0).reset();
-    $('#finput').unwrap().removeAttr('multiple');
+    $('#finput').unwrap().removeAttr('multiple').off('change');
     $('.info').text('');
     $('#procmess').text('');
     $('#filehref').hide();
     djvuWorker.reset();
 }
 
+
+function metaDataFuncPrepare() {
+    $('#funcmenublock').hide(400);
+    $('#funcblock').show(400);
+    var mtblock = $('#metaDataBlock').show(400);
+    $("#finput").change(metaDataFunc);
+    $("#procmess").text("");
+    $("#metaDataBlock #metadata").html('');
+}
+
+function metaDataFunc() {
+    $("#procmess").text("");
+    $("#metaDataBlock #metadata").html('');
+    if (this.files.length) {
+        if (this.files[0].name.substr(-5) !== '.djvu') {
+            $('#warnmess').text("Расширение файла не .djvu !!!");
+            return;
+        }
+        $('#warnmess').text("");
+        var fr = new FileReader();
+        fr.readAsArrayBuffer($("#finput")[0].files[0]);
+        $("#procmess").text('Загрузка документа ...');
+        fr.onload = () => {
+            var buf = fr.result;
+            djvuWorker.createDocument(buf)
+
+                .then(() => {
+                    $("#procmess").text('Задание выполняется ...');
+                    return djvuWorker.getDocumentMetaData(true);
+                })
+
+                .then(str => {
+                    $("#procmess").text("Задание выполнено !");
+                    $("#metaDataBlock #metadata").html(str);
+                })
+
+                .catch(() => {
+                    $("#procmess").text("Ошибка при обработке файла !!!");
+                });
+        }
+    }
+}
 
 function pictureFuncPrepare() {
     $('#funcmenublock').hide(400);
@@ -58,7 +101,7 @@ function readImagesAndCreateDocument() {
                 $("#procmess").text("Ошибка при загрузке файлов! " + e.message);
             })
             .then(() => {
-                if (++i < files.length) {                    
+                if (++i < files.length) {
                     $("#procmess").text("Задание выполняется ... " + Math.round(i / files.length * 100) + ' %');
                     func();
                 }

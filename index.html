@@ -69,13 +69,14 @@
         <div id="viewfunc" class="disabledfunc">
             Просмотреть DjVu
         </div>
-        <div id="metadatafunc" class="disabledfunc">
+        <div id="metadatafunc" class="funcelem">
            Метаданные DjVu
         </div>
     </div>
     <div id="funcblock" class="body funcblock">
         <input type="file" id="finput"><br>
         <p id="warnmess"></p>
+
         <div class="funcblock" id="sliceblock">
             <p class="describing">
                 Выберите djvu документ. Введите номер первой и последней страницы, которые Вы хотите поместить в новый документ.
@@ -105,6 +106,20 @@
             <input type="checkbox" id="grayscale" value="1">Серое изображение (отбросить цвета при кодировании)
             <br><br>
             <input type="button" value="Создать документ" id="picturebut" disabled>
+        </div>
+
+        <div class="funcblock" id="metaDataBlock">
+            <p class="describing">
+                Выберите djvu документ. Метаданные представляют структуру djvu файла. 
+                Каждая единица (порция) данных или Data Chunk расположены в том порядке, в котором они встречаются в файле. 
+                Некоторые порции описаны подробно в соответствии с их назначение и устройством,
+                другие же характеризуются лишь заголовком и длиной, так как библиотека способна читать не все порции данных,
+                или же не представляется возможным вывести информацию в текстовом виде кратко. 
+                Перед каждой страницей или словарем выводится id машинного оглавления.
+            </p>
+            <p class="info"></p>
+            <p id="metadata"></p>
+            
         </div>
 
         <br>
