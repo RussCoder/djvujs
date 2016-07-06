@@ -81,7 +81,12 @@ class DjVuDocument {
         return count;
     }
 
-    toString() {
+    /**
+     * Возвращает метаданные документа. 
+     * @param {Boolean} html - заменять ли \n на <br>
+     * @returns {string} строка метаданных
+     */
+    toString(html) {
         var str = this.formatID + '\n';
         if (this.dirm) {
             str += this.id + " " + this.length + '\n\n';
@@ -94,8 +99,7 @@ class DjVuDocument {
             str += this.djvi[prop];
         }
         this.pages.forEach(item => str += item.toString());
-        str = str.replace(/\n/g, '<br>');
-        return str;
+        return html ? str.replace(/\n/g, '<br>') : str;
     }
 
     /**

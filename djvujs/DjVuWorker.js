@@ -74,9 +74,24 @@ class DjVuWorker {
             case 'endMultyPageDocument':
                 callback.resolve(obj.buffer);
                 break;
+            case 'getDocumentMetaData':
+                callback.resolve(obj.str);
+                break;
             default:
                 console.log("Unexpected message from DjVuWorker: ", obj);
         }
+    }
+
+
+    getDocumentMetaData(html) {
+        return new Promise((resolve, reject) => {
+            var id = this.callbacks.add({ resolve: resolve, reject: reject });
+            this.worker.postMessage({
+                command: 'getDocumentMetaData',
+                id: id,
+                html: html
+            });
+        });
     }
 
     startMultyPageDocument(slicenumber, delayInit, grayscale) {

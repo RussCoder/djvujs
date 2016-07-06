@@ -57,11 +57,19 @@ onmessage = function (oEvent) {
       case 'endMultyPageDocument':
         endMultyPageDocument(obj);
         break;
+      case 'getDocumentMetaData':
+        getDocumentMetaData(obj);
+        break;
     }
   } catch (error) {
     postMessage({ command: 'Error', id: obj.id, message: error.message });
   }
 };
+
+function getDocumentMetaData(obj) {
+  var str = djvuDocument.toString(obj.html);
+  postMessage({ command: 'getDocumentMetaData', id: obj.id, str: str });
+}
 
 function startMultyPageDocument(obj) {
   iwiw = new IWImageWriter(obj.slicenumber, obj.delayInit, obj.grayscale);
