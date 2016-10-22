@@ -1,19 +1,16 @@
-.head {
-    width: 700px;
-    margin: 5px auto;  
-    box-shadow: 0 0 1px gray;
-    padding: 20px;
-       
-}
 
 .body {
     color: gray;
     width: 700px;
-    margin: 0 auto;
+    margin: 1em auto;
     box-shadow: 0 0 1px gray;
     padding: 20px;
     overflow: hidden;
-    margin: 5px auto;
+}
+
+.additionalBlock {
+    height: 5em;
+    text-align: center;
 }
 
 .funcelem, .disabledfunc {
@@ -46,17 +43,6 @@
     width: 150px;
 }
 
-#sitename {
-    text-decoration: none;
-    color: gray;
-    font-size:  xx-large;
-    font-weight: bold;
-}
-#sitename:hover {
-    cursor: pointer;
-    text-shadow: 0 0 1px gray;
-}
-
 #finput {
     margin: 10px;
 }
@@ -87,22 +73,40 @@
     color: blue;
 }
 
-#sitemenu a, .hrefbut {
-    margin: 5px;
-    padding: 5px;
-    text-decoration: none;
-    cursor: pointer;
-    border-radius: 3px;
-    box-shadow: 0 0 1px gray;
-    color: gray;
-}
-
-#sitemenu a:hover, .hrefbut:hover {
-    background: #eee;
-}
-
 #metaDataBlock #metadata {
     color: black;
     border: dotted 1px black;
     padding: 5px;
+}
+
+.activebut {
+    cursor: pointer;
+    background: white;
+    text-decoration: none;
+    text-align: center;
+    border: 1px solid #0f0f0f;
+    padding: 0.3em;
+    margin: 0.1em;
+    border-radius: 5px;
+    color: #0f0f0f;
+    outline: none;
+
+}
+
+.activebut:hover {
+    box-shadow: 0 0 1px gray;
+}
+
+.activebut:active {
+    box-shadow: 0 0 1px gray inset;
+}
+
+.activebut:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+    box-shadow: none;
+}
+
+#backbutton {
+    display: none;
 }

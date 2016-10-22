@@ -2,7 +2,10 @@
 
 var djvuWorker = new DjVuWorker();
 
-$('#sitename, #mainpagehref').click(reset);
+$('#backbutton').click(reset);
+$('.funcelem').on('click', () => {
+   $('#backbutton').show(400); 
+}); 
 $('#slicefunc').click(sliceFuncPrepare);
 $('#picturefunc').click(pictureFuncPrepare);
 $('#metadatafunc').click(metaDataFuncPrepare);
@@ -11,6 +14,7 @@ function reset(event) {
     event.preventDefault();
     event.stopPropagation();
     $('.funcblock').hide(400);
+    $('#backbutton').hide(400);
     $('#funcmenublock').show(400);
     $('#finput').wrap('<form>').closest('form').get(0).reset();
     $('#finput').unwrap().removeAttr('multiple').off('change');
