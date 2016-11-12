@@ -1,5 +1,9 @@
 "use strict";
 
+/**
+ * Скрипт для тестирования библиотеки непосредственно в синхронном режиме
+ */
+
 var fileSize = 0;
 var output;
 Globals.counter = 0;
