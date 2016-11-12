@@ -28,6 +28,19 @@ class Block extends Int16Array {
     setCoef(n, val) {
         this[n] = val;
     }
+
+    /**
+     * Функция создания массива блоков на основе одного буфера, более быстрого выделения памяти
+     * @returns {Array<Block>}
+     */
+    static createBlockArray(length) {
+        var blocks = new Array(length);
+        var buffer = new ArrayBuffer(length << 11);  // выделяем память под все блоки
+        for (var i = 0; i < length; i++) {
+            blocks[i] = new Block(buffer, i << 11);
+        }
+        return blocks;
+    }
 }
 
 //класс общих данных для кодирования и декодирования картинки

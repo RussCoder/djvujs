@@ -16,7 +16,19 @@ class DjVuPage {
         this.djbz = null;
         this.bg44arr = new Array();
         this.fg44 = null;
+        /**
+         * @type {IWImage}
+         */
         this.bgimage = null;
+        /**
+         * @type {IWImage}
+         */
+        this.fgimage = null;
+        /**
+         * @type {JB2Image}
+         */
+        this.sjbz = null;
+
 
         // список всех порций данных - для toString
         this.iffchunks = [];
@@ -61,6 +73,7 @@ class DjVuPage {
     /**
      * Метод предварительного разбора страницы.
      * Вызывается вручную или автоматически
+     * @returns {DjVuPage}
      */
     init() {
         //чтобы не вызывалось более 1 раза
@@ -104,10 +117,9 @@ class DjVuPage {
 
     /**
      * Метод генерации изображения для общего случая (все 3 слоя)
+     * @returns {ImageData}
      */
     getImageData() {
-        this.init();
-        var image = new ImageData(this.info.width, this.info.height);
         this.decode();
         var time = performance.now();
         //достаем маску
@@ -127,6 +139,8 @@ class DjVuPage {
         if (!this.bgimage && !this.fgimage) {
             return this.sjbz.getImage();
         }
+
+        var image = new ImageData(this.info.width, this.info.height);
         //масштабы на случай если закодированы в более меньшем разрешении
         var fgscale = Math.round(this.info.width / this.fgimage.info.width);
         var bgscale = Math.round(this.info.width / this.bgimage.info.width);
@@ -153,8 +167,16 @@ class DjVuPage {
         console.log("DataImage creating time = ", performance.now() - time);
         return image;
     }
-    //раскодируем все слои
+
+    /**
+     * Раскодирование всех 3 слоев изображения страницы, вызыват init()
+     * @returns {DjVuPage}
+     */
     decode() {
+        if (this.decoded) {
+            return this;
+        }
+        this.init();
         var time = performance.now();
         this.sjbz ? this.sjbz.decode(this.djbz) : 0;
         console.log("Mask decoding time = ", performance.now() - time);
@@ -177,12 +199,19 @@ class DjVuPage {
             this.fgimage.createPixelmap();
         }
         console.log("Foreground decoding time = ", performance.now() - time);
+        this.decoded = true;
+        return this;
     }
-    //фоновое изображение
-    getBackgroundImage() {
+
+    /**
+     * Фоновой слой
+     * @returns {ImageData}
+     */
+    getBackgroundImageData() {
+        this.decode();
         if (this.bg44arr.length) {
             this.bg44arr.forEach((chunk) => {
-                let zp = new ZPCoder(chunk.bs);
+                let zp = new ZPDecoder(chunk.bs);
                 this.bgimage.decodeChunk(zp, chunk.header);
             }
             );
@@ -191,16 +220,22 @@ class DjVuPage {
             return null;
         }
     }
-    getForegroundImage() {
+
+    /**
+     * @returns {ImageData}
+     */
+    getForegroundImageData() {
+        this.decode();
         if (this.fg44) {
             this.fgimage = new IWImage();
-            let zp = new ZPCoder(this.fg44.bs);
+            let zp = new ZPDecoder(this.fg44.bs);
             this.fgimage.decodeChunk(zp, this.fg44.header);
             return this.fgimage.getImage();
         } else {
             return null;
         }
     }
+
     toString() {
         var str = '[DirmID: "' + this.dirmID + '"]\n';
         str += this.id + ' ' + this.length + "\n";

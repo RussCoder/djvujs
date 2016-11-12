@@ -22,8 +22,11 @@ class DjVuDocument {
         Globals.getINCLChunk = function (id) {
             return Globals._doc.djvi[id].innerChunk;
         }
-        //страницы FORMDJVU
-        this.pages = [];
+        
+        /**
+         * @type {Array<DjVuPage>}
+         */
+        this.pages = []; //страницы FORMDJVU
         //разделяемые ресурсы
         this.djvi = {};
 

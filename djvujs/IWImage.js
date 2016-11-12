@@ -45,6 +45,9 @@ class IWImage {
         }
     }
     
+    /**
+     * @returns {ImageData}
+     */
     getImage() {
         this.pixelmap ? this.createPixelmap() : 0;
         var width = this.info.width;

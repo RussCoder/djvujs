@@ -1,6 +1,9 @@
 'use strict';
 
 // вспомогательный класс для быстрого доступа к разделяемым ресурсам
+/**
+ * @type {Object}
+ */
 var Globals = {};
 
 Globals.drawImage = function (image, dpi) {

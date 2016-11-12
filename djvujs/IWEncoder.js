@@ -118,7 +118,7 @@ class IWEncoder extends IWCodecBaseClass {
         var length = blockRows * blockCols;
         var buffer = new ArrayBuffer(length << 11);  // выделяем память под все блоки
         // блоки исходного изображения
-        this.blocks = [];
+        this.blocks = []; // TODO: переделать через Block.createBlockArray()
         for (var r = 0; r < blockRows; r++) {
             for (var c = 0; c < blockCols; c++) {
                 var block = new Block(buffer, (r * blockCols + c) << 11);

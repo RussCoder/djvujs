@@ -42,7 +42,7 @@ window.onload = function () {
 }
 function loadDjVu() {
     var xhr = new XMLHttpRequest();
-    xhr.open("GET", "samples/cs.djvu");
+    xhr.open("GET", "samples/colorbook.djvu");
     xhr.responseType = "arraybuffer";
     xhr.onload = function (e) {
         console.log(e.loaded);
@@ -114,19 +114,19 @@ function readDjvu(buf) {
     //writeln(doc.toString());
     //writeln(djvuPage.toString());
 
-   /* var dpi = doc.pages[3].init().dpi;
-    var image = doc.pages[3].getImageData();
+    /*var dpi = doc.pages[0].init().dpi;
+    var image = doc.pages[0].getImageData();
     var canvas = document.getElementById('canvas');
     var ctx = canvas.getContext('2d');
     canvas.width = image.width;
     canvas.height = image.height;
     var scale = dpi / 100;
-    
+
     ctx.putImageData(image, 0, 0);
     canvas.style.maxWidth = image.width * 2 / scale + "px";
     canvas.style.maxWidth = image.width  / scale + "px";*/
 
-   // Globals.drawImageSmooth(doc.pages[3].getImageData(), 600);
+    Globals.drawImageSmooth(doc.pages[0].getImageData(), 600);
     writeln(doc.toString());
     console.log(Globals.Timer.toString());
     console.log("Total execution time = ", performance.now() - time);
@@ -163,5 +163,4 @@ function testFunc(doc1, doc2) {
     writeln(doc.toString());
     var link = document.querySelector('#dochref');
     link.href = doc.createObjectURL();
-
 }

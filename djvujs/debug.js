@@ -129,7 +129,7 @@ function ZPtest() {
     console.log(arr);
     ctx = [0];
     var bs = new ByteStream(bsw.getBuffer());
-    var zp = new ZPCoder(bs);
+    var zp = new ZPDecoder(bs);
     for (i = 0; i < n; i++) {
         var byte = 0;
         for (var j = 7; j >= 0; j--) {
@@ -149,7 +149,7 @@ function BZZtest() {
     var data = Uint8Array.of(11, 3, 2, 10, 2, 10, 2, 0);
     bzz.encode(data.buffer);
     var bsbs = new ByteStream(bs.getBuffer());
-    var zp2 = new ZPCoder(bsbs);
+    var zp2 = new ZPDecoder(bsbs);
     zp2.pzp = zp.pzp;
     var bzz = new BZZCodec(zp2);
     bzz.decode();
