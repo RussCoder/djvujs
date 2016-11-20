@@ -1,89 +1,137 @@
 'use strict';
 
+function include(url) {
+    var script = document.createElement('script');
+    script.src = url;
+    document.head.appendChild(script);
+    console.log("included: " + url);
+}
+function writeln(str) {
+    str = str || "";
+    output.innerHTML += str + "<br>";
+}
+
+function write(str) {
+    output.innerHTML += str;
+}
+function clear() {
+    output.innerHTML = "";
+}
+
 // вспомогательный класс для быстрого доступа к разделяемым ресурсам
 /**
- * @type {Object}
+ * @type {DjVuGlobals}
  */
-var Globals = {};
+var Globals = {
 
-Globals.drawImage = function (image, dpi) {
-    var tmp;
-    var scale = dpi ? dpi / Globals.defaultDPI : 1;
-    var time = performance.now();
-    Globals.canvas.width = image.width / scale;
-    this.canvas.height = image.height / scale;
+    init() {
+        var canvas = document.getElementById('canvas');
+        var c = canvas.getContext('2d');
+        this.defaultDPI = 100; // число точек на дюйм для монитора, в реальности 96.
+        this.Timer = new DebugTimer();
+        this.canvas = canvas;
+        this.canvasCtx = c;
+        this.dict = [];
+        this.img = document.getElementById('img');
+        this.counter = 0;
+    },
 
-    var oc = document.createElement('canvas');
-    var octx = oc.getContext('2d');
-    oc.width = image.width;
-    oc.height = image.height;
-    octx.putImageData(image, 0, 0);
 
-    var tmpH, tmpW, tmpH2, tmpW2;
-    tmpH = tmpH2 = oc.height;
-    tmpW = tmpW2 = oc.width;
+    /**
+     * @returns {Promise<ArrayBuffer>}
+     */
+    loadFile(url) {
+        return new Promise(resolve => {
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", url);
+            xhr.responseType = "arraybuffer";
+            xhr.onload =  (e) => {
+                console.log("File loaded: ", e.loaded);
+                resolve(xhr.response);
+            };
+            xhr.send();
+        });
+    },
 
-    if (scale > 4) {
-        tmpH = oc.height / scale * 4;
-        tmpW = oc.width / scale * 4;
-        //первое сжатие
-        octx.drawImage(oc, 0, 0, tmpW, tmpH);
-    }
-    if (scale > 2) {
-        tmpH2 = oc.height / scale * 2;
-        tmpW2 = oc.width / scale * 2;
-        //второе сжатие
-        octx.drawImage(oc, 0, 0, tmpW, tmpH, 0, 0, tmpW2, tmpH2);
-    }
-    //итоговое сжатие
-    this.canvasCtx.drawImage(oc, 0, 0, tmpW2, tmpH2,
-        0, 0, canvas.width, canvas.height);
-    console.log("Canvas resizing time = ", performance.now() - time);
-    /*Globals.canvasCtx.putImageData(image, 0, 0);
-        
+    drawImage(image, dpi) {
+        var tmp;
+        var scale = dpi ? dpi / Globals.defaultDPI : 1;
+        var time = performance.now();
+        Globals.canvas.width = image.width / scale;
+        this.canvas.height = image.height / scale;
+
+        var oc = document.createElement('canvas');
+        var octx = oc.getContext('2d');
+        oc.width = image.width;
+        oc.height = image.height;
+        octx.putImageData(image, 0, 0);
+
+        var tmpH, tmpW, tmpH2, tmpW2;
+        tmpH = tmpH2 = oc.height;
+        tmpW = tmpW2 = oc.width;
+
+        if (scale > 4) {
+            tmpH = oc.height / scale * 4;
+            tmpW = oc.width / scale * 4;
+            //первое сжатие
+            octx.drawImage(oc, 0, 0, tmpW, tmpH);
+        }
+        if (scale > 2) {
+            tmpH2 = oc.height / scale * 2;
+            tmpW2 = oc.width / scale * 2;
+            //второе сжатие
+            octx.drawImage(oc, 0, 0, tmpW, tmpH, 0, 0, tmpW2, tmpH2);
+        }
+        //итоговое сжатие
+        this.canvasCtx.drawImage(oc, 0, 0, tmpW2, tmpH2,
+            0, 0, canvas.width, canvas.height);
+        console.log("Canvas resizing time = ", performance.now() - time);
+        /*Globals.canvasCtx.putImageData(image, 0, 0);
+            
+            this.img.src = this.canvas.toDataURL();
+            
+            this.img.width = image.width / scale;
+            // console.log(this.canvas.parentNode);
+            (tmp = this.canvas.parentNode) ? tmp.removeChild(this.canvas) : 0;*/
+    },
+
+    drawImageNS(image, dpi) {
+        Globals.Timer.start('drawImageNS');
+        var tmp;
+        var scale = dpi ? Globals.defaultDPI / dpi : 1;
+        var time = performance.now();
+        Globals.canvas.width = image.width / scale;
+        this.canvas.height = image.height / scale;
+
+        var oc = document.createElement('canvas');
+        var octx = oc.getContext('2d');
+        oc.width = image.width;
+        oc.height = image.height;
+        octx.putImageData(image, 0, 0);
+        var resImg = downScaleCanvas(oc, scale);
+        this.canvas.width = resImg.width;
+        this.canvas.height = resImg.height;
+        this.canvasCtx.putImageData(resImg, 0, 0);
+        Globals.Timer.end('drawImageNS');
+    },
+
+    drawImageSmooth(image, dpi) {
+        var time = performance.now();
+        var tmp;
+        var scale = dpi ? dpi / Globals.defaultDPI : 1;
+
+        Globals.canvas.width = image.width;
+        this.canvas.height = image.height;
+
+        Globals.canvasCtx.putImageData(image, 0, 0);
+
         this.img.src = this.canvas.toDataURL();
-        
+        console.log("DataURL creating time = ", performance.now() - time);
         this.img.width = image.width / scale;
-        // console.log(this.canvas.parentNode);
-        (tmp = this.canvas.parentNode) ? tmp.removeChild(this.canvas) : 0;*/
-}
-
-Globals.drawImageNS = function (image, dpi) {
-    Globals.Timer.start('drawImageNS');
-    var tmp;
-    var scale = dpi ? Globals.defaultDPI / dpi : 1;
-    var time = performance.now();
-    Globals.canvas.width = image.width / scale;
-    this.canvas.height = image.height / scale;
-
-    var oc = document.createElement('canvas');
-    var octx = oc.getContext('2d');
-    oc.width = image.width;
-    oc.height = image.height;
-    octx.putImageData(image, 0, 0);
-    var resImg = downScaleCanvas(oc, scale);
-    this.canvas.width = resImg.width;
-    this.canvas.height = resImg.height;
-    this.canvasCtx.putImageData(resImg, 0, 0);
-    Globals.Timer.end('drawImageNS');
-}
-
-Globals.drawImageSmooth = function (image, dpi) {
-    var time = performance.now();
-    var tmp;
-    var scale = dpi ? dpi / Globals.defaultDPI : 1;
-
-    Globals.canvas.width = image.width;
-    this.canvas.height = image.height;
-
-    Globals.canvasCtx.putImageData(image, 0, 0);
-
-    this.img.src = this.canvas.toDataURL();
-    console.log("DataURL creating time = ", performance.now() - time);
-    this.img.width = image.width / scale;
-    (tmp = this.canvas.parentNode) ? tmp.removeChild(this.canvas) : 0;
-    console.log("DataURL creating time = ", performance.now() - time);
-}
+        (tmp = this.canvas.parentNode) ? tmp.removeChild(this.canvas) : 0;
+        console.log("DataURL creating time = ", performance.now() - time);
+    }
+};
 
 function downScaleCanvas(cv, scale) {
     if (!(scale < 1) || !(scale > 0))

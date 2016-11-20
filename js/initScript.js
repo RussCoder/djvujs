@@ -6,36 +6,10 @@
 
 var fileSize = 0;
 var output;
-Globals.counter = 0;
 
-// comment
-function include(url) {
-    var script = document.createElement('script');
-    script.src = url;
-    document.head.appendChild(script);
-    console.log("included: " + url);
-}
-function writeln(str) {
-    str = str || "";
-    output.innerHTML += str + "<br>";
-}
-
-function write(str) {
-    output.innerHTML += str;
-}
-function clear() {
-    output.innerHTML = "";
-}
 window.onload = function () {
     output = document.getElementById("output");
-    var canvas = document.getElementById('canvas');
-    var c = canvas.getContext('2d');
-    Globals.defaultDPI = 100;
-    Globals.Timer = new DebugTimer();
-    Globals.canvas = canvas;
-    Globals.canvasCtx = c;
-    Globals.dict = [];
-    Globals.img = document.getElementById('img');
+    Globals.init();
     // testFunc();
     loadDjVu();
     //loadPicture();
@@ -126,7 +100,7 @@ function readDjvu(buf) {
     canvas.style.maxWidth = image.width * 2 / scale + "px";
     canvas.style.maxWidth = image.width  / scale + "px";*/
 
-    Globals.drawImageSmooth(doc.pages[0].getImageData(), 600);
+    Globals.drawImageSmooth(doc.pages[0].getImageData(), doc.pages[0].dpi);
     writeln(doc.toString());
     console.log(Globals.Timer.toString());
     console.log("Total execution time = ", performance.now() - time);

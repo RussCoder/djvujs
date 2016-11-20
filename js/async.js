@@ -6,26 +6,7 @@
 
 var fileSize = 0;
 var output;
-Globals.counter = 0;
 
-// comment
-function include(url) {
-    var script = document.createElement('script');
-    script.src = url;
-    document.head.appendChild(script);
-    console.log("included: " + url);
-}
-function writeln(str) {
-    str = str || "";
-    output.innerHTML += str + "<br>";
-}
-
-function write(str) {
-    output.innerHTML += str;
-}
-function clear() {
-    output.innerHTML = "";
-}
 window.onload = function () {
     output = document.getElementById("output");
     var canvas = document.getElementById('canvas');
@@ -37,21 +18,22 @@ window.onload = function () {
     Globals.dict = [];
     Globals.img = document.getElementById('img');
     // testFunc();
-    loadDjVu();
     //loadPicture();
+    renderDjVu();
 }
-function loadDjVu() {
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", "samples/cs.djvu");
-    xhr.responseType = "arraybuffer";
-    xhr.onload = function (e) {
-        console.log(e.loaded);
-        fileSize = e.loaded;
-        var buf = xhr.response;
-        readDjvu(buf);
-    }
-    xhr.send();
+
+function renderDjVu() {
+    var url = 'samples/r1.djvu';
+    /** @type {DjVuWorker} */
+    var worker = new DjVuWorker();
+    Globals.loadFile(url)
+        .then(buffer => worker.createDocument(buffer))
+        .then(() => worker.getPageImageDataWithDPI(0))
+        .then(obj => {
+            Globals.drawImageSmooth(obj.imageData, obj.dpi);
+        });
 }
+
 function loadPicture() {
     var xhr = new XMLHttpRequest();
     xhr.open("GET", "samples/bear.jpg");
@@ -114,19 +96,7 @@ function readDjvu(buf) {
 
     }, 1000);
 
-    /* */
-    /*worker.getPageImageData(3, function (imageData) {
-        //Globals.canvasCtx.putImageData(imageData, 0, 0);
-        Globals.drawImageSmooth(imageData, 600);
-        console.log("Total execution time = ", performance.now() - time);
-    });*/
-    //Globals.canvasCtx.putImageData(doc.pages[0].getImage(), 0, 0);
-    //link.href = ndoc.createObjectURL();
-    //writeln(doc.toString());
-    //writeln(djvuPage.toString());
 
-    //Globals.drawImageSmooth(doc.pages[3].getImage(), 600);
-    // writeln(doc.toString());
     console.log(Globals.Timer.toString());
     console.log("Total execution time = ", performance.now() - time);
 }

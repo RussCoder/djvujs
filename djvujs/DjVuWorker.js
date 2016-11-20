@@ -49,10 +49,13 @@ class DjVuWorker {
             case 'Process':
                 this.onprocess ? this.onprocess(obj.percent) : 0;
                 break;
-            case 'getPageImageData':
+            case 'getPageImageDataWithDPI':
                 console.log(+new Date());
-                // производим "сборку" ImageData
-                callback.resolve(new ImageData(new Uint8ClampedArray(obj.buffer), obj.width, obj.height));
+                callback.resolve({
+                    // производим "сборку" ImageData
+                    imageData: new ImageData(new Uint8ClampedArray(obj.buffer), obj.width, obj.height),
+                    dpi: obj.dpi
+                });
                 console.log('--**', +new Date());
                 break;
             case 'createDocument':
@@ -141,10 +144,10 @@ class DjVuWorker {
         });
     }
 
-    getPageImageData(pagenumber) {
+    getPageImageDataWithDPI(pagenumber) {
         return new Promise((resolve, reject) => {
             var id = this.callbacks.add({ resolve: resolve, reject: reject });
-            this.worker.postMessage({ command: 'getPageImageData', id: id, pagenumber: pagenumber });
+            this.worker.postMessage({ command: 'getPageImageDataWithDPI', id: id, pagenumber: pagenumber });
         });
     }
 
