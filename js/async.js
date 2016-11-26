@@ -19,11 +19,20 @@ window.onload = function () {
     Globals.img = document.getElementById('img');
     // testFunc();
     //loadPicture();
-    renderDjVu();
+    //renderDjVu();
+    initViewer();
+
+
+}
+
+function initViewer() {
+    /** @type {DjVuViewer} */
+    var viewer = new DjVuViewer('.djvu_viewer');
+    viewer.loadDjVu('samples/colorbook.djvu');
 }
 
 function renderDjVu() {
-    var url = 'samples/r1.djvu';
+    var url = 'samples/colorbook.djvu';
     /** @type {DjVuWorker} */
     var worker = new DjVuWorker();
     Globals.loadFile(url)

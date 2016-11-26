@@ -18,3 +18,23 @@
     color: white;
     background: blue;
 }
+
+.djvu_viewer {
+    display: inline-block;
+    box-shadow: 0 0 4px gray;
+    margin: 1em;
+    padding: 1em;
+}
+
+.image_wrapper {
+    text-align: center;
+}
+
+.djvu_viewer img {
+    margin: 0.5em;
+    box-shadow: 0 0 1px lightgray;
+}
+
+.djvu_viewer .page_number {
+    width: 5em;
+}
