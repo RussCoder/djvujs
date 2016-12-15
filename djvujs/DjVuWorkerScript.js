@@ -57,6 +57,14 @@ var handlers = {
     }, [imageData.data.buffer]);
   },
 
+  getPageNumber(obj) {
+    postMessage({
+      command: 'getPageNumber',
+      id: obj.id,
+      pageNumber: djvuDocument.pages.length
+    });
+  },
+
   getDocumentMetaData(obj) {
     var str = djvuDocument.toString(obj.html);
     postMessage({ command: 'getDocumentMetaData', id: obj.id, str: str });

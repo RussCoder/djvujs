@@ -13,41 +13,81 @@ class DjVuViewer {
         this.scaleSlider = this.element.querySelector('.scale');
         this.scaleLabel = this.element.querySelector('.scale_label');
         this.img = this.element.querySelector('.image_wrapper img');
-        this.curPage = 0;
+        this._curPage = 0;
+        this.pageNumber = null;
+        /** @type {DjVuWorker} */
+        this.worker = new DjVuWorker();
 
         this.nextBut.onclick = () => this.showNextPage();
         this.prevBut.onclick = () => this.showPrevPage();
     }
 
+    get curPage() {
+        return this._curPage;
+    }
+
+    set curPage(value) {
+        this.setPage(value);
+    }
+
     showNextPage() {
-        this.curPage++;
-        this.renderCurPage();
+        this.curPage += 1;
     }
 
     showPrevPage() {
-        this.curPage--;
-        this.renderCurPage();
+        this.curPage -= 1;
+    }
+
+    lockNavButtons() {
+        this.nextBut.disabled = true;
+        this.prevBut.disabled = true;
+    }
+
+    unlockNavButtons() {
+        this.nextBut.disabled = false;
+        this.prevBut.disabled = false;
     }
 
     renderCurPage() {
-        this.nextBut.disabled = true;
-        this.prevBut.disabled = true;
-        this.worker.getPageImageDataWithDPI(this.curPage).then(obj => {
+        return this.worker.getPageImageDataWithDPI(this.curPage).then(obj => {
             this.drawImage(obj.imageData, obj.dpi);
-            this.nextBut.disabled = false;
-            this.prevBut.disabled = false;
         });
     }
 
     loadDjVu(url) {
-        /** @type {DjVuWorker} */
-        this.worker = new DjVuWorker();
         Globals.loadFile(url)
             .then(buffer => this.worker.createDocument(buffer))
-            .then(() => this.worker.getPageImageDataWithDPI(this.curPage))
+            .then(() => this.worker.getPageNumber())
+            .then(number => {
+                this.pageNumber = number;
+                return this.worker.getPageImageDataWithDPI(this.curPage);
+            })
             .then(obj => {
                 this.drawImage(obj.imageData, obj.dpi);
             });
+    }
+
+    setPage(page) {
+        if (page < 0 || page > this.pageNumber) {
+            return false;
+        }
+        this._curPage = page;
+        if (this._curPage === 0) {
+            this.prevBut.disabled = true;
+        } else if (this._curPage === this.pageNumber) {
+            this.nextBut.disabled = true;
+        } else {
+            this.unlockNavButtons();
+        }
+        this.lockNavButtons();
+        this.renderCurPage().then(() => {
+            this.unlockNavButtons();
+            if (this._curPage === 0) {
+                this.prevBut.disabled = true;
+            } else if (this._curPage === this.pageNumber) {
+                this.nextBut.disabled = true;
+            }
+        });
     }
 
     drawImage(image, dpi) {

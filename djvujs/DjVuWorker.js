@@ -80,11 +80,23 @@ class DjVuWorker {
             case 'getDocumentMetaData':
                 callback.resolve(obj.str);
                 break;
+            case 'getPageNumber':
+                callback.resolve(obj.pageNumber);
+                break;
             default:
                 console.log("Unexpected message from DjVuWorker: ", obj);
         }
     }
 
+    getPageNumber() {
+        return new Promise((resolve, reject) => {
+            var id = this.callbacks.add({ resolve, reject });
+            this.worker.postMessage({
+                command: 'getPageNumber',
+                id: id
+            });
+        });
+    }
 
     getDocumentMetaData(html) {
         return new Promise((resolve, reject) => {
