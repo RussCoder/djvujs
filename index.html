@@ -7,13 +7,14 @@
     <title>DjVu.js | Работа с DjVu файлами онлайн</title>
     <script type="text/javascript" src="js/jquery-3.0.0.min.js"></script>
     <script type="text/javascript" src="djvujs/DjVuWorker.js"></script>
+    <script type="text/javascript" src="djvujs/DjVuViewer.js" defer></script>
     <script type="text/javascript" src="js/app.js" defer></script>
     <link rel="stylesheet" href="css/app.css">
 </head>
 
 <body>
     <div class="additionalBlock">
-         <input id="backbutton" type="button" class="activebut" value="Назад к выбору функций">
+        <input id="backbutton" type="button" class="activebut" value="Назад к выбору функций">
     </div>
     <div class="body" id="funcmenublock">
         <div id="slicefunc" class="funcelem" title="Разделить DjVu документ онлайн">
@@ -28,11 +29,11 @@
         <div id="addpicfunc" class="disabledfunc">
             Добавить картинки к DjVu
         </div>
-        <div id="viewfunc" class="disabledfunc">
+        <div id="viewfunc" class="funcelem">
             Просмотреть DjVu
         </div>
         <div id="metadatafunc" class="funcelem">
-           Метаданные DjVu
+            Метаданные DjVu
         </div>
     </div>
     <div id="funcblock" class="body funcblock">
@@ -73,21 +74,37 @@
 
         <div class="funcblock" id="metaDataBlock">
             <p class="describing">
-                Выберите djvu документ. Метаданные представляют структуру djvu файла. 
-                Каждая единица (порция) данных или Data Chunk расположены в том порядке, в котором они встречаются в файле. 
-                Некоторые порции описаны подробно в соответствии с их назначение и устройством,
-                другие же характеризуются лишь заголовком и длиной, так как библиотека способна читать не все порции данных,
-                или же не представляется возможным вывести информацию в текстовом виде кратко. 
-                Перед каждой страницей или словарем выводится id машинного оглавления.
+                Выберите djvu документ. Метаданные представляют структуру djvu файла. Каждая единица (порция) данных или Data Chunk расположены
+                в том порядке, в котором они встречаются в файле. Некоторые порции описаны подробно в соответствии с их назначение
+                и устройством, другие же характеризуются лишь заголовком и длиной, так как библиотека способна читать не
+                все порции данных, или же не представляется возможным вывести информацию в текстовом виде кратко. Перед каждой
+                страницей или словарем выводится id машинного оглавления.
             </p>
             <p class="info"></p>
             <p id="metadata"></p>
-            
         </div>
+
 
         <br>
         <p id="procmess"></p>
         <a href="" id="filehref" download="djvujs_file.djvu"> Сохранить файл </a>
+    </div>
+
+    <div class="funcblock" id="djvuViewerBlock">
+        <p class="describing">
+            Выберите djvu документ, который Вы хотите просмотреть.
+        </p>
+        <div id="viewer" class="djvu_viewer">
+            <div class="image_wrapper">
+                <img class="image" />
+            </div>
+            <div class="controls">
+                <input type="button" class="navbut prev" value="&#9668;">
+                <input class="page_number" type="number">
+                <input type="button" class="navbut next" value="&#9658;">
+                <input class="scale" type="range" min="0" max="200" step="1" value="100"><span class="scale_label">100</span>%
+            </div>
+        </div>
     </div>
 
 </body>

@@ -1,14 +1,16 @@
 'use strict';
 
 var djvuWorker = new DjVuWorker();
+var djvuViewer;
 
 $('#backbutton').click(reset);
 $('.funcelem').on('click', () => {
-   $('#backbutton').show(400); 
-}); 
+    $('#backbutton').show(400);
+});
 $('#slicefunc').click(sliceFuncPrepare);
 $('#picturefunc').click(pictureFuncPrepare);
 $('#metadatafunc').click(metaDataFuncPrepare);
+$('#viewfunc').click(viewFuncPrepare);
 
 function reset(event) {
     event.preventDefault();
@@ -21,9 +23,35 @@ function reset(event) {
     $('.info').text('');
     $('#procmess').text('');
     $('#filehref').hide();
+    djvuViewer.reset();
     djvuWorker.reset();
 }
 
+function viewFuncPrepare() {
+    $('#funcmenublock').hide(400);
+    $('#funcblock').show(400);
+    $('#djvuViewerBlock').show(400);
+    $("#finput").change(viewFunc);
+}
+
+function viewFunc() {
+    if (this.files.length) {
+        if (this.files[0].name.substr(-5) !== '.djvu') {
+            $('#warnmess').text("Расширение файла не .djvu !!!");
+            return;
+        }
+        $('#warnmess').text("");
+        var fr = new FileReader();
+        fr.readAsArrayBuffer($("#finput")[0].files[0]);
+        fr.onload = () => {
+            var buf = fr.result;
+            djvuViewer = new DjVuViewer('.djvu_viewer', djvuWorker);
+            djvuViewer.loadDjVuFromBuffer(buf).catch(() => {
+                $("#warnmess").text("Ошибка при обработке файла !!!");
+            });
+        }
+    }
+}
 
 function metaDataFuncPrepare() {
     $('#funcmenublock').hide(400);

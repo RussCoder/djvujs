@@ -1,7 +1,7 @@
 'use strict';
 
 class DjVuViewer {
-    constructor(selector) {
+    constructor(selector, worker) {
         this.defaultDPI = 100;
         this.selector = selector;
         this.element = document.querySelector(selector);
@@ -18,7 +18,7 @@ class DjVuViewer {
         this.pageNumber = null;
         this.stdWidth
         /** @type {DjVuWorker} */
-        this.worker = new DjVuWorker();
+        this.worker = worker || new DjVuWorker();
 
         this.element.style.width = window.innerWidth * 0.9 + 'px';
         this.element.style.height = window.innerHeight * 0.9 + 'px';
@@ -28,6 +28,18 @@ class DjVuViewer {
         this.pageNumberBox.onblur = (e) => this.showEnteredPage(e);
         this.pageNumberBox.onkeypress = (e) => this.showEnteredPageByEnter(e);
         this.scaleSlider.oninput = () => this.changeScale();
+    }
+
+    reset() {
+        if (this.nextBut) {
+            this.nextBut.onclick = null;
+            this.prevBut.onclick = null;
+            this.pageNumberBox.onblur = null;
+            this.pageNumberBox.onkeypress = null;
+            this.scaleSlider.oninput = null;
+            this.worker = null;
+            this.img.src = '';
+        }
     }
 
     changeScale() {
@@ -81,13 +93,32 @@ class DjVuViewer {
     }
 
     loadDjVu(url) {
-        Globals.loadFile(url)
+        return Globals.loadFile(url)
             .then(buffer => this.worker.createDocument(buffer))
             .then(() => this.worker.getPageNumber())
             .then(number => {
                 this.pageNumber = number;
                 this.curPage = 1;
-            })
+            });
+    }
+
+    loadDjVuFromBuffer(buffer) {
+        return this.worker.createDocument(buffer)
+            .then(() => this.worker.getPageNumber())
+            .then(number => {
+                this.pageNumber = number;
+                this.curPage = 1;
+            });
+    }
+
+    relockNavButtons() {
+        this.unlockNavButtons();
+        if (this._curPage === 0) {
+            this.prevBut.disabled = true;
+        }
+        if (this._curPage === this.pageNumber - 1) {
+            this.nextBut.disabled = true;
+        }
     }
 
     setPage(page) {
@@ -98,22 +129,11 @@ class DjVuViewer {
             page = this.pageNumber - 1;
         }
         this._curPage = page;
-        if (this._curPage === 0) {
-            this.prevBut.disabled = true;
-        } else if (this._curPage === this.pageNumber - 1) {
-            this.nextBut.disabled = true;
-        } else {
-            this.unlockNavButtons();
-        }
+        this.relockNavButtons();
         this.pageNumberBox.value = this.curPage;
         this.lockNavButtons();
         this.renderCurPage().then(() => {
-            this.unlockNavButtons();
-            if (this._curPage === 0) {
-                this.prevBut.disabled = true;
-            } else if (this._curPage === this.pageNumber - 1) {
-                this.nextBut.disabled = true;
-            }
+            this.relockNavButtons();
         });
     }
 
