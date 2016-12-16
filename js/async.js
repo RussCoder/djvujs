@@ -28,7 +28,7 @@ window.onload = function () {
 function initViewer() {
     /** @type {DjVuViewer} */
     var viewer = new DjVuViewer('.djvu_viewer');
-    viewer.loadDjVu('samples/colorbook.djvu');
+    viewer.loadDjVu('samples/php.djvu');
 }
 
 function renderDjVu() {

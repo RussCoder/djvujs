@@ -44,7 +44,6 @@ onmessage = function (oEvent) {
 var handlers = {
   getPageImageDataWithDPI(obj) {
     var pagenum = +obj.pagenumber;
-    console.log(djvuDocument, pagenum);
     var imageData = djvuDocument.pages[pagenum].getImageData();
     var dpi = djvuDocument.pages[pagenum].dpi;
     postMessage({
@@ -55,6 +54,7 @@ var handlers = {
       height: imageData.height,
       dpi: dpi
     }, [imageData.data.buffer]);
+    this.reloadDocument();
   },
 
   getPageNumber(obj) {
@@ -110,5 +110,9 @@ var handlers = {
   createDocument(obj) {
     djvuDocument = new DjVuDocument(obj.buffer);
     postMessage({ command: 'createDocument', id: obj.id, pagenumber: djvuDocument.pages.length });
+  },
+
+  reloadDocument() {
+    djvuDocument = new DjVuDocument(djvuDocument.buffer);
   }
 };

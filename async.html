@@ -37,10 +37,12 @@
         <div class="image_wrapper">
             <img class="image" />
         </div>
-        <input type="button" class="navbut prev" value="&#9668;">
-        <input class="page_number" type="number">
-        <input type="button" class="navbut next" value="&#9658;">
-        <input class="scale" type="range"><span class="scale_label">100</span>%
+        <div class="controls">
+            <input type="button" class="navbut prev" value="&#9668;">
+            <input class="page_number" type="number">
+            <input type="button" class="navbut next" value="&#9658;">
+            <input class="scale" type="range" min="0" max="200" step="1" value="100"><span class="scale_label">100</span>%
+        </div>
     </div>
 
     <canvas width="192" height="256" id="canvas"></canvas>

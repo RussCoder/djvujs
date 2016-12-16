@@ -29,6 +29,9 @@ class DjVuPage {
          */
         this.sjbz = null;
 
+        this.decoded = false;
+        this.info = null;
+
 
         // список всех порций данных - для toString
         this.iffchunks = [];

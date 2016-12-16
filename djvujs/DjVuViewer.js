@@ -7,23 +7,49 @@ class DjVuViewer {
         this.element = document.querySelector(selector);
         this.canvas = document.createElement('canvas');
         this.canvasCtx = this.canvas.getContext('2d');
-        this.prevBut = this.element.querySelector('.navbut.prev');
-        this.nextBut = this.element.querySelector('.navbut.next');
-        this.pageNumberBox = this.element.querySelector('.page_number');
-        this.scaleSlider = this.element.querySelector('.scale');
-        this.scaleLabel = this.element.querySelector('.scale_label');
+        this.prevBut = this.element.querySelector('.controls .navbut.prev');
+        this.nextBut = this.element.querySelector('.controls .navbut.next');
+        this.pageNumberBox = this.element.querySelector('.controls .page_number');
+        this.scaleSlider = this.element.querySelector('.controls .scale');
+        this.scaleLabel = this.element.querySelector('.controls .scale_label');
         this.img = this.element.querySelector('.image_wrapper img');
+        this.imgWrapper = this.element.querySelector('.image_wrapper');
         this._curPage = 0;
         this.pageNumber = null;
+        this.stdWidth
         /** @type {DjVuWorker} */
         this.worker = new DjVuWorker();
 
+        this.element.style.width = window.innerWidth * 0.9 + 'px';
+        this.element.style.height = window.innerHeight * 0.9 + 'px';
+
         this.nextBut.onclick = () => this.showNextPage();
         this.prevBut.onclick = () => this.showPrevPage();
+        this.pageNumberBox.onblur = (e) => this.showEnteredPage(e);
+        this.pageNumberBox.onkeypress = (e) => this.showEnteredPageByEnter(e);
+        this.scaleSlider.oninput = () => this.changeScale();
+    }
+
+    changeScale() {
+        this.scaleLabel.innerText = this.scaleSlider.value;
+        this.img.width = this.stdWidth * (+this.scaleSlider.value / 100);
+    }
+
+    showEnteredPageByEnter(e) {
+        if (e.keyCode === 13) {
+            this.pageNumberBox.blur();
+            this.showEnteredPage();
+        }
+    }
+
+    showEnteredPage(e) {
+        var page = +this.pageNumberBox.value;
+        console.log(page);
+        this.curPage = page;
     }
 
     get curPage() {
-        return this._curPage;
+        return this._curPage + 1;
     }
 
     set curPage(value) {
@@ -49,7 +75,7 @@ class DjVuViewer {
     }
 
     renderCurPage() {
-        return this.worker.getPageImageDataWithDPI(this.curPage).then(obj => {
+        return this.worker.getPageImageDataWithDPI(this._curPage).then(obj => {
             this.drawImage(obj.imageData, obj.dpi);
         });
     }
@@ -60,31 +86,32 @@ class DjVuViewer {
             .then(() => this.worker.getPageNumber())
             .then(number => {
                 this.pageNumber = number;
-                return this.worker.getPageImageDataWithDPI(this.curPage);
+                this.curPage = 1;
             })
-            .then(obj => {
-                this.drawImage(obj.imageData, obj.dpi);
-            });
     }
 
     setPage(page) {
-        if (page < 0 || page > this.pageNumber) {
-            return false;
+        page--;
+        if (page < 0) {
+            page = 0;
+        } else if (page > this.pageNumber - 1) {
+            page = this.pageNumber - 1;
         }
         this._curPage = page;
         if (this._curPage === 0) {
             this.prevBut.disabled = true;
-        } else if (this._curPage === this.pageNumber) {
+        } else if (this._curPage === this.pageNumber - 1) {
             this.nextBut.disabled = true;
         } else {
             this.unlockNavButtons();
         }
+        this.pageNumberBox.value = this.curPage;
         this.lockNavButtons();
         this.renderCurPage().then(() => {
             this.unlockNavButtons();
             if (this._curPage === 0) {
                 this.prevBut.disabled = true;
-            } else if (this._curPage === this.pageNumber) {
+            } else if (this._curPage === this.pageNumber - 1) {
                 this.nextBut.disabled = true;
             }
         });
@@ -102,8 +129,9 @@ class DjVuViewer {
 
         this.img.src = this.canvas.toDataURL();
         console.log("DataURL creating time = ", performance.now() - time);
-        this.img.width = image.width / scale;
+        this.stdWidth = image.width / scale;
+        this.img.width = this.stdWidth * (+this.scaleSlider.value / 100);
         //(tmp = this.canvas.parentNode) ? tmp.removeChild(this.canvas) : 0;
-        console.log("DataURL creating time = ", performance.now() - time);
+        console.log("Rescale time = ", performance.now() - time);
     }
 }
