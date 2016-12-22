@@ -16,7 +16,7 @@ window.onload = function () {
 }
 function loadDjVu() {
     var xhr = new XMLHttpRequest();
-    xhr.open("GET", "samples/colorbook.djvu");
+    xhr.open("GET", "samples/csl.djvu");
     xhr.responseType = "arraybuffer";
     xhr.onload = function (e) {
         console.log(e.loaded);
@@ -27,17 +27,11 @@ function loadDjVu() {
     xhr.send();
 }
 function loadPicture() {
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", "samples/bigfoto.jpg");
-    xhr.responseType = "arraybuffer";
-    xhr.onload = function (e) {
-        console.log(e.loaded);
-        fileSize = e.loaded;
-        var buf = xhr.response;
-        readPicture(buf);
-    }
-    xhr.send();
+    Globals.loadFile('samples/csl.djvu').then(buffer => {
+        readDjvu(buffer);
+    });
 }
+
 function readPicture(buffer) {
 
     createImageBitmap(new Blob([buffer])).then(function (image) {
@@ -70,7 +64,6 @@ function readPicture(buffer) {
 
 }
 function readDjvu(buf) {
-    console.log("DJ1");
     var link = document.querySelector('#dochref');
     var time = performance.now();
     console.log("Buffer length = " + buf.byteLength);
@@ -100,8 +93,10 @@ function readDjvu(buf) {
     canvas.style.maxWidth = image.width * 2 / scale + "px";
     canvas.style.maxWidth = image.width  / scale + "px";*/
 
-    Globals.drawImageSmooth(doc.pages[0].getImageData(), doc.pages[0].dpi);
-    writeln(doc.toString());
+    console.log('Before render');
+    Globals.drawImageSmooth(doc.pages[2].getImageData(), doc.pages[2].dpi);
+   // writeln(doc.toString(true));
+   //doc.countFiles();
     console.log(Globals.Timer.toString());
     console.log("Total execution time = ", performance.now() - time);
 }

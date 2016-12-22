@@ -21,6 +21,7 @@ window.onload = function () {
     //loadPicture();
     //renderDjVu();
     initViewer();
+    //Globals.loadFile('samples/csl.djvu').then(buf => showMetaData(buf));
 
 
 }
@@ -28,7 +29,7 @@ window.onload = function () {
 function initViewer() {
     /** @type {DjVuViewer} */
     var viewer = new DjVuViewer('.djvu_viewer');
-    viewer.loadDjVu('samples/php.djvu');
+    viewer.loadDjVu('samples/csl.djvu');
 }
 
 function renderDjVu() {
@@ -81,6 +82,14 @@ function readPicture(buffer) {
     });
 
 }
+
+function showMetaData(buffer) {
+    var worker = new DjVuWorker();
+    worker.createDocument(buffer)
+        .then(() => worker.getDocumentMetaData(true))
+        .then(text => writeln(text));
+}
+
 function readDjvu(buf) {
     console.log("DJ1");
     var link = document.querySelector('#dochref');

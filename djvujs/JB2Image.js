@@ -86,7 +86,10 @@ class JB2Image extends JB2Codec {
         let width, hoff, voff, flag;
         let height, index;
         let bm;
-        while (type !== 11) {
+        var count = 0;
+        while (type !== 11 && count < 8000) {
+            count++;
+            //console.log(type);
             switch (type) {
                 case 1:
                     width = this.decodeNum(0, 262142, this.symbolWidthCtx);
@@ -151,6 +154,9 @@ class JB2Image extends JB2Codec {
                 break;
             }
         }
+        if(count >= 5000) {
+            console.warn("Too many inerations in JB2 decoding!");
+        } 
     }
 
     decodeSymbolCoords(width, height) {

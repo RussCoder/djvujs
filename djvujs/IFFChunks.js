@@ -128,25 +128,28 @@ class DIRMChunk extends IFFChunk {
         super(bs);
         this.dflags = bs.byte();
         this.nfiles = bs.getInt16();
-        this.offsets = [];
-        this.sizes = [];
-        this.flags = [];
-        this.ids = [];
+        this.offsets = new Array(this.nfiles);
+        this.sizes = new Array(this.nfiles);
+        this.flags = new Array(this.nfiles);
+        this.ids = new Array(this.nfiles);
+        this.names = new Array(this.nfiles);
+        this.titles = new Array(this.nfiles);
         for (var i = 0; i < this.nfiles; i++) {
-            this.offsets.push(bs.getInt32());
+            this.offsets[i] = bs.getInt32();
         }
         var bsbs = bs.fork(this.length - 3 - 4 * this.nfiles);
         var bzz = new BZZDecoder(new ZPDecoder(bsbs));
         var bsz = bzz.getByteStream();
         for (var i = 0; i < this.nfiles; i++) {
-            this.sizes.push(bsz.getUint24());
+            this.sizes[i] = bsz.getUint24();
         }
         for (var i = 0; i < this.nfiles; i++) {
-            this.flags.push(bsz.byte());
+            this.flags[i] = bsz.byte();
         }
         for (var i = 0; i < this.nfiles && !bsz.isEmpty(); i++) {
-            //todo проверять hasname и hastitle
-            this.ids.push(bsz.readStrNT());
+            this.ids[i] = bsz.readStrNT();
+            this.names[i] = this.flags[i] & 128 ? bsz.readStrNT() : this.ids[i]; // check hasname flag
+            this.titles[i] = this.flags[i] & 64 ? bsz.readStrNT() : this.ids[i]; // check hastitle flag
         }
     }
 
