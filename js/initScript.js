@@ -12,8 +12,9 @@ window.onload = function () {
     Globals.init();
     // testFunc();
     loadDjVu();
-    //loadPicture();
+    //loadPicture(); 
 }
+
 function loadDjVu() {
     var xhr = new XMLHttpRequest();
     xhr.open("GET", "samples/csl.djvu");
@@ -22,10 +23,12 @@ function loadDjVu() {
         console.log(e.loaded);
         fileSize = e.loaded;
         var buf = xhr.response;
-        readDjvu(buf);
+        //readDjvu(buf);
+        splitDjvu(buf);
     }
     xhr.send();
 }
+
 function loadPicture() {
     Globals.loadFile('samples/csl.djvu').then(buffer => {
         readDjvu(buffer);
@@ -61,44 +64,29 @@ function readPicture(buffer) {
         // writeln(doc.toString());
         console.log('pictureTotalTime = ', performance.now() - pictureTotalTime);
     });
-
 }
+
 function readDjvu(buf) {
     var link = document.querySelector('#dochref');
     var time = performance.now();
     console.log("Buffer length = " + buf.byteLength);
     var doc = new DjVuDocument(buf);
     Globals.counter = 0;
-    /*var worker = new DjVuWorker();
-    worker.createDocument(buf);*/
-    /*worker.getPageImageData(3, function (imageData) {
-        //Globals.canvasCtx.putImageData(imageData, 0, 0);
-        Globals.drawImageSmooth(imageData, 600);
-        console.log("Total execution time = ", performance.now() - time);
-    });*/
-    //Globals.canvasCtx.putImageData(doc.pages[0].getImage(), 0, 0);
-    //link.href = ndoc.createObjectURL();
-    //writeln(doc.toString());
-    //writeln(djvuPage.toString());
-
-    /*var dpi = doc.pages[0].init().dpi;
-    var image = doc.pages[0].getImageData();
-    var canvas = document.getElementById('canvas');
-    var ctx = canvas.getContext('2d');
-    canvas.width = image.width;
-    canvas.height = image.height;
-    var scale = dpi / 100;
-
-    ctx.putImageData(image, 0, 0);
-    canvas.style.maxWidth = image.width * 2 / scale + "px";
-    canvas.style.maxWidth = image.width  / scale + "px";*/
 
     console.log('Before render');
-    Globals.drawImageSmooth(doc.pages[2].getImageData(), doc.pages[2].dpi);
-   // writeln(doc.toString(true));
-   //doc.countFiles();
+    Globals.drawImageSmooth(doc.pages[2].getImageData(), doc.pages[2].dpi * 0.8);
+    // writeln(doc.toString(true));
+    //doc.countFiles();
     console.log(Globals.Timer.toString());
     console.log("Total execution time = ", performance.now() - time);
+}
+
+function splitDjvu(buf) {
+    var link = document.querySelector('#dochref');
+    console.log("Buffer length = " + buf.byteLength);
+    var doc = new DjVuDocument(buf);
+    var slice = doc.slice(0, 11);
+    link.href = slice.createObjectURL();
 }
 
 /**

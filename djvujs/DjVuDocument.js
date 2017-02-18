@@ -125,6 +125,8 @@ class DjVuDocument {
         dirm.dflags = this.dirm.dflags;
         var pageNumber = to - from;
         dirm.flags = [];
+        dirm.names = [];
+        dirm.titles = [];
         dirm.sizes = [];
         dirm.ids = [];
         var chuckBS = [];
@@ -176,6 +178,8 @@ class DjVuDocument {
                 dirm.flags.push(this.dirm.flags[i]);
                 dirm.sizes.push(this.dirm.sizes[i]);
                 dirm.ids.push(this.dirm.ids[i]);
+                dirm.names.push(this.dirm.names[i]);
+                dirm.titles.push(this.dirm.titles[i]);
                 var cbs = new ByteStream(this.buffer, this.dirm.offsets[i], this.dirm.sizes[i]);
                 chuckBS.push(cbs);
             }

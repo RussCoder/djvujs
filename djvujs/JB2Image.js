@@ -46,7 +46,7 @@ class JB2Image extends JB2Codec {
             this.dict = this.decodeNum(0, 262142, this.inheritDictSizeCtx);
             //тип следующей записи (должен быть 0)
             type = this.decodeNum(0, 11, this.recordTypeCtx);
-            //console.log(size);
+            console.log("Zero", type);
         }
 
         this.width = this.decodeNum(0, 262142, this.imageSizeCtx) || 200;
@@ -87,14 +87,17 @@ class JB2Image extends JB2Codec {
         let height, index;
         let bm;
         var count = 0;
-        while (type !== 11 && count < 8000) {
+        var maxInterationNumber = 363;
+        while (type !== 11 && count < maxInterationNumber) {
             count++;
             //console.log(type);
             switch (type) {
                 case 1:
+                console.log("ONE!!!");
                     width = this.decodeNum(0, 262142, this.symbolWidthCtx);
                     height = this.decodeNum(0, 262142, this.symbolHeightCtx);
                     bm = this.decodeBitmap(width, height);
+                    this.drawBitmap(bm);
                     var coords = this.decodeSymbolCoords(bm.width, bm.height);
                     this.copyToBitmap(bm, coords.x, coords.y);
                     this.dict.push(bm);
@@ -138,23 +141,27 @@ class JB2Image extends JB2Codec {
                     bm = this.dict[index];
                     var coords = this.decodeSymbolCoords(bm.width, bm.height);
                     this.copyToBitmap(bm, coords.x, coords.y);
-                    //this.drawBitmap(bm);
+                    this.drawBitmap(bm);
                     break;
                 default:
                     endflag = 1;
                     console.log("Type ", type);
-                //throw new Error("Indefined type in JB2Image");
+                    throw new Error("Indefined type in JB2Image");
             }
             if (endflag) {
                 return;
             }
             type = this.decodeNum(0, 11, this.recordTypeCtx);
+
+            if(count > maxInterationNumber -50) {
+                console.log(type);
+            }
             if (type > 11) {
                 console.log("TYPE ERROR " + type);
                 break;
             }
         }
-        if(count >= 5000) {
+        if(count >= maxInterationNumber) {
             console.warn("Too many inerations in JB2 decoding!");
         } 
     }

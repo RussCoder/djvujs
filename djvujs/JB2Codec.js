@@ -13,8 +13,8 @@ class Bitmap {
         }
         var tmp = i * this.width + j;
         var index = tmp >> 3;
-        var bitIndex = tmp & 7;      
-        var mask = 128 >> bitIndex;        
+        var bitIndex = tmp & 7;
+        var mask = 128 >> bitIndex;
         var answ = (this.innerArray[index] & mask) ? 1 : 0;
         return answ;
     }
@@ -61,8 +61,8 @@ class BitmapX {
 class NumContext {
     constructor() {
         this.ctx = [0];
-        this._left = null ;
-        this._right = null ;
+        this._left = null;
+        this._right = null;
     }
     get left() {
         if (!this._left) {
@@ -104,30 +104,40 @@ class JB2Codec extends IFFChunk {
         this.commentLengthCtx = new NumContext();
         this.commentOctetCtx = new NumContext();
     }
-    
+
     decodeNum(low, high, numctx) {
         var v = 0;
         var decision = 0;
         var range = 0xffffffff;
-        
+
+        if (low === high) {
+            return low;
+        }
+
         //phase 1
-        decision = (low >= v) || ((high >= v) && this.zp.decode(numctx.ctx, 0));
+        decision = (low >= 0) || ((high >= 0) && this.zp.decode(numctx.ctx, 0));
         // раскодировали знак
         var negative = !decision;
         numctx = negative ? numctx.left : numctx.right;
-        
+
+        if (negative) { // переводим границы в положительную полуось
+            var temp = -low - 1;
+            low = -high - 1;
+            high = temp;
+        }
+
         //phase 2
-        decision = (high >= (v << 1) + 1) && this.zp.decode(numctx.ctx, 0);
+        decision = (low > (v << 1) + 1) || ((high >= (v << 1) + 1) && this.zp.decode(numctx.ctx, 0));
         while (decision) {
             v += v + 1;
             numctx = numctx.right;
-            decision = (low >= v) || ((high >= (v << 1) + 1) && this.zp.decode(numctx.ctx, 0));
+            decision = (low > (v << 1) + 1) || ((high >= (v << 1) + 1) && this.zp.decode(numctx.ctx, 0));
         }
         numctx = numctx.left;
         //phase 3
         range = (v + 1) >> 1;
         while (range) {
-            decision = (low >= v) || ((high >= (v + range)) && this.zp.decode(numctx.ctx, 0));
+            decision = (low > v) || ((high >= (v + range)) && this.zp.decode(numctx.ctx, 0));
             v += decision ? range : 0;
             numctx = decision ? numctx.right : numctx.left;
             range >>= 1;
@@ -135,14 +145,14 @@ class JB2Codec extends IFFChunk {
         //phase 4
         return negative ? (-v - 1) : v;
     }
-    
+
     toString() {
         var str = super.toString();
         return str;
     }
-    
+
     decodeBitmap(width, height) {
-        var bitmap = new Bitmap(width,height);
+        var bitmap = new Bitmap(width, height);
         /*for (let i = 0; i < height; i++) {
             bitmap[i] = new Uint8Array(width);
         }*/
@@ -154,7 +164,7 @@ class JB2Codec extends IFFChunk {
         }
         return bitmap;
     }
-    
+
     getCtxIndex(bm, i, j) {
         var index = 0;
         let r = i + 2;
@@ -163,26 +173,26 @@ class JB2Codec extends IFFChunk {
         }
         r--;
         if (bm.hasRow(r)) {
-            index |= ((bm.get(r, j - 2) || 0) << 6) | ((bm.get(r, j - 1) || 0) << 5) | 
-            (bm.get(r, j) << 4) | ((bm.get(r, j + 1) || 0) << 3) | ((bm.get(r, j + 2) || 0) << 2);
+            index |= ((bm.get(r, j - 2) || 0) << 6) | ((bm.get(r, j - 1) || 0) << 5) |
+                (bm.get(r, j) << 4) | ((bm.get(r, j + 1) || 0) << 3) | ((bm.get(r, j + 2) || 0) << 2);
         }
         index |= ((bm.get(i, j - 2) || 0) << 1) | (bm.get(i, j - 1) || 0);
         return index;
     }
-    
+
     decodeBitmapRef(width, height, mbm) {
         //current bitmap
-        let cbm = new Bitmap(width,height);
+        let cbm = new Bitmap(width, height);
         var alignInfo = this.alignBitmaps(cbm, mbm);
         for (let i = height - 1; i >= 0; i--) {
             for (let j = 0; j < width; j++) {
-                this.zp.decode(this.refinementBitmapCtx, 
-                this.getCtxIndexRef(cbm, mbm, alignInfo, i, j)) ? cbm.set(i, j) : 0;
+                this.zp.decode(this.refinementBitmapCtx,
+                    this.getCtxIndexRef(cbm, mbm, alignInfo, i, j)) ? cbm.set(i, j) : 0;
             }
         }
         return cbm;
     }
-    
+
     getCtxIndexRef(cbm, mbm, alignInfo, i, j) {
         var index = 0;
         let r = i + 1;
@@ -190,7 +200,7 @@ class JB2Codec extends IFFChunk {
             index = ((cbm.get(r, j - 1) || 0) << 10) | (cbm.get(r, j) << 9) | ((cbm.get(r, j + 1) || 0) << 8);
         }
         index |= (cbm.get(i, j - 1) || 0) << 7;
-        
+
         r = i + alignInfo.rowshift + 1;
         let c = j + alignInfo.colshift;
         index |= mbm.hasRow(r) ? mbm.get(r, c) << 6 : 0;
@@ -204,7 +214,7 @@ class JB2Codec extends IFFChunk {
         }
         return index;
     }
-    
+
     alignBitmaps(cbm, mbm) {
         let cwidth = cbm.width - 1;
         let cheight = cbm.height - 1;
@@ -218,18 +228,18 @@ class JB2Codec extends IFFChunk {
             'colshift': mcol - ccol
         };
     }
-    
+
     decodeComment() {
         var length = this.decodeNum(0, 262142, this.commentLengthCtx);
         var comment = new Uint8Array(length);
-        for (let i = 0; i < length; comment[i++] = this.decodeNum(0, 255, this.commentOctetCtx)) {}
+        for (let i = 0; i < length; comment[i++] = this.decodeNum(0, 255, this.commentOctetCtx)) { }
         return comment;
     }
-    
+
     drawBitmap(bm) {
         var image = document.createElement('canvas')
-        .getContext('2d')
-        .createImageData(bm.width, bm.height);
+            .getContext('2d')
+            .createImageData(bm.width, bm.height);
         for (let i = 0; i < bm.height; i++) {
             for (let j = 0; j < bm.width; j++) {
                 let v = bm.get(i, j) ? 0 : 255;
@@ -238,7 +248,7 @@ class JB2Codec extends IFFChunk {
                 image.data[index + 1] = v;
                 image.data[index + 2] = v;
                 image.data[index + 3] = 255;
-            
+
             }
         }
         // Globals.canvas.width = Globals.canvas.width;
