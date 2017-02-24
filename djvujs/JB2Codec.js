@@ -105,7 +105,7 @@ class JB2Codec extends IFFChunk {
         this.commentOctetCtx = new NumContext();
     }
 
-    decodeNum(low, high, numctx) {
+    decodeNumX(low, high, numctx) {
         var v = 0;
         var decision = 0;
         var range = 0xffffffff;
@@ -144,6 +144,61 @@ class JB2Codec extends IFFChunk {
         }
         //phase 4
         return negative ? (-v - 1) : v;
+    }
+
+    decodeNum(low, high, numctx) {
+        let negative= false;
+        let cutoff;
+    
+        // Start all phases
+        cutoff = 0;
+        for (let phase= 1, range = 0xffffffff; range != 1;)
+        {
+            // encode
+            let decision = (low >= cutoff) || ((high >= cutoff) && this.zp.decode(numctx.ctx, 0));
+            // context for new bit
+            numctx = decision ? numctx.right : numctx.left;
+            // phase dependent part
+            switch (phase) {
+                case 1:
+                    negative = !decision;
+                    if (negative) {
+                        let temp = - low - 1;
+                        low = - high - 1;
+                        high = temp;
+                    }
+                    phase = 2; cutoff = 1;
+                    break;
+
+                case 2:
+                    if (!decision) {
+                        phase = 3;
+                        range = (cutoff + 1) / 2;
+                        if (range == 1)
+                            cutoff = 0;
+                        else
+                            cutoff -= range / 2;
+                    }
+                    else {
+                        cutoff += cutoff + 1;
+                    }
+                    break;
+
+                case 3:
+                    range /= 2;
+                    if (range != 1) {
+                        if (!decision)
+                            cutoff -= range / 2;
+                        else
+                            cutoff += range / 2;
+                    }
+                    else if (!decision) {
+                        cutoff--;
+                    }
+                    break;
+            }
+        }
+        return (negative) ? (- cutoff - 1) : cutoff;
     }
 
     toString() {

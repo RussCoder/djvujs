@@ -87,9 +87,10 @@ class JB2Image extends JB2Codec {
         let height, index;
         let bm;
         var count = 0;
-        var maxInterationNumber = 363;
+        var maxInterationNumber = 370;
         while (type !== 11 && count < maxInterationNumber) {
             count++;
+            console.log('count', count);
             //console.log(type);
             switch (type) {
                 case 1:
@@ -187,10 +188,12 @@ class JB2Image extends JB2Codec {
         }
         this.baseline.add(y);
         this.lastRight = x + width - 1;
+        console.log('coords', x, y);
         return {
             'x': x,
             'y': y
         };
+        
     }
 
     // принимает битмап и координаты левого нижнего угла в обычной системе координат

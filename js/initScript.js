@@ -23,8 +23,8 @@ function loadDjVu() {
         console.log(e.loaded);
         fileSize = e.loaded;
         var buf = xhr.response;
-        //readDjvu(buf);
-        splitDjvu(buf);
+        readDjvu(buf);
+        //splitDjvu(buf);
     }
     xhr.send();
 }
