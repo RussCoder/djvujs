@@ -37,6 +37,7 @@ onmessage = function (oEvent) {
     var obj = oEvent.data;
     handlers[obj.command](obj);
   } catch (error) {
+    debugger;
     postMessage({ command: 'Error', id: obj.id, message: error.message });
   }
 };

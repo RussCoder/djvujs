@@ -147,13 +147,12 @@ class JB2Codec extends IFFChunk {
     }
 
     decodeNum(low, high, numctx) {
-        let negative= false;
+        let negative = false;
         let cutoff;
-    
+
         // Start all phases
         cutoff = 0;
-        for (let phase= 1, range = 0xffffffff; range != 1;)
-        {
+        for (let phase = 1, range = 0xffffffff; range != 1;) {
             // encode
             let decision = (low >= cutoff) || ((high >= cutoff) && this.zp.decode(numctx.ctx, 0));
             // context for new bit
@@ -291,6 +290,9 @@ class JB2Codec extends IFFChunk {
         return comment;
     }
 
+    /**
+     * Отладочная функция для просмотра символов.
+     */
     drawBitmap(bm) {
         var image = document.createElement('canvas')
             .getContext('2d')

@@ -56,7 +56,6 @@ class DjVuWorker {
                     imageData: new ImageData(new Uint8ClampedArray(obj.buffer), obj.width, obj.height),
                     dpi: obj.dpi
                 });
-                console.log('--**', +new Date());
                 break;
             case 'createDocument':
                 this.pagenumber = obj.pagenumber;

@@ -126,7 +126,7 @@ class DjVuPage {
         this.decode();
         var time = performance.now();
         //достаем маску
-        if (this.sjbz) {
+        if (this.sjbz && this.sjbz.bitmap) {
             var bm = this.sjbz.bitmap;
         } else {
             //если только фоновый слой
@@ -143,10 +143,45 @@ class DjVuPage {
             return this.sjbz.getImage();
         }
 
+        var fgscale, bgscale, fgpixelmap, bgpixelmap;
+
+        if (this.bgimage) {
+            //масштабы на случай если закодированы в более меньшем разрешении
+            bgscale = Math.round(this.info.width / this.bgimage.info.width);
+            bgpixelmap = this.bgimage.pixelmap;
+        } else {
+            bgscale = 1;
+            bgpixelmap = {
+                getPixel() {
+                    return {
+                        r: 255,
+                        g: 255,
+                        b: 255
+                    }
+                }
+            }
+        }
+
+        if (this.fgimage) {
+            //масштабы на случай если закодированы в более меньшем разрешении
+            fgscale = Math.round(this.info.width / this.fgimage.info.width);
+            fgpixelmap = this.bgimage.pixelmap;
+        } else {
+            fgscale = 1;
+            fgpixelmap = {
+                getPixel() {
+                    return {
+                        r: 0,
+                        g: 0,
+                        b: 0
+                    }
+                }
+            }
+        }
+
+
         var image = new ImageData(this.info.width, this.info.height);
-        //масштабы на случай если закодированы в более меньшем разрешении
-        var fgscale = Math.round(this.info.width / this.fgimage.info.width);
-        var bgscale = Math.round(this.info.width / this.bgimage.info.width);
+    
         //набираем изображение по пикселям
         for (var i = 0; i < this.info.height; i++) {
             for (var j = 0; j < this.info.width; j++) {
@@ -154,11 +189,11 @@ class DjVuPage {
                 if (bm.get(i, j)) {
                     var is = Math.floor(i / fgscale);
                     var js = Math.floor(j / fgscale);
-                    pixel = this.fgimage.pixelmap.getPixel(is, js);
+                    pixel = fgpixelmap.getPixel(is, js);
                 } else {
                     var is = Math.floor(i / bgscale);
                     var js = Math.floor(j / bgscale);
-                    pixel = this.bgimage.pixelmap.getPixel(is, js);
+                    pixel = bgpixelmap.getPixel(is, js);
                 }
                 var index = ((this.info.height - i - 1) * this.info.width + j) * 4;
                 image.data[index] = pixel.r;
