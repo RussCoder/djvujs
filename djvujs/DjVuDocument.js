@@ -18,11 +18,8 @@ class DjVuDocument {
             this.dirm = new DIRMChunk(this.bs.fork(length + 8));
             this.bs.jump(8 + length + (length & 1 ? 1 : 0));
         }
-        Globals._doc = this;
-        Globals.getINCLChunk = function (id) {
-            return Globals._doc.djvi[id].innerChunk;
-        }
-        
+        this.getINCLChunkCallback = id => this.djvi[id].innerChunk;
+
         /**
          * @type {Array<DjVuPage>}
          */
@@ -45,7 +42,11 @@ class DjVuDocument {
                 this.bs.jump(-12);
                 switch (id) {
                     case "FORMDJVU":
-                        this.pages.push(new DjVuPage(this.bs.fork(length + 8), this.dirm.ids[i]));
+                        this.pages.push(new DjVuPage(
+                            this.bs.fork(length + 8),
+                            this.dirm.ids[i],
+                            this.getINCLChunkCallback
+                        ));
                         break;
                     case "FORMDJVI":
                         //через строчку id chunk INCL ссылается на нужный ресурс

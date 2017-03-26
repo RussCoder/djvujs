@@ -62,9 +62,8 @@ class JB2Dict extends JB2Codec {
                 endflag = 1;
                 break;
             default:
-                console.log("Type ", type);
                 endflag = 1;
-                throw new Error("Indefined type in JB2Dict");          
+                throw new Error("Indefined type in JB2Dict: ", type);          
             }
             if (endflag) {
                 return;

@@ -88,8 +88,6 @@ class СolorChunkDataHeader {
 class INCLChunk extends IFFChunk {
     constructor(bs) {
         super(bs);
-        this.ref = '';
-        var byte;
         var tmp = this.bs.getUint8Array().slice(0);
         this.ref = String.fromCharCode(...tmp);
     }

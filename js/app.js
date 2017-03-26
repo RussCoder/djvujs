@@ -23,8 +23,8 @@ function reset(event) {
     $('.info').text('');
     $('#procmess').text('');
     $('#filehref').hide();
-    djvuViewer.reset();
-    djvuWorker.reset();
+    djvuViewer && djvuViewer.reset();
+    djvuWorker && djvuWorker.reset();
 }
 
 function viewFuncPrepare() {
