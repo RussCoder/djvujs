@@ -165,7 +165,7 @@ class DjVuPage {
         if (this.fgimage) {
             //масштабы на случай если закодированы в более меньшем разрешении
             fgscale = Math.round(this.info.width / this.fgimage.info.width);
-            fgpixelmap = this.bgimage.pixelmap;
+            fgpixelmap = this.fgimage.pixelmap;
         } else {
             fgscale = 1;
             fgpixelmap = {
