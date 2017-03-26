@@ -7,7 +7,7 @@ class DjVuPage {
     /**
      * Принимает байтовый поток и id из машинного оглавлени документа. 
      */
-    constructor(bs, dirmID) {
+    constructor(bs, dirmID, getINCLChunkCallback) {
         this.id = "FORM:DJVU"; // данная информация была проверена в DjVuDocument
         this.length = bs.length - 8;
         this.dirmID = dirmID; // нужно для метаданных
@@ -16,6 +16,7 @@ class DjVuPage {
         this.djbz = null;
         this.bg44arr = new Array();
         this.fg44 = null;
+        this.getINCLChunkCallback = getINCLChunkCallback;
         /**
          * @type {IWImage}
          */
@@ -104,11 +105,13 @@ class DjVuPage {
                 chunk = this.sjbz = new JB2Image(chunkBs);
             } else if (id === "INCL") {
                 chunk = this.incl = new INCLChunk(chunkBs);
-                var inclChunk = Globals.getINCLChunk(this.incl.ref);
+                var inclChunk = this.getINCLChunkCallback(this.incl.ref);
                 inclChunk.id === "Djbz" ? this.djbz = inclChunk : this.iffchunks.push(inclChunk);
                 this.dependencies.push(chunk.ref);
             } else if (id === "CIDa") {
                 chunk = new CIDaChunk(chunkBs);
+            } else if (id === 'Djbz') {
+                chunk = this.djbz = new JB2Dict(chunkBs);
             } else {
                 chunk = new IFFChunk(chunkBs);
             }
@@ -181,7 +184,7 @@ class DjVuPage {
 
 
         var image = new ImageData(this.info.width, this.info.height);
-    
+
         //набираем изображение по пикселям
         for (var i = 0; i < this.info.height; i++) {
             for (var j = 0; j < this.info.width; j++) {
