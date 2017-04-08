@@ -2,7 +2,7 @@
 
 class Bitmap {
     constructor(width, height) {
-        var length = Math.ceil(width * height / 8);
+        var length = Math.ceil(width * height / 8); // число бит необходимых для кодировки черно-белого изображенияы
         this.height = height;
         this.width = width;
         this.innerArray = new Uint8Array(length);
@@ -18,7 +18,7 @@ class Bitmap {
         var answ = (this.innerArray[index] & mask) ? 1 : 0;
         return answ;
     }
-    set(i, j) {
+    set(i, j) { // сделать "пиксель" черным
         var tmp = i * this.width + j;
         var index = tmp >> 3;
         var bitIndex = tmp & 7;
@@ -31,6 +31,7 @@ class Bitmap {
     }
 }
 /*
+// Более простой и гораздо менее эффективный класс.
 class BitmapX {
     constructor(width, height) {
         this.height = height;
