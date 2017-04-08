@@ -62,11 +62,11 @@ var TestHelper = {
 
     compareImageData(canonicImageData, resultImageData) {
         if (canonicImageData.width !== resultImageData.width) {
-            return "WIdth bad!";
+            return `Несовпадение ширины! ${canonicImageData.width} и ${resultImageData.width}`;
         }
 
         if (canonicImageData.height !== resultImageData.height) {
-            return "bad height";
+            return `Несовпадение высоты! ${canonicImageData.height} и ${resultImageData.height}`;
         }
 
         var strictCheck = () => {
@@ -80,12 +80,22 @@ var TestHelper = {
             return null;
         };
 
+        var height = canonicImageData.height * 4;
+        var width = canonicImageData.width * 4;
+        var byteStep = 8;
+
         var luft1Check = () => {
             for (var i = 0; i < resultImageData.data.length; i++) {
                 if (
                     canonicImageData.data[i] !== resultImageData.data[i]
-                    && canonicImageData.data[i + 4] !== resultImageData.data[i]
-                    && canonicImageData.data[i - 4] !== resultImageData.data[i]
+                    && canonicImageData.data[i + byteStep] !== resultImageData.data[i]
+                    && canonicImageData.data[i - byteStep] !== resultImageData.data[i]
+                    && canonicImageData.data[i + width] !== resultImageData.data[i]
+                    && canonicImageData.data[i + width + byteStep] !== resultImageData.data[i]
+                    && canonicImageData.data[i + width - byteStep] !== resultImageData.data[i]
+                    && canonicImageData.data[i - width] !== resultImageData.data[i]
+                    && canonicImageData.data[i - width + byteStep] !== resultImageData.data[i]
+                    && canonicImageData.data[i - width - byteStep] !== resultImageData.data[i]
                 ) {
                     return i;
                 }
@@ -124,12 +134,20 @@ var Tests = {
             });
     },
 
-    testBG44() {
+    testGrayscaleBG44() {
         return this._imageTest("boy.djvu", 0, "boy.png");
+    },
+
+    testColorBG44() {
+        return this._imageTest("chicken.djvu", 0, "chicken.png");
     },
 
     testJB2() {
         return this._imageTest("DjVu3Spec.djvu", 47, "DjVu3Spec_48.png");
+    },
+
+    test3LayerColorImage() {
+        return this._imageTest("colorbook.djvu", 3, "colorbook_4.png");
     }
 }
 

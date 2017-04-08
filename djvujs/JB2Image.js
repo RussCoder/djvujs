@@ -56,7 +56,7 @@ class JB2Image extends JB2Codec {
         //позиции первого и предыдущего символа на строке
         this.lastLeft = 0;
         this.lastBottom = this.height - 1;
-        this.firstLeft = 0;
+        this.firstLeft = -1; // получено экспериментально, чтобы не вычитать 1 каждый раз из x как это делается в javadjvu
         this.firstBottom = this.height - 1;
         // флаг всегда должен быть = 0 
         let flag = this.zp.decode([0], 0);
@@ -88,12 +88,12 @@ class JB2Image extends JB2Codec {
         let bm;
         var count = 0;
         //var maxInterationNumber = 370;
-        while (type !== 11 /*&& count < maxInterationNumber*/) {
+        while (type !== 11 /*&& count < maxInterationNumber*/) { // 11 means "End of data"
             //count++;
             //console.log('count', count);
             //console.log(type);
             switch (type) {
-                case 1:
+                case 1: // New symbol, add to image and library 
                     width = this.decodeNum(0, 262142, this.symbolWidthCtx);
                     height = this.decodeNum(0, 262142, this.symbolHeightCtx);
                     bm = this.decodeBitmap(width, height);
@@ -102,13 +102,13 @@ class JB2Image extends JB2Codec {
                     this.copyToBitmap(bm, coords.x, coords.y);
                     this.dict.push(bm);
                     break;
-                case 2:
+                case 2: // New symbol, add to library only
                     width = this.decodeNum(0, 262142, this.symbolWidthCtx);
                     height = this.decodeNum(0, 262142, this.symbolHeightCtx);
                     bm = this.decodeBitmap(width, height);
                     this.dict.push(bm);
                     break;
-                case 4:
+                case 4: // Matched symbol with refinement, add to image and library
                     index = this.decodeNum(0, this.dict.length - 1, this.symbolIndexCtx);
                     var widthdiff = this.decodeNum(-262143, 262142, this.symbolWidthDiffCtx);
                     var heightdiff = this.decodeNum(-262143, 262142, this.symbolHeightDiffCtx);
@@ -119,7 +119,7 @@ class JB2Image extends JB2Codec {
                     //this.drawBitmap(cbm);
                     this.dict.push(cbm);
                     break;
-                case 5:
+                case 5: // Matched symbol with refinement, add to library only
                     index = this.decodeNum(0, this.dict.length - 1, this.symbolIndexCtx);
                     widthdiff = this.decodeNum(-262143, 262142, this.symbolWidthDiffCtx);
                     heightdiff = this.decodeNum(-262143, 262142, this.symbolHeightDiffCtx);
@@ -127,7 +127,7 @@ class JB2Image extends JB2Codec {
                     var cbm = this.decodeBitmapRef(mbm.width + widthdiff, heightdiff + mbm.height, mbm);
                     this.dict.push(cbm);
                     break;
-                case 6:
+                case 6: // Matched symbol with refinement, add to image only
                     index = this.decodeNum(0, this.dict.length - 1, this.symbolIndexCtx);
                     var widthdiff = this.decodeNum(-262143, 262142, this.symbolWidthDiffCtx);
                     var heightdiff = this.decodeNum(-262143, 262142, this.symbolHeightDiffCtx);
@@ -136,7 +136,7 @@ class JB2Image extends JB2Codec {
                     var coords = this.decodeSymbolCoords(cbm.width, cbm.height);
                     this.copyToBitmap(cbm, coords.x, coords.y);
                     break;
-                case 7:
+                case 7: // Matched symbol, copy to image without refinement
                     index = this.decodeNum(0, this.dict.length - 1, this.symbolIndexCtx);
                     bm = this.dict[index];
                     var coords = this.decodeSymbolCoords(bm.width, bm.height);
@@ -166,42 +166,43 @@ class JB2Image extends JB2Codec {
     }
 
     decodeSymbolCoords(width, height) {
-        var flag = this.zp.decode(this.offsetTypeCtx, 0);
-        //console.log(flag);
-        var hoffCtx = flag ? this.hoffCtx : this.shoffCtx;
-        var voffCtx = flag ? this.voffCtx : this.svoffCtx;
-        var hoff = this.decodeNum(-262143, 262142, hoffCtx);
-        var voff = this.decodeNum(-262143, 262142, voffCtx);
+        var flag = this.zp.decode(this.offsetTypeCtx, 0); // флаг новой строки
+        var horizontalOffsetCtx = flag ? this.hoffCtx : this.shoffCtx;
+        var verticalOffsetCtx = flag ? this.voffCtx : this.svoffCtx;
+        var horizontalOffset = this.decodeNum(-262143, 262142, horizontalOffsetCtx);
+        var verticalOffset = this.decodeNum(-262143, 262142, verticalOffsetCtx);
         var x, y;
         if (flag) {
-            x = this.firstLeft + hoff;
-            y = this.firstBottom + voff - height + 1;
+            x = this.firstLeft + horizontalOffset;
+            y = this.firstBottom + verticalOffset - height + 1;
             this.firstLeft = x;
             this.firstBottom = y;
             this.baseline.reinit();
         }
         else {
-            x = this.lastRight + hoff;
-            y = this.baseline.getVal() + voff;
+            x = this.lastRight + horizontalOffset;
+            y = this.baseline.getVal() + verticalOffset;
         }
         this.baseline.add(y);
         this.lastRight = x + width - 1;
-        //console.log('coords', x, y);
         return {
-            'x': x,
+            'x': x,  // не вычитаем 1, так как firstLeft инициализирован -1, а Baseline и так выдает верный результат
             'y': y
         };
-        
+
     }
 
     // принимает битмап и координаты левого нижнего угла в обычной системе координат
     copyToBitmap(bm, x, y) {
-        this.bitmap ? 0 : this.bitmap = new Bitmap(this.width, this.height);
-        for (let i = y, k = 0; k < bm.height; k++ ,
-            i++) {
-            for (let j = x, t = 0; t < bm.width; t++ ,
-                j++) {
-                bm.get(k, t) ? this.bitmap.set(i, j) : 0;
+        if (!this.bitmap) {
+            this.bitmap = new Bitmap(this.width, this.height);
+        }
+
+        for (var i = y, k = 0; k < bm.height; k++ , i++) {
+            for (var j = x, t = 0; t < bm.width; t++ , j++) {
+                if (bm.get(k, t)) {
+                    this.bitmap.set(i, j);
+                }
             }
         }
     }
@@ -217,7 +218,6 @@ class JB2Image extends JB2Codec {
                 image.data[index + 1] = v;
                 image.data[index + 2] = v;
                 image.data[index + 3] = 255;
-
             }
         }
         console.log("JB2Image creating time = ", performance.now() - time);
