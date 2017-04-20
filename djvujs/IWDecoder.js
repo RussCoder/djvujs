@@ -254,7 +254,7 @@ class IWDecoder extends IWCodecBaseClass {
         }
         for (var r = 0; r < blockRows; r++) {
             for (var c = 0; c < blockCols; c++) {
-                let block = this.blocks[r * blockCols + c];
+                var block = this.blocks[r * blockCols + c];
                 for (var i = 0; i < 1024; i++) {
                     /*var bits = [];
                     for (let j = 0; j < 10; j++) {
@@ -271,6 +271,7 @@ class IWDecoder extends IWCodecBaseClass {
         }
         return bitmap;
     }
+
     inverseWaveletTransform(bitmap) {
         //return;
         var s = 16;
@@ -358,8 +359,7 @@ class IWDecoder extends IWCodecBaseClass {
                     }
                 }
             }
-            s >>= 1;
-            // деление на 2
+            s >>= 1; // деление на 2
         }
     }
 }

@@ -76,8 +76,14 @@ class СolorChunkDataHeader {
             // должна быть равна ширине(высоте) в INFOChunk или быть от 2 до 12 раз меньше
             this.width = bs.getUint16();
             this.height = bs.getUint16();
+            
+            var byte = bs.getUint8();
             // задержка декодирования цветовой информации (старший бит должен быть 1, но вообще игнорируется)
-            this.delayInit = bs.getUint8() & 127;
+            this.delayInit = byte & 127;
+            if(!byte & 128) {
+                console.warn('Old image reconstruction should be applied!');
+            }
+
         }
     }
     toString() {
