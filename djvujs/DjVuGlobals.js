@@ -1,11 +1,5 @@
 'use strict';
 
-function include(url) {
-    var script = document.createElement('script');
-    script.src = url;
-    document.head.appendChild(script);
-    console.log("included: " + url);
-}
 function writeln(str) {
     str = str || "";
     output.innerHTML += str + "<br>";
@@ -45,8 +39,8 @@ var Globals = {
             var xhr = new XMLHttpRequest();
             xhr.open("GET", url);
             xhr.responseType = "arraybuffer";
-            xhr.onload =  (e) => {
-                console.log("File loaded: ", e.loaded);
+            xhr.onload = (e) => {
+                DjVu.IS_DEBUG && console.log("File loaded: ", e.loaded);
                 resolve(xhr.response);
             };
             xhr.send();
@@ -85,14 +79,7 @@ var Globals = {
         //итоговое сжатие
         this.canvasCtx.drawImage(oc, 0, 0, tmpW2, tmpH2,
             0, 0, canvas.width, canvas.height);
-        console.log("Canvas resizing time = ", performance.now() - time);
-        /*Globals.canvasCtx.putImageData(image, 0, 0);
-            
-            this.img.src = this.canvas.toDataURL();
-            
-            this.img.width = image.width / scale;
-            // console.log(this.canvas.parentNode);
-            (tmp = this.canvas.parentNode) ? tmp.removeChild(this.canvas) : 0;*/
+        DjVu.IS_DEBUG && console.log("Canvas resizing time = ", performance.now() - time);
     },
 
     drawImageNS(image, dpi) {
@@ -126,10 +113,10 @@ var Globals = {
         Globals.canvasCtx.putImageData(image, 0, 0);
 
         this.img.src = this.canvas.toDataURL();
-        console.log("DataURL creating time = ", performance.now() - time);
+        DjVu.IS_DEBUG && console.log("DataURL creating time = ", performance.now() - time);
         this.img.width = image.width / scale;
         (tmp = this.canvas.parentNode) ? tmp.removeChild(this.canvas) : 0;
-        console.log("DataURL creating time = ", performance.now() - time);
+        DjVu.IS_DEBUG && console.log("DataURL creating time = ", performance.now() - time);
     }
 };
 

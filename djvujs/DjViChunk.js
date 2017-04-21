@@ -22,7 +22,7 @@ class DjViChunk {
             this.bs.jump(8 + length + (length & 1 ? 1 : 0));
             this.innerChunk = id === 'Djbz' ? new JB2Dict(chunkBs) : new IFFChunk(chunkBs);
             if (id != 'Djbz') {
-                console.log("DJVI new chunk!!!");
+                console.error("Unsupported chunk inside the DJVI chunk: ", id);
             }
         }
     }

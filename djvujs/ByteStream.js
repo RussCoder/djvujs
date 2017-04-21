@@ -8,7 +8,7 @@ class ByteStream {
         this.length = length || buffer.byteLength;
         if (this.length + offsetx > buffer.byteLength) {
             this.length = buffer.byteLength - offsetx;
-            console.log("Incorrect length");
+            console.error("Incorrect length in ByteStream!");
         }
         this.viewer = new DataView(this.buffer,this.offsetx,this.length);
     }
@@ -123,7 +123,6 @@ class ByteStream {
             this.shift = 7;
             this.offset++;
             if (this.offset >= this.length) {
-               // console.log("-");
                 this.curbyte = 255;
             } 
             else {

@@ -3,8 +3,7 @@
 class IWImage {
     constructor() {
         this.ycodec = new IWDecoder();
-        this.cslice = 0;
-        // current slice
+        this.cslice = 0; // current slice
         this.info = null;
         this.pixelmap = null;
     }
@@ -16,15 +15,9 @@ class IWImage {
                 this.crcodec = new IWDecoder();
                 this.cbcodec = new IWDecoder();
             }
-        }
-        else {
+        } else {
             this.info.slices = header.slices;
         }
-
-        /*if(Globals.pzp) {
-            //zp.pzp = Globals.pzp;
-            console.log("PZP in doing !!!!");
-        }*/
 
         for (var i = 0; i < this.info.slices; i++) {
             this.cslice++;

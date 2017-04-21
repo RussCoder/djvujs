@@ -86,12 +86,12 @@ class JB2Image extends JB2Codec {
         let width, hoff, voff, flag;
         let height, index;
         let bm;
-        var count = 0;
+        var count = 0; // degug code
         //var maxInterationNumber = 370;
         while (type !== 11 /*&& count < maxInterationNumber*/) { // 11 means "End of data"
             //count++;
-            //console.log('count', count);
-            //console.log(type);
+            // DjVu.IS_DEBUG && console.log('count', count);
+            // DjVu.IS_DEBUG && console.log(type);
             switch (type) {
                 case 1: // New symbol, add to image and library 
                     width = this.decodeNum(0, 262142, this.symbolWidthCtx);
@@ -152,15 +152,15 @@ class JB2Image extends JB2Codec {
             }
             type = this.decodeNum(0, 11, this.recordTypeCtx);
 
-            /*if(count > maxInterationNumber -50) {
+            /*if( DjVu.IS_DEBUG && count > maxInterationNumber -50 ) {
                 console.log(type);
             }*/
             if (type > 11) {
-                console.log("TYPE ERROR " + type);
+                console.error("TYPE ERROR " + type);
                 break;
             }
         }
-        /*if(count >= maxInterationNumber) {
+        /*if(DjVu.IS_DEBUG && count >= maxInterationNumber) {
             console.warn("Too many inerations in JB2 decoding!");
         } */
     }
@@ -220,7 +220,7 @@ class JB2Image extends JB2Codec {
                 image.data[index + 3] = 255;
             }
         }
-        console.log("JB2Image creating time = ", performance.now() - time);
+        DjVu.IS_DEBUG && console.log("JB2Image creating time = ", performance.now() - time);
         return image;
     }
 }

@@ -375,7 +375,7 @@ class ZPDecoder extends ZPCodecBaseClass {
             this.f = Math.min(this.c, 0x7fff);
         } 
         else {
-            console.log("()");
+           // console.log("()");
         }
         return this.b;
     }*/

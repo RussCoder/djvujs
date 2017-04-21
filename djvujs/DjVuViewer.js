@@ -56,7 +56,6 @@ class DjVuViewer {
 
     showEnteredPage(e) {
         var page = +this.pageNumberBox.value;
-        console.log(page);
         this.curPage = page;
     }
 
@@ -138,20 +137,14 @@ class DjVuViewer {
     }
 
     drawImage(image, dpi) {
-        var time = performance.now();
-        var tmp;
         var scale = dpi ? dpi / this.defaultDPI : 1;
 
         this.canvas.width = image.width;
         this.canvas.height = image.height;
 
         this.canvasCtx.putImageData(image, 0, 0);
-
         this.img.src = this.canvas.toDataURL();
-        console.log("DataURL creating time = ", performance.now() - time);
         this.stdWidth = image.width / scale;
         this.img.width = this.stdWidth * (+this.scaleSlider.value / 100);
-        //(tmp = this.canvas.parentNode) ? tmp.removeChild(this.canvas) : 0;
-        console.log("Rescale time = ", performance.now() - time);
     }
 }

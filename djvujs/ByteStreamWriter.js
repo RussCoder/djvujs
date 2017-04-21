@@ -88,23 +88,14 @@ class ByteStreamWriter {
     }
 
     extense() {
-        //this.fullBuffers.push(this.buffer);
         Globals.Timer.start("extenseTime");
+
         var newlength = this.bufferLength + this.buffer.byteLength;
         var nb = new ArrayBuffer(newlength);
-        /*var oldViewer = this.viewer;
-        this.buffer = nb;
-        this.viewer = new DataView(this.buffer)
-        
-        for (var i = 0; i < this.offset; i+=8) {
-            this.viewer.setFloat64(i, oldViewer.getFloat64(i));
-        }*/
-        new Uint8Array(nb).set(new Uint8Array(this.buffer));
-        //console.log("BL ", this.buffer.byteLength);
+        new Uint8Array(nb).set(new Uint8Array(this.buffer)); // быстрое копирование ArrayBuffer
         this.buffer = nb;
         this.viewer = new DataView(this.buffer);
-        //console.log("BL ", oldViewer.byteLength);
-        // console.log('ByteStream extensed in ', performance.now() - time);
+
         Globals.Timer.end("extenseTime");
     }
 

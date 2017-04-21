@@ -5,6 +5,7 @@
  */
 // подгружаем всю библиотеку, адреса относительно директории DjVuWorkerScript    
 importScripts(
+  "DjVu.js",
   "DjVuGlobals.js",
   'ByteStream.js',
   "ZPCodec.js",
@@ -37,7 +38,6 @@ onmessage = function (oEvent) {
     var obj = oEvent.data;
     handlers[obj.command](obj);
   } catch (error) {
-    debugger;
     postMessage({ command: 'Error', id: obj.id, message: error.message });
   }
 };

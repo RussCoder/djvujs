@@ -53,7 +53,7 @@ class DjVuDocument {
                         this.djvi[this.dirm.ids[i]] = new DjViChunk(this.bs.fork(length + 8), this.dirm.ids[i]);
                         break;
                     default:
-                        console.log(id);
+                        console.error("Incorrectr chunk ID: ", id);
                 }
             }
         }
@@ -186,7 +186,7 @@ class DjVuDocument {
             }
 
             if (!(this.dirm.ids[i] in dependencies) && !(this.dirm.flags[i] & 1)) {
-                console.log("Excess dict ", this.dirm.ids[i]);
+                console.warn("Excess dict ", this.dirm.ids[i]);
             }
         }
 
@@ -199,7 +199,7 @@ class DjVuDocument {
             djvuWriter.writeFormChunkBS(chuckBS[i]);
         }
         var newbuffer = djvuWriter.getBuffer();
-        console.log("New Buffer size = ", newbuffer.byteLength);
+        DjVu.IS_DEBUG && console.log("New Buffer size = ", newbuffer.byteLength);
         var doc = new DjVuDocument(newbuffer);
         Globals.Timer.end('sliceTime');
         return doc;

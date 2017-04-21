@@ -50,7 +50,6 @@ class DjVuWorker {
                 this.onprocess ? this.onprocess(obj.percent) : 0;
                 break;
             case 'getPageImageDataWithDPI':
-                console.log(+new Date());
                 callback.resolve({
                     // производим "сборку" ImageData
                     imageData: new ImageData(new Uint8ClampedArray(obj.buffer), obj.width, obj.height),
@@ -83,7 +82,7 @@ class DjVuWorker {
                 callback.resolve(obj.pageNumber);
                 break;
             default:
-                console.log("Unexpected message from DjVuWorker: ", obj);
+                console.error("Unexpected message from DjVuWorker: ", obj);
         }
     }
 

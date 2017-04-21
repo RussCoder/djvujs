@@ -1,6 +1,9 @@
 'use strict';
 
-var DjVu = {};
+var DjVu = {
+    VERSION: '0.0.1',
+    IS_DEBUG: false
+};
 
 DjVu.Utils = {
     /**
@@ -12,7 +15,7 @@ DjVu.Utils = {
             xhr.open("GET", url);
             xhr.responseType = "arraybuffer";
             xhr.onload = (e) => {
-                console.log("File loaded: ", e.loaded);
+                DjVu.IS_DEBUG && console.log("File loaded: ", e.loaded);
                 resolve(xhr.response);
             };
             xhr.send();

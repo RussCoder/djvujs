@@ -205,7 +205,7 @@ class DjVuPage {
                 image.data[index + 3] = 255;
             }
         }
-        console.log("DataImage creating time = ", performance.now() - time);
+        DjVu.IS_DEBUG && console.log("DataImage creating time = ", performance.now() - time);
         return image;
     }
 
@@ -220,7 +220,7 @@ class DjVuPage {
         this.init();
         var time = performance.now();
         this.sjbz ? this.sjbz.decode(this.djbz) : 0;
-        console.log("Mask decoding time = ", performance.now() - time);
+        DjVu.IS_DEBUG && console.log("Mask decoding time = ", performance.now() - time);
         time = performance.now();
         if (this.bg44arr.length) {
             this.bgimage = new IWImage();
@@ -231,7 +231,7 @@ class DjVuPage {
             );
             this.bgimage.createPixelmap();
         }
-        console.log("Background decoding time = ", performance.now() - time);
+        DjVu.IS_DEBUG && console.log("Background decoding time = ", performance.now() - time);
         time = performance.now();
         if (this.fg44) {
             this.fgimage = new IWImage();
@@ -239,7 +239,7 @@ class DjVuPage {
             this.fgimage.decodeChunk(zp, this.fg44.header);
             this.fgimage.createPixelmap();
         }
-        console.log("Foreground decoding time = ", performance.now() - time);
+        DjVu.IS_DEBUG && console.log("Foreground decoding time = ", performance.now() - time);
         this.decoded = true;
         return this;
     }
