@@ -25,9 +25,12 @@ importScripts(
   "debug.js",
   "ByteStreamWriter.js",
   "IWImageWriter.js",
-  "DjVuWriter.js");
+  "DjVuWriter.js"
+);
+
 /** @type {DjVuDocument} */
 var djvuDocument; // главный объект документа
+/** @type {IWImageWriter} */
 var iwiw; // объект записи документов
 var Globals = {};
 Globals.Timer = new DebugTimer();
@@ -38,7 +41,12 @@ onmessage = function (oEvent) {
     var obj = oEvent.data;
     handlers[obj.command](obj);
   } catch (error) {
-    postMessage({ command: 'Error', id: obj.id, message: error.message });
+    postMessage({
+      command: 'Error',
+      id: obj.id,
+      message: error.message,
+      lastCommandObject: obj
+    });
   }
 };
 

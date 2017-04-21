@@ -29,8 +29,8 @@ class IWImageWriter {
         dirm.dflags = 129; // 1000 0001
         dirm.flags = [];
         dirm.ids = [];
-        dirm.sizes = [];
-
+        dirm.sizes = []; 
+        // titles and names are not used by this encoder
     }
 
     addPageToDocument(imageData) {

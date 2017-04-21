@@ -39,12 +39,12 @@ class DjVuWriter {
         }
         for (var i = 0; i < dirm.ids.length; i++) {
             tmpBS.writeStrNT(dirm.ids[i]);
-            if(dirm.names[i]) {
+            if (dirm.names && dirm.names[i]) {
                 tmpBS.writeStrNT(dirm.names[i]);
-            } 
-            if(dirm.titles[i]) {
+            }
+            if (dirm.title && dirm.titles[i]) {
                 tmpBS.writeStrNT(dirm.titles[i]);
-            } 
+            }
         }
         //todo для BWT конечный символ EOB - временный код
         tmpBS.writeByte(0);
