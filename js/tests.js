@@ -6,7 +6,6 @@ var resultImageData;
 
 var outputBlock = $('#test_results_wrapper');
 
-console.log(outputBlock[0]);
 // test invocations 
 
 function runAllTests() {
@@ -71,10 +70,10 @@ var TestHelper = {
 
         var strictCheck = () => {
             for (var i = 0; i < resultImageData.data.length; i++) {
-                if (
+               if (
                     canonicImageData.data[i] !== resultImageData.data[i]
-                ) {
-                    return i;
+                ) {                
+                        return i;
                 }
             }
             return null;
@@ -134,6 +133,10 @@ var Tests = {
             });
     },
 
+    test3LayerSiglePageDocument() {
+        return this._imageTest("happy_birthday.djvu", 0, "happy_birthday.png");
+    },
+
     testGrayscaleBG44() {
         return this._imageTest("boy.djvu", 0, "boy.png");
     },
@@ -142,7 +145,11 @@ var Tests = {
         return this._imageTest("chicken.djvu", 0, "chicken.png");
     },
 
-    testJB2() {
+    testJB2Pure() {
+        return this._imageTest("boy_jb2.djvu", 0, "boy_jb2.png");
+    },
+
+    testJB2WithBitOfBackground() {
         return this._imageTest("DjVu3Spec.djvu", 47, "DjVu3Spec_48.png");
     },
 
