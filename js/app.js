@@ -3,14 +3,20 @@
 var djvuWorker = new DjVuWorker();
 var djvuViewer;
 
-$('#backbutton').click(reset);
-$('.funcelem').on('click', () => {
-    $('#backbutton').show(400);
-});
-$('#slicefunc').click(sliceFuncPrepare);
-$('#picturefunc').click(pictureFuncPrepare);
-$('#metadatafunc').click(metaDataFuncPrepare);
-$('#viewfunc').click(viewFuncPrepare);
+function initDjVuApplication() {
+    $('#backbutton').click(reset);
+    $('.funcelem').on('click', () => {
+        $('#backbutton').show(400);
+    });
+    $('#slicefunc').click(sliceFuncPrepare);
+    $('#picturefunc').click(pictureFuncPrepare);
+    $('#metadatafunc').click(metaDataFuncPrepare);
+    $('#viewfunc').click(viewFuncPrepare);
+
+    if (DjVu.VERSION) {
+        $('#djvu_app').prepend('<div class="djvu_version">djvu.js version: ' + DjVu.VERSION + '</div>');
+    }
+}
 
 function reset(event) {
     event.preventDefault();
@@ -220,3 +226,5 @@ function sliceFunc() {
             $("#procmess").text("Ошибка при обработке файла !!!");
         });
 }
+
+initDjVuApplication();

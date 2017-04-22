@@ -1,11 +1,31 @@
 
-.body {
+.func_menu_block {
+    display: flex;
+    justify-content: space-between;
+    flex-flow: row wrap;
     color: gray;
-    width: 700px;
+    max-width: 50em;
     margin: 1em auto;
     box-shadow: 0 0 1px gray;
-    padding: 20px;
+    padding: 1em;
     overflow: hidden;
+}
+
+.wrapper {
+    color: gray;
+    max-width: 50em;
+    margin: 1em auto;
+    box-shadow: 0 0 1px gray;
+    padding: 1em;
+    overflow: hidden;
+}
+
+.djvu_version {
+    position: relative;
+    color: gray;
+    text-shadow: 0 0 1px lightgray;
+    top: 0;
+    left: 0;
 }
 
 .additionalBlock {
@@ -14,17 +34,17 @@
 }
 
 .funcelem, .disabledfunc {
-    float: left;
-    width: 100px;
-    height: 70px;
+    font-size: 1.1em;
+    font-weight: bold; 
+    flex: 0 0 auto;
+    box-sizing: content-box;
+    width: 10em;
+    height: 2em;
     box-shadow: 0 0 1px gray;
-    vertical-align: middle;
-    text-align: center;
-    font-weight: bold;
-    font-size:  large;
+    text-align: center;   
     color: gray;
-    margin: 15px;
-    padding: 20px;
+    margin: 1em;
+    padding: 1em;
 }
 
 .disabledfunc {
@@ -132,6 +152,11 @@
 .djvu_viewer .controls .scale_label {
     display: inline-block;
     min-width: 3em;
+}
+
+.djvu_viewer .scale {
+    display: inline-block;
+    width: 10em;
 }
 
 .image_wrapper {
