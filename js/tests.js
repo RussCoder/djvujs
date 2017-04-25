@@ -141,7 +141,6 @@ var Tests = {
             .then(obj => {
                 resultImageData = obj.imageData;
                 return TestHelper.getImageDataByImageURI(`/assets/${imageName}`);
-
             })
             .then(canonicImageData => {
                 return TestHelper.compareImageData(canonicImageData, resultImageData);
@@ -151,6 +150,23 @@ var Tests = {
     /*test3LayerSiglePageDocument() { // отключен так как не ясен алгоритм масштабирования слоев
         return this._imageTest("happy_birthday.djvu", 0, "happy_birthday.png");
     },*/
+
+    testCreateDocumentFromPictures() {
+        djvuWorker.startMultyPageDocument(90, 0, 0);
+        return Promise.all([
+            TestHelper.getImageDataByImageURI(`/assets/boy.png`),
+            TestHelper.getImageDataByImageURI(`/assets/chicken.png`)
+        ]).then(imageDatas => {
+            return Promise.all(imageDatas.map(imageData => djvuWorker.addPageToDocument(imageData)));
+        }).then(() => {
+            return Promise.all([
+                DjVu.Utils.loadFile(`/assets/boy_and_chicken.djvu`),
+                djvuWorker.endMultyPageDocument()
+            ]);
+        }).then(arrayBuffers => {
+            return TestHelper.compareArrayBuffers(...arrayBuffers);
+        });
+    },
 
     testSliceDocument() {
         var resultBuffer;

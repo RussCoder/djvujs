@@ -119,7 +119,7 @@ function readImagesAndCreateDocument() {
     var grayscale = $('#grayscale').prop('checked') ? 1 : 0;
 
     var files = $('#finput')[0].files;
-    djvuWorker.startMultyPageDocument(slices, delayInit, grayscale)
+    djvuWorker.startMultyPageDocument(slices, delayInit, grayscale);
     $('#filehref').hide();
     var i = 0;
     var canvas = document.createElement('canvas');
