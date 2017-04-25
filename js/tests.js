@@ -59,6 +59,21 @@ var TestHelper = {
         });
     },
 
+    compareArrayBuffers(canonicBuffer, resultBuffer) {
+        var canonicArray = new Uint8Array(canonicBuffer);
+        var resultArray = new Uint8Array(resultBuffer);
+
+        if (canonicArray.length !== resultArray.length) {
+            return `Несовпадение длины байтовых массивов! ${canonicArray.length} и ${resultArray.length}`
+        }
+
+        for (var i = 0; i < canonicArray.length; i++) {
+            if (canonicArray[i] !== resultArray[i]) {
+                return `Расхождение в байте номер ${i} !`;
+            }
+        }
+    },
+
     compareImageData(canonicImageData, resultImageData) {
         if (canonicImageData.width !== resultImageData.width) {
             return `Несовпадение ширины! ${canonicImageData.width} и ${resultImageData.width}`;
@@ -136,6 +151,20 @@ var Tests = {
     /*test3LayerSiglePageDocument() { // отключен так как не ясен алгоритм масштабирования слоев
         return this._imageTest("happy_birthday.djvu", 0, "happy_birthday.png");
     },*/
+
+    testSliceDocument() {
+        var resultBuffer;
+        return DjVu.Utils.loadFile(`/assets/DjVu3Spec.djvu`)
+            .then(buffer => djvuWorker.createDocument(buffer))
+            .then(() => djvuWorker.slice(4, 10))
+            .then(_resultBuffer => {
+                resultBuffer = _resultBuffer;
+                return DjVu.Utils.loadFile(`/assets/DjVu3Spec_5-10.djvu`);
+            })
+            .then(canonicBuffer => {
+                return TestHelper.compareArrayBuffers(canonicBuffer, resultBuffer);
+            });
+    },
 
     testGrayscaleBG44() {
         return this._imageTest("boy.djvu", 0, "boy.png");

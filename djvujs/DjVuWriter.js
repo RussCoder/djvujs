@@ -19,8 +19,6 @@ class DjVuWriter {
     writeDirmChunk(dirm) {
         this.dirm = dirm;
         this.bsw.writeStr('DIRM').saveOffsetMark('DIRMsize').jump(4);
-
-        var startOffset = this.bsw.offset;
         this.dirm.offsets = [];
 
         this.bsw.writeByte(dirm.dflags)
@@ -39,10 +37,10 @@ class DjVuWriter {
         }
         for (var i = 0; i < dirm.ids.length; i++) {
             tmpBS.writeStrNT(dirm.ids[i]);
-            if (dirm.names && dirm.names[i]) {
+            if (dirm.flags[i] & 128) { // has name flag
                 tmpBS.writeStrNT(dirm.names[i]);
             }
-            if (dirm.title && dirm.titles[i]) {
+            if (dirm.flags[i] & 64) { // has title flag
                 tmpBS.writeStrNT(dirm.titles[i]);
             }
         }
@@ -125,7 +123,6 @@ class DjVuWriter {
         }
         for (var i = 0; i < this.dirm.offsets.length; i++) {
             this.bsw.rewriteInt32('DIRMoffsets', this.dirm.offsets[i]);
-            this.dirm.offsetsOffset += 4;
         }
         return this.bsw.getBuffer();
     }

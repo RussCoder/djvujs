@@ -222,7 +222,8 @@ function sliceFunc() {
             $("#procmess").text("Задание выполненено !!!");
             $('#filehref').prop('href', DjVuWorker.createArrayBufferURL(buffer)).show(400);
         },
-        () => { // reject
+        (e) => { // reject
+            console.error(e);
             $("#procmess").text("Ошибка при обработке файла !!!");
         });
 }

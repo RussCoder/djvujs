@@ -175,7 +175,7 @@ class DjVuDocument {
             }
 
             //копируем страницы и словари. Эскизы пропускаем - пока что это не реализовано
-            if (this.dirm.ids[i] in dependencies || this.dirm.flags[i] & 1) {
+            if ((this.dirm.ids[i] in dependencies) || (this.dirm.flags[i] & 1)) {
                 dirm.flags.push(this.dirm.flags[i]);
                 dirm.sizes.push(this.dirm.sizes[i]);
                 dirm.ids.push(this.dirm.ids[i]);
@@ -189,7 +189,7 @@ class DjVuDocument {
                 console.warn("Excess dict ", this.dirm.ids[i]);
             }
         }
-
+        
         djvuWriter.writeDirmChunk(dirm);
         if (this.navm) {
             djvuWriter.writeChunk(this.navm);
