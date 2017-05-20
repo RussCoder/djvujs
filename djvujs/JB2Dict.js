@@ -19,8 +19,8 @@ class JB2Dict extends JB2Codec {
             //console.log(size);
         }
 
-        this.decodeNum(0, 262142, this.imageSizeCtx);
-        this.decodeNum(0, 262142, this.imageSizeCtx);
+        this.decodeNum(0, 262142, this.imageSizeCtx); // image width
+        this.decodeNum(0, 262142, this.imageSizeCtx); // image height
         // флаг всегда должен быть = 0 
         var flag = this.zp.decode([0], 0);
         if (flag) {
@@ -28,7 +28,6 @@ class JB2Dict extends JB2Codec {
         }
         type = this.decodeNum(0, 11, this.recordTypeCtx);
 
-        var endflag = 0;
         var width, widthdiff, heightdiff, symbolIndex;
         var height;
         var bm;
@@ -45,12 +44,18 @@ class JB2Dict extends JB2Codec {
                     symbolIndex = this.decodeNum(0, this.dict.length - 1, this.symbolIndexCtx);
                     widthdiff = this.decodeNum(-262143, 262142, this.symbolWidthDiffCtx);
                     heightdiff = this.decodeNum(-262143, 262142, this.symbolHeightDiffCtx);
-                    //endflag = 1;
                     var mbm = this.dict[symbolIndex];
                     var cbm = this.decodeBitmapRef(mbm.width + widthdiff, heightdiff + mbm.height, mbm);
                     //this.drawBitmap(cbm);
                     this.dict.push(cbm);
                     break;
+
+                case 9: // Numcoder reset
+                //this.decodeNum(0, 262142, this.inheritDictSizeCtx);
+                console.log("RESET DICT");
+                    this.resetNumContexts();
+                    break;
+
                 case 10:
                     var comment = this.decodeComment();
                     var str = "";
@@ -58,15 +63,12 @@ class JB2Dict extends JB2Codec {
                         var byte = comment[i];
                         str += String.fromCharCode(byte);
                     }
-                    endflag = 1;
                     break;
+
                 default:
-                    endflag = 1;
-                    throw new Error("Indefined type in JB2Dict: ", type);
+                    throw new Error("Unsupported type in JB2Dict: " + type);
             }
-            if (endflag) {
-                return;
-            }
+
             type = this.decodeNum(0, 11, this.recordTypeCtx);
             if (type > 11) {
                 console.error("TYPE ERROR " + type);

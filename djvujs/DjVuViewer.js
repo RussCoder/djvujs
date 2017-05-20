@@ -25,8 +25,8 @@ class DjVuViewer {
 
         this.nextBut.onclick = () => this.showNextPage();
         this.prevBut.onclick = () => this.showPrevPage();
-        this.pageNumberBox.onblur = (e) => this.showEnteredPage(e);
-        this.pageNumberBox.onkeypress = (e) => this.showEnteredPageByEnter(e);
+        this.pageNumberBox.onblur = (e) => this.renderEnteredPage(e);
+        this.pageNumberBox.onkeypress = (e) => this.renderEnteredPageByEnter(e);
         this.scaleSlider.oninput = () => this.changeScale();
     }
 
@@ -47,14 +47,13 @@ class DjVuViewer {
         this.img.width = this.stdWidth * (+this.scaleSlider.value / 100);
     }
 
-    showEnteredPageByEnter(e) {
+    renderEnteredPageByEnter(e) {
         if (e.keyCode === 13) {
-            this.pageNumberBox.blur();
-            this.showEnteredPage();
+            this.pageNumberBox.blur(); // it will call showEnteredPage() as the event handler
         }
     }
 
-    showEnteredPage(e) {
+    renderEnteredPage(e) {
         var page = +this.pageNumberBox.value;
         this.curPage = page;
     }
@@ -97,7 +96,7 @@ class DjVuViewer {
             .then(() => this.worker.getPageNumber())
             .then(number => {
                 this.pageNumber = number;
-                this.curPage = 1;
+                this.curPage = 4;
             });
     }
 

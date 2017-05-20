@@ -82,7 +82,6 @@ class JB2Image extends JB2Codec {
             this.dict = djbz.dict.slice(0, this.dict);
         }
         var type = this.decodeNum(0, 11, this.recordTypeCtx);
-        let endflag = 0;
         let width, hoff, voff, flag;
         let height, index;
         let bm;
@@ -93,6 +92,7 @@ class JB2Image extends JB2Codec {
             // DjVu.IS_DEBUG && console.log('count', count);
             // DjVu.IS_DEBUG && console.log(type);
             switch (type) {
+
                 case 1: // New symbol, add to image and library 
                     width = this.decodeNum(0, 262142, this.symbolWidthCtx);
                     height = this.decodeNum(0, 262142, this.symbolHeightCtx);
@@ -102,12 +102,23 @@ class JB2Image extends JB2Codec {
                     this.copyToBitmap(bm, coords.x, coords.y);
                     this.dict.push(bm);
                     break;
+
                 case 2: // New symbol, add to library only
                     width = this.decodeNum(0, 262142, this.symbolWidthCtx);
                     height = this.decodeNum(0, 262142, this.symbolHeightCtx);
                     bm = this.decodeBitmap(width, height);
                     this.dict.push(bm);
                     break;
+
+                case 3: // New symbol, add to image only 
+                    width = this.decodeNum(0, 262142, this.symbolWidthCtx);
+                    height = this.decodeNum(0, 262142, this.symbolHeightCtx);
+                    bm = this.decodeBitmap(width, height);
+                    //this.drawBitmap(bm);
+                    var coords = this.decodeSymbolCoords(bm.width, bm.height);
+                    this.copyToBitmap(bm, coords.x, coords.y);
+                    break;
+
                 case 4: // Matched symbol with refinement, add to image and library
                     index = this.decodeNum(0, this.dict.length - 1, this.symbolIndexCtx);
                     var widthdiff = this.decodeNum(-262143, 262142, this.symbolWidthDiffCtx);
@@ -119,6 +130,7 @@ class JB2Image extends JB2Codec {
                     //this.drawBitmap(cbm);
                     this.dict.push(cbm);
                     break;
+
                 case 5: // Matched symbol with refinement, add to library only
                     index = this.decodeNum(0, this.dict.length - 1, this.symbolIndexCtx);
                     widthdiff = this.decodeNum(-262143, 262142, this.symbolWidthDiffCtx);
@@ -127,6 +139,7 @@ class JB2Image extends JB2Codec {
                     var cbm = this.decodeBitmapRef(mbm.width + widthdiff, heightdiff + mbm.height, mbm);
                     this.dict.push(cbm);
                     break;
+
                 case 6: // Matched symbol with refinement, add to image only
                     index = this.decodeNum(0, this.dict.length - 1, this.symbolIndexCtx);
                     var widthdiff = this.decodeNum(-262143, 262142, this.symbolWidthDiffCtx);
@@ -136,6 +149,7 @@ class JB2Image extends JB2Codec {
                     var coords = this.decodeSymbolCoords(cbm.width, cbm.height);
                     this.copyToBitmap(cbm, coords.x, coords.y);
                     break;
+
                 case 7: // Matched symbol, copy to image without refinement
                     index = this.decodeNum(0, this.dict.length - 1, this.symbolIndexCtx);
                     bm = this.dict[index];
@@ -143,13 +157,26 @@ class JB2Image extends JB2Codec {
                     this.copyToBitmap(bm, coords.x, coords.y);
                     //this.drawBitmap(bm);
                     break;
+
+                case 8: // Non-symbol data 
+                    width = this.decodeNum(0, 262142, this.symbolWidthCtx);
+                    height = this.decodeNum(0, 262142, this.symbolHeightCtx);
+                    bm = this.decodeBitmap(width, height);
+                    //this.drawBitmap(bm);
+                    var coords = this.decodeAbsoluteLocationCoords(bm.width, bm.height);
+                    this.copyToBitmap(bm, coords.x, coords.y);
+                    break;
+
+                case 9: // Numcoder reset
+                    console.log("RESET IMAGE");
+                    this.resetNumContexts();
+                    break;
+
                 default:
-                    endflag = 1;
-                    throw new Error("Indefined type in JB2Image", type);
+                    throw new Error("Unsupported type in JB2Image: " + type);
             }
-            if (endflag) {
-                return;
-            }
+
+
             type = this.decodeNum(0, 11, this.recordTypeCtx);
 
             /*if( DjVu.IS_DEBUG && count > maxInterationNumber -50 ) {
@@ -163,6 +190,15 @@ class JB2Image extends JB2Codec {
         /*if(DjVu.IS_DEBUG && count >= maxInterationNumber) {
             console.warn("Too many inerations in JB2 decoding!");
         } */
+    }
+
+    decodeAbsoluteLocationCoords(width, height) {
+        var left = this.decodeNum(1, this.width, this.horizontalAbsLocationCtx);
+        var top = this.decodeNum(1, this.height, this.verticalAbsLocationCtx);
+        return {
+            x: left,
+            y: top - height
+        }
     }
 
     decodeSymbolCoords(width, height) {

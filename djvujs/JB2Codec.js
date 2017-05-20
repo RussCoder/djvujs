@@ -83,13 +83,17 @@ class JB2Codec extends IFFChunk {
     constructor(bs) {
         super(bs);
         this.zp = new ZPDecoder(this.bs);
+        this.directBitmapCtx = new Uint8Array(1024);
+        this.refinementBitmapCtx = new Uint8Array(2048);
+        this.offsetTypeCtx = [0];
+        this.resetNumContexts();
+    }
+
+    resetNumContexts() {
         this.recordTypeCtx = new NumContext();
         this.imageSizeCtx = new NumContext();
         this.symbolWidthCtx = new NumContext();
         this.symbolHeightCtx = new NumContext();
-        this.directBitmapCtx = new Uint8Array(1024);
-        this.refinementBitmapCtx = new Uint8Array(2048);
-        this.offsetTypeCtx = [0];
         this.inheritDictSizeCtx = new NumContext();
         //гориз смещение
         this.hoffCtx = new NumContext();
@@ -104,6 +108,9 @@ class JB2Codec extends IFFChunk {
         this.symbolWidthDiffCtx = new NumContext();
         this.commentLengthCtx = new NumContext();
         this.commentOctetCtx = new NumContext();
+
+        this.horizontalAbsLocationCtx = new NumContext();
+        this.verticalAbsLocationCtx = new NumContext();
     }
 
     decodeNumX(low, high, numctx) {
