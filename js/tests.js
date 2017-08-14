@@ -198,6 +198,10 @@ var Tests = {
         return this._imageTest("DjVu3Spec.djvu", 47, "DjVu3Spec_48.png");
     },
 
+    testJB2WhereRemovingOfEmptyEdgesOfBitmapsBeforeAddingToDictRequired() {
+        return this._imageTest("problem_page.djvu", 0, "problem_page.png");
+    },
+
     /*test3LayerColorImage() { // отключен так как не ясен алгоритм масштабирования слоев
         return this._imageTest("colorbook.djvu", 3, "colorbook_4.png");
     }*/
