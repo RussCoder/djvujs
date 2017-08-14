@@ -85,8 +85,8 @@ class JB2Image extends JB2Codec {
         let width, hoff, voff, flag;
         let height, index;
         let bm;
-        var count = 0; // degug code
-        //var maxInterationNumber = 370;
+        // var count = 0; // degug code
+        //var maxInterationNumber = 2000;
         while (type !== 11 /*&& count < maxInterationNumber*/) { // 11 means "End of data"
             //count++;
             // DjVu.IS_DEBUG && console.log('count', count);
@@ -127,8 +127,7 @@ class JB2Image extends JB2Codec {
                     var cbm = this.decodeBitmapRef(mbm.width + widthdiff, heightdiff + mbm.height, mbm);
                     var coords = this.decodeSymbolCoords(cbm.width, cbm.height);
                     this.copyToBitmap(cbm, coords.x, coords.y);
-                    //this.drawBitmap(cbm);
-                    this.dict.push(cbm);
+                    this.dict.push(cbm.removeEmptyEdges());
                     break;
 
                 case 5: // Matched symbol with refinement, add to library only
@@ -137,7 +136,7 @@ class JB2Image extends JB2Codec {
                     heightdiff = this.decodeNum(-262143, 262142, this.symbolHeightDiffCtx);
                     var mbm = this.dict[index];
                     var cbm = this.decodeBitmapRef(mbm.width + widthdiff, heightdiff + mbm.height, mbm);
-                    this.dict.push(cbm);
+                    this.dict.push(cbm.removeEmptyEdges());
                     break;
 
                 case 6: // Matched symbol with refinement, add to image only
@@ -176,20 +175,17 @@ class JB2Image extends JB2Codec {
                     throw new Error("Unsupported type in JB2Image: " + type);
             }
 
-
             type = this.decodeNum(0, 11, this.recordTypeCtx);
 
-            /*if( DjVu.IS_DEBUG && count > maxInterationNumber -50 ) {
-                console.log(type);
-            }*/
+            /*if (DjVu.IS_DEBUG && count > maxInterationNumber) {
+                 console.error("Too many iterations!");
+                 break;
+             }*/
             if (type > 11) {
                 console.error("TYPE ERROR " + type);
                 break;
             }
         }
-        /*if(DjVu.IS_DEBUG && count >= maxInterationNumber) {
-            console.warn("Too many inerations in JB2 decoding!");
-        } */
     }
 
     decodeAbsoluteLocationCoords(width, height) {

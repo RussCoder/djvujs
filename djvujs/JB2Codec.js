@@ -29,6 +29,65 @@ class Bitmap {
     hasRow(r) {
         return r >= 0 && r < this.height;
     }
+
+    removeEmptyEdges() {
+        var bottomShift = 0;
+        var topShift = 0;
+        var leftShift = 0;
+        var rightShift = 0;
+
+        main_cycle: for (var i = 0; i < this.height; i++) {
+            for (var j = 0; j < this.width; j++) {
+                if (this.get(i, j)) {
+                    break main_cycle;
+                }
+            }
+            bottomShift++;
+        }
+
+        main_cycle: for (var i = this.height - 1; i >= 0; i--) {
+            for (var j = 0; j < this.width; j++) {
+                if (this.get(i, j)) {
+                    break main_cycle;
+                }
+            }
+            topShift++;
+        }
+
+        main_cycle: for (var j = 0; j < this.width; j++) {
+            for (var i = 0; i < this.height; i++) {
+                if (this.get(i, j)) {
+                    break main_cycle;
+                }
+            }
+            leftShift++;
+        }
+
+        main_cycle: for (var j = this.width - 1; j >= 0; j--) {
+            for (var i = 0; i < this.height; i++) {
+                if (this.get(i, j)) {
+                    break main_cycle;
+                }
+            }
+            rightShift++;
+        }
+
+        if (topShift || bottomShift || leftShift || rightShift) {
+            var newWidth = this.width - leftShift - rightShift;
+            var newHeight = this.height - topShift - bottomShift;
+            var newBitMap = new Bitmap(newWidth, newHeight);
+            for (var i = bottomShift, p = 0; p < newHeight; p++ , i++) {
+                for (var j = leftShift, q = 0; q < newWidth; q++ , j++) {
+                    if (this.get(i, j)) {
+                        newBitMap.set(p, q);
+                    }
+                }
+            }
+            return newBitMap;
+        }
+
+        return this;
+    }
 }
 /*
 // Более простой и гораздо менее эффективный класс.
@@ -242,6 +301,7 @@ class JB2Codec extends IFFChunk {
         return index;
     }
 
+    // don't forget to remove empty edges of the result bitmap before it is added to the dictionary
     decodeBitmapRef(width, height, mbm) {
         //current bitmap
         let cbm = new Bitmap(width, height);

@@ -96,7 +96,7 @@ class DjVuViewer {
             .then(() => this.worker.getPageNumber())
             .then(number => {
                 this.pageNumber = number;
-                this.curPage = 4;
+                this.curPage = 1;
             });
     }
 

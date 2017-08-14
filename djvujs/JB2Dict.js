@@ -47,7 +47,7 @@ class JB2Dict extends JB2Codec {
                     var mbm = this.dict[symbolIndex];
                     var cbm = this.decodeBitmapRef(mbm.width + widthdiff, heightdiff + mbm.height, mbm);
                     //this.drawBitmap(cbm);
-                    this.dict.push(cbm);
+                    this.dict.push(cbm.removeEmptyEdges());
                     break;
 
                 case 9: // Numcoder reset

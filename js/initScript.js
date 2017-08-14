@@ -4,6 +4,8 @@
  * Скрипт для тестирования библиотеки непосредственно в синхронном режиме
  */
 
+DjVu.IS_DEBUG = true;
+
 var fileSize = 0;
 var output;
 
@@ -17,7 +19,7 @@ window.onload = function () {
 
 function loadDjVu() {
     var xhr = new XMLHttpRequest();
-    xhr.open("GET", "samples/csl.djvu");
+    xhr.open("GET", "samples/problem_page.djvu");
     xhr.responseType = "arraybuffer";
     xhr.onload = function (e) {
         console.log(e.loaded);
@@ -74,7 +76,7 @@ function readDjvu(buf) {
     Globals.counter = 0;
 
     console.log('Before render');
-    Globals.drawImageSmooth(doc.pages[2].getImageData(), doc.pages[2].dpi * 0.8);
+    Globals.drawImageSmooth(doc.pages[0].getImageData(), doc.pages[0].dpi * 0.8);
     // writeln(doc.toString(true));
     //doc.countFiles();
     console.log(Globals.Timer.toString());
