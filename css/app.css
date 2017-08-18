@@ -165,7 +165,7 @@
     text-align: center;
 }
 
-.djvu_viewer img {
+.djvu_viewer .image {
     margin: 0.5em;
     box-shadow: 0 0 1px lightgray;
 }
