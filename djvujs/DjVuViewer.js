@@ -100,7 +100,7 @@ class DjVuViewer {
         return this.worker.getPageImageDataWithDPI(this._curPage).then(obj => {
             this.imageData = obj.imageData;
             this.imageDPI = obj.dpi;
-            this.standardScale = this.imageDPI ? this.imageDPI / Globals.defaultDPI : 1;
+            this.standardScale = this.imageDPI ? this.imageDPI / this.defaultDPI : 1;
             this.drawImageOnCanvas();
 
             this.improveImageTimeout = setTimeout(() => {
@@ -109,8 +109,24 @@ class DjVuViewer {
         });
     }
 
-    loadDjVu(url) {
-        return Globals.loadFile(url)
+    /**
+     * @returns {Promise<ArrayBuffer>}
+     */
+    loadFile(url) {
+        return new Promise(resolve => {
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", url);
+            xhr.responseType = "arraybuffer";
+            xhr.onload = (e) => {
+                DjVu.IS_DEBUG && console.log("File loaded: ", e.loaded);
+                resolve(xhr.response);
+            };
+            xhr.send();
+        });
+    }
+
+    loadDjVu(url) { // debug functions
+        return this.loadFile(url)
             .then(buffer => this.worker.createDocument(buffer))
             .then(() => this.worker.getPageNumber())
             .then(number => {
@@ -200,7 +216,7 @@ class DjVuViewer {
     drawImageOnCanvas() {
         //var time = performance.now();
         var image = this.imageData;
-        var scale = this.imageDPI ? this.imageDPI / Globals.defaultDPI : 1;
+        var scale = this.imageDPI ? this.imageDPI / this.defaultDPI : 1;
         scale /= (+this.scaleSlider.value / 100)
         this.stdWidth = image.width / scale * (+this.scaleSlider.value / 100);
         this.stdHeight = image.height / scale * (+this.scaleSlider.value / 100);
