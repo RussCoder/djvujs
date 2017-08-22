@@ -141,9 +141,10 @@ class DIRMChunk extends IFFChunk {
         for (var i = 0; i < this.nfiles; i++) {
             this.offsets[i] = bs.getInt32();
         }
+
         var bsbs = bs.fork(this.length - 3 - 4 * this.nfiles);
-        var bzz = new BZZDecoder(new ZPDecoder(bsbs));
-        var bsz = bzz.getByteStream();
+        var bsz = BZZDecoder.decodeByteStream(bsbs);
+        
         for (var i = 0; i < this.nfiles; i++) {
             this.sizes[i] = bsz.getUint24();
         }

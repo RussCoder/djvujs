@@ -19,7 +19,7 @@ window.onload = function () {
 
 function loadDjVu() {
     var xhr = new XMLHttpRequest();
-    xhr.open("GET", "samples/problem_page.djvu");
+    xhr.open("GET", "samples/lizard2003-navm.djvu");
     xhr.responseType = "arraybuffer";
     xhr.onload = function (e) {
         console.log(e.loaded);
@@ -76,7 +76,7 @@ function readDjvu(buf) {
     Globals.counter = 0;
 
     console.log('Before render');
-    Globals.drawImageSmooth(doc.pages[0].getImageData(), doc.pages[0].dpi * 0.8);
+    Globals.drawImage(doc.pages[1].getImageData(), doc.pages[1].dpi * 2);
     // writeln(doc.toString(true));
     //doc.countFiles();
     console.log(Globals.Timer.toString());

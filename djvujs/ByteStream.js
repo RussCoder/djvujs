@@ -10,30 +10,30 @@ class ByteStream {
             this.length = buffer.byteLength - offsetx;
             console.error("Incorrect length in ByteStream!");
         }
-        this.viewer = new DataView(this.buffer,this.offsetx,this.length);
+        this.viewer = new DataView(this.buffer, this.offsetx, this.length);
     }
-    
+
     // "читает" следующие length байт в массив 
     getUint8Array(length) {
         length = length || this.restLength();
         var off = this.offset;
         this.offset += length;
-        return new Uint8Array(this.buffer,this.offsetx + off,length);
+        return new Uint8Array(this.buffer, this.offsetx + off, length);
     }
-    
+
     // возвращает массив полностью представляющий весь поток
     toUint8Array() {
-        return new Uint8Array(this.buffer,this.offsetx,this.length);
+        return new Uint8Array(this.buffer, this.offsetx, this.length);
     }
-    
+
     restLength() {
         return this.length - this.offset;
     }
-    
+
     reset() {
         this.offset = 0;
     }
-    
+
     byte() {
         if (this.offset >= this.length) {
             this.offset++;
@@ -41,7 +41,7 @@ class ByteStream {
         }
         return this.viewer.getUint8(this.offset++);
     }
-    
+
     getInt8() {
         return this.viewer.getInt8(this.offset++);
     }
@@ -63,22 +63,28 @@ class ByteStream {
     getUint8() {
         return this.viewer.getUint8(this.offset++);
     }
+
+    getInt24() {
+        var uint = this.getUint24();
+        return (uint & 0x800000) ? (0xffffff - val + 1) * -1 : uint
+    }
+
     getUint24() {
         return (this.byte() << 16) | (this.byte() << 8) | this.byte();
     }
-    
+
     jump(length) {
         this.offset += length;
     }
-    
+
     setOffset(offset) {
         this.offset = offset;
     }
-    
+
     readChunkName() {
         return this.readStr4();
     }
-    
+
     readStr4() {
         var str = "";
         for (var i = 0; i < 4; i++) {
@@ -87,7 +93,7 @@ class ByteStream {
         }
         return str;
     }
-    
+
     readStrNT() {
         var str = "";
         var byte = this.viewer.getUint8(this.offset++);
@@ -97,12 +103,11 @@ class ByteStream {
         }
         return str;
     }
-    
-    
+
+
     fork(_length) {
         var length = _length || (this.length - this.offset);
-        var tmp = new ByteStream(this.buffer,this.offsetx + this.offset,length);
-        return tmp;
+        return new ByteStream(this.buffer, this.offsetx + this.offset, length);
     }
 
     clone() {
@@ -112,8 +117,8 @@ class ByteStream {
     isEmpty() {
         return this.offset >= this.length;
     }
-    
-    
+
+
     /*bit() {
         let bit = (this.curbyte & this.bitmask) >>> this.shift;
         this.shift--;

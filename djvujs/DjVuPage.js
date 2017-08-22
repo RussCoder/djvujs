@@ -29,6 +29,10 @@ class DjVuPage {
          * @type {JB2Image}
          */
         this.sjbz = null;
+        /**
+         * @type {DjvuPallete}
+         */
+        this.fgbz = null;
 
         this.decoded = false;
         this.info = null;
@@ -112,6 +116,8 @@ class DjVuPage {
                 chunk = new CIDaChunk(chunkBs);
             } else if (id === 'Djbz') {
                 chunk = this.djbz = new JB2Dict(chunkBs);
+            } else if (id === 'FGbz') {
+                chunk = this.fgbz = new DjVuPallete(chunkBs);
             } else {
                 chunk = new IFFChunk(chunkBs);
             }
