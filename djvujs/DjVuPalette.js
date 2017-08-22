@@ -1,11 +1,13 @@
 'use strict';
 
-class DjVuPallete extends IFFChunk {
+class DjVuPalette extends IFFChunk {
 
     /** @param {ByteStream} bs */
     constructor(bs) {
-        //var time = performance.now();
+        var time = performance.now();
         super(bs);
+        this.pixel = { r: 0, g: 0, b: 0 };
+
         this.version = bs.getUint8();
         if (this.version & 0x7f) {
             throw "Bad Djvu Pallete version!";
@@ -30,7 +32,21 @@ class DjVuPallete extends IFFChunk {
                 this.colorIndices[i] = index;
             }
         }
-        //console.log('DjvuPallete time ', performance.now() - time);
+        DjVu.IS_DEBUG && console.log('DjvuPalette time ', performance.now() - time);
+    }
+
+    getDataSize() {
+        return this.dataSize;
+    }
+
+    getPixelByBlitIndex(index) {
+        var colorIndex = this.colorIndices[index] * 3;
+
+        this.pixel.r = this.colorArray[colorIndex + 2];
+        this.pixel.g = this.colorArray[colorIndex + 1];
+        this.pixel.b = this.colorArray[colorIndex];
+
+        return this.pixel;
     }
 
     toString() {

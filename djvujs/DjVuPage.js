@@ -117,7 +117,7 @@ class DjVuPage {
             } else if (id === 'Djbz') {
                 chunk = this.djbz = new JB2Dict(chunkBs);
             } else if (id === 'FGbz') {
-                chunk = this.fgbz = new DjVuPallete(chunkBs);
+                chunk = this.fgbz = new DjVuPalette(chunkBs);
             } else {
                 chunk = new IFFChunk(chunkBs);
             }
@@ -135,9 +135,7 @@ class DjVuPage {
         this.decode();
         var time = performance.now();
         //достаем маску
-        if (this.sjbz && this.sjbz.bitmap) {
-            var bm = this.sjbz.bitmap;
-        } else {
+        if (!this.sjbz) {
             //если только фоновый слой
             if (this.bgimage) {
                 return this.bgimage.getImage();
@@ -189,8 +187,29 @@ class DjVuPage {
         }
 
 
-        var image = new ImageData(this.info.width, this.info.height);
+        var image;
+        if (!this.fgbz) {
+            image = this.createImageFromMaskBitmapAndPixelMaps(
+                this.sjbz.getBitmap(),
+                fgpixelmap,
+                bgpixelmap,
+                fgscale,
+                bgscale
+            );
+        } else {
+            image = this.createImageFromMaskImageAndBackgroundPixelMap(
+                this.sjbz.getImage(this.fgbz, true),
+                bgpixelmap,
+                bgscale
+            );
+        }
 
+        DjVu.IS_DEBUG && console.log("DataImage creating time = ", performance.now() - time);
+        return image;
+    }
+
+    createImageFromMaskBitmapAndPixelMaps(bm, fgpixelmap, bgpixelmap, fgscale, bgscale) {
+        var image = new ImageData(this.info.width, this.info.height);
         //набираем изображение по пикселям
         for (var i = 0; i < this.info.height; i++) {
             for (var j = 0; j < this.info.width; j++) {
@@ -211,8 +230,31 @@ class DjVuPage {
                 image.data[index + 3] = 255;
             }
         }
-        DjVu.IS_DEBUG && console.log("DataImage creating time = ", performance.now() - time);
+
         return image;
+    }
+
+    createImageFromMaskImageAndBackgroundPixelMap(maskImage, bgpixelmap, bgscale) {
+        var pixelArray = maskImage.data;
+        var pixel;
+        //набираем изображение по пикселям
+        for (var i = 0; i < this.info.height; i++) {
+            for (var j = 0; j < this.info.width; j++) {
+                var index = ((this.info.height - i - 1) * this.info.width + j) * 4;
+                if (pixelArray[index + 3]) {
+                    var is = Math.floor(i / bgscale);
+                    var js = Math.floor(j / bgscale);
+                    pixel = bgpixelmap.getPixel(is, js);
+                    pixelArray[index] = pixel.r;
+                    pixelArray[index + 1] = pixel.g;
+                    pixelArray[index + 2] = pixel.b;
+                } else {
+                    pixelArray[index + 3] = 255;
+                }
+            }
+        }
+
+        return maskImage;
     }
 
     /**
@@ -281,6 +323,12 @@ class DjVuPage {
         } else {
             return null;
         }
+    }
+
+    /** @return {ImageData} */
+    getMaskImageData() {
+        this.decode();
+        return this.sjbz && this.sjbz.getImage(this.fgbz);
     }
 
     toString() {

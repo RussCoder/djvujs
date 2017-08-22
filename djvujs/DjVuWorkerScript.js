@@ -16,7 +16,7 @@ importScripts(
   "IWDecoder.js",
   "IWEncoder.js",
   "IWImage.js",
-  "DjvuPallete.js",
+  "DjVuPalette.js",
   "JB2Codec.js",
   "JB2Dict.js",
   "JB2Image.js",

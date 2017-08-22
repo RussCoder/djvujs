@@ -76,7 +76,7 @@ function readDjvu(buf) {
     Globals.counter = 0;
 
     console.log('Before render');
-    Globals.drawImage(doc.pages[1].getImageData(), doc.pages[1].dpi * 2);
+    Globals.drawImage(doc.pages[1].getImageData(), doc.pages[1].dpi * 1);
     // writeln(doc.toString(true));
     //doc.countFiles();
     console.log(Globals.Timer.toString());

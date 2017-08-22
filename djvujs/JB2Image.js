@@ -35,7 +35,19 @@ class JB2Image extends JB2Codec {
         super(bs);
         //словарь (может быть заменен диной словаря на некоторое время)
         this.dict = [];
+        // "blit" = "block transfer"
+        this.blitList = [];
         this.init();
+    }
+
+    /**
+     * Добавляет в список битмап и координаты левого нижнего угла в классической системе координат
+     * @param {Bitmap} bitmap 
+     * @param {Number} x 
+     * @param {Number} y 
+     */
+    addBlit(bitmap, x, y) {
+        this.blitList.push({ bitmap, x, y });
     }
 
     //раскодируем первую запись в потоке
@@ -99,7 +111,8 @@ class JB2Image extends JB2Codec {
                     bm = this.decodeBitmap(width, height);
                     //this.drawBitmap(bm);
                     var coords = this.decodeSymbolCoords(bm.width, bm.height);
-                    this.copyToBitmap(bm, coords.x, coords.y);
+                    this.addBlit(bm, coords.x, coords.y);
+                    //this.copyToBitmap(bm, coords.x, coords.y);
                     this.dict.push(bm);
                     break;
 
@@ -116,7 +129,8 @@ class JB2Image extends JB2Codec {
                     bm = this.decodeBitmap(width, height);
                     //this.drawBitmap(bm);
                     var coords = this.decodeSymbolCoords(bm.width, bm.height);
-                    this.copyToBitmap(bm, coords.x, coords.y);
+                    this.addBlit(bm, coords.x, coords.y);
+                    //this.copyToBitmap(bm, coords.x, coords.y);
                     break;
 
                 case 4: // Matched symbol with refinement, add to image and library
@@ -126,7 +140,8 @@ class JB2Image extends JB2Codec {
                     var mbm = this.dict[index];
                     var cbm = this.decodeBitmapRef(mbm.width + widthdiff, heightdiff + mbm.height, mbm);
                     var coords = this.decodeSymbolCoords(cbm.width, cbm.height);
-                    this.copyToBitmap(cbm, coords.x, coords.y);
+                    this.addBlit(cbm, coords.x, coords.y);
+                    //this.copyToBitmap(cbm, coords.x, coords.y);
                     this.dict.push(cbm.removeEmptyEdges());
                     break;
 
@@ -146,14 +161,16 @@ class JB2Image extends JB2Codec {
                     var mbm = this.dict[index];
                     var cbm = this.decodeBitmapRef(mbm.width + widthdiff, heightdiff + mbm.height, mbm);
                     var coords = this.decodeSymbolCoords(cbm.width, cbm.height);
-                    this.copyToBitmap(cbm, coords.x, coords.y);
+                    this.addBlit(cbm, coords.x, coords.y);
+                    //this.copyToBitmap(cbm, coords.x, coords.y);
                     break;
 
                 case 7: // Matched symbol, copy to image without refinement
                     index = this.decodeNum(0, this.dict.length - 1, this.symbolIndexCtx);
                     bm = this.dict[index];
                     var coords = this.decodeSymbolCoords(bm.width, bm.height);
-                    this.copyToBitmap(bm, coords.x, coords.y);
+                    this.addBlit(bm, coords.x, coords.y);
+                    //this.copyToBitmap(bm, coords.x, coords.y);
                     //this.drawBitmap(bm);
                     break;
 
@@ -163,7 +180,8 @@ class JB2Image extends JB2Codec {
                     bm = this.decodeBitmap(width, height);
                     //this.drawBitmap(bm);
                     var coords = this.decodeAbsoluteLocationCoords(bm.width, bm.height);
-                    this.copyToBitmap(bm, coords.x, coords.y);
+                    this.addBlit(bm, coords.x, coords.y);
+                    //this.copyToBitmap(bm, coords.x, coords.y);
                     break;
 
                 case 9: // Numcoder reset
@@ -239,7 +257,55 @@ class JB2Image extends JB2Codec {
         }
     }
 
-    getImage() {
+    getBitmap() {
+        if (!this.bitmap) {
+            this.blitList.forEach(blit => this.copyToBitmap(blit.bitmap, blit.x, blit.y));
+        }
+        return this.bitmap;
+    }
+
+    /**
+     * Создаем изображение из маски и палитры, если таковая имеется
+     * @param {DjVuPalette} palette 
+     * @param {boolean} isMarkMaskPixels - чтобы понять какой пиксель брать из фона, а какой не трогать. 
+     * Нужно только при составлении изображения из двух слоев
+     */
+    getImage(palette = null, isMarkMaskPixels = false) {
+
+        if (palette && palette.getDataSize() !== this.blitList.length) {
+            palette = null; // отбрасываем цвета если что-то не так.
+        }
+
+        var pixelArray = new Uint8ClampedArray(this.width * this.height * 4);
+        var time = performance.now();
+        pixelArray.fill(255); // все белым непрозрачным
+
+        var blackPixel = { r: 0, g: 0, b: 0 };
+        var alpha = isMarkMaskPixels ? 0 : 255;
+
+        for (var blitIndex = 0; blitIndex < this.blitList.length; blitIndex++) {
+            var blit = this.blitList[blitIndex];
+            var pixel = palette ? palette.getPixelByBlitIndex(blitIndex) : blackPixel;
+            var bm = blit.bitmap;
+            for (var i = blit.y, k = 0; k < bm.height; k++ , i++) {
+                for (var j = blit.x, t = 0; t < bm.width; t++ , j++) {
+                    if (bm.get(k, t)) {
+                        var pixelIndex = ((this.height - i - 1) * this.width + j) * 4;
+                        pixelArray[pixelIndex] = pixel.r;
+                        pixelArray[pixelIndex + 1] = pixel.g;
+                        pixelArray[pixelIndex + 2] = pixel.b;
+                        pixelArray[pixelIndex + 3] = alpha;
+                    }
+                }
+            }
+        }
+
+        DjVu.IS_DEBUG && console.log("JB2Image creating time = ", performance.now() - time);
+        return new ImageData(pixelArray, this.width, this.height);
+    }
+
+    getImageFromBitmap() {
+        this.getBitmap();
         var time = performance.now();
         var image = new ImageData(this.width, this.height);
         for (var i = 0; i < this.height; i++) {
