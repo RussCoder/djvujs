@@ -6,7 +6,7 @@
  */
 class DjVuWorker {
     constructor(path) {
-        this.path = path || 'djvujs/DjVuWorkerScript.js';
+        this.path = path || '/djvujs/DjVuWorkerScript.js';
         this.worker = new Worker(this.path);
         this.worker.onmessage = (event) => {
             this.messageHandler(event);

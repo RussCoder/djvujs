@@ -2,7 +2,7 @@
 
 class Bitmap {
     constructor(width, height) {
-        var length = Math.ceil(width * height / 8); // число бит необходимых для кодировки черно-белого изображенияы
+        var length = Math.ceil(width * height / 8); // число байт необходимых для кодировки черно-белого изображенияы
         this.height = height;
         this.width = width;
         this.innerArray = new Uint8Array(length);
@@ -115,6 +115,9 @@ class BitmapX {
     }
     hasRow(r) {
         return r >= 0 && r < this.height;
+    }
+    removeEmptyEdges() {
+        return this;
     }
 }*/
 
