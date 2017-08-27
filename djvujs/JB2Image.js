@@ -264,6 +264,29 @@ class JB2Image extends JB2Codec {
         return this.bitmap;
     }
 
+    getMaskImage() {
+        var imageData = new ImageData(this.width, this.height);
+        var pixelArray = imageData.data;
+        var time = performance.now();
+        pixelArray.fill(255); // все белым непрозрачным
+
+        for (var blitIndex = 0; blitIndex < this.blitList.length; blitIndex++) {
+            var blit = this.blitList[blitIndex];
+            var bm = blit.bitmap;
+            for (var i = blit.y, k = 0; k < bm.height; k++ , i++) {
+                for (var j = blit.x, t = 0; t < bm.width; t++ , j++) {
+                    if (bm.get(k, t)) {
+                        var pixelIndex = ((this.height - i - 1) * this.width + j) * 4;
+                        pixelArray[pixelIndex] = 0;
+                    }
+                }
+            }
+        }
+
+        DjVu.IS_DEBUG && console.log("JB2Image mask image creating time = ", performance.now() - time);
+        return imageData;
+    }
+
     /**
      * Создаем изображение из маски и палитры, если таковая имеется
      * @param {DjVuPalette} palette 

@@ -70,47 +70,47 @@ class Pixelmap {
         this.ybytemap = ybytemap;
         this.cbbytemap = cbbytemap;
         this.crbytemap = crbytemap;
+        this.pixel = { r: 0, g: 0, b: 0 }; // промежуточный объект, чтобы не создавать каждый раз
+    }
+
+    _normalize(val) {
+        val = (val + 32) >> 6;   // убираем 6 дробных бит в этом псевдо дробном числе
+        if (val < -128) {
+            val = -128;
+        } else if (val >= 128) {
+            val = 127;
+        }
+        return val;
     }
 
     getPixel(i, j) {
-        const normalize = (val) => {
-            val = (val + 32) >> 6;   // убираем 6 дробных бит в этом псевдо дробном числе
-            if (val < -128) {
-                val = -128;
-            } else if (val >= 128) {
-                val = 127;
-            }
-            return val;
-        };
-
         if (this.cbbytemap) { // случай цветного изображения
             // данный код откопирован из djvulibre, не совпадает со спецификацией
-            var y = normalize(this.ybytemap[i][j]);
-            var b = normalize(this.cbbytemap[i][j]);
-            var r = normalize(this.crbytemap[i][j]);
+            var y = this._normalize(this.ybytemap[i][j]);
+            var b = this._normalize(this.cbbytemap[i][j]);
+            var r = this._normalize(this.crbytemap[i][j]);
 
             var t1 = b >> 2;
             var t2 = r + (r >> 1);
             var t3 = y + 128 - t1;
 
-            var tr = y + 128 + t2;
-            var tg = t3 - (t2 >> 1);
-            var tb = t3 + (b << 1);
+            this.pixel.r = y + 128 + t2;
+            this.pixel.g = t3 - (t2 >> 1);
+            this.pixel.b = t3 + (b << 1);
 
-            return {
+            /*return { // Uint8ClampsedArray должен сам обработать это
                 r: Math.max(0, Math.min(255, tr)),
                 g: Math.max(0, Math.min(255, tg)),
                 b: Math.max(0, Math.min(255, tb))
-            }
+            }*/
         } else { // серое изображение
-            var v = normalize(this.ybytemap[i][j]);
+            var v = this._normalize(this.ybytemap[i][j]);
             v = 127 - v;
-
-            return {
-                r: v,
-                g: v,
-                b: v
-            }
+            this.pixel.r = v;
+            this.pixel.g = v;
+            this.pixel.b = v;
         }
+
+        return this.pixel;
     }
 }

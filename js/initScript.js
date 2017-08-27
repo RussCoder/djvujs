@@ -8,6 +8,25 @@ DjVu.IS_DEBUG = true;
 
 var fileSize = 0;
 var output;
+var djvuArrayBuffer;
+var timeOutput = document.querySelector('#time_output');
+var rerunButton = document.querySelector('#rerun');
+rerunButton.onclick = rerun;
+var pageNumber = 3;
+var djvuUrl = 'samples/colorbook.djvu';
+
+
+function rerun() {
+    Globals.init();
+    Globals.clearCanvas();
+
+    setTimeout(() => {
+        var start = performance.now(); 
+        readDjvu(djvuArrayBuffer);
+        var time = performance.now() - start;
+        timeOutput.innerText = Math.round(time);
+    }, 0);   
+}
 
 window.onload = function () {
     output = document.getElementById("output");
@@ -19,13 +38,13 @@ window.onload = function () {
 
 function loadDjVu() {
     var xhr = new XMLHttpRequest();
-    xhr.open("GET", "samples/lizard2003-navm.djvu");
+    xhr.open("GET", djvuUrl);
     xhr.responseType = "arraybuffer";
     xhr.onload = function (e) {
         console.log(e.loaded);
         fileSize = e.loaded;
-        var buf = xhr.response;
-        readDjvu(buf);
+        djvuArrayBuffer = xhr.response;
+        rerun();
         //splitDjvu(buf);
     }
     xhr.send();
@@ -76,7 +95,7 @@ function readDjvu(buf) {
     Globals.counter = 0;
 
     console.log('Before render');
-    Globals.drawImage(doc.pages[1].getImageData(), doc.pages[1].dpi * 1);
+    Globals.drawImage(doc.pages[pageNumber].getImageData(), doc.pages[pageNumber].dpi * 1);
     // writeln(doc.toString(true));
     //doc.countFiles();
     console.log(Globals.Timer.toString());

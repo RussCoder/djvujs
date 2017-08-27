@@ -189,8 +189,8 @@ class DjVuPage {
 
         var image;
         if (!this.fgbz) {
-            image = this.createImageFromMaskBitmapAndPixelMaps(
-                this.sjbz.getBitmap(),
+            image = this.createImageFromMaskImageAndPixelMaps(
+                this.sjbz.getMaskImage(),
                 fgpixelmap,
                 bgpixelmap,
                 fgscale,
@@ -208,26 +208,28 @@ class DjVuPage {
         return image;
     }
 
-    createImageFromMaskBitmapAndPixelMaps(bm, fgpixelmap, bgpixelmap, fgscale, bgscale) {
-        var image = new ImageData(this.info.width, this.info.height);
+    createImageFromMaskImageAndPixelMaps(maskImage, fgpixelmap, bgpixelmap, fgscale, bgscale) {
+        var image = maskImage;
+        var pixelArray = image.data;
         //набираем изображение по пикселям
         for (var i = 0; i < this.info.height; i++) {
             for (var j = 0; j < this.info.width; j++) {
                 var pixel;
-                if (bm.get(i, j)) {
-                    var is = Math.floor(i / fgscale);
-                    var js = Math.floor(j / fgscale);
-                    pixel = fgpixelmap.getPixel(is, js);
-                } else {
+                var index = ((this.info.height - i - 1) * this.info.width + j) << 2;
+                if (pixelArray[index]) {
                     var is = Math.floor(i / bgscale);
                     var js = Math.floor(j / bgscale);
                     pixel = bgpixelmap.getPixel(is, js);
+                } else {
+                    var is = Math.floor(i / fgscale);
+                    var js = Math.floor(j / fgscale);
+                    pixel = fgpixelmap.getPixel(is, js);
                 }
-                var index = ((this.info.height - i - 1) * this.info.width + j) * 4;
-                image.data[index] = pixel.r;
-                image.data[index + 1] = pixel.g;
-                image.data[index + 2] = pixel.b;
-                image.data[index + 3] = 255;
+
+                pixelArray[index] = pixel.r;
+                pixelArray[index + 1] = pixel.g;
+                pixelArray[index + 2] = pixel.b;
+                //pixelArray[index + 3] = 255; уже сделано при создании изображения
             }
         }
 

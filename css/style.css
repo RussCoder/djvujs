@@ -1,3 +1,13 @@
+.control_block{
+    box-shadow: 0 0 1px gray;
+    padding: 0.5em;
+    margin: 0.5em;
+}
+
+#time_output {
+    color: blue;
+}
+
 #canvas, #canvas2 {
     box-shadow: 0 0 1px gray;
 }

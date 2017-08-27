@@ -33,7 +33,7 @@ class DebugTimer {
     toString() {
         var str = '**DebugTimer**\n';
         for (var p in this.timers) {
-            str += ">>" + p + " " + this.timers[p].totalTime + "\n" + JSON.stringify(this.timers[p].timeArray) + '\n' + '<<\n';
+            str += ">>" + p + " " + this.timers[p].totalTime + "\n" + /*JSON.stringify(this.timers[p].timeArray) + '\n'*/ + '<<\n';
         }
         str += "**DebugTimer**\n";
         return str;

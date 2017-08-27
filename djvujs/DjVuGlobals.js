@@ -30,6 +30,10 @@ var Globals = {
         this.counter = 0;
     },
 
+    clearCanvas() {
+        this.canvasCtx.fillStyle = 'white';
+        this.canvasCtx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    },
 
     /**
      * @returns {Promise<ArrayBuffer>}
