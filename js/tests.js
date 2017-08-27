@@ -10,6 +10,7 @@ var outputBlock = $('#test_results_wrapper');
 
 function runAllTests() {
     var testNames = Object.keys(Tests);
+    var totalTime = 0;
     var runNextTest = () => {
         while (testNames.length) {
             var testName = testNames.shift();
@@ -17,18 +18,23 @@ function runAllTests() {
                 continue;
             }
             TestHelper.writeLog(`${testName} started...`);
+            var startTime = performance.now();
             return Tests[testName]().then((error) => {
+                var testTime = performance.now() - startTime;
+                totalTime += testTime;
                 if (error) {
                     TestHelper.writeLog(`Error: ${error}`, "red");
-                    TestHelper.writeLog(`${testName} fails!`, "red");
+                    TestHelper.writeLog(`${testName} failed!`, "red");
                 } else {
                     TestHelper.writeLog(`${testName} succeeded!`, "green");
                 }
-
+                TestHelper.writeLog(`It has taken ${Math.round(testTime)} milliseconds`, "blue");
                 TestHelper.writeLine();
                 return runNextTest();
             });
         }
+
+        TestHelper.writeLog(`Total time = ${Math.round(totalTime)} milliseconds`, "blue");
     };
 
     return runNextTest();
@@ -201,6 +207,10 @@ var Tests = {
     testJB2WhereRemovingOfEmptyEdgesOfBitmapsBeforeAddingToDictRequired() {
         return this._imageTest("problem_page.djvu", 0, "problem_page.png");
     },
+
+    testFGbzColoredMask() {
+        return this._imageTest("navm_fgbz.djvu", 2, "navm_fgbz_3.png");
+    }
 
     /*test3LayerColorImage() { // отключен так как не ясен алгоритм масштабирования слоев
         return this._imageTest("colorbook.djvu", 3, "colorbook_4.png");
