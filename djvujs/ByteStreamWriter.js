@@ -88,7 +88,7 @@ class ByteStreamWriter {
     }
 
     extense() {
-        Globals.Timer.start("extenseTime");
+        //Globals.Timer.start("extenseTime");
 
         var newlength = this.bufferLength + this.buffer.byteLength;
         var nb = new ArrayBuffer(newlength);
@@ -96,7 +96,7 @@ class ByteStreamWriter {
         this.buffer = nb;
         this.viewer = new DataView(this.buffer);
 
-        Globals.Timer.end("extenseTime");
+        //Globals.Timer.end("extenseTime");
     }
 
     //смещение на length байт

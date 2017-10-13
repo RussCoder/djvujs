@@ -117,7 +117,7 @@ class DjVuDocument {
 
     // создает новый документ со страницы from включая ее до to не включая
     slice(from, to) {
-        Globals.Timer.start('sliceTime');
+        //Globals.Timer.start('sliceTime');
         from = from || 0;
         to = to || this.pages.length;
         var djvuWriter = new DjVuWriter();
@@ -201,7 +201,7 @@ class DjVuDocument {
         var newbuffer = djvuWriter.getBuffer();
         DjVu.IS_DEBUG && console.log("New Buffer size = ", newbuffer.byteLength);
         var doc = new DjVuDocument(newbuffer);
-        Globals.Timer.end('sliceTime');
+        //Globals.Timer.end('sliceTime');
         return doc;
     }
 

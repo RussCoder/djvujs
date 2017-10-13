@@ -1,6 +1,6 @@
 'use strict';
 
-var djvuWorker = new DjVuWorker();
+var djvuWorker = new DjVu.Worker('/dist/djvu.js');
 
 var resultImageData;
 
