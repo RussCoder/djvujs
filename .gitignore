@@ -1,2 +1,8 @@
 .idea/
 node_modules/
+/samples/
+.vscode/
+access.log
+error.log
+favicon.ico
+jsconfig.json
