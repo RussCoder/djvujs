@@ -6,7 +6,12 @@
  */
 class DjVuWorker {
     constructor(path) {
-        this.path = path || '/djvujs/DjVuWorkerScript.js';
+        if (!path) {
+            var script = document.querySelector('script[src*="djvu."]');
+            this.path = script ? script.src : '/djvujs/DjVuWorkerScript.js';
+        } else {
+            this.path = path;
+        }
         this.worker = new Worker(this.path);
         this.worker.onmessage = (event) => {
             this.messageHandler(event);
