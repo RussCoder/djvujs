@@ -1,5 +1,7 @@
 import inject from 'rollup-plugin-inject';
 import legacy from 'rollup-plugin-legacy';
+import replace from 'rollup-plugin-re';
+import cleanup from 'rollup-plugin-cleanup';
 
 export default {
     input: 'rollup_index.js',
@@ -9,6 +11,14 @@ export default {
         name: 'DjVu'
     },
     plugins: [
+        replace({
+            defines: {
+                FALSE_FLAG: false
+            },
+            replaces: {
+                "'use strict';": ''
+            }
+        }),
         legacy({
             "./djvujs/DjVu.js": "DjVu",
             "./djvujs/ByteStream.js": "ByteStream",
@@ -91,7 +101,8 @@ export default {
             IWImageWriter: "./IWImageWriter.js",
             DjVuWriter: "./DjVuWriter.js",
             DjVuWorker: "./DjVuWorker.js"
-        })
+        }),
+        cleanup()
     ],
     treeshake: false
 };

@@ -6,7 +6,9 @@
   },
   "devDependencies": {
     "rollup": "^0.50.0",
+    "rollup-plugin-cleanup": "^1.0.1",
     "rollup-plugin-inject": "^2.0.0",
-    "rollup-plugin-legacy": "^1.0.0"
+    "rollup-plugin-legacy": "^1.0.0",
+    "rollup-plugin-re": "^1.0.6"
   }
 }
