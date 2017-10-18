@@ -19,14 +19,21 @@ function runAllTests() {
             }
             TestHelper.writeLog(`${testName} started...`);
             var startTime = performance.now();
-            return Tests[testName]().then((error) => {
+            return Tests[testName]().then((result) => {
                 var testTime = performance.now() - startTime;
                 totalTime += testTime;
-                if (error) {
-                    TestHelper.writeLog(`Error: ${error}`, "red");
-                    TestHelper.writeLog(`${testName} failed!`, "red");
-                } else {
+                if (!result) {
                     TestHelper.writeLog(`${testName} succeeded!`, "green");
+                } else if (result.isSuccess) {
+                    TestHelper.writeLog(`${testName} succeeded!`, "green");
+                    if (result.messages) {
+                        result.messages.forEach(message => {
+                            TestHelper.writeLog(message, "orange");
+                        });
+                    }
+                } else {
+                    TestHelper.writeLog(`Error: ${result}`, "red");
+                    TestHelper.writeLog(`${testName} failed!`, "red");
                 }
                 TestHelper.writeLog(`It has taken ${Math.round(testTime)} milliseconds`, "blue");
                 TestHelper.writeLine();
@@ -49,7 +56,7 @@ var TestHelper = {
         outputBlock.append("<hr>");
     },
 
-    getHashByArray(array) {
+    getHashOfArray(array) {
         var hash = 0, i, chr;
         if (array.length === 0) return hash;
         for (i = 0; i < array.length; i++) {
@@ -113,25 +120,29 @@ var TestHelper = {
 
         var height = canonicImageData.height * 4;
         var width = canonicImageData.width * 4;
-        var byteStep = 8;
+        var byteStep = 4;
 
         var luft1Check = () => {
-            for (var i = 0; i < resultImageData.data.length; i++) {
-                if (
-                    canonicImageData.data[i] !== resultImageData.data[i]
-                    && canonicImageData.data[i + byteStep] !== resultImageData.data[i]
-                    && canonicImageData.data[i - byteStep] !== resultImageData.data[i]
-                    && canonicImageData.data[i + width] !== resultImageData.data[i]
-                    && canonicImageData.data[i + width + byteStep] !== resultImageData.data[i]
-                    && canonicImageData.data[i + width - byteStep] !== resultImageData.data[i]
-                    && canonicImageData.data[i - width] !== resultImageData.data[i]
-                    && canonicImageData.data[i - width + byteStep] !== resultImageData.data[i]
-                    && canonicImageData.data[i - width - byteStep] !== resultImageData.data[i]
-                ) {
-                    return i;
+            var luftCheck = (luft) => {
+                for (var i = 0; i < resultImageData.data.length; i++) {
+                    if (
+                        canonicImageData.data[i + luft] !== resultImageData.data[i]
+                        && canonicImageData.data[i] !== resultImageData.data[i]
+                    ) {
+                        return i;
+                    }
                 }
-            }
-            return null;
+                return null;
+            };
+            var successLuft = null;
+            [byteStep, -byteStep, width, width + byteStep, width - byteStep, -width, -width + byteStep, -width - byteStep].some(luft => {
+                var index = luftCheck(luft);
+                if (index === null) {
+                    successLuft = luft;
+                    return true;
+                }
+            });
+            return successLuft;
         };
 
         var strictResult = strictCheck();
@@ -139,10 +150,10 @@ var TestHelper = {
             return null;
         } else {
             var luft1Result = luft1Check();
-            if (luft1Result === null) {
-                return `Нестрогая проверка пройдена, однако имеется расхождение пикселей! Строгая проверка: ${strictResult}`;
+            if (luft1Result !== null) {
+                return `Нестрогая проверка пройдена luft = ${luft1Result}, однако имеется расхождение пикселей! Строгая проверка: ${strictResult}`;
             } else {
-                return `Pасхождение пикселей! Строгая проверка: ${strictResult} Нестрогая проверка: ${luft1Result}`;
+                return `Pасхождение пикселей! Строгая проверка: ${strictResult}`;
             }
         }
     }
@@ -151,11 +162,10 @@ var TestHelper = {
 
 var Tests = {
 
-    _imageTest(djvuName, pageNum, imageName) {
+    _imageTest(djvuName, pageNum, imageName, hash = null) {
         return DjVu.Utils.loadFile(`/assets/${djvuName}`)
             .then(buffer => {
-                console.log("Dhash", TestHelper.getHashByArray(new Uint8Array(buffer)));
-                djvuWorker.createDocument(buffer);
+                return djvuWorker.createDocument(buffer);
             })
             .then(() => djvuWorker.getPageImageDataWithDPI(pageNum))
             .then(obj => {
@@ -163,9 +173,18 @@ var Tests = {
                 return TestHelper.getImageDataByImageURI(`/assets/${imageName}`);
             })
             .then(canonicImageData => {
-                console.log("Chash", TestHelper.getHashByArray(canonicImageData.data));
-                console.log("Rhash", TestHelper.getHashByArray(resultImageData.data));
-                return TestHelper.compareImageData(canonicImageData, resultImageData);
+                var result = TestHelper.compareImageData(canonicImageData, resultImageData);
+                if (result !== null && hash) {
+                    var isHashTheSame = TestHelper.getHashOfArray(resultImageData.data) === hash;
+                    return {
+                        isSuccess: isHashTheSame,
+                        messages: [
+                            isHashTheSame ? "Hash is the same! Good" : "Hash is different!",
+                            result
+                        ]
+                    };
+                }
+                return result;
             });
     },
 
@@ -173,7 +192,7 @@ var Tests = {
         return this._imageTest("happy_birthday.djvu", 0, "happy_birthday.png");
     },*/
 
-   /* testCreateDocumentFromPictures() {
+    testCreateDocumentFromPictures() {
         djvuWorker.startMultyPageDocument(90, 0, 0);
         return Promise.all([
             TestHelper.getImageDataByImageURI(`/assets/boy.png`),
@@ -218,19 +237,19 @@ var Tests = {
 
     testJB2WithBitOfBackground() {
         return this._imageTest("DjVu3Spec.djvu", 47, "DjVu3Spec_48.png");
-    },*/
-
-    testJB2WhereRemovingOfEmptyEdgesOfBitmapsBeforeAddingToDictRequired() {
-        return this._imageTest("problem_page.djvu", 0, "problem_page.png");
     },
 
-   /* testFGbzColoredMask() {
+    testJB2WhereRemovingOfEmptyEdgesOfBitmapsBeforeAddingToDictRequired() {
+        return this._imageTest("problem_page.djvu", 0, "problem_page.png", 826528816);
+    },
+
+    testFGbzColoredMask() {
         return this._imageTest("navm_fgbz.djvu", 2, "navm_fgbz_3.png");
-    }*/
+    }
 
     /*test3LayerColorImage() { // отключен так как не ясен алгоритм масштабирования слоев
         return this._imageTest("colorbook.djvu", 3, "colorbook_4.png");
     }*/
-}
+};
 
 runAllTests();
