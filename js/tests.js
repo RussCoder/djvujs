@@ -49,6 +49,17 @@ var TestHelper = {
         outputBlock.append("<hr>");
     },
 
+    getHashByArray(array) {
+        var hash = 0, i, chr;
+        if (array.length === 0) return hash;
+        for (i = 0; i < array.length; i++) {
+            chr = array[i];
+            hash = ((hash << 5) - hash) + chr;
+            hash |= 0; // Convert to 32bit integer
+        }
+        return hash;
+    },
+
     getImageDataByImageURI(imageURI) {
         var image = new Image();
         image.src = imageURI;
@@ -142,13 +153,18 @@ var Tests = {
 
     _imageTest(djvuName, pageNum, imageName) {
         return DjVu.Utils.loadFile(`/assets/${djvuName}`)
-            .then(buffer => djvuWorker.createDocument(buffer))
+            .then(buffer => {
+                console.log("Dhash", TestHelper.getHashByArray(new Uint8Array(buffer)));
+                djvuWorker.createDocument(buffer);
+            })
             .then(() => djvuWorker.getPageImageDataWithDPI(pageNum))
             .then(obj => {
                 resultImageData = obj.imageData;
                 return TestHelper.getImageDataByImageURI(`/assets/${imageName}`);
             })
             .then(canonicImageData => {
+                console.log("Chash", TestHelper.getHashByArray(canonicImageData.data));
+                console.log("Rhash", TestHelper.getHashByArray(resultImageData.data));
                 return TestHelper.compareImageData(canonicImageData, resultImageData);
             });
     },
@@ -157,7 +173,7 @@ var Tests = {
         return this._imageTest("happy_birthday.djvu", 0, "happy_birthday.png");
     },*/
 
-    testCreateDocumentFromPictures() {
+   /* testCreateDocumentFromPictures() {
         djvuWorker.startMultyPageDocument(90, 0, 0);
         return Promise.all([
             TestHelper.getImageDataByImageURI(`/assets/boy.png`),
@@ -202,15 +218,15 @@ var Tests = {
 
     testJB2WithBitOfBackground() {
         return this._imageTest("DjVu3Spec.djvu", 47, "DjVu3Spec_48.png");
-    },
+    },*/
 
     testJB2WhereRemovingOfEmptyEdgesOfBitmapsBeforeAddingToDictRequired() {
         return this._imageTest("problem_page.djvu", 0, "problem_page.png");
     },
 
-    testFGbzColoredMask() {
+   /* testFGbzColoredMask() {
         return this._imageTest("navm_fgbz.djvu", 2, "navm_fgbz_3.png");
-    }
+    }*/
 
     /*test3LayerColorImage() { // отключен так как не ясен алгоритм масштабирования слоев
         return this._imageTest("colorbook.djvu", 3, "colorbook_4.png");
