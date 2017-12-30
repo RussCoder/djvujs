@@ -1,5 +1,11 @@
 # djvu.js - DjVu JavaScript library
 
+<hr>
+
+**The technical documentation of the library is available [in the wiki](https://github.com/RussCoder/djvujs/wiki/DjVu.js-Documentation).**
+
+<hr>
+
 djvu.js - program library for working with djvu online. It's written in JavaScript and can be run in the web browsers without any connection with the server. djvu.js can be used for splitting (and concatenation) of djvu files, rendering pages of a djvu document, converting (and compressing) images into djvu documents and for analyzing of meta data of djvu documents.
 
 The library is only being developed and may be noticeably changed in the future. Any contribution is welcome :)
