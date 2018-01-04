@@ -3,7 +3,7 @@
 class BZZDecoder {
     constructor(zp) {
         this.zp = zp;
-        this.minblock = 10;
+        // this.minblock = 10; // нигде не используется, оставлено для документации
         this.maxblock = 4096;
         this.FREQMAX = 4;
         this.CTXIDS = 3;
@@ -15,7 +15,6 @@ class BZZDecoder {
         this.size = 0;
         this.blocksize = 0;
         this.data = null;
-        this.decoded = false;
     }
 
     decode_raw(bits) {
