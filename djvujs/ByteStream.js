@@ -1,5 +1,10 @@
 'use strict';
 
+/**
+ * Объект байтового потока. Предоставляет API для чтения сырого ArrayBuffer как потока байт.
+ * После вызова каждого метода чтения, внутренный указатель смещается автоматически.
+ * Можно читать числа, строки, массив байт разной длины. 
+ */
 class ByteStream {
     constructor(buffer, offsetx, length) {
         this.buffer = buffer;
@@ -13,7 +18,7 @@ class ByteStream {
         this.viewer = new DataView(this.buffer, this.offsetx, this.length);
     }
 
-    // "читает" следующие length байт в массив 
+    // "читает" следующие length байт в массив, возвращает массив основанный на том же ArrayBuffer
     getUint8Array(length) {
         length = length || this.restLength();
         var off = this.offset;
@@ -102,6 +107,11 @@ class ByteStream {
             byte = this.viewer.getUint8(this.offset++);
         }
         return str;
+    }
+
+    readStrUTF(byteLength) {
+        var array = this.getUint8Array(byteLength);
+        return String.fromCodePoint ? String.fromCodePoint(...array) : String.fromCharCode(...array);
     }
 
 

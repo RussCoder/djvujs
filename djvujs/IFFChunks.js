@@ -76,11 +76,11 @@ class СolorChunkDataHeader {
             // должна быть равна ширине(высоте) в INFOChunk или быть от 2 до 12 раз меньше
             this.width = bs.getUint16();
             this.height = bs.getUint16();
-            
+
             var byte = bs.getUint8();
             // задержка декодирования цветовой информации (старший бит должен быть 1, но вообще игнорируется)
             this.delayInit = byte & 127;
-            if(!byte & 128) {
+            if (!byte & 128) {
                 console.warn('Old image reconstruction should be applied!');
             }
 
@@ -94,8 +94,7 @@ class СolorChunkDataHeader {
 class INCLChunk extends IFFChunk {
     constructor(bs) {
         super(bs);
-        var tmp = this.bs.getUint8Array().slice(0);
-        this.ref = String.fromCharCode(...tmp);
+        this.ref = this.bs.readStrUTF();
     }
     toString() {
         var str = super.toString();
@@ -144,7 +143,7 @@ class DIRMChunk extends IFFChunk {
 
         var bsbs = bs.fork(this.length - 3 - 4 * this.nfiles);
         var bsz = BZZDecoder.decodeByteStream(bsbs);
-        
+
         for (var i = 0; i < this.nfiles; i++) {
             this.sizes[i] = bsz.getUint24();
         }

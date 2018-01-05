@@ -5,7 +5,7 @@
  */
 class DjVuPage {
     /**
-     * Принимает байтовый поток и id из машинного оглавлени документа. 
+     * Принимает байтовый поток и id из машинного оглавления документа. 
      */
     constructor(bs, dirmID, getINCLChunkCallback) {
         this.id = "FORM:DJVU"; // данная информация была проверена в DjVuDocument
@@ -16,7 +16,7 @@ class DjVuPage {
         this.djbz = null;
         this.bg44arr = new Array();
         this.fg44 = null;
-        this.getINCLChunkCallback = getINCLChunkCallback;
+        this.getINCLChunkCallback = getINCLChunkCallback; // метод для получения глобальной порции данных (словарь обычно) от документа по id
         /**
          * @type {IWImage}
          */
@@ -33,6 +33,9 @@ class DjVuPage {
          * @type {DjvuPallete}
          */
         this.fgbz = null;
+
+        /** @type {DjvuText} */
+        this.text = null;
 
         this.decoded = false;
         this.info = null;
@@ -94,13 +97,13 @@ class DjVuPage {
         this.iffchunks.push(this.info);
         while (!this.bs.isEmpty()) {
             var chunk;
-            let id = this.bs.readStr4();
-            let length = this.bs.getInt32();
-            this.bs.jump(-8);
-            // вернулись назад
-            let chunkBs = this.bs.fork(length + 8);
-            this.bs.jump(8 + length + (length & 1 ? 1 : 0));
-            // перепрыгнули к следующей порции
+            var id = this.bs.readStr4();
+            var length = this.bs.getInt32();
+
+            this.bs.jump(-8); // вернулись назад
+            var chunkBs = this.bs.fork(length + 8); // создали поток включающий только 1 порцию
+            this.bs.jump(8 + length + (length & 1 ? 1 : 0)); // перепрыгнули к следующей порции
+
             if (id == "FG44") {
                 chunk = this.fg44 = new ColorChunk(chunkBs);
             } else if (id == "BG44") {
@@ -118,6 +121,8 @@ class DjVuPage {
                 chunk = this.djbz = new JB2Dict(chunkBs);
             } else if (id === 'FGbz') {
                 chunk = this.fgbz = new DjVuPalette(chunkBs);
+            } else if (id === 'TXTa' || id === 'TXTz') {
+                chunk = this.text = new DjVuText(chunkBs);
             } else {
                 chunk = new IFFChunk(chunkBs);
             }
@@ -331,6 +336,14 @@ class DjVuPage {
     getMaskImageData() {
         this.decode();
         return this.sjbz && this.sjbz.getImage(this.fgbz);
+    }
+
+    getText() {
+        if (this.text) {
+            return this.text.getText();
+        } else {
+            return "";
+        }
     }
 
     toString() {

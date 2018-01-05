@@ -12,8 +12,8 @@ var djvuArrayBuffer;
 var timeOutput = document.querySelector('#time_output');
 var rerunButton = document.querySelector('#rerun');
 rerunButton.onclick = rerun;
-var pageNumber = 3;
-var djvuUrl = 'assets/navm_fgbz.djvu';
+var pageNumber = 0;
+var djvuUrl = 'assets/DjVu3Spec.djvu';
 
 
 function rerun() {
@@ -96,8 +96,9 @@ function readDjvu(buf) {
 
     console.log('Before render');
     Globals.drawImage(doc.pages[pageNumber].getImageData(), doc.pages[pageNumber].dpi * 1);
+    console.log(doc.pages[pageNumber].getText());
     // writeln(doc.toString(true));
-    //doc.countFiles();
+    // doc.countFiles();
     console.log(Globals.Timer.toString());
     console.log("Total execution time = ", performance.now() - time);
 }

@@ -15,6 +15,7 @@ function initWorker() {
         "IFFChunks.js",
         "BZZDecoder.js",
         "BZZEncoder.js",
+        "DjVuText.js",
         "IWCodecBaseClass.js",
         "IWDecoder.js",
         "IWEncoder.js",
