@@ -15,17 +15,24 @@ rerunButton.onclick = rerun;
 var pageNumber = 0;
 var djvuUrl = 'assets/DjVu3Spec.djvu';
 
+function saveStringAsFile(string) {
+    var link = document.createElement('a');
+    link.download = 'string.txt';
+    var blob = new Blob([string], { type: 'text/plain' });
+    link.href = window.URL.createObjectURL(blob);
+    link.click();
+}
 
 function rerun() {
     Globals.init();
     Globals.clearCanvas();
 
     setTimeout(() => {
-        var start = performance.now(); 
+        var start = performance.now();
         readDjvu(djvuArrayBuffer);
         var time = performance.now() - start;
         timeOutput.innerText = Math.round(time);
-    }, 0);   
+    }, 0);
 }
 
 window.onload = function () {
@@ -97,6 +104,7 @@ function readDjvu(buf) {
     console.log('Before render');
     Globals.drawImage(doc.pages[pageNumber].getImageData(), doc.pages[pageNumber].dpi * 1);
     console.log(doc.pages[pageNumber].getText());
+    //saveStringAsFile(doc.pages[pageNumber].getText());
     // writeln(doc.toString(true));
     // doc.countFiles();
     console.log(Globals.Timer.toString());

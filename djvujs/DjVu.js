@@ -9,11 +9,11 @@ DjVu.Utils = {
     /**
      *  @returns {Promise<ArrayBuffer>}
      */
-    loadFile(url) {
+    loadFile(url, responseType = 'arraybuffer') {
         return new Promise(resolve => {
             var xhr = new XMLHttpRequest();
             xhr.open("GET", url);
-            xhr.responseType = "arraybuffer";
+            xhr.responseType = responseType;
             xhr.onload = (e) => {
                 DjVu.IS_DEBUG && console.log("File loaded: ", e.loaded);
                 resolve(xhr.response);

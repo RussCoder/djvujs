@@ -192,6 +192,26 @@ var Tests = {
         return this._imageTest("happy_birthday.djvu", 0, "happy_birthday.png");
     },*/
 
+    testText() {
+        return DjVu.Utils.loadFile('/assets/DjVu3Spec.djvu')
+            .then(buffer => {
+                return djvuWorker.createDocument(buffer);
+            })
+            .then(() => {
+                return Promise.all([
+                    djvuWorker.getPageText(0),
+                    DjVu.Utils.loadFile('/assets/DjVu3Spec_1.txt', 'text')
+                ]);
+            })
+            .then(data => {
+                if (data[0] === data[1]) {
+                    return null;
+                } else {
+                    return "Text is incorrect!";
+                }
+            });
+    },
+
     testCreateDocumentFromPictures() {
         djvuWorker.startMultyPageDocument(90, 0, 0);
         return Promise.all([

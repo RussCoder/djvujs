@@ -19,7 +19,7 @@ export default {
                 "'use strict';": ''
             }
         }),
-        legacy({
+        legacy({ // what is exported in each file
             "./djvujs/DjVu.js": "DjVu",
             "./djvujs/ByteStream.js": "ByteStream",
             "./djvujs/ZPCodec.js": {
@@ -43,6 +43,7 @@ export default {
                 Block: "Block",
                 IWCodecBaseClass: "IWCodecBaseClass"
             },
+            "./djvujs/DjVuText.js": "DjVuText",
             "./djvujs/IWDecoder.js": "IWDecoder",
             "./djvujs/IWEncoder.js": "IWEncoder",
             "./djvujs/IWImage.js": "IWImage",
@@ -59,7 +60,8 @@ export default {
             "./djvujs/DjVuGlobals.js": "Globals",
             "./djvujs/DjVuWorker.js": "DjVuWorker"
         }),
-        inject({
+        inject({ // how to import dependencies
+            
             // control which files this plugin applies to
             // with include/exclude
             include: 'djvujs/*.js',
@@ -91,6 +93,7 @@ export default {
             IWEncoder: "./IWEncoder.js",
             IWImage: "./IWImage.js",
             DjVuPalette: "./DjVuPalette.js",
+            DjVuText: "./DjVuText.js",
             JB2Codec: "./JB2Codec.js",
             JB2Dict: "./JB2Dict.js",
             JB2Image: "./JB2Image.js",
