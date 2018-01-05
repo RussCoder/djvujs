@@ -86,6 +86,9 @@ class DjVuWorker {
             case 'getPageNumber':
                 callback.resolve(obj.pageNumber);
                 break;
+            case 'getPageText':
+                callback.resolve(obj.text);
+                break;
             default:
                 console.error("Unexpected message from DjVuWorker: ", obj);
         }
@@ -163,6 +166,13 @@ class DjVuWorker {
         return new Promise((resolve, reject) => {
             var id = this.callbacks.add({ resolve: resolve, reject: reject });
             this.worker.postMessage({ command: 'getPageImageDataWithDPI', id: id, pagenumber: pagenumber });
+        });
+    }
+
+    getPageText(pagenumber) {
+        return new Promise((resolve, reject) => {
+            var id = this.callbacks.add({ resolve: resolve, reject: reject });
+            this.worker.postMessage({ command: 'getPageText', id: id, pagenumber: pagenumber });
         });
     }
 

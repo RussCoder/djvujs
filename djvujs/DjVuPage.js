@@ -339,6 +339,7 @@ class DjVuPage {
     }
 
     getText() {
+        this.decode();
         if (this.text) {
             return this.text.getText();
         } else {

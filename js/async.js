@@ -19,11 +19,9 @@ window.onload = function () {
     Globals.img = document.getElementById('img');
     // testFunc();
     //loadPicture();
-    //renderDjVu();
-    initViewer();
+    renderDjVu();
+    //initViewer();
     //Globals.loadFile('samples/csl.djvu').then(buf => showMetaData(buf));
-
-
 }
 
 function initViewer() {
@@ -33,14 +31,15 @@ function initViewer() {
 }
 
 function renderDjVu() {
-    var url = 'samples/colorbook.djvu';
+    var url = 'assets/DjVu3Spec.djvu';
     /** @type {DjVuWorker} */
     var worker = new DjVuWorker();
     Globals.loadFile(url)
         .then(buffer => worker.createDocument(buffer))
-        .then(() => worker.getPageImageDataWithDPI(0))
-        .then(obj => {
-            Globals.drawImageSmooth(obj.imageData, obj.dpi);
+        .then(() => Promise.all([worker.getPageText(0), worker.getPageImageDataWithDPI(0)]))
+        .then(data => {
+            output.innerText = data[0];
+            Globals.drawImageSmooth(data[1].imageData, data[1].dpi);
         });
 }
 
