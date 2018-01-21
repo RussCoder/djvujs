@@ -8,7 +8,7 @@ class DjVuWorker {
     constructor(path) {
         if (!path) {
             var script = document.querySelector('script[src*="djvu."]');
-            this.path = script ? script.src : '/djvujs/DjVuWorkerScript.js';
+            this.path = script ? script.src : '/src/DjVuWorkerScript.js';
         } else {
             this.path = path;
         }

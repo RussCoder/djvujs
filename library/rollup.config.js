@@ -20,13 +20,13 @@ export default {
             }
         }),
         legacy({ // what is exported in each file
-            "./djvujs/DjVu.js": "DjVu",
-            "./djvujs/ByteStream.js": "ByteStream",
-            "./djvujs/ZPCodec.js": {
+            "./src/DjVu.js": "DjVu",
+            "./src/ByteStream.js": "ByteStream",
+            "./src/ZPCodec.js": {
                 "ZPEncoder": "ZPEncoder",
                 "ZPDecoder": "ZPDecoder"
             },
-            "./djvujs/IFFChunks.js": {
+            "./src/IFFChunks.js": {
                 "IFFChunk": "IFFChunk",
                 "DjVuError": "DjVuError",
                 "ColorChunk": "ColorChunk",
@@ -36,35 +36,35 @@ export default {
                 "NAVMChunk": "NAVMChunk",
                 "DIRMChunk": "DIRMChunk"
             },
-            "./djvujs/BZZDecoder.js": "BZZDecoder",
-            "./djvujs/BZZEncoder.js": "BZZEncoder",
-            "./djvujs/IWCodecBaseClass.js": {
+            "./src/BZZDecoder.js": "BZZDecoder",
+            "./src/BZZEncoder.js": "BZZEncoder",
+            "./src/IWCodecBaseClass.js": {
                 Bytemap: "Bytemap",
                 Block: "Block",
                 IWCodecBaseClass: "IWCodecBaseClass"
             },
-            "./djvujs/DjVuText.js": "DjVuText",
-            "./djvujs/IWDecoder.js": "IWDecoder",
-            "./djvujs/IWEncoder.js": "IWEncoder",
-            "./djvujs/IWImage.js": "IWImage",
-            "./djvujs/DjVuPalette.js": "DjVuPalette",
-            "./djvujs/JB2Codec.js": "JB2Codec",
-            "./djvujs/JB2Dict.js": "JB2Dict",
-            "./djvujs/JB2Image.js": "JB2Image",
-            "./djvujs/DjViChunk.js": "DjViChunk",
-            "./djvujs/DjVuPage.js": "DjVuPage",
-            "./djvujs/DjVuDocument.js": "DjVuDocument",
-            "./djvujs/ByteStreamWriter.js": "ByteStreamWriter",
-            "./djvujs/IWImageWriter.js": "IWImageWriter",
-            "./djvujs/DjVuWriter.js": "DjVuWriter",
-            "./djvujs/DjVuGlobals.js": "Globals",
-            "./djvujs/DjVuWorker.js": "DjVuWorker"
+            "./src/DjVuText.js": "DjVuText",
+            "./src/IWDecoder.js": "IWDecoder",
+            "./src/IWEncoder.js": "IWEncoder",
+            "./src/IWImage.js": "IWImage",
+            "./src/DjVuPalette.js": "DjVuPalette",
+            "./src/JB2Codec.js": "JB2Codec",
+            "./src/JB2Dict.js": "JB2Dict",
+            "./src/JB2Image.js": "JB2Image",
+            "./src/DjViChunk.js": "DjViChunk",
+            "./src/DjVuPage.js": "DjVuPage",
+            "./src/DjVuDocument.js": "DjVuDocument",
+            "./src/ByteStreamWriter.js": "ByteStreamWriter",
+            "./src/IWImageWriter.js": "IWImageWriter",
+            "./src/DjVuWriter.js": "DjVuWriter",
+            "./src/DjVuGlobals.js": "Globals",
+            "./src/DjVuWorker.js": "DjVuWorker"
         }),
         inject({ // how to import dependencies
             
             // control which files this plugin applies to
             // with include/exclude
-            include: 'djvujs/*.js',
+            include: 'src/*.js',
             exclude: 'node_modules/**',
 
             /* all other options are treated as modules...*/
