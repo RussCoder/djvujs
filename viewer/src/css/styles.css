@@ -1,0 +1,48 @@
+.djvu_viewer {
+    font-size: 14px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 0 4px gray;
+    padding: 1em;
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.djvu_viewer .down_panel {
+    flex: 0 0 auto;
+    border: 1px solid black;
+    padding: 0.5em;
+    display: flex;
+    justify-content: center;
+    margin: 1em;
+    width: 90%;
+    height: 1.5em;
+    text-align: center;
+}
+
+.djvu_viewer .down_panel .scale_label {
+    display: inline-block;
+    min-width: 3em;
+}
+
+.djvu_viewer .scale {
+    display: inline-block;
+    width: 10em;
+}
+
+.image_wrapper {
+    flex: 1 1 auto;
+    overflow: auto;
+    height: 95%;
+    text-align: center;
+}
+
+.djvu_viewer .image {
+    margin: 0.5em;
+    box-shadow: 0 0 1px lightgray;
+}
+
+.djvu_viewer .page_number {
+    width: 5em;
+}

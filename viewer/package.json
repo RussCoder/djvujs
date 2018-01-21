@@ -1,0 +1,22 @@
+{
+  "name": "djvu_viewer",
+  "version": "0.0.1",
+  "private": true,
+  "devDependencies": {
+    "react-scripts": "1.0.17"
+  },
+  "dependencies": {
+    "prop-types": "^15.6.0",
+    "react": "^16.2.0",
+    "react-dom": "^16.2.0",
+    "react-redux": "^5.0.6",
+    "redux": "^3.7.2",
+    "redux-thunk": "^2.2.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  }
+}
