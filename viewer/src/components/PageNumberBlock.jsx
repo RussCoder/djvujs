@@ -12,19 +12,44 @@ class PageNumberBlock extends React.Component {
     };
 
     setNewPageNumber(number) {
-        this.props.setNewPageNumber(number);
+        if (number >= 1 && number <= this.props.pagesCount) {
+            this.props.setNewPageNumber(number);
+        }
     }
 
     onInputChange = (e) => {
         this.setNewPageNumber(+e.target.value);
     };
 
+    goToNextPage = () => {
+        this.setNewPageNumber(this.props.pageNumber + 1);
+    };
+
+    goToPrevPage = () => {
+        this.setNewPageNumber(this.props.pageNumber - 1);
+    };
+
     render() {
         return (
             <div className="page_number_block">
-                <input type="button" className="navbut prev" value="&#9668;" />
-                <input className="page_number" type="number" onChange={this.onInputChange} />
-                <input type="button" className="navbut next" value="&#9658;" />
+                <input
+                    type="button"
+                    className="navbut prev"
+                    value="&#9668;"
+                    onClick={this.goToPrevPage}
+                />
+                <input
+                    className="page_number"
+                    type="number"
+                    onChange={this.onInputChange}
+                    value={this.props.pageNumber}
+                />
+                <input
+                    type="button"
+                    className="navbut next"
+                    value="&#9658;"
+                    onClick={this.goToNextPage}
+                />
             </div>
         );
     }

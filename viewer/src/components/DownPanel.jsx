@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import PageNumberBlock from './PageNumberBlock'
+import ScaleGizmo from './ScaleGizmo';
 
 class DownPanel extends React.Component {
 
@@ -9,9 +10,8 @@ class DownPanel extends React.Component {
         return (
             <div className="down_panel">
                 <PageNumberBlock />
-                <input className="scale" type="range" min="0" max="200" step="1" value="100" onChange={() => { }} />
-                <span className="scale_label">100</span>%
-             </div>
+                <ScaleGizmo />
+            </div>
         );
     }
 }

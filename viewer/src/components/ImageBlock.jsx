@@ -8,6 +8,8 @@ const DEFAULT_DPI = 100;
 class ImageBlock extends React.Component {
 
     static propTypes = {
+        imageWidth: PropTypes.number,
+        imageHeight: PropTypes.number,
         imageData: PropTypes.object,
         imageDPI: PropTypes.number,
         imageUrl: PropTypes.string
@@ -17,11 +19,6 @@ class ImageBlock extends React.Component {
         super(props);
         this.tmpCanvas = document.createElement('canvas');
         this.tmpCanvasCtx = this.tmpCanvas.getContext('2d');
-        this.improveImageTimeout = null;
-        this.state = {
-            isCanvasMode: true,
-            dataUrl: null
-        }
     }
 
     componentDidUpdate() {
@@ -32,18 +29,10 @@ class ImageBlock extends React.Component {
         this.updateImageIfRequired();
     }
 
-    getImageDataURL() {
-        const imageData = this.props.imageData;
-        this.tmpCanvas.width = imageData.width;
-        this.tmpCanvas.height = imageData.height;
-        this.tmpCanvasCtx.putImageData(imageData, 0, 0);
-        return this.tmpCanvas.toDataURL();
-    }
-
     getScaledImageWidth() {
-        if (this.props.imageData && this.props.imageDPI) {
+        if (this.props.imageDPI) {
             const stdScale = this.props.imageDPI ? this.props.imageDPI / DEFAULT_DPI : 1
-            return this.props.imageData.width / stdScale * this.props.userScale;
+            return this.props.imageWidth / stdScale * this.props.userScale;
         } else {
             return null;
         }
@@ -53,22 +42,17 @@ class ImageBlock extends React.Component {
         if (!(this.canvas && this.props.imageData) && !(this.img && this.props.dataUrl)) {
             return;
         }
-        if (this.state.isCanvasMode) {
-            clearTimeout(this.improveImageTimeout);
+        if (!this.props.dataUrl && this.props.imageData) {
             this.drawImageOnCanvas();
-            this.improveImageTimeout = setTimeout(() => {
-                this.setState({
-                    dataUrl: this.getImageDataURL(),
-                    isCanvasMode: false
-                })
-            }, 1000);
+        } else {
+            this.canvas.height = this.canvas.width = 0;
         }
     }
 
     drawImageOnCanvas() {
         const { imageData, imageDPI, userScale } = this.props;
 
-        var image = imageData;
+        var image = imageData.a;
         var scale = imageDPI ? imageDPI / DEFAULT_DPI : 1;
         scale /= userScale
 
@@ -100,6 +84,7 @@ class ImageBlock extends React.Component {
         this.canvas.height = image.height / scale;
         this.canvasCtx.drawImage(this.tmpCanvas, 0, 0, tmpW2, tmpH2,
             0, 0, this.canvas.width, this.canvas.height);
+        this.tmpCanvas.width = this.tmpCanvas.height = 0;
     }
 
     canvasRef = (node) => {
@@ -110,18 +95,19 @@ class ImageBlock extends React.Component {
     };
 
     render() {
+        const isCanvasMode = !this.props.dataUrl;
         return (
             <div className="image_wrapper">
                 <img
-                    style={this.state.isCanvasMode ? { display: 'none' } : null}
+                    style={isCanvasMode ? { display: 'none' } : null}
                     className="image"
                     width={this.getScaledImageWidth()}
                     ref={node => this.img = node}
-                    src={this.state.dataUrl}
+                    src={this.props.dataUrl}
                     alt='Djvu Viewer'
                 />
                 <canvas
-                    style={this.state.isCanvasMode ? null : { display: 'none' }}
+                    style={isCanvasMode ? null : { display: 'none' }}
                     ref={this.canvasRef}
                     className="image"
                 />
@@ -132,6 +118,8 @@ class ImageBlock extends React.Component {
 
 export default connect(
     state => ({
+        imageWidth: state.imageWidth,
+        imageHeight: state.imageHeight,
         imageData: state.imageData,
         dataUrl: state.dataUrl,
         imageDPI: state.imageDPI,
