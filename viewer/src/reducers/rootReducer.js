@@ -44,7 +44,7 @@ const rootReducer = (state = initialState, action) => {
 
         case Consts.DOCUMENT_CREATED_ACTION:
             return {
-                ...state,
+                ...initialState,
                 pagesCount: action.pagesCount
             };
 

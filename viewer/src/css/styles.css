@@ -3,9 +3,9 @@
     overflow: hidden;
     position: relative;
     box-shadow: 0 0 4px gray;
-    padding: 1em;
+    box-sizing: border-box;
+    padding: 0.5em;
     height: 100%;
-    width: 100%;
     display: flex;
     flex-direction: column;
 }
@@ -15,11 +15,19 @@
     border: 1px solid black;
     padding: 0.5em;
     display: flex;
+    flex-wrap: nowrap;
     justify-content: center;
     margin: 1em;
     width: 90%;
     height: 1.5em;
     text-align: center;
+}
+
+.djvu_viewer .scale_gizmo {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: center;
 }
 
 .djvu_viewer .down_panel .scale_label {
@@ -47,6 +55,17 @@
     box-shadow: 0 0 1px lightgray;
 }
 
-.djvu_viewer .page_number {
-    width: 5em;
+.djvu_viewer .page_number_block .page_number {
+    flex: 1 1 auto;
+    min-width: 1em;
+    max-width: 4em;
+}
+
+.djvu_viewer .page_number_block {
+    margin: 0 0.5em;
+    flex: 0 0 auto;
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: center;
 }
