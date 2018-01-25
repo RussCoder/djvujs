@@ -4,12 +4,16 @@ import replace from 'rollup-plugin-re';
 import cleanup from 'rollup-plugin-cleanup';
 
 export default {
-    input: 'rollup_index.js',
-    output: {
+    input: './src/index.js',
+    output: [{
         file: 'dist/djvu.js',
         format: 'iife',
         name: 'DjVu'
-    },
+    }, {
+        file: '../viewer/public/tmp/djvu.js',
+        format: 'iife',
+        name: 'DjVu'
+    }],
     plugins: [
         replace({
             defines: {
@@ -61,7 +65,7 @@ export default {
             "./src/DjVuWorker.js": "DjVuWorker"
         }),
         inject({ // how to import dependencies
-            
+
             // control which files this plugin applies to
             // with include/exclude
             include: 'src/*.js',

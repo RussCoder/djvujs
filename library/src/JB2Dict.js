@@ -51,18 +51,18 @@ class JB2Dict extends JB2Codec {
                     break;
 
                 case 9: // Numcoder reset
-                //this.decodeNum(0, 262142, this.inheritDictSizeCtx);
-                console.log("RESET DICT");
+                    //this.decodeNum(0, 262142, this.inheritDictSizeCtx);
+                    console.log("RESET DICT");
                     this.resetNumContexts();
                     break;
 
                 case 10:
-                    var comment = this.decodeComment();
-                    var str = "";
+                    /*var comment = */this.decodeComment();
+                    /*var str = ""; // TODO: test comments
                     for (var i = 0; i < comment.length; i++) {
                         var byte = comment[i];
                         str += String.fromCharCode(byte);
-                    }
+                    }*/
                     break;
 
                 default:

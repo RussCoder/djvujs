@@ -185,8 +185,12 @@ class JB2Image extends JB2Codec {
                     break;
 
                 case 9: // Numcoder reset
-                    console.log("RESET IMAGE");
+                    console.log("RESET NUM CONTEXTS");
                     this.resetNumContexts();
+                    break;
+
+                case 10:
+                    this.decodeComment(); // TODO: test comments
                     break;
 
                 default:

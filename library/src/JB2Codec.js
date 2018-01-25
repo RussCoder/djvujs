@@ -175,7 +175,7 @@ class JB2Codec extends IFFChunk {
         this.verticalAbsLocationCtx = new NumContext();
     }
 
-    decodeNumX(low, high, numctx) {
+    /*decodeNumX(low, high, numctx) {
         var v = 0;
         var decision = 0;
         var range = 0xffffffff;
@@ -214,7 +214,7 @@ class JB2Codec extends IFFChunk {
         }
         //phase 4
         return negative ? (-v - 1) : v;
-    }
+    }*/
 
     decodeNum(low, high, numctx) {
         let negative = false;
