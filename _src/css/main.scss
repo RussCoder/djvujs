@@ -1,0 +1,63 @@
+$lineColor: #CCC;
+body {
+    font-size: 14px;
+    font-family: "Helvetica";
+    text-align: justify;
+    max-width: 65em;
+    margin: 1em auto;
+    display: block;
+    background: #f4f4f7;
+    color: #444;
+}
+
+header {
+    text-align: center;
+    .site_name {
+        font-size: 5.5em;
+    }
+}
+
+nav {
+    font-size: 2em;
+    display: flex;
+    margin: 1em;
+    justify-content: flex-start;
+    a {
+        cursor: pointer;
+        margin: 0 1em;
+        padding: 0.3em;
+        text-decoration: none;
+        color: inherit;
+        border: 1px solid $lineColor;
+        border-radius: 0.3em;
+        &:hover {
+            background: $lineColor;
+        }
+    }
+}
+
+.main {
+    font-size: 1.5em;
+    padding: 0 4em;
+}
+
+h1 {
+    font-size: 2.5em;
+    border-bottom: $lineColor solid 1px;
+    padding: 0.3em 0;
+}
+
+h2 {
+    font-size: 2em;
+}
+
+h3 {
+    font-size: 1.5em;
+}
+
+footer {
+    margin-top: 1em;
+    text-align: center;
+    border-top: 1px solid $lineColor;
+    padding: 1em 0;
+}

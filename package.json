@@ -1,0 +1,10 @@
+{
+  "name": "djvu.js_website",
+  "scripts": {
+    "start": "harp server _src --port 9000",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "harp": "^0.25.0"
+  }
+}
