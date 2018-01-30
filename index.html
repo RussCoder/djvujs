@@ -1,0 +1,16 @@
+<!DOCTYPE html><html><head><link rel="stylesheet" href="css/main.css"><link rel="shortcut icon" href="/djvu.png"><title>DjVu.js</title></head><body><header> <div class="site_name">DjVu.js program library</div></header><nav><a href="/">Viewer</a><a href="https://github.com/RussCoder/djvujs/wiki/DjVu.js-Documentation">Docs</a><a href="about">About</a><a href="https://github.com/RussCoder/djvujs">GitHub</a></nav><div class="main"> <link rel="stylesheet" href="/djvujs/djvu_viewer.css">
+
+<script src="/djvujs/djvu.js"></script>
+<script src="/djvujs/djvu_viewer.js"></script>
+<script>
+    window.onload = function() { 
+        DjVu.Viewer.init(document.querySelector("#for_viewer"));
+    }
+</script>
+
+<h1>The DjVu Viewer demo</h1><p>DjVu.js is a program library for working with djvu files online.
+It&#39;s written in JavaScript and can be run in the web browsers without any connection with the server.
+It&#39;s absolutely open sourse and you can see the source code on <a href="https://github.com/RussCoder/djvujs">GitHub</a>
+Also there is the DjVu.js Viewer wirtten in ReactJS and powered with DjVu.js library.</p>
+<p>Here you can see the Viewer and try it out. </p>
+<div id="for_viewer"></div></div><footer>DjVu.js 2018 | Perhaps, all rights reserved  </footer></body></html>
