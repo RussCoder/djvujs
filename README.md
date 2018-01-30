@@ -4,7 +4,7 @@
 
 **The technical documentation of the library is available [in the wiki](https://github.com/RussCoder/djvujs/wiki/DjVu.js-Documentation).**
 
-**[The official website with DjVu.js Viewer demo](https://github.com/RussCoder/djvujs/wiki/DjVu.js-Documentation).**
+**[The official website with DjVu.js Viewer demo](https://russcoder.github.io/djvujs).**
 
 <hr>
 
@@ -14,7 +14,7 @@ Also, there is a DjVu.js Viewer, an app which uses DjVu.js in order to render Dj
 
 The library is only being developed and may be noticeably changed in the future. Any contribution is welcome :)
 
-The official website is <a href="http://djvujs.net/">https://russcoder.github.io/djvujs/</a>.
+The official website is [](https://russcoder.github.io/djvujs).
 
 <hr>
 
@@ -24,6 +24,4 @@ djvu.js - это программная библиотека написанна�
 
 Библиотека djvu.js находится в процессе разработки и может быть значительно изменена в будущем. Любое содействие в развитии библиотеки приветсвуется :)
 
-Официальный сайт библиотеки djvu.js - <a href="http://djvujs.net/">https://russcoder.github.io/djvujs/</a>.
-
-
+Официальный сайт библиотеки djvu.js - [](https://russcoder.github.io/djvujs).
