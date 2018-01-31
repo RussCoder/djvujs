@@ -44,6 +44,17 @@ class Block extends Int16Array {
 }
 
 //класс общих данных для кодирования и декодирования картинки
+
+
+/**
+ * There are 4 magic values: 
+ * 1 for ZERO // this coeff never hits this bit
+ * 2 for ACTIVE // this coeff is already active активный
+ * 4 for NEW // this coeff is becoming active при закодировании используется, когда собираемся закодировать
+ * 8 for UNK // потенциальный флаг
+ * these 4 are flags. It turned out that it works much faster with raw constats 
+ * rather than with const variables or properties from the prototype. 
+ */
 class IWCodecBaseClass {
     constructor() {
         this.quant_lo = [0x004000, 0x008000, 0x008000, 0x010000, 0x010000, 0x010000, 0x010000, 0x010000, 0x010000, 0x010000, 0x010000, 0x010000, 0x020000, 0x020000, 0x020000, 0x020000];
@@ -71,9 +82,9 @@ class IWCodecBaseClass {
             for (var i = 0; i < 16; i++) {
                 var threshold = this.quant_lo[i];
                 //чтобы не проверять потом этот коэффициент
-                this.coeffstate[0][i] = this.ZERO;
+                this.coeffstate[0][i] = 1/*ZERO*/;
                 if (threshold > 0 && threshold < 0x8000) {
-                    this.coeffstate[0][i] = this.UNK;
+                    this.coeffstate[0][i] = 8/*UNK*/;
                     is_null = 0;
                 }
             }

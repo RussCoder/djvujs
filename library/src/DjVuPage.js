@@ -152,7 +152,7 @@ class DjVuPage {
             }
         }
         if (!this.bgimage && !this.fgimage) {
-            return this.sjbz.getImage();
+            return this.sjbz.getImage(this.fgbz);
         }
 
         var fgscale, bgscale, fgpixelmap, bgpixelmap;
@@ -163,13 +163,10 @@ class DjVuPage {
             bgpixelmap = this.bgimage.pixelmap;
         } else {
             bgscale = 1;
+            var whitePixel = { r: 255, g: 255, b: 255 };
             bgpixelmap = {
                 getPixel() {
-                    return {
-                        r: 255,
-                        g: 255,
-                        b: 255
-                    }
+                    return whitePixel;
                 }
             }
         }
@@ -180,20 +177,17 @@ class DjVuPage {
             fgpixelmap = this.fgimage.pixelmap;
         } else {
             fgscale = 1;
+            var blackPixel = { r: 0, g: 0, b: 0 };
             fgpixelmap = {
                 getPixel() {
-                    return {
-                        r: 0,
-                        g: 0,
-                        b: 0
-                    }
+                    return blackPixel;
                 }
             }
         }
 
 
         var image;
-        if (!this.fgbz) {
+        if (!this.fgbz) { // если нет палитры
             image = this.createImageFromMaskImageAndPixelMaps(
                 this.sjbz.getMaskImage(),
                 fgpixelmap,
@@ -201,7 +195,7 @@ class DjVuPage {
                 fgscale,
                 bgscale
             );
-        } else {
+        } else { // тут уже предполагается, что переднего плана нет, а только палитра
             image = this.createImageFromMaskImageAndBackgroundPixelMap(
                 this.sjbz.getImage(this.fgbz, true),
                 bgpixelmap,

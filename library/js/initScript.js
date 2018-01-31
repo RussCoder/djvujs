@@ -13,7 +13,7 @@ var timeOutput = document.querySelector('#time_output');
 var rerunButton = document.querySelector('#rerun');
 rerunButton.onclick = rerun;
 var pageNumber = 0;
-var djvuUrl = 'assets/DjVu3Spec.djvu';
+var djvuUrl = 'assets/colorbook.djvu';
 
 function saveStringAsFile(string) {
     var link = document.createElement('a');
