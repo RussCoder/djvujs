@@ -75,6 +75,5 @@ class JB2Dict extends JB2Codec {
                 break;
             }
         }
-        Globals.dict = this.dict;
     }
 }

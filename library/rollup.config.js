@@ -61,7 +61,6 @@ export default {
             "./src/ByteStreamWriter.js": "ByteStreamWriter",
             "./src/IWImageWriter.js": "IWImageWriter",
             "./src/DjVuWriter.js": "DjVuWriter",
-            "./src/DjVuGlobals.js": "Globals",
             "./src/DjVuWorker.js": "DjVuWorker"
         }),
         inject({ // how to import dependencies
@@ -76,7 +75,6 @@ export default {
             // use the default – i.e. insert
             // import $ from 'jquery'
             DjVu: "./DjVu.js",
-            Globals: "./DjVuGlobals.js",
             ByteStream: "./ByteStream.js",
             ZPEncoder: ["./ZPCodec.js", "ZPEncoder"],
             ZPDecoder: ["./ZPCodec.js", "ZPDecoder"],

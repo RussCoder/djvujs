@@ -2,7 +2,8 @@ const http = require('http');
 const url = require('url');
 const fs = require('fs');
 const path = require('path');
-// you can pass the parameter in the command line. e.g. node static_server.js 3000
+const child_process = require('child_process');
+// you can pass the parameter in the command line. e.g. node server.js 3000
 const port = process.argv[2] || 9000;
 
 const mimeType = {
@@ -53,3 +54,7 @@ http.createServer(function (req, res) {
 }).listen(parseInt(port));
 
 console.log(`Server is listening on port ${port}`);
+
+const watchProcess = child_process.exec('npm run watch');
+watchProcess.stdout.pipe(process.stdout);
+watchProcess.stderr.pipe(process.stderr);
