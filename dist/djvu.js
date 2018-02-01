@@ -2,7 +2,7 @@ var DjVu = (function () {
 'use strict';
 
 var DjVu = {
-    VERSION: '0.0.5',
+    VERSION: '0.0.6',
     IS_DEBUG: false
 };
 DjVu.Utils = {
@@ -927,9 +927,9 @@ class IWCodecBaseClass {
             var is_null = 1;
             for (var i = 0; i < 16; i++) {
                 var threshold = this.quant_lo[i];
-                this.coeffstate[0][i] = this.ZERO;
+                this.coeffstate[0][i] = 1        ;
                 if (threshold > 0 && threshold < 0x8000) {
-                    this.coeffstate[0][i] = this.UNK;
+                    this.coeffstate[0][i] = 8       ;
                     is_null = 0;
                 }
             }
@@ -1007,7 +1007,7 @@ class IWDecoder extends IWCodecBaseClass {
         for (var i = indices.from; i <= indices.to; i++ ,
             boff++) {
             for (var j = 0; j < 16; j++) {
-                if (this.coeffstate[boff][j] & this.ACTIVE) {
+                if (this.coeffstate[boff][j] & 2           ) {
                     if (!this.curband) {
                         step = this.quant_lo[j];
                     }
@@ -1035,20 +1035,20 @@ class IWDecoder extends IWCodecBaseClass {
         var step = this.quant_hi[this.curband];
         for (var i = indices.from; i <= indices.to; i++ ,
             boff++) {
-            if (this.bucketstate[boff] & this.NEW) {
+            if (this.bucketstate[boff] & 4       ) {
                 var shift = 0;
-                if (this.bucketstate[boff] & this.ACTIVE) {
+                if (this.bucketstate[boff] & 2          ) {
                     shift = 8;
                 }
                 var bucket = block.buckets[i];
                 var np = 0;
                 for (var j = 0; j < 16; j++) {
-                    if (this.coeffstate[boff][j] & this.UNK) {
+                    if (this.coeffstate[boff][j] & 8       ) {
                         np++;
                     }
                 }
                 for (var j = 0; j < 16; j++) {
-                    if (this.coeffstate[boff][j] & this.UNK) {
+                    if (this.coeffstate[boff][j] & 8       ) {
                         var ip = Math.min(7, np);
                         var des = this.zp.decode(this.activateCoefCtx, shift + ip);
                         if (des) {
@@ -1072,7 +1072,7 @@ class IWDecoder extends IWCodecBaseClass {
         var boff = 0;
         for (var i = indices.from; i <= indices.to; i++ ,
             boff++) {
-            if (!(this.bucketstate[boff] & this.UNK)) {
+            if (!(this.bucketstate[boff] & 8       )) {
                 continue;
             }
             var n = 0;
@@ -1087,25 +1087,25 @@ class IWDecoder extends IWCodecBaseClass {
                     n--;
                 }
             }
-            if (this.bbstate & this.ACTIVE) {
+            if (this.bbstate & 2          ) {
                 n |= 4;
             }
             if (this.zp.decode(this.decodeCoefCtx, n + band * 8)) {
-                this.bucketstate[boff] |= this.NEW;
+                this.bucketstate[boff] |= 4       ;
             }
         }
     }
     blockBandDecodingPass() {
         var indices = this.getBandBuckets(this.curband);
         var bcount = indices.to - indices.from + 1;
-        if (bcount < 16 || (this.bbstate & this.ACTIVE)) {
-            this.bbstate |= this.NEW;
-        } else if (this.bbstate & this.UNK) {
+        if (bcount < 16 || (this.bbstate & 2          )) {
+            this.bbstate |= 4        ;
+        } else if (this.bbstate & 8       ) {
             if (this.zp.decode(this.decodeBucketCtx, 0)) {
-                this.bbstate |= this.NEW;
+                this.bbstate |= 4       ;
             }
         }
-        return this.bbstate & this.NEW;
+        return this.bbstate & 4       ;
     }
     preliminaryFlagComputation(block) {
         this.bbstate = 0;
@@ -1119,9 +1119,9 @@ class IWDecoder extends IWCodecBaseClass {
                 var bucket = block.buckets[j];
                 for (var k = 0; k < bucket.length; k++) {
                     if (bucket[k] === 0) {
-                        this.coeffstate[boff][k] = this.UNK;
+                        this.coeffstate[boff][k] = 8       ;
                     } else {
-                        this.coeffstate[boff][k] = this.ACTIVE;
+                        this.coeffstate[boff][k] = 2          ;
                     }
                     bstatetmp |= this.coeffstate[boff][k];
                 }
@@ -1131,11 +1131,11 @@ class IWDecoder extends IWCodecBaseClass {
         } else {
             var bucket = block.buckets[0];
             for (var k = 0; k < bucket.length; k++) {
-                if (this.coeffstate[0][k] !== this.ZERO) {
+                if (this.coeffstate[0][k] !== 1        ) {
                     if (bucket[k] === 0) {
-                        this.coeffstate[0][k] = this.UNK;
+                        this.coeffstate[0][k] = 8       ;
                     } else {
-                        this.coeffstate[0][k] = this.ACTIVE;
+                        this.coeffstate[0][k] = 2          ;
                     }
                 }
                 bstatetmp |= this.coeffstate[0][k];
@@ -1749,219 +1749,6 @@ class DjVuPalette extends IFFChunk {
     }
 }
 
-function writeln(str) {
-    str = str || "";
-    output.innerHTML += str + "<br>";
-}
-function write(str) {
-    output.innerHTML += str;
-}
-function clear() {
-    output.innerHTML = "";
-}
-var Globals = {
-    init() {
-        var canvas = document.getElementById('canvas');
-        var c = canvas.getContext('2d');
-        this.defaultDPI = 100;
-        this.Timer = new DebugTimer();
-        this.canvas = canvas;
-        this.canvasCtx = c;
-        this.dict = [];
-        this.img = document.getElementById('img');
-        this.counter = 0;
-    },
-    clearCanvas() {
-        this.canvasCtx.fillStyle = 'white';
-        this.canvasCtx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-    },
-    loadFile(url) {
-        return new Promise(resolve => {
-            var xhr = new XMLHttpRequest();
-            xhr.open("GET", url);
-            xhr.responseType = "arraybuffer";
-            xhr.onload = (e) => {
-                DjVu.IS_DEBUG && console.log("File loaded: ", e.loaded);
-                resolve(xhr.response);
-            };
-            xhr.send();
-        });
-    },
-    drawImage(image, dpi) {
-        var tmp;
-        var scale = dpi ? dpi / Globals.defaultDPI : 1;
-        var time = performance.now();
-        Globals.canvas.width = image.width / scale;
-        this.canvas.height = image.height / scale;
-        var oc = document.createElement('canvas');
-        var octx = oc.getContext('2d');
-        oc.width = image.width;
-        oc.height = image.height;
-        octx.putImageData(image, 0, 0);
-        var tmpH, tmpW, tmpH2, tmpW2;
-        tmpH = tmpH2 = oc.height;
-        tmpW = tmpW2 = oc.width;
-        if (scale > 4) {
-            tmpH = oc.height / scale * 4;
-            tmpW = oc.width / scale * 4;
-            octx.drawImage(oc, 0, 0, tmpW, tmpH);
-        }
-        if (scale > 2) {
-            tmpH2 = oc.height / scale * 2;
-            tmpW2 = oc.width / scale * 2;
-            octx.drawImage(oc, 0, 0, tmpW, tmpH, 0, 0, tmpW2, tmpH2);
-        }
-        this.canvasCtx.drawImage(oc, 0, 0, tmpW2, tmpH2,
-            0, 0, canvas.width, canvas.height);
-        DjVu.IS_DEBUG && console.log("Canvas resizing time = ", performance.now() - time);
-    },
-    drawImageNS(image, dpi) {
-        Globals.Timer.start('drawImageNS');
-        var tmp;
-        var scale = dpi ? Globals.defaultDPI / dpi : 1;
-        var time = performance.now();
-        Globals.canvas.width = image.width / scale;
-        this.canvas.height = image.height / scale;
-        var oc = document.createElement('canvas');
-        var octx = oc.getContext('2d');
-        oc.width = image.width;
-        oc.height = image.height;
-        octx.putImageData(image, 0, 0);
-        var resImg = downScaleCanvas(oc, scale);
-        this.canvas.width = resImg.width;
-        this.canvas.height = resImg.height;
-        this.canvasCtx.putImageData(resImg, 0, 0);
-        Globals.Timer.end('drawImageNS');
-    },
-    drawImageSmooth(image, dpi) {
-        var time = performance.now();
-        var tmp;
-        var scale = dpi ? dpi / Globals.defaultDPI : 1;
-        Globals.canvas.width = image.width;
-        this.canvas.height = image.height;
-        Globals.canvasCtx.putImageData(image, 0, 0);
-        this.img.src = this.canvas.toDataURL();
-        DjVu.IS_DEBUG && console.log("DataURL creating time = ", performance.now() - time);
-        this.img.width = image.width / scale;
-        (tmp = this.canvas.parentNode) ? tmp.removeChild(this.canvas) : 0;
-        DjVu.IS_DEBUG && console.log("DataURL creating time = ", performance.now() - time);
-    }
-};
-function downScaleCanvas(cv, scale) {
-    if (!(scale < 1) || !(scale > 0))
-        throw ('scale must be a positive number <1 ');
-    var sqScale = scale * scale;
-    var sw = cv.width;
-    var sh = cv.height;
-    var tw = Math.floor(sw * scale);
-    var th = Math.floor(sh * scale);
-    var sx = 0
-        , sy = 0
-        , sIndex = 0;
-    var tx = 0
-        , ty = 0
-        , yIndex = 0
-        , tIndex = 0;
-    var tX = 0
-        , tY = 0;
-    var w = 0
-        , nw = 0
-        , wx = 0
-        , nwx = 0
-        , wy = 0
-        , nwy = 0;
-    var crossX = false;
-    var crossY = false;
-    var sBuffer = cv.getContext('2d').
-        getImageData(0, 0, sw, sh).data;
-    var tBuffer = new Float32Array(3 * tw * th);
-    var sR = 0
-        , sG = 0
-        , sB = 0;
-    for (sy = 0; sy < sh; sy++) {
-        ty = sy * scale;
-        tY = 0 | ty;
-        yIndex = 3 * tY * tw;
-        crossY = (tY != (0 | ty + scale));
-        if (crossY) {
-            wy = (tY + 1 - ty);
-            nwy = (ty + scale - tY - 1);
-        }
-        for (sx = 0; sx < sw; sx++ ,
-            sIndex += 4) {
-            tx = sx * scale;
-            tX = 0 | tx;
-            tIndex = yIndex + tX * 3;
-            crossX = (tX != (0 | tx + scale));
-            if (crossX) {
-                wx = (tX + 1 - tx);
-                nwx = (tx + scale - tX - 1);
-            }
-            sR = sBuffer[sIndex];
-            sG = sBuffer[sIndex + 1];
-            sB = sBuffer[sIndex + 2];
-            if (!crossX && !crossY) {
-                tBuffer[tIndex] += sR * sqScale;
-                tBuffer[tIndex + 1] += sG * sqScale;
-                tBuffer[tIndex + 2] += sB * sqScale;
-            } else if (crossX && !crossY) {
-                w = wx * scale;
-                tBuffer[tIndex] += sR * w;
-                tBuffer[tIndex + 1] += sG * w;
-                tBuffer[tIndex + 2] += sB * w;
-                nw = nwx * scale;
-                tBuffer[tIndex + 3] += sR * nw;
-                tBuffer[tIndex + 4] += sG * nw;
-                tBuffer[tIndex + 5] += sB * nw;
-            } else if (crossY && !crossX) {
-                w = wy * scale;
-                tBuffer[tIndex] += sR * w;
-                tBuffer[tIndex + 1] += sG * w;
-                tBuffer[tIndex + 2] += sB * w;
-                nw = nwy * scale;
-                tBuffer[tIndex + 3 * tw] += sR * nw;
-                tBuffer[tIndex + 3 * tw + 1] += sG * nw;
-                tBuffer[tIndex + 3 * tw + 2] += sB * nw;
-            } else {
-                w = wx * wy;
-                tBuffer[tIndex] += sR * w;
-                tBuffer[tIndex + 1] += sG * w;
-                tBuffer[tIndex + 2] += sB * w;
-                nw = nwx * wy;
-                tBuffer[tIndex + 3] += sR * nw;
-                tBuffer[tIndex + 4] += sG * nw;
-                tBuffer[tIndex + 5] += sB * nw;
-                nw = wx * nwy;
-                tBuffer[tIndex + 3 * tw] += sR * nw;
-                tBuffer[tIndex + 3 * tw + 1] += sG * nw;
-                tBuffer[tIndex + 3 * tw + 2] += sB * nw;
-                nw = nwx * nwy;
-                tBuffer[tIndex + 3 * tw + 3] += sR * nw;
-                tBuffer[tIndex + 3 * tw + 4] += sG * nw;
-                tBuffer[tIndex + 3 * tw + 5] += sB * nw;
-            }
-        }
-    }
-    var resCV = document.createElement('canvas');
-    resCV.width = tw;
-    resCV.height = th;
-    var resCtx = resCV.getContext('2d');
-    var imgRes = resCtx.getImageData(0, 0, tw, th);
-    var tByteBuffer = imgRes.data;
-    var pxIndex = 0;
-    for (sIndex = 0,
-        tIndex = 0; pxIndex < tw * th; sIndex += 3,
-        tIndex += 4,
-        pxIndex++) {
-        tByteBuffer[tIndex] = Math.ceil(tBuffer[sIndex]);
-        tByteBuffer[tIndex + 1] = Math.ceil(tBuffer[sIndex + 1]);
-        tByteBuffer[tIndex + 2] = Math.ceil(tBuffer[sIndex + 2]);
-        tByteBuffer[tIndex + 3] = 255;
-    }
-    resCtx.putImageData(imgRes, 0, 0);
-    return imgRes;
-}
-
 class Bitmap$1 {
     constructor(width, height) {
         var length = Math.ceil(width * height / 8);
@@ -2287,7 +2074,6 @@ class JB2Dict extends JB2Codec {
                 break;
             }
         }
-        Globals.dict = this.dict;
     }
 }
 
@@ -2659,7 +2445,7 @@ class DjVuPage {
             }
         }
         if (!this.bgimage && !this.fgimage) {
-            return this.sjbz.getImage();
+            return this.sjbz.getImage(this.fgbz);
         }
         var fgscale, bgscale, fgpixelmap, bgpixelmap;
         if (this.bgimage) {
@@ -2667,13 +2453,10 @@ class DjVuPage {
             bgpixelmap = this.bgimage.pixelmap;
         } else {
             bgscale = 1;
+            var whitePixel = { r: 255, g: 255, b: 255 };
             bgpixelmap = {
                 getPixel() {
-                    return {
-                        r: 255,
-                        g: 255,
-                        b: 255
-                    }
+                    return whitePixel;
                 }
             };
         }
@@ -2682,13 +2465,10 @@ class DjVuPage {
             fgpixelmap = this.fgimage.pixelmap;
         } else {
             fgscale = 1;
+            var blackPixel = { r: 0, g: 0, b: 0 };
             fgpixelmap = {
                 getPixel() {
-                    return {
-                        r: 0,
-                        g: 0,
-                        b: 0
-                    }
+                    return blackPixel;
                 }
             };
         }
