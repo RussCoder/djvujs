@@ -6,7 +6,6 @@ import FileBlock from './FileBlock';
 
 class DownPanel extends React.Component {
 
-
     render() {
         return (
             <div className="down_panel">

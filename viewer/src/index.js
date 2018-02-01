@@ -2,10 +2,8 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux'
 import App from './components/App.jsx';
-import registerServiceWorker from './registerServiceWorker';
 import configureStore from './store';
 import Actions from './actions/actions';
-
 
 const DjVu = window.DjVu;
 
@@ -33,5 +31,3 @@ if (process.env.NODE_ENV !== 'production') {
         store.dispatch(Actions.createDocumentFromArrayBufferAction(buffer));
     });
 }
-
-registerServiceWorker();

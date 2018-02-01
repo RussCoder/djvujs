@@ -1,8 +1,14 @@
 const util = require('util');
-const exec = util.promisify(require('child_process').exec);
+const child_process = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
+function execute(command) {
+    return new Promise(resolve => {
+        const subProcess = child_process.exec(command, resolve);
+        subProcess.stdio.forEach((stream, i) => stream.pipe(process.stdout));
+    })
+}
 
 function copyFile(source, target) {
     var rd = fs.createReadStream(source);
@@ -33,6 +39,10 @@ async function processFile(dir, destFile) {
     }
 }
 
+function decorate(string) {
+    const line = '***************************************';
+    return `\n${line}\n\n${string}\n\n${line}\n`;
+}
 
 async function main() {
     const viewerBuildDir = 'viewer/build/static/';
@@ -40,17 +50,18 @@ async function main() {
 
     console.log("The build process is running... Wait for a while, please.");
 
-    const install = process.argv[2] === 'install' ? '& npm install' : '';
+    const install = process.argv.includes('install') ? '& npm install' : '';
+    const isOnlyLib = !!process.argv.includes('lib');
 
     try {
         await Promise.all([
-            exec(`cd viewer ${install} & npm run build`)
-                .then(() => console.log('The Viewer is built!')),
-            exec(`cd library ${install} & npm run build`)
-                .then(() => console.log('The Library is built!'))
+            isOnlyLib ? null : execute(`cd viewer ${install} & npm run build`)
+                .then(() => console.log(decorate('The Viewer is built!'))),
+            execute(`cd library ${install} & npm run build`)
+                .then(() => console.log(decorate('The Library is built!')))
         ]);
-    } catch(e) {
-        console.error("The build process threw an error! Try to execute 'node build.js install' \n\n");
+    } catch (e) {
+        console.error(decorate("The build process threw an error! Try to execute 'node build.js install'"));
         console.error(e);
     }
 
