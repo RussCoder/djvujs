@@ -46,24 +46,24 @@ function decorate(string) {
 
 async function main() {
     const viewerBuildDir = 'viewer/build/static/';
-    const time = Date.now();
+    // const time = Date.now();
 
-    console.log("The build process is running... Wait for a while, please.");
+    // console.log("The build process is running... Wait for a while, please.");
 
-    const install = process.argv.includes('install') ? '& npm install' : '';
-    const isOnlyLib = !!process.argv.includes('lib');
+    // const install = process.argv.includes('install') ? '& npm install' : '';
+    // const isOnlyLib = !!process.argv.includes('lib');
 
-    try {
-        await Promise.all([
-            isOnlyLib ? null : execute(`cd viewer ${install} & npm run build`)
-                .then(() => console.log(decorate('The Viewer is built!'))),
-            execute(`cd library ${install} & npm run build`)
-                .then(() => console.log(decorate('The Library is built!')))
-        ]);
-    } catch (e) {
-        console.error(decorate("The build process threw an error! Try to execute 'node build.js install'"));
-        console.error(e);
-    }
+    // // try {
+    // //     await Promise.all([
+    // //         isOnlyLib ? null : execute(`cd viewer ${install} & npm run build`, process.cwd() + '\\viewer')
+    // //             .then(() => console.log(decorate('The Viewer is built!'))),
+    // //         execute(`cd library ${install} & npm run build`, process.cwd() + '\\library')
+    // //             .then(() => console.log(decorate('The Library is built!')))
+    // //     ]);
+    // // } catch (e) {
+    // //     console.error(decorate("The build process threw an error! Try to execute 'node build.js install'"));
+    // //     console.error(e);
+    // // }
 
     await Promise.all([
         processFile(viewerBuildDir + 'css/', 'djvu_viewer.css'),
@@ -71,7 +71,7 @@ async function main() {
         processFile('library/dist/', 'djvu.js'),
     ]);
     console.log('All files are copied to the ./build/ directory!');
-    console.log('It has taken ', (Date.now() - time) / 1000, ' seconds.');
+    //console.log('It has taken ', (Date.now() - time) / 1000, ' seconds.');
 }
 
 main();
