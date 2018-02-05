@@ -3,6 +3,8 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import Consts from '../constants/consts';
 import Actions from '../actions/actions';
+import FontAwesomeIcon from '@fortawesome/react-fontawesome';
+import { faArrowAltCircleRight, faArrowAltCircleLeft } from '@fortawesome/fontawesome-free-regular';
 
 class PageNumberBlock extends React.Component {
 
@@ -32,11 +34,10 @@ class PageNumberBlock extends React.Component {
     render() {
         return (
             <div className="page_number_block">
-                <input
-                    type="button"
-                    className="navbut prev"
-                    value="&#9668;"
+                <FontAwesomeIcon
+                    icon={faArrowAltCircleLeft}
                     onClick={this.goToPrevPage}
+                    className="navbut"
                 />
                 <input
                     className="page_number"
@@ -44,11 +45,10 @@ class PageNumberBlock extends React.Component {
                     onChange={this.onInputChange}
                     value={this.props.pageNumber}
                 />
-                <input
-                    type="button"
-                    className="navbut next"
-                    value="&#9658;"
+                <FontAwesomeIcon
+                    icon={faArrowAltCircleRight}
                     onClick={this.goToNextPage}
+                    className="navbut"
                 />
             </div>
         );

@@ -46,6 +46,11 @@ const Actions = {
         type: Consts.DATA_URL_CREATED_ACTION,
         dataUrl: dataUrl
     }),
+
+    toggleFullPageViewAction: (isFullPageView) => ({
+        type: Consts.TOGGLE_FULL_PAGE_VIEW_ACTION,
+        isFullPageView: isFullPageView
+    })
 };
 
 export default Actions;

@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import PageNumberBlock from './PageNumberBlock'
 import ScaleGizmo from './ScaleGizmo';
 import FileBlock from './FileBlock';
+import FullPageViewButton from './FullPageViewButton';
 
 class DownPanel extends React.Component {
 
@@ -12,6 +13,7 @@ class DownPanel extends React.Component {
                 <FileBlock />
                 <PageNumberBlock />
                 <ScaleGizmo />
+                <FullPageViewButton />
             </div>
         );
     }

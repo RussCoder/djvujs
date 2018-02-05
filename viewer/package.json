@@ -8,6 +8,10 @@
         "react-scripts": "1.0.17"
     },
     "dependencies": {
+        "@fortawesome/fontawesome-free-regular": "^5.0.6",
+        "@fortawesome/fontawesome-free-solid": "^5.0.6",
+        "@fortawesome/react-fontawesome": "0.0.17",
+        "classnames": "^2.2.5",
         "prop-types": "^15.6.0",
         "react": "^16.2.0",
         "react-dom": "^16.2.0",

@@ -15,6 +15,7 @@ const initialState = {
     isLoading: false,
     currentPageNumber: 1,
     pagesCount: null,
+    isFullPageView: false,
     imageDataUrlTimeout: null
 };
 
@@ -45,6 +46,7 @@ const rootReducer = (state = initialState, action) => {
         case Consts.DOCUMENT_CREATED_ACTION:
             return {
                 ...initialState,
+                isFullPageView: state.isFullPageView,
                 pagesCount: action.pagesCount
             };
 
@@ -58,6 +60,12 @@ const rootReducer = (state = initialState, action) => {
             return {
                 ...state,
                 userScale: action.scale
+            }
+
+        case Consts.TOGGLE_FULL_PAGE_VIEW_ACTION:
+            return {
+                ...state,
+                isFullPageView: action.isFullPageView
             }
 
         default:

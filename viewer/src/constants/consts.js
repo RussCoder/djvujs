@@ -4,6 +4,7 @@ const Consts = {
     DOCUMENT_CREATED_ACTION: null,
     SET_NEW_PAGE_NUMBER_ACTION: null,
     DATA_URL_CREATED_ACTION: null,
+    TOGGLE_FULL_PAGE_VIEW_ACTION: null,
     SET_USER_SCALE_ACTION: null
 };
 
