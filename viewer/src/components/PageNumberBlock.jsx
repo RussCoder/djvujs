@@ -1,10 +1,11 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import Consts from '../constants/consts';
-import Actions from '../actions/actions';
 import FontAwesomeIcon from '@fortawesome/react-fontawesome';
 import { faArrowAltCircleRight, faArrowAltCircleLeft } from '@fortawesome/fontawesome-free-regular';
+
+import Actions from '../actions/actions';
+import PageNumberElement from './PageNumber';
 
 class PageNumberBlock extends React.Component {
 
@@ -39,12 +40,9 @@ class PageNumberBlock extends React.Component {
                     onClick={this.goToPrevPage}
                     className="navbut"
                 />
-                <input
-                    className="page_number"
-                    type="number"
-                    onChange={this.onInputChange}
-                    value={this.props.pageNumber}
-                />
+
+                <PageNumberElement {...this.props} />
+
                 <FontAwesomeIcon
                     icon={faArrowAltCircleRight}
                     onClick={this.goToNextPage}
