@@ -1,5 +1,10 @@
 'use strict';
 
+/**
+ * Old Viewer with manual DOM manipulation. Saved just for history. 
+ * Isn't used anymore. 
+ */
+
 class DjVuViewer {
     constructor(selector, worker) {
         this.defaultDPI = 100;

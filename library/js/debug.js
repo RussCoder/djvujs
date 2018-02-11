@@ -1,4 +1,10 @@
 'use strict';
+
+/**
+ * One more set of debug funcitions that was used in development of the library.
+ * Saved mostly for history. 
+ */
+
 //класс для измерения времени с точностью до микросекунд
 class DebugTimer {
     constructor() {

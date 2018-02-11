@@ -1,7 +1,6 @@
 'use strict';
 
-var djvuWorker = new DjVuWorker();
-var djvuViewer;
+var djvuWorker = new DjVu.Worker();
 
 function initDjVuApplication() {
     $('#backbutton').click(reset);
@@ -11,7 +10,6 @@ function initDjVuApplication() {
     $('#slicefunc').click(sliceFuncPrepare);
     $('#picturefunc').click(pictureFuncPrepare);
     $('#metadatafunc').click(metaDataFuncPrepare);
-    $('#viewfunc').click(viewFuncPrepare);
 
     if (DjVu.VERSION) {
         $('#djvu_app').prepend('<div class="djvu_version">djvu.js version: ' + DjVu.VERSION + '</div>');
@@ -29,34 +27,7 @@ function reset(event) {
     $('.info').text('');
     $('#procmess').text('');
     $('#filehref').hide();
-    djvuViewer && djvuViewer.reset();
     djvuWorker && djvuWorker.reset();
-}
-
-function viewFuncPrepare() {
-    $('#funcmenublock').hide(400);
-    $('#funcblock').show(400);
-    $('#djvuViewerBlock').show(400);
-    $("#finput").change(viewFunc);
-}
-
-function viewFunc() {
-    if (this.files.length) {
-        if (this.files[0].name.substr(-5) !== '.djvu') {
-            $('#warnmess').text("Расширение файла не .djvu !!!");
-            return;
-        }
-        $('#warnmess').text("");
-        var fr = new FileReader();
-        fr.readAsArrayBuffer($("#finput")[0].files[0]);
-        fr.onload = () => {
-            var buf = fr.result;
-            djvuViewer = new DjVuViewer('.djvu_viewer', djvuWorker);
-            djvuViewer.loadDjVuFromBuffer(buf).catch(() => {
-                $("#warnmess").text("Ошибка при обработке файла !!!");
-            });
-        }
-    }
 }
 
 function metaDataFuncPrepare() {
@@ -148,7 +119,7 @@ function readImagesAndCreateDocument() {
                     djvuWorker.endMultyPageDocument()
                         .then((buffer) => {
                             $("#procmess").text("Задание выполненено !!!");
-                            $('#filehref').prop('href', DjVuWorker.createArrayBufferURL(buffer)).show(400);
+                            $('#filehref').prop('href', DjVu.Worker.createArrayBufferURL(buffer)).show(400);
                         });
                 }
             });
@@ -165,7 +136,7 @@ function createPicDocument(imageArray) {
     djvuWorker.createDocumentFromPictures(imageArray, slices, delayInit, grayscale)
         .then((buffer) => {
             $("#procmess").text("Задание выполненено !!!");
-            $('#filehref').prop('href', DjVuWorker.createArrayBufferURL(buffer)).show(400);
+            $('#filehref').prop('href', DjVu.Worker.createArrayBufferURL(buffer)).show(400);
         },
         () => {
             $("#procmess").text("Ошибка при обработке файла !!!");
@@ -220,7 +191,7 @@ function sliceFunc() {
     djvuWorker.slice(from, to)
         .then((buffer) => {
             $("#procmess").text("Задание выполненено !!!");
-            $('#filehref').prop('href', DjVuWorker.createArrayBufferURL(buffer)).show(400);
+            $('#filehref').prop('href', DjVu.Worker.createArrayBufferURL(buffer)).show(400);
         },
         (e) => { // reject
             console.error(e);

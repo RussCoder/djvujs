@@ -1,5 +1,9 @@
 'use strict';
 
+/**
+ * Just a set of debug functions. 
+ */
+
 function writeln(str) {
     str = str || "";
     output.innerHTML += str + "<br>";

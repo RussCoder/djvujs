@@ -9,7 +9,6 @@ function initWorker() {
     // подгружаем всю библиотеку, адреса относительно директории DjVuWorkerScript
     importScripts(
         "DjVu.js",
-        "DjVuGlobals.js",
         'ByteStream.js',
         "ZPCodec.js",
         "IFFChunks.js",
@@ -27,7 +26,6 @@ function initWorker() {
         "DjViChunk.js",
         "DjVuPage.js",
         "DjVuDocument.js",
-        "debug.js",
         "ByteStreamWriter.js",
         "IWImageWriter.js",
         "DjVuWriter.js"
@@ -38,8 +36,6 @@ function initWorker() {
     var djvuDocument; // главный объект документа
     /** @type {IWImageWriter} */
     var iwiw; // объект записи документов
-    // var Globals = {};
-    // Globals.Timer = new DebugTimer();
 
     // обрабочик приема событий
     onmessage = function (oEvent) {
