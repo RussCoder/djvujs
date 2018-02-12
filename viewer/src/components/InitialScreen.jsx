@@ -10,7 +10,7 @@ class InitialScreen extends React.Component {
         return (
             <div class="initial_screen">
                 <div className="content">
-                    <h1>DjVu.js Viewer welcomes you!</h1>
+                    <div className="header">DjVu.js Viewer welcomes you!</div>
                     <div>Choose a .djvu file to view it! </div>
                     <div>
                         Note that you can switch the viwer to the full page mode and back - just click on the <FontAwesomeIcon icon={faExpand} /> icon on the down panel.

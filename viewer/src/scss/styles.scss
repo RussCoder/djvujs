@@ -37,10 +37,11 @@ body.disable_scroll_djvujs {
         overflow: auto;
         display: flex;
         align-items: center;
+        justify-content: center;
 
         .content {
 
-            .h1 {
+            .header {
                 text-align: center;
                 font-size: 2em;
             }
@@ -50,6 +51,7 @@ body.disable_scroll_djvujs {
             }
 
             .file_block_wrapper {
+                display: inline-block;
                 border: 1px solid lightgray;
 
                 .file_block {
