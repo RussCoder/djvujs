@@ -3,14 +3,15 @@ import setDataUrlTimeout from './dataUrlCreator';
 
 const Actions = {
 
-    createDocumentFromArrayBufferAction: (arrayBuffer) => (dispatch, getState) => {
+    createDocumentFromArrayBufferAction: (arrayBuffer, fileName = "***") => (dispatch, getState) => {
         const worker = getState().djvuWorker;
         worker.createDocument(arrayBuffer)
             .then(() => worker.getPageNumber())
             .then(pagesCount => {
                 dispatch({
                     type: Consts.DOCUMENT_CREATED_ACTION,
-                    pagesCount: pagesCount
+                    pagesCount: pagesCount,
+                    fileName: fileName
                 });
                 dispatch(Actions.renderCurrentPageAction());
             });

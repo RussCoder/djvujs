@@ -1,4 +1,5 @@
-html.disable_scroll_djvujs, body.disable_scroll_djvujs {
+html.disable_scroll_djvujs,
+body.disable_scroll_djvujs {
     width: 100% !important;
     height: 100% !important;
     overflow: hidden !important;
@@ -25,6 +26,68 @@ html.disable_scroll_djvujs, body.disable_scroll_djvujs {
         width: 100%;
         height: 100%;
         z-index: 100;
+    }
+
+    .initial_screen {
+        font-size: 2em;
+        text-align: center;
+        flex: 1 1 auto;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        display: flex;
+        align-items: center;
+
+        .content {
+
+            .h1 {
+                text-align: center;
+                font-size: 2em;
+            }
+
+            div {
+                margin: 1em;
+            }
+
+            .file_block_wrapper {
+                border: 1px solid lightgray;
+
+                .file_block {
+                    display: block;
+                }
+            }
+        }
+    }
+
+    .file_block {
+        flex: 0 1 auto;
+        cursor: pointer;
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: center;
+        justify-content: flex-start;
+        white-space: nowrap;
+        overflow: hidden;
+        padding: 0.15em;
+
+        .file_icon {
+            flex: 0 0 auto;
+            font-size: 1.5em;
+        }
+
+        .file_name {
+            overflow: hidden;
+            flex: 0 1 auto;
+            text-align: left;
+            text-overflow: ellipsis;
+            margin: 0 0.5em;
+        }
+
+        &:hover {
+            .file_icon {
+                transform: scale(1.1)
+            }
+        }
     }
 
     .down_panel {
@@ -77,8 +140,6 @@ html.disable_scroll_djvujs, body.disable_scroll_djvujs {
         width: 100%;
         height: 100%;
         display: flex;
-        justify-content: center;
-        align-content: center;
         overflow: auto;
         height: 95%;
         text-align: center;

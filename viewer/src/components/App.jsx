@@ -1,13 +1,16 @@
 import React, { Component } from 'react';
-import DownPanel from "./DownPanel";
-import ImageBlock from "./ImageBlock";
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import '../css/styles.css';
 
+import DownPanel from "./DownPanel";
+import ImageBlock from "./ImageBlock";
+import InitialScreen from './InitialScreen';
+
 class App extends Component {
     static propTypes = {
-        isFullPageView: PropTypes.bool.isRequired
+        isFullPageView: PropTypes.bool.isRequired,
+        isFileLoaded: PropTypes.bool.isRequired
     };
 
     render() {
@@ -21,9 +24,10 @@ class App extends Component {
             document.querySelector('html').classList.remove(disableScrollClass);
             document.body.classList.remove(disableScrollClass);
         }
+
         return (
             <div className={"djvu_viewer" + fullPageViewClass}>
-                <ImageBlock />
+                {this.props.isFileLoaded ? <ImageBlock /> : <InitialScreen />}
                 <DownPanel />
             </div>
         );
@@ -32,6 +36,7 @@ class App extends Component {
 
 export default connect(
     state => ({
+        isFileLoaded: !!state.fileName,
         isFullPageView: state.isFullPageView
     })
 )(App);

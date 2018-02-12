@@ -1,7 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import Consts from '../constants/consts';
 import Actions from '../actions/actions';
 
 class ScaleGizmo extends React.Component {

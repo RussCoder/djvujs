@@ -1,7 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import Consts from '../constants/consts';
 
 const DEFAULT_DPI = 100;
 
@@ -98,19 +97,19 @@ class ImageBlock extends React.Component {
         const isCanvasMode = !this.props.dataUrl;
         return (
             <div className="image_wrapper">
-                <img
-                    style={isCanvasMode ? { display: 'none' } : null}
-                    className="image"
-                    width={this.getScaledImageWidth()}
-                    ref={node => this.img = node}
-                    src={this.props.dataUrl}
-                    alt='Djvu Viewer'
-                />
-                <canvas
-                    style={isCanvasMode ? null : { display: 'none' }}
-                    ref={this.canvasRef}
-                    className="image"
-                />
+                <div className="image">
+                    <img
+                        style={isCanvasMode ? { display: 'none' } : null}
+                        width={this.getScaledImageWidth()}
+                        ref={node => this.img = node}
+                        src={this.props.dataUrl}
+                        alt='Djvu Viewer'
+                    />
+                    <canvas
+                        style={isCanvasMode && this.props.imageData ? null : { display: 'none' }}
+                        ref={this.canvasRef}
+                    />
+                </div>
             </div>
         );
     }

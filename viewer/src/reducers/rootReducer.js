@@ -5,6 +5,7 @@ const DjVu = window.DjVu;
 
 const initialState = {
     djvuWorker: new DjVu.Worker(),
+    fileName: null,
     arrayBuffer: null,
     dataUrl: null,
     imageWidth: null,
@@ -47,7 +48,8 @@ const rootReducer = (state = initialState, action) => {
             return {
                 ...initialState,
                 isFullPageView: state.isFullPageView,
-                pagesCount: action.pagesCount
+                pagesCount: action.pagesCount,
+                fileName: action.fileName
             };
 
         case Consts.SET_NEW_PAGE_NUMBER_ACTION:

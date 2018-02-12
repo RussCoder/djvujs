@@ -1,12 +1,15 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import Consts from '../constants/consts';
+import FontAwesomeIcon from '@fortawesome/react-fontawesome';
+import { faUpload } from '@fortawesome/fontawesome-free-solid';
+
 import Actions from '../actions/actions';
 
 class FileBlock extends React.Component {
 
     static propTypes = {
+        fileName: PropTypes.string,
         createNewDocument: PropTypes.func.isRequired
     };
 
@@ -24,19 +27,42 @@ class FileBlock extends React.Component {
         var fr = new FileReader();
         fr.readAsArrayBuffer(file);
         fr.onload = () => {
-            this.props.createNewDocument(fr.result);
+            this.props.createNewDocument(fr.result, file.name);
         }
+    };
+
+    onClick = (e) => {
+        this.input && this.input.click();
     };
 
     render() {
         return (
-            <input type="file" onChange={this.onChange} />
+            <div
+                className="file_block"
+                onClick={this.onClick}
+            >
+                <FontAwesomeIcon
+                    icon={faUpload}
+                    onClick={this.goToPrevPage}
+                    className="file_icon"
+                />
+                <span className="file_name">{this.props.fileName || "Choose a file"}</span>
+                <input
+                    style={{ display: 'none' }}
+                    type="file"
+                    onChange={this.onChange}
+                    accept=".djvu, .djv"
+                    ref={node => this.input = node}
+                />
+            </div>
         );
     }
 }
 
-export default connect(null,
+export default connect(state => ({
+    fileName: state.fileName,
+}),
     {
-        createNewDocument: Actions.createDocumentFromArrayBufferAction
+        createNewDocument: Actions.createDocumentFromArrayBufferAction,
     }
 )(FileBlock);
