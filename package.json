@@ -3,9 +3,11 @@
   "scripts": {
     "start": "harp server _src --port 9000",
     "compile": "harp compile _src ./compile",
+    "copy": "node .js",
     "static": "harp server ./ --port 9000"
   },
   "devDependencies": {
+    "fs-extra": "^5.0.0",
     "harp": "^0.25.0"
   }
 }
