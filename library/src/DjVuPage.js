@@ -212,17 +212,18 @@ class DjVuPage {
         var pixelArray = image.data;
         //набираем изображение по пикселям
         for (var i = 0; i < this.info.height; i++) {
+            var rowIndexOffset = (this.info.height - i - 1) * this.info.width;
+            var bis = Math.floor(i / bgscale);
+            var fis = Math.floor(i / fgscale);
             for (var j = 0; j < this.info.width; j++) {
                 var pixel;
-                var index = ((this.info.height - i - 1) * this.info.width + j) << 2;
+                var index = (rowIndexOffset + j) << 2;
                 if (pixelArray[index]) {
-                    var is = Math.floor(i / bgscale);
-                    var js = Math.floor(j / bgscale);
-                    pixel = bgpixelmap.getPixel(is, js);
+                    //var js = Math.floor(j / bgscale);
+                    pixel = bgpixelmap.getPixel(bis, Math.floor(j / bgscale));
                 } else {
-                    var is = Math.floor(i / fgscale);
-                    var js = Math.floor(j / fgscale);
-                    pixel = fgpixelmap.getPixel(is, js);
+                    //var js = Math.floor(j / fgscale);
+                    pixel = fgpixelmap.getPixel(fis, Math.floor(j / fgscale));
                 }
 
                 pixelArray[index] = pixel.r;

@@ -195,53 +195,8 @@ class IWDecoder extends IWCodecBaseClass {
             this.bucketstate[0] = bstatetmp;
             this.bbstate |= bstatetmp;
         }
-        /*block.activeBandFlags[this.curband] = 0;
-        block.potentialBandFlags[this.curband] = 0;
-        for (var j = indices.from; j <= indices.to; j++) {
-            block.activeBandFlags[this.curband] = block.activeBucketFlags[j] || block.activeBandFlags[this.curband];
-            block.potentialBandFlags[this.curband] = block.potentialBandFlags[this.curband] || block.potentialBucketFlags[j];
-        }
-        
-        
-        var indices = this.getBandBuckets(this.curband);
-        for (let j = indices.from; j <= indices.to; j++) {
-            let bucket = block.buckets[j];
-            //снимаем флаги для тукущего ведра
-            block.potentialBucketFlags[j] = 0;
-            block.activeBucketFlags[j] = 0;
-            
-            for (let k = 0; k < bucket.length; k++) {
-                let index = k + 16 * j;
-                let step = this.getStep(index);
-                //опускаем все флаги
-                block.activeCoefFlags[index] = 0;
-                block.potentialCoefFlags[index] = 0;
-                
-                if (step === 0 || step >= 0x8000) {
-                    block.activeCoefFlags[index] = 0;
-                    block.potentialCoefFlags[index] = 0;
-                } 
-                else {
-                    if (bucket[k] === 0) {
-                        block.potentialCoefFlags[index] = 1;
-                        block.potentialBucketFlags[j] = 1;
-                    } 
-                    else {
-                        block.activeCoefFlags[index] = 1;
-                        block.activeBucketFlags[j] = 1;
-                    }
-                }
-            }
-        }
-        
-        block.activeBandFlags[this.curband] = 0;
-        block.potentialBandFlags[this.curband] = 0;
-        for (let j = indices.from; j <= indices.to; j++) {
-            block.activeBandFlags[this.curband] = block.activeBucketFlags[j] || block.activeBandFlags[this.curband];
-            block.potentialBandFlags[this.curband] = block.potentialBandFlags[this.curband] || block.potentialBucketFlags[j];
-        }
-    */
     }
+
     getBytemap(noInverse) {
         var fullWidth = Math.ceil(this.info.width / 32) * 32;
         var fullHeight = Math.ceil(this.info.height / 32) * 32;

@@ -57,8 +57,15 @@ class Block extends Int16Array {
  */
 class IWCodecBaseClass {
     constructor() {
-        this.quant_lo = [0x004000, 0x008000, 0x008000, 0x010000, 0x010000, 0x010000, 0x010000, 0x010000, 0x010000, 0x010000, 0x010000, 0x010000, 0x020000, 0x020000, 0x020000, 0x020000];
-        this.quant_hi = [0, 0x020000, 0x020000, 0x040000, 0x040000, 0x040000, 0x080000, 0x040000, 0x040000, 0x080000];
+        this.quant_lo = Uint32Array.of(
+            0x004000, 0x008000, 0x008000, 0x010000, 0x010000,
+            0x010000, 0x010000, 0x010000, 0x010000, 0x010000,
+            0x010000, 0x010000, 0x020000, 0x020000, 0x020000, 0x020000
+        );
+        this.quant_hi = Uint32Array.of(
+            0, 0x020000, 0x020000, 0x040000, 0x040000,
+            0x040000, 0x080000, 0x040000, 0x040000, 0x080000
+        );
         this.bucketstate = new Uint8Array(16);
         this.coeffstate = new Array(16);
         for (var i = 0; i < 16; this.coeffstate[i++] = new Uint8Array(16)) { }
