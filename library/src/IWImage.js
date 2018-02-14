@@ -84,11 +84,14 @@ class Pixelmap {
     }
 
     getPixel(i, j) {
+
+        var index = this.ybytemap.width * i + j;
+
         if (this.cbbytemap) { // случай цветного изображения
             // данный код откопирован из djvulibre, не совпадает со спецификацией
-            var y = this._normalize(this.ybytemap[i][j]);
-            var b = this._normalize(this.cbbytemap[i][j]);
-            var r = this._normalize(this.crbytemap[i][j]);
+            var y = this._normalize(this.ybytemap.byIndex(index));
+            var b = this._normalize(this.cbbytemap.byIndex(index));
+            var r = this._normalize(this.crbytemap.byIndex(index));
 
             var t1 = b >> 2;
             var t2 = r + (r >> 1);
@@ -104,7 +107,7 @@ class Pixelmap {
                 b: Math.max(0, Math.min(255, tb))
             }*/
         } else { // серое изображение
-            var v = this._normalize(this.ybytemap[i][j]);
+            var v = this._normalize(this.ybytemap.byIndex(index));
             v = 127 - v;
             this.pixel.r = v;
             this.pixel.g = v;

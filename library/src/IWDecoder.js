@@ -202,11 +202,13 @@ class IWDecoder extends IWCodecBaseClass {
         var fullHeight = Math.ceil(this.info.height / 32) * 32;
         var blockRows = Math.ceil(this.info.height / 32);
         var blockCols = Math.ceil(this.info.width / 32);
-        // полный двумерный массив пикселей
-        var bitmap = new Array(fullHeight);
-        for (var i = 0; i < fullHeight; i++) {
-            bitmap[i] = new Float32Array(fullWidth);
-        }
+        //полный двумерный массив пикселей
+        // var bitmap = new Array(fullHeight);
+        // for (var i = 0; i < fullHeight; i++) {
+        //     bitmap[i] = new Float32Array(fullWidth);
+        // }
+
+        var bm = new LinearBytemap(fullWidth, fullHeight);
         for (var r = 0; r < blockRows; r++) {
             for (var c = 0; c < blockCols; c++) {
                 var block = this.blocks[r * blockCols + c];
@@ -217,14 +219,15 @@ class IWDecoder extends IWCodecBaseClass {
                     }
                     let row = 16 * bits[1] + 8 * bits[3] + 4 * bits[5] + 2 * bits[7] + bits[9];
                     let col = 16 * bits[0] + 8 * bits[2] + 4 * bits[4] + 2 * bits[6] + bits[8];*/
-                    bitmap[this.zigzagRow[i] + 32 * r][this.zigzagCol[i] + 32 * c] = block.getCoef(i);
+                    // bitmap[this.zigzagRow[i] + 32 * r][this.zigzagCol[i] + 32 * c] = block.getCoef(i);
+                    bm.set(this.zigzagRow[i] + 32 * r, this.zigzagCol[i] + 32 * c, block.getCoef(i));
                 }
             }
         }
         if (!noInverse) {
-            this.inverseWaveletTransform(bitmap);
+            this.inverseWaveletTransform(bm);
         }
-        return bitmap;
+        return bm;
     }
 
     inverseWaveletTransform(bitmap) {
@@ -241,37 +244,39 @@ class IWDecoder extends IWCodecBaseClass {
                     if (k - 1 < 0) {
                         a = 0;
                     } else {
-                        a = bitmap[(k - 1) * s][i];
+                        a = bitmap.get((k - 1) * s, i);
                     }
                     //-------------
                     if (k - 3 < 0) {
                         c = 0;
                     } else {
-                        c = bitmap[(k - 3) * s][i];
+                        c = bitmap.get((k - 3) * s, i);
                     }
                     //-------------
                     if (k + 1 > kmax) {
                         b = 0;
                     } else {
-                        b = bitmap[(k + 1) * s][i];
+                        b = bitmap.get((k + 1) * s, i);
                     }
                     //-------------
                     if (k + 3 > kmax) {
                         d = 0;
                     } else {
-                        d = bitmap[(k + 3) * s][i];
+                        d = bitmap.get((k + 3) * s, i);
                     }
                     //-------------
-                    bitmap[k * s][i] -= (9 * (a + b) - (c + d) + 16) >> 5;
+                    bitmap.sub(k * s, i, (9 * (a + b) - (c + d) + 16) >> 5);
                 }
                 //Prediction 
                 for (var k = 1; k <= kmax; k += 2) {
                     if ((k - 3 >= 0) && (k + 3 <= kmax)) {
-                        bitmap[k * s][i] += (9 * (bitmap[(k - 1) * s][i] + bitmap[(k + 1) * s][i]) - (bitmap[(k - 3) * s][i] + bitmap[(k + 3) * s][i]) + 8) >> 4;
+                        bitmap.add(k * s, i,
+                            (9 * (bitmap.get((k - 1) * s, i) + bitmap.get((k + 1) * s, i)) - (bitmap.get((k - 3) * s, i) + bitmap.get((k + 3) * s, i)) + 8) >> 4
+                        );
                     } else if (k + 1 <= kmax) {
-                        bitmap[k * s][i] += (bitmap[(k - 1) * s][i] + bitmap[(k + 1) * s][i] + 1) >> 1;
+                        bitmap.add(k * s, i, (bitmap.get((k - 1) * s, i) + bitmap.get((k + 1) * s, i) + 1) >> 1);
                     } else {
-                        bitmap[k * s][i] += bitmap[(k - 1) * s][i];
+                        bitmap.add(k * s, i, bitmap.get((k - 1) * s, i));
                     }
                 }
             }
@@ -284,37 +289,67 @@ class IWDecoder extends IWCodecBaseClass {
                     if (k - 1 < 0) {
                         a = 0;
                     } else {
-                        a = bitmap[i][(k - 1) * s];
+                        a = bitmap.get(i, (k - 1) * s);
                     }
                     if (k - 3 < 0) {
                         c = 0;
                     } else {
-                        c = bitmap[i][(k - 3) * s];
+                        c = bitmap.get(i, (k - 3) * s);
                     }
                     if (k + 1 > kmax) {
                         b = 0;
                     } else {
-                        b = bitmap[i][(k + 1) * s];
+                        b = bitmap.get(i, (k + 1) * s);
                     }
                     if (k + 3 > kmax) {
                         d = 0;
                     } else {
-                        d = bitmap[i][(k + 3) * s];
+                        d = bitmap.get(i, (k + 3) * s);
                     }
-                    bitmap[i][k * s] -= (9 * (a + b) - (c + d) + 16) >> 5;
+                    bitmap.sub(i, k * s, (9 * (a + b) - (c + d) + 16) >> 5);
                 }
                 //Prediction 
                 for (var k = 1; k <= kmax; k += 2) {
                     if ((k - 3 >= 0) && (k + 3 <= kmax)) {
-                        bitmap[i][k * s] += (9 * (bitmap[i][(k - 1) * s] + bitmap[i][(k + 1) * s]) - (bitmap[i][(k - 3) * s] + bitmap[i][(k + 3) * s]) + 8) >> 4;
+                        bitmap.add(i, k * s,
+                            (9 * (bitmap.get(i, (k - 1) * s) + bitmap.get(i, (k + 1) * s)) - (bitmap.get(i, (k - 3) * s) + bitmap.get(i, (k + 3) * s)) + 8) >> 4
+                        );
                     } else if (k + 1 <= kmax) {
-                        bitmap[i][k * s] += (bitmap[i][(k - 1) * s] + bitmap[i][(k + 1) * s] + 1) >> 1;
+                        bitmap.add(i, k * s, (bitmap.get(i, (k - 1) * s) + bitmap.get(i, (k + 1) * s) + 1) >> 1);
                     } else {
-                        bitmap[i][k * s] += bitmap[i][(k - 1) * s];
+                        bitmap.add(i, k * s, bitmap.get(i, (k - 1) * s));
                     }
                 }
             }
             s >>= 1; // деление на 2
         }
+    }
+}
+
+
+class LinearBytemap {
+    constructor(width, height) {
+        this.width = width;
+        this.array = new Float32Array(width * height);
+    }
+
+    byIndex(i) {
+        return this.array[i];
+    }
+
+    get(i, j) {
+        return this.array[(i * this.width) + j];
+    }
+
+    set(i, j, val) {
+        this.array[(i * this.width) + j] = val;
+    }
+
+    sub(i, j, val) {
+        this.array[(i * this.width) + j] -= val;
+    }
+
+    add(i, j, val) {
+        this.array[(i * this.width) + j] += val;
     }
 }
