@@ -157,18 +157,27 @@ class DjVuPage {
 
         var fgscale, bgscale, fgpixelmap, bgpixelmap;
 
+        function fakePixelMap(r, g, b) { // ??? нужно ли это вообще ??? Пока что не встречал таких примеров
+            var pixel = { r, g, b };
+            return {
+                getPixel(i, j) {
+                    return pixel;
+                },
+                writePixel(i, j, pixelArray, pixelIndex) {
+                    pixelArray[pixelIndex] = r;
+                    pixelArray[pixelIndex | 1] = g;
+                    pixelArray[pixelIndex | 2] = b;
+                }
+            }
+        }
+
         if (this.bgimage) {
             //масштабы на случай если закодированы в более меньшем разрешении
             bgscale = Math.round(this.info.width / this.bgimage.info.width);
             bgpixelmap = this.bgimage.pixelmap;
         } else {
             bgscale = 1;
-            var whitePixel = { r: 255, g: 255, b: 255 };
-            bgpixelmap = {
-                getPixel() {
-                    return whitePixel;
-                }
-            }
+            bgpixelmap = fakePixelMap(255, 255, 255);
         }
 
         if (this.fgimage) {
@@ -177,12 +186,7 @@ class DjVuPage {
             fgpixelmap = this.fgimage.pixelmap;
         } else {
             fgscale = 1;
-            var blackPixel = { r: 0, g: 0, b: 0 };
-            fgpixelmap = {
-                getPixel() {
-                    return blackPixel;
-                }
-            }
+            fgpixelmap = fakePixelMap(0, 0, 0);
         }
 
 
@@ -195,7 +199,7 @@ class DjVuPage {
                 fgscale,
                 bgscale
             );
-        } else { // тут уже предполагается, что переднего плана нет, а только палитра
+        } else { // тут уже предполагается, что переднего плана нет, а только палитра (in DjVu_Tech_Primer it is so)
             image = this.createImageFromMaskImageAndBackgroundPixelMap(
                 this.sjbz.getImage(this.fgbz, true),
                 bgpixelmap,
@@ -216,19 +220,21 @@ class DjVuPage {
             var bis = Math.floor(i / bgscale);
             var fis = Math.floor(i / fgscale);
             for (var j = 0; j < this.info.width; j++) {
-                var pixel;
+                //var pixel;
                 var index = (rowIndexOffset + j) << 2;
                 if (pixelArray[index]) {
                     //var js = Math.floor(j / bgscale);
-                    pixel = bgpixelmap.getPixel(bis, Math.floor(j / bgscale));
+                    //pixel = bgpixelmap.getPixel(bis, Math.floor(j / bgscale));
+                    bgpixelmap.writePixel(bis, Math.floor(j / bgscale), pixelArray, index);
                 } else {
                     //var js = Math.floor(j / fgscale);
-                    pixel = fgpixelmap.getPixel(fis, Math.floor(j / fgscale));
+                    //pixel = fgpixelmap.getPixel(fis, Math.floor(j / fgscale));
+                    fgpixelmap.writePixel(fis, Math.floor(j / fgscale), pixelArray, index);
                 }
 
-                pixelArray[index] = pixel.r;
-                pixelArray[index + 1] = pixel.g;
-                pixelArray[index + 2] = pixel.b;
+                // pixelArray[index] = pixel.r;
+                // pixelArray[index + 1] = pixel.g;
+                // pixelArray[index + 2] = pixel.b;
                 //pixelArray[index + 3] = 255; уже сделано при создании изображения
             }
         }
@@ -238,7 +244,7 @@ class DjVuPage {
 
     createImageFromMaskImageAndBackgroundPixelMap(maskImage, bgpixelmap, bgscale) {
         var pixelArray = maskImage.data;
-        var pixel;
+        //var pixel;
         //набираем изображение по пикселям
         for (var i = 0; i < this.info.height; i++) {
             for (var j = 0; j < this.info.width; j++) {
@@ -246,10 +252,10 @@ class DjVuPage {
                 if (pixelArray[index + 3]) {
                     var is = Math.floor(i / bgscale);
                     var js = Math.floor(j / bgscale);
-                    pixel = bgpixelmap.getPixel(is, js);
-                    pixelArray[index] = pixel.r;
-                    pixelArray[index + 1] = pixel.g;
-                    pixelArray[index + 2] = pixel.b;
+                    bgpixelmap.writePixel(is, js, pixelArray, index);
+                    // pixelArray[index] = pixel.r;
+                    // pixelArray[index + 1] = pixel.g;
+                    // pixelArray[index + 2] = pixel.b;
                 } else {
                     pixelArray[index + 3] = 255;
                 }

@@ -51,13 +51,13 @@ class IWImage {
         var image = new ImageData(width, height);
 
         for (var i = 0; i < height; i++) {
-            for (var j = 0; j < width; j++) {
-                var pixel = this.pixelmap.getPixel(i, j);
-                let index = ((height - i - 1) * width + j) * 4;
-                image.data[index] = pixel.r;
-                image.data[index + 1] = pixel.g;
-                image.data[index + 2] = pixel.b;
-                image.data[index + 3] = 255;
+            for (var j = 0; j < width; j++) {          
+                let index = ((height - i - 1) * width + j) << 2;
+                this.pixelmap.writePixel(i, j, image.data, index);
+                // image.data[index] = pixel.r;
+                // image.data[index + 1] = pixel.g;
+                // image.data[index + 2] = pixel.b;
+                image.data[index | 3] = 255;
             }
         }
         return image;
@@ -70,7 +70,7 @@ class Pixelmap {
         this.ybytemap = ybytemap;
         this.cbbytemap = cbbytemap;
         this.crbytemap = crbytemap;
-        this.pixel = { r: 0, g: 0, b: 0 }; // промежуточный объект, чтобы не создавать каждый раз
+        //this.pixel = { r: 0, g: 0, b: 0 }; // промежуточный объект, чтобы не создавать каждый раз
     }
 
     _normalize(val) {
@@ -83,7 +83,7 @@ class Pixelmap {
         return val;
     }
 
-    getPixel(i, j) {
+    writePixel(i, j, pixelArray, pixelIndex) {
 
         var index = this.ybytemap.width * i + j;
 
@@ -93,13 +93,13 @@ class Pixelmap {
             var b = this._normalize(this.cbbytemap.byIndex(index));
             var r = this._normalize(this.crbytemap.byIndex(index));
 
-            var t1 = b >> 2;
+            //var t1 = b >> 2;
             var t2 = r + (r >> 1);
-            var t3 = y + 128 - t1;
+            var t3 = y + 128 - (b >> 2);
 
-            this.pixel.r = y + 128 + t2;
-            this.pixel.g = t3 - (t2 >> 1);
-            this.pixel.b = t3 + (b << 1);
+            pixelArray[pixelIndex] = y + 128 + t2;
+            pixelArray[pixelIndex | 1] = t3 - (t2 >> 1);
+            pixelArray[pixelIndex | 2] = t3 + (b << 1);
 
             /*return { // Uint8ClampsedArray должен сам обработать это
                 r: Math.max(0, Math.min(255, tr)),
@@ -109,11 +109,12 @@ class Pixelmap {
         } else { // серое изображение
             var v = this._normalize(this.ybytemap.byIndex(index));
             v = 127 - v;
-            this.pixel.r = v;
-            this.pixel.g = v;
-            this.pixel.b = v;
+            pixelArray[pixelIndex] = v;
+            pixelArray[pixelIndex | 1] = v;
+            pixelArray[pixelIndex | 2] = v;
         }
 
-        return this.pixel;
+        //return this.pixel;
     }
+
 }

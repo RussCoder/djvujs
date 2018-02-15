@@ -317,11 +317,11 @@ class JB2Image extends JB2Codec {
             for (var i = blit.y, k = 0; k < bm.height; k++ , i++) {
                 for (var j = blit.x, t = 0; t < bm.width; t++ , j++) {
                     if (bm.get(k, t)) {
-                        var pixelIndex = ((this.height - i - 1) * this.width + j) * 4;
+                        var pixelIndex = ((this.height - i - 1) * this.width + j) << 2;
                         pixelArray[pixelIndex] = pixel.r;
-                        pixelArray[pixelIndex + 1] = pixel.g;
-                        pixelArray[pixelIndex + 2] = pixel.b;
-                        pixelArray[pixelIndex + 3] = alpha;
+                        pixelArray[pixelIndex | 1] = pixel.g;
+                        pixelArray[pixelIndex | 2] = pixel.b;
+                        pixelArray[pixelIndex | 3] = alpha;
                     }
                 }
             }
