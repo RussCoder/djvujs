@@ -4,10 +4,13 @@ class JB2Dict extends JB2Codec {
     constructor(bs) {
         super(bs);
         this.dict = [];
-        //this.decode();
+        this.isDecoded = false;
     }
 
     decode(djbz) {
+        if (this.isDecoded) {
+            return;
+        }
         var type = this.decodeNum(0, 11, this.recordTypeCtx);
         if (type == 9) {
             // длина словаря
@@ -75,5 +78,7 @@ class JB2Dict extends JB2Codec {
                 break;
             }
         }
+
+        this.isDecoded = true;
     }
 }

@@ -9,11 +9,25 @@ DjVu.IS_DEBUG = true;
 var fileSize = 0;
 var output;
 var djvuArrayBuffer;
+var djvuDocument;
 var timeOutput = document.querySelector('#time_output');
+var renderTimeOutput = document.querySelector('#render_time_output');
 var rerunButton = document.querySelector('#rerun');
 rerunButton.onclick = rerun;
+document.querySelector('#redraw').onclick = redrawPage;
+
 var pageNumber = 0;
-var djvuUrl = 'assets/colorbook.djvu';
+var djvuUrl = 'assets/DjVu3Spec.djvu';
+
+document.querySelector('#next').onclick = () => {
+    pageNumber++;
+    redrawPage();
+};
+
+document.querySelector('#prev').onclick = () => {
+    pageNumber--;
+    redrawPage();
+}
 
 function saveStringAsFile(string) {
     var link = document.createElement('a');
@@ -98,17 +112,30 @@ function readDjvu(buf) {
     var link = document.querySelector('#dochref');
     var time = performance.now();
     console.log("Buffer length = " + buf.byteLength);
-    var doc = new DjVuDocument(buf);
+    djvuDocument = new DjVuDocument(buf);
     Globals.counter = 0;
 
-    console.log('Before render');
-    Globals.drawImage(doc.pages[pageNumber].getImageData(), doc.pages[pageNumber].dpi * 1);
-    console.log(doc.pages[pageNumber].getText());
+    redrawPage();
     //saveStringAsFile(doc.pages[pageNumber].getText());
     // writeln(doc.toString(true));
     // doc.countFiles();
-    console.log(Globals.Timer.toString());
+    //console.log(Globals.Timer.toString());
     console.log("Total execution time = ", performance.now() - time);
+}
+
+function redrawPage() {
+    console.log('**** Render Page ****');
+    var time = performance.now();
+    Globals.drawImage(
+        djvuDocument.pages[pageNumber].getImageData(),
+        djvuDocument.pages[pageNumber].dpi * 1
+    );
+    //console.log(doc.pages[pageNumber].getText());
+    time = performance.now() - time;
+    console.log("Redraw time", time);
+    djvuDocument.pages[pageNumber].reset();
+    console.log('**** ***** **** ****');
+    renderTimeOutput.innerText = Math.round(time);
 }
 
 function splitDjvu(buf) {

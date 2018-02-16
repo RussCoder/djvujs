@@ -12,11 +12,16 @@ class DjVuPage {
         this.length = bs.length - 8;
         this.dirmID = dirmID; // нужно для метаданных
         this.bs = bs;
-        this.bs.jump(12);
+        this.getINCLChunkCallback = getINCLChunkCallback; // метод для получения глобальной порции данных (словарь обычно) от документа по id
+        this.reset();
+    }
+
+    reset() {
+        this.bs.setOffset(12); // skip id, length and secondary id
         this.djbz = null;
         this.bg44arr = new Array();
         this.fg44 = null;
-        this.getINCLChunkCallback = getINCLChunkCallback; // метод для получения глобальной порции данных (словарь обычно) от документа по id
+        
         /**
          * @type {IWImage}
          */

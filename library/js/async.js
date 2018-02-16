@@ -6,6 +6,29 @@
 
 var fileSize = 0;
 var output;
+var djvuWorker;
+
+var timeOutput = document.querySelector('#time_output');
+var renderTimeOutput = document.querySelector('#render_time_output');
+var rerunButton = document.querySelector('#rerun');
+rerunButton.onclick = rerun;
+document.querySelector('#redraw').onclick = redrawPage;
+
+var pageNumber = 4;
+var djvuUrl = 'assets/DjVu3Spec.djvu';
+
+document.querySelector('#next').onclick = () => {
+    pageNumber++;
+    redrawPage();
+};
+
+document.querySelector('#prev').onclick = () => {
+    pageNumber--;
+    redrawPage();
+};
+
+var pageNumber = 5;
+var djvuUrl = 'assets/DjVu3Spec.djvu';
 
 window.onload = function () {
     output = document.getElementById("output");
@@ -31,16 +54,27 @@ function initViewer() {
 }
 
 function renderDjVu() {
-    var url = 'assets/DjVu3Spec.djvu';
     /** @type {DjVuWorker} */
-    var worker = new DjVuWorker();
-    Globals.loadFile(url)
-        .then(buffer => worker.createDocument(buffer))
-        .then(() => Promise.all([worker.getPageText(0), worker.getPageImageDataWithDPI(0)]))
-        .then(data => {
-            output.innerText = data[0];
-            Globals.drawImageSmooth(data[1].imageData, data[1].dpi);
-        });
+    djvuWorker = new DjVu.Worker();
+    Globals.loadFile(djvuUrl)
+        .then(buffer => djvuWorker.createDocument(buffer))
+        .then(() => redrawPage());
+}
+
+function redrawPage() {
+    console.log('**** Render Page ****');
+    var time = performance.now();
+    return Promise.all([
+        djvuWorker.getPageText(pageNumber), 
+        djvuWorker.getPageImageDataWithDPI(pageNumber)
+    ]).then(data => {
+        output.innerText = data[0];
+        Globals.drawImage(data[1].imageData, data[1].dpi);
+        time = performance.now() - time;
+        console.log("Redraw time", time);
+        console.log('**** ***** **** ****');
+        renderTimeOutput.innerText = Math.round(time);
+    });
 }
 
 function loadPicture() {

@@ -4,37 +4,15 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>DjVu.js</title>
-    <script type="text/javascript" src="src/DjVu.js"></script>
-    <script type="text/javascript" src="src/DjVuGlobals.js"></script>
-    <script type="text/javascript" src="src/ByteStream.js"></script>
-    <script type="text/javascript" src="src/ZPCodec.js"></script>
-    <script type="text/javascript" src="src/IFFChunks.js"></script>
-    <script type="text/javascript" src="src/BZZDecoder.js"></script>
-    <script type="text/javascript" src="src/BZZEncoder.js"></script>
-    <script type="text/javascript" src="src/IWCodecBaseClass.js"></script>
-    <script type="text/javascript" src="src/IWDecoder.js"></script>
-    <script type="text/javascript" src="src/IWEncoder.js"></script>
-    <script type="text/javascript" src="src/IWImage.js"></script>
-    <script type="text/javascript" src="src/JB2Codec.js"></script>
-    <script type="text/javascript" src="src/JB2Dict.js"></script>
-    <script type="text/javascript" src="src/JB2Image.js"></script>
-    <script type="text/javascript" src="src/DjViChunk.js"></script>
-    <script type="text/javascript" src="src/DjVuPage.js"></script>
-    <script type="text/javascript" src="src/DjVuDocument.js"></script>
-    <script type="text/javascript" src="js/handler.js" defer></script>
-    <script type="text/javascript" src="src/ByteStreamWriter.js"></script>
-    <script type="text/javascript" src="src/IWImageWriter.js"></script>
-    <script type="text/javascript" src="src/DjVuWriter.js"></script>
-    <script type="text/javascript" src="src/DjVuGlobals.js" defer></script>
-    <script type="text/javascript" src="src/debug.js"></script>
-    <script type="text/javascript" src="src/DjVuWorker.js"></script>
-    <script type="text/javascript" src="src/DjVuViewer.js" defer></script>
+    <script type="text/javascript" src="dist/djvu.js"></script>
+    <script type="text/javascript" src="js/DjVuGlobals.js" defer></script>
+    <script type="text/javascript" src="js/debug.js"></script>
     <script type="text/javascript" src="js/async.js" defer></script>
     <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
-    <div id="viewer" class="djvu_viewer">
+    <!-- <div id="viewer" class="djvu_viewer">
         <div class="image_wrapper">
             <img class="image" />
             <canvas class="image"></canvas>
@@ -45,6 +23,17 @@
             <input type="button" class="navbut next" value="&#9658;">
             <input class="scale" type="range" min="0" max="200" step="1" value="100"><span class="scale_label">100</span>%
         </div>
+    </div> -->
+
+    <div class="control_block">
+        <input type="button" id="rerun" value="rerun">
+        <input type="button" id="redraw" value="redraw">
+
+        <input type="button" id="next" value="next">
+        <input type="button" id="prev" value="prev">
+
+        <span id="time_output"></span>
+        <span id="render_time_output"></span>
     </div>
 
     <canvas width="192" height="256" id="canvas"></canvas>

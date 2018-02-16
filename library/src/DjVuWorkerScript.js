@@ -79,7 +79,7 @@ function initWorker() {
                 height: imageData.height,
                 dpi: dpi
             }, [imageData.data.buffer]);
-            this.reloadDocument(); // TODO: сделать все нормально, без утечек памяти и битых данных.
+            djvuDocument.pages[pagenum].reset(); // зачищаем данные декодирования
         },
 
         getPageNumber(obj) {
