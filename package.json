@@ -4,6 +4,7 @@
     "start": "harp server _src --port 9000",
     "compile": "harp compile _src ./compile && npm run copy",
     "copy": "node .js",
+    "static": "harp server ./ --port 9000",
     "static": "harp server ./ --port 9000"
   },
   "devDependencies": {
