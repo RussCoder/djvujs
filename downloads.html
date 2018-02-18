@@ -1,0 +1,61 @@
+<!DOCTYPE html><html><head><script>(function (d, w, c) {
+    (w[c] = w[c] || []).push(function() {
+        try {
+            w.yaCounter47737162 = new Ya.Metrika({
+                id:47737162,
+                clickmap:true,
+                trackLinks:true,
+                accurateTrackBounce:true
+            });
+        } catch(e) { }
+    });
+
+    var n = d.getElementsByTagName("script")[0],
+        s = d.createElement("script"),
+        f = function () { n.parentNode.insertBefore(s, n); };
+    s.type = "text/javascript";
+    s.async = true;
+    s.src = "https://mc.yandex.ru/metrika/watch.js";
+
+    if (w.opera == "[object Opera]") {
+        d.addEventListener("DOMContentLoaded", f, false);
+    } else { f(); }
+})(document, window, "yandex_metrika_callbacks");
+</script><noscript><div><img src="https://mc.yandex.ru/watch/47737162" style="position:absolute; left:-9999px;" alt=""></div></noscript><link rel="stylesheet" href="css/main.css"><link rel="shortcut icon" href="djvu.png"><title>DjVu.js - View DjVu online!</title></head><body><header> <a href="./"><div class="site_name">DjVu.js program library</div></a></header><nav><a href="./">Viewer</a><a href="docs">Docs</a><a href="downloads">Downloads</a><a href="about">About</a></nav><div class="main"> <h1>Downloads</h1><p>Here you can download the library and the viewer .js and .css files.</p>
+<p><a href="/dist/djvu.js" download="djvu.js">Download DjVu.js library (version 0.0.7)</a></p>
+<p><a href="/dist/djvu_viewer.js" download="djvu_viewer.js">Download DjVu.js Viewer .js file</a></p>
+<p><a href="/dist/djvu_viewer.css" download="djvu_viewer.css">Download DjVu.js Viewer .css file</a></p>
+<h2>How to use it</h2><p>Create a folder with all 3 files, that you have downloaded here (<code>djvu.js</code>, <code>djvu_viewer.js</code> and <code>djvu_viewer.css</code>). Then in the same folder create an .html file (let&#39;s say <code>index.html</code>) with the following content.</p>
+<pre><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+
+&lt;header&gt;
+    &lt;meta charset=&quot;utf-8&quot;&gt;
+    &lt;script src=&quot;djvu.js&quot;&gt;&lt;/script&gt;
+    &lt;script src=&quot;djvu_viewer.js&quot;&gt;&lt;/script&gt;
+    &lt;link href=&quot;djvu_viewer.css&quot; rel=&quot;stylesheet&quot;&gt;
+
+    &lt;script&gt;
+        window.onload = function () {
+            DjVu.Viewer.init(
+                document.querySelector(&quot;#for_viewer&quot;)
+            );
+        };
+    &lt;/script&gt;
+
+&lt;/header&gt;
+
+&lt;body&gt;
+    &lt;div id=&quot;for_viewer&quot;&gt;&lt;/div&gt;
+&lt;/body&gt;
+
+&lt;/html&gt;
+</code></pre><p>If you use Mozilla Firefox web browser, then you can just open the <code>index.html</code> and you will see the DjVu.js viewer, which will work absolutely the same way
+as it does on the main page of this website. But if you use Google Chrome or Opera, you won&#39;t see anything except for some errors in the console. It&#39;s concerned with that the 
+DjVu.js uses the Web Workers API of the web browsers and Chrome doesn&#39;t allow the script to create a Worker, when the file is loaded from the file system directly. In other words, you just need
+to start a local web server in order to make everything work as it works on the Internet. Any static web server will do. </p>
+<p>For example, if you have Node.js installed, you can just use <code>serve</code> package to run a simple static web server. Run the following commands in your shell. </p>
+<pre><code>npm install -g serve
+</code></pre><p>to install <code>serve</code> package globally and then head to the directory, where our files are kept, and run</p>
+<pre><code>serve -p 5000
+</code></pre><p>in order to start the local server (you may change the port as you wish). Then just open <a href="http://localhost:5000/">http://localhost:5000/</a> and you will see the viewer. </p></div><footer>DjVu.js 2018 | Perhaps, all rights reserved  </footer></body></html>
