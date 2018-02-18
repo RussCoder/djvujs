@@ -8,8 +8,8 @@
     }
 </script>
 
-# The DjVu Viewer demo
-DjVu.js is a program library for working with .djvu files online.
+# The DjVu.js Viewer demo
+DjVu.js is a program library for working with `.djvu` files online.
 It's written in JavaScript and can be run in web browsers without any connection with the server.
 It's absolutely open source and you can see the source code on [GitHub](https://github.com/RussCoder/djvujs)
 Also there is the DjVu.js Viewer, which allows you to view .djvu files online right in the browser.

@@ -33,12 +33,12 @@ html
     title DjVu.js - View DjVu online!
   body
     header 
-        div.site_name DjVu.js program library
+        a(href='./'): div.site_name DjVu.js program library
     nav
         a(href='./') Viewer
-        a(href='https://github.com/RussCoder/djvujs/wiki/DjVu.js-Documentation') Docs
+        a(href='docs') Docs
+        a(href='downloads') Downloads
         a(href='about') About
-        a(href='https://github.com/RussCoder/djvujs') GitHub
     div.main 
         != yield
     footer

@@ -6,7 +6,6 @@ body {
     max-width: 65em;
     margin: 1em auto;
     display: block;
-    background: #f4f4f7;
     color: #444;
 }
 
@@ -15,14 +14,22 @@ header {
     .site_name {
         font-size: 5.5em;
     }
+
+    a {
+        all: initial;
+        font: inherit;
+        cursor: pointer;
+        text-align: center;
+    }
 }
 
 nav {
     font-size: 2em;
     display: flex;
     margin: 1em;
-    justify-content: flex-start;
+    justify-content: space-around;
     a {
+        font-size: inherit;
         cursor: pointer;
         margin: 0 1em;
         padding: 0.3em;
@@ -60,4 +67,29 @@ footer {
     text-align: center;
     border-top: 1px solid $lineColor;
     padding: 1em 0;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+    font-size: 0.8em;
+    border: 1px solid $lineColor;
+    padding: 0.1em 0.2em;
+    border-radius: 0.3em;
+
+    &:hover {
+        background: $lineColor;
+    }
+}
+
+code {
+    border-radius: 0.2em;
+    padding: 0 0.2em;
+    background: #f4f4f7;
+}
+
+pre {
+    overflow: auto;
+    padding: 0.5em;
+    background: #f4f4f7;
 }
