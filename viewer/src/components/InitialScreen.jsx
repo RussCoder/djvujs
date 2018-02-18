@@ -8,7 +8,7 @@ class InitialScreen extends React.Component {
 
     render() {
         return (
-            <div class="initial_screen">
+            <div className="initial_screen">
                 <div className="content">
                     <div className="header">DjVu.js Viewer welcomes you!</div>
                     <div>Choose a .djvu file to view it! </div>

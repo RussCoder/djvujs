@@ -145,10 +145,18 @@ body.disable_scroll_djvujs {
         overflow: auto;
         height: 95%;
         text-align: center;
-
+        
         .image {
+            position: relative;
             margin: auto;
             border: 1px solid lightgray;
+
+            img, canvas {
+                position: absolute;
+                left: 0;
+                top: 0;
+                z-index: 2;
+            }
         }
     }
 

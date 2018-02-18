@@ -18,6 +18,15 @@ class ImageBlock extends React.Component {
         super(props);
         this.tmpCanvas = document.createElement('canvas');
         this.tmpCanvasCtx = this.tmpCanvas.getContext('2d');
+        this.state = { isCanvasMode: true };
+        this.changeImageTimeout = null;
+    }
+
+    componentWillReceiveProps(nextProps) {
+        if (this.props.imageData !== nextProps.imageData) {
+            this.setState({ isCanvasMode: true });
+            clearTimeout(this.changeImageTimeout);
+        }
     }
 
     componentDidUpdate() {
@@ -37,13 +46,26 @@ class ImageBlock extends React.Component {
         }
     }
 
+    getScaledImageHeight() {
+        if (this.props.imageDPI) {
+            const stdScale = this.props.imageDPI ? this.props.imageDPI / DEFAULT_DPI : 1
+            return this.props.imageHeight / stdScale * this.props.userScale;
+        } else {
+            return null;
+        }
+    }
+
     updateImageIfRequired() {
         if (!(this.canvas && this.props.imageData) && !(this.img && this.props.dataUrl)) {
             return;
         }
         if (!this.props.dataUrl && this.props.imageData) {
             this.drawImageOnCanvas();
-        } else {
+        } else if (this.state.isCanvasMode) {
+            this.changeImageTimeout = setTimeout(() => {          
+                this.setState({ isCanvasMode: false });            
+            }, 250);        
+        } else {  
             this.canvas.height = this.canvas.width = 0;
         }
     }
@@ -93,20 +115,25 @@ class ImageBlock extends React.Component {
         }
     };
 
+    imageRef = (node) => {
+        this.img = node;
+    };
+
     render() {
-        const isCanvasMode = !this.props.dataUrl;
+        const isCanvasMode = this.state.isCanvasMode;
         return (
             <div className="image_wrapper">
                 <div className="image">
+                    <div style={{ opacity: 0, width: this.getScaledImageWidth(), height: this.getScaledImageHeight() }} />
                     <img
-                        style={isCanvasMode ? { display: 'none' } : null}
+                        style={{ zIndex: isCanvasMode ? 1 : 2, display: this.props.dataUrl ? "inline" : "none" }}
                         width={this.getScaledImageWidth()}
-                        ref={node => this.img = node}
+                        ref={this.imageRef}
                         src={this.props.dataUrl}
-                        alt='Djvu Viewer'
+                        alt='DjVu.js Viewer'
                     />
                     <canvas
-                        style={isCanvasMode && this.props.imageData ? null : { display: 'none' }}
+                        style={isCanvasMode ? { zIndex: 2 } : { zIndex: 1 }}
                         ref={this.canvasRef}
                     />
                 </div>

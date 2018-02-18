@@ -17,6 +17,20 @@ export default class PageNumber extends React.Component {
         };
     }
 
+    componentDidUpdate() { // тупо костыль, так как Firefox на autoFocus кидает Blur сразу же
+        if (this.input) {
+            setTimeout(() => {
+                try {
+                    if (this.input) {
+                        this.input.focus();
+                        this.input.select();
+                        this.input = null;
+                    }
+                } catch (e) { }
+            }, 10);
+        }
+    }
+
     setNewPageNumber(number) {
         if (!this.props.pagesCount) {
             return;
@@ -55,6 +69,10 @@ export default class PageNumber extends React.Component {
         this.setState({ tempValue: e.target.value })
     };
 
+    inputRef = node => {
+        this.input = node;
+    }
+
     render() {
         if (this.state.isEditing) {
             return (
@@ -65,8 +83,7 @@ export default class PageNumber extends React.Component {
                     type="number"
                     onChange={this.onChange}
                     value={this.state.tempValue === null ? this.props.pageNumber : this.state.tempValue}
-                    onFocus={e => e.target.select()}
-                    autoFocus
+                    ref={this.inputRef}
                 />
             );
         } else {
