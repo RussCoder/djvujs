@@ -2,7 +2,7 @@ var DjVu = (function () {
 'use strict';
 
 var DjVu = {
-    VERSION: '0.0.6',
+    VERSION: '0.0.7',
     IS_DEBUG: false
 };
 DjVu.Utils = {
@@ -882,9 +882,9 @@ class Bytemap extends Array {
         }
     }
 }
-class Block extends Int16Array {
+class Block {
     constructor(buffer, offset) {
-        super(buffer, offset, 1024);
+        this.array = new Int16Array(buffer, offset, 1024);
         this.buckets = new Array(64);
         var boff = 0;
         for (var i = 0; i < 64; i++) {
@@ -893,10 +893,10 @@ class Block extends Int16Array {
         }
     }
     getCoef(n) {
-        return this[n];
+        return this.array[n];
     }
     setCoef(n, val) {
-        this[n] = val;
+        this.array[n] = val;
     }
     static createBlockArray(length) {
         var blocks = new Array(length);
@@ -909,8 +909,15 @@ class Block extends Int16Array {
 }
 class IWCodecBaseClass {
     constructor() {
-        this.quant_lo = [0x004000, 0x008000, 0x008000, 0x010000, 0x010000, 0x010000, 0x010000, 0x010000, 0x010000, 0x010000, 0x010000, 0x010000, 0x020000, 0x020000, 0x020000, 0x020000];
-        this.quant_hi = [0, 0x020000, 0x020000, 0x040000, 0x040000, 0x040000, 0x080000, 0x040000, 0x040000, 0x080000];
+        this.quant_lo = Uint32Array.of(
+            0x004000, 0x008000, 0x008000, 0x010000, 0x010000,
+            0x010000, 0x010000, 0x010000, 0x010000, 0x010000,
+            0x010000, 0x010000, 0x020000, 0x020000, 0x020000, 0x020000
+        );
+        this.quant_hi = Uint32Array.of(
+            0, 0x020000, 0x020000, 0x040000, 0x040000,
+            0x040000, 0x080000, 0x040000, 0x040000, 0x080000
+        );
         this.bucketstate = new Uint8Array(16);
         this.coeffstate = new Array(16);
         for (var i = 0; i < 16; this.coeffstate[i++] = new Uint8Array(16)) { }
@@ -1152,22 +1159,19 @@ class IWDecoder extends IWCodecBaseClass {
         var fullHeight = Math.ceil(this.info.height / 32) * 32;
         var blockRows = Math.ceil(this.info.height / 32);
         var blockCols = Math.ceil(this.info.width / 32);
-        var bitmap = new Array(fullHeight);
-        for (var i = 0; i < fullHeight; i++) {
-            bitmap[i] = new Float32Array(fullWidth);
-        }
+        var bm = new LinearBytemap(fullWidth, fullHeight);
         for (var r = 0; r < blockRows; r++) {
             for (var c = 0; c < blockCols; c++) {
                 var block = this.blocks[r * blockCols + c];
                 for (var i = 0; i < 1024; i++) {
-                    bitmap[this.zigzagRow[i] + 32 * r][this.zigzagCol[i] + 32 * c] = block.getCoef(i);
+                    bm.set(this.zigzagRow[i] + 32 * r, this.zigzagCol[i] + 32 * c, block.getCoef(i));
                 }
             }
         }
         if (!noInverse) {
-            this.inverseWaveletTransform(bitmap);
+            this.inverseWaveletTransform(bm);
         }
-        return bitmap;
+        return bm;
     }
     inverseWaveletTransform(bitmap) {
         var s = 16;
@@ -1179,32 +1183,34 @@ class IWDecoder extends IWCodecBaseClass {
                     if (k - 1 < 0) {
                         a = 0;
                     } else {
-                        a = bitmap[(k - 1) * s][i];
+                        a = bitmap.get((k - 1) * s, i);
                     }
                     if (k - 3 < 0) {
                         c = 0;
                     } else {
-                        c = bitmap[(k - 3) * s][i];
+                        c = bitmap.get((k - 3) * s, i);
                     }
                     if (k + 1 > kmax) {
                         b = 0;
                     } else {
-                        b = bitmap[(k + 1) * s][i];
+                        b = bitmap.get((k + 1) * s, i);
                     }
                     if (k + 3 > kmax) {
                         d = 0;
                     } else {
-                        d = bitmap[(k + 3) * s][i];
+                        d = bitmap.get((k + 3) * s, i);
                     }
-                    bitmap[k * s][i] -= (9 * (a + b) - (c + d) + 16) >> 5;
+                    bitmap.sub(k * s, i, (9 * (a + b) - (c + d) + 16) >> 5);
                 }
                 for (var k = 1; k <= kmax; k += 2) {
                     if ((k - 3 >= 0) && (k + 3 <= kmax)) {
-                        bitmap[k * s][i] += (9 * (bitmap[(k - 1) * s][i] + bitmap[(k + 1) * s][i]) - (bitmap[(k - 3) * s][i] + bitmap[(k + 3) * s][i]) + 8) >> 4;
+                        bitmap.add(k * s, i,
+                            (9 * (bitmap.get((k - 1) * s, i) + bitmap.get((k + 1) * s, i)) - (bitmap.get((k - 3) * s, i) + bitmap.get((k + 3) * s, i)) + 8) >> 4
+                        );
                     } else if (k + 1 <= kmax) {
-                        bitmap[k * s][i] += (bitmap[(k - 1) * s][i] + bitmap[(k + 1) * s][i] + 1) >> 1;
+                        bitmap.add(k * s, i, (bitmap.get((k - 1) * s, i) + bitmap.get((k + 1) * s, i) + 1) >> 1);
                     } else {
-                        bitmap[k * s][i] += bitmap[(k - 1) * s][i];
+                        bitmap.add(k * s, i, bitmap.get((k - 1) * s, i));
                     }
                 }
             }
@@ -1215,37 +1221,60 @@ class IWDecoder extends IWCodecBaseClass {
                     if (k - 1 < 0) {
                         a = 0;
                     } else {
-                        a = bitmap[i][(k - 1) * s];
+                        a = bitmap.get(i, (k - 1) * s);
                     }
                     if (k - 3 < 0) {
                         c = 0;
                     } else {
-                        c = bitmap[i][(k - 3) * s];
+                        c = bitmap.get(i, (k - 3) * s);
                     }
                     if (k + 1 > kmax) {
                         b = 0;
                     } else {
-                        b = bitmap[i][(k + 1) * s];
+                        b = bitmap.get(i, (k + 1) * s);
                     }
                     if (k + 3 > kmax) {
                         d = 0;
                     } else {
-                        d = bitmap[i][(k + 3) * s];
+                        d = bitmap.get(i, (k + 3) * s);
                     }
-                    bitmap[i][k * s] -= (9 * (a + b) - (c + d) + 16) >> 5;
+                    bitmap.sub(i, k * s, (9 * (a + b) - (c + d) + 16) >> 5);
                 }
                 for (var k = 1; k <= kmax; k += 2) {
                     if ((k - 3 >= 0) && (k + 3 <= kmax)) {
-                        bitmap[i][k * s] += (9 * (bitmap[i][(k - 1) * s] + bitmap[i][(k + 1) * s]) - (bitmap[i][(k - 3) * s] + bitmap[i][(k + 3) * s]) + 8) >> 4;
+                        bitmap.add(i, k * s,
+                            (9 * (bitmap.get(i, (k - 1) * s) + bitmap.get(i, (k + 1) * s)) - (bitmap.get(i, (k - 3) * s) + bitmap.get(i, (k + 3) * s)) + 8) >> 4
+                        );
                     } else if (k + 1 <= kmax) {
-                        bitmap[i][k * s] += (bitmap[i][(k - 1) * s] + bitmap[i][(k + 1) * s] + 1) >> 1;
+                        bitmap.add(i, k * s, (bitmap.get(i, (k - 1) * s) + bitmap.get(i, (k + 1) * s) + 1) >> 1);
                     } else {
-                        bitmap[i][k * s] += bitmap[i][(k - 1) * s];
+                        bitmap.add(i, k * s, bitmap.get(i, (k - 1) * s));
                     }
                 }
             }
             s >>= 1;
         }
+    }
+}
+class LinearBytemap {
+    constructor(width, height) {
+        this.width = width;
+        this.array = new Float32Array(width * height);
+    }
+    byIndex(i) {
+        return this.array[i];
+    }
+    get(i, j) {
+        return this.array[(i * this.width) + j];
+    }
+    set(i, j, val) {
+        this.array[(i * this.width) + j] = val;
+    }
+    sub(i, j, val) {
+        this.array[(i * this.width) + j] -= val;
+    }
+    add(i, j, val) {
+        this.array[(i * this.width) + j] += val;
     }
 }
 
@@ -1292,12 +1321,9 @@ class IWImage {
         var image = new ImageData(width, height);
         for (var i = 0; i < height; i++) {
             for (var j = 0; j < width; j++) {
-                var pixel = this.pixelmap.getPixel(i, j);
-                let index = ((height - i - 1) * width + j) * 4;
-                image.data[index] = pixel.r;
-                image.data[index + 1] = pixel.g;
-                image.data[index + 2] = pixel.b;
-                image.data[index + 3] = 255;
+                let index = ((height - i - 1) * width + j) << 2;
+                this.pixelmap.writePixel(i, j, image.data, index);
+                image.data[index | 3] = 255;
             }
         }
         return image;
@@ -1308,7 +1334,6 @@ class Pixelmap {
         this.ybytemap = ybytemap;
         this.cbbytemap = cbbytemap;
         this.crbytemap = crbytemap;
-        this.pixel = { r: 0, g: 0, b: 0 };
     }
     _normalize(val) {
         val = (val + 32) >> 6;
@@ -1319,25 +1344,24 @@ class Pixelmap {
         }
         return val;
     }
-    getPixel(i, j) {
+    writePixel(i, j, pixelArray, pixelIndex) {
+        var index = this.ybytemap.width * i + j;
         if (this.cbbytemap) {
-            var y = this._normalize(this.ybytemap[i][j]);
-            var b = this._normalize(this.cbbytemap[i][j]);
-            var r = this._normalize(this.crbytemap[i][j]);
-            var t1 = b >> 2;
+            var y = this._normalize(this.ybytemap.byIndex(index));
+            var b = this._normalize(this.cbbytemap.byIndex(index));
+            var r = this._normalize(this.crbytemap.byIndex(index));
             var t2 = r + (r >> 1);
-            var t3 = y + 128 - t1;
-            this.pixel.r = y + 128 + t2;
-            this.pixel.g = t3 - (t2 >> 1);
-            this.pixel.b = t3 + (b << 1);
+            var t3 = y + 128 - (b >> 2);
+            pixelArray[pixelIndex] = y + 128 + t2;
+            pixelArray[pixelIndex | 1] = t3 - (t2 >> 1);
+            pixelArray[pixelIndex | 2] = t3 + (b << 1);
         } else {
-            var v = this._normalize(this.ybytemap[i][j]);
+            var v = this._normalize(this.ybytemap.byIndex(index));
             v = 127 - v;
-            this.pixel.r = v;
-            this.pixel.g = v;
-            this.pixel.b = v;
+            pixelArray[pixelIndex] = v;
+            pixelArray[pixelIndex | 1] = v;
+            pixelArray[pixelIndex | 2] = v;
         }
-        return this.pixel;
     }
 }
 
@@ -2026,8 +2050,12 @@ class JB2Dict extends JB2Codec {
     constructor(bs) {
         super(bs);
         this.dict = [];
+        this.isDecoded = false;
     }
     decode(djbz) {
+        if (this.isDecoded) {
+            return;
+        }
         var type = this.decodeNum(0, 11, this.recordTypeCtx);
         if (type == 9) {
             var size = this.decodeNum(0, 262142, this.inheritDictSizeCtx);
@@ -2077,6 +2105,7 @@ class JB2Dict extends JB2Codec {
                 break;
             }
         }
+        this.isDecoded = true;
     }
 }
 
@@ -2318,11 +2347,11 @@ class JB2Image extends JB2Codec {
             for (var i = blit.y, k = 0; k < bm.height; k++ , i++) {
                 for (var j = blit.x, t = 0; t < bm.width; t++ , j++) {
                     if (bm.get(k, t)) {
-                        var pixelIndex = ((this.height - i - 1) * this.width + j) * 4;
+                        var pixelIndex = ((this.height - i - 1) * this.width + j) << 2;
                         pixelArray[pixelIndex] = pixel.r;
-                        pixelArray[pixelIndex + 1] = pixel.g;
-                        pixelArray[pixelIndex + 2] = pixel.b;
-                        pixelArray[pixelIndex + 3] = alpha;
+                        pixelArray[pixelIndex | 1] = pixel.g;
+                        pixelArray[pixelIndex | 2] = pixel.b;
+                        pixelArray[pixelIndex | 3] = alpha;
                     }
                 }
             }
@@ -2355,11 +2384,14 @@ class DjVuPage {
         this.length = bs.length - 8;
         this.dirmID = dirmID;
         this.bs = bs;
-        this.bs.jump(12);
+        this.getINCLChunkCallback = getINCLChunkCallback;
+        this.reset();
+    }
+    reset() {
+        this.bs.setOffset(12);
         this.djbz = null;
         this.bg44arr = new Array();
         this.fg44 = null;
-        this.getINCLChunkCallback = getINCLChunkCallback;
         this.bgimage = null;
         this.fgimage = null;
         this.sjbz = null;
@@ -2451,29 +2483,32 @@ class DjVuPage {
             return this.sjbz.getImage(this.fgbz);
         }
         var fgscale, bgscale, fgpixelmap, bgpixelmap;
+        function fakePixelMap(r, g, b) {
+            var pixel = { r, g, b };
+            return {
+                getPixel(i, j) {
+                    return pixel;
+                },
+                writePixel(i, j, pixelArray, pixelIndex) {
+                    pixelArray[pixelIndex] = r;
+                    pixelArray[pixelIndex | 1] = g;
+                    pixelArray[pixelIndex | 2] = b;
+                }
+            }
+        }
         if (this.bgimage) {
             bgscale = Math.round(this.info.width / this.bgimage.info.width);
             bgpixelmap = this.bgimage.pixelmap;
         } else {
             bgscale = 1;
-            var whitePixel = { r: 255, g: 255, b: 255 };
-            bgpixelmap = {
-                getPixel() {
-                    return whitePixel;
-                }
-            };
+            bgpixelmap = fakePixelMap(255, 255, 255);
         }
         if (this.fgimage) {
             fgscale = Math.round(this.info.width / this.fgimage.info.width);
             fgpixelmap = this.fgimage.pixelmap;
         } else {
             fgscale = 1;
-            var blackPixel = { r: 0, g: 0, b: 0 };
-            fgpixelmap = {
-                getPixel() {
-                    return blackPixel;
-                }
-            };
+            fgpixelmap = fakePixelMap(0, 0, 0);
         }
         var image;
         if (!this.fgbz) {
@@ -2498,38 +2533,29 @@ class DjVuPage {
         var image = maskImage;
         var pixelArray = image.data;
         for (var i = 0; i < this.info.height; i++) {
+            var rowIndexOffset = (this.info.height - i - 1) * this.info.width;
+            var bis = Math.floor(i / bgscale);
+            var fis = Math.floor(i / fgscale);
             for (var j = 0; j < this.info.width; j++) {
-                var pixel;
-                var index = ((this.info.height - i - 1) * this.info.width + j) << 2;
+                var index = (rowIndexOffset + j) << 2;
                 if (pixelArray[index]) {
-                    var is = Math.floor(i / bgscale);
-                    var js = Math.floor(j / bgscale);
-                    pixel = bgpixelmap.getPixel(is, js);
+                    bgpixelmap.writePixel(bis, Math.floor(j / bgscale), pixelArray, index);
                 } else {
-                    var is = Math.floor(i / fgscale);
-                    var js = Math.floor(j / fgscale);
-                    pixel = fgpixelmap.getPixel(is, js);
+                    fgpixelmap.writePixel(fis, Math.floor(j / fgscale), pixelArray, index);
                 }
-                pixelArray[index] = pixel.r;
-                pixelArray[index + 1] = pixel.g;
-                pixelArray[index + 2] = pixel.b;
             }
         }
         return image;
     }
     createImageFromMaskImageAndBackgroundPixelMap(maskImage, bgpixelmap, bgscale) {
         var pixelArray = maskImage.data;
-        var pixel;
         for (var i = 0; i < this.info.height; i++) {
             for (var j = 0; j < this.info.width; j++) {
                 var index = ((this.info.height - i - 1) * this.info.width + j) * 4;
                 if (pixelArray[index + 3]) {
                     var is = Math.floor(i / bgscale);
                     var js = Math.floor(j / bgscale);
-                    pixel = bgpixelmap.getPixel(is, js);
-                    pixelArray[index] = pixel.r;
-                    pixelArray[index + 1] = pixel.g;
-                    pixelArray[index + 2] = pixel.b;
+                    bgpixelmap.writePixel(is, js, pixelArray, index);
                 } else {
                     pixelArray[index + 3] = 255;
                 }
@@ -3598,7 +3624,7 @@ function initWorker() {
                 height: imageData.height,
                 dpi: dpi
             }, [imageData.data.buffer]);
-            this.reloadDocument();
+            djvuDocument.pages[pagenum].reset();
         },
         getPageNumber(obj) {
             postMessage({
