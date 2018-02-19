@@ -183,6 +183,8 @@ var Tests = {
                             result
                         ]
                     };
+                } else if(!hash) {
+                    result += "... Hash is " + TestHelper.getHashOfArray(resultImageData.data);
                 }
                 return result;
             });
@@ -225,6 +227,7 @@ var Tests = {
                 djvuWorker.endMultyPageDocument()
             ]);
         }).then(arrayBuffers => {
+            console.log(arrayBuffers);
             return TestHelper.compareArrayBuffers(...arrayBuffers);
         });
     },
@@ -244,19 +247,19 @@ var Tests = {
     },
 
     testGrayscaleBG44() {
-        return this._imageTest("boy.djvu", 0, "boy.png");
+        return this._imageTest("boy.djvu", 0, "boy.png", -1560338846);
     },
 
     testColorBG44() {
-        return this._imageTest("chicken.djvu", 0, "chicken.png");
+        return this._imageTest("chicken.djvu", 0, "chicken.png", 1973539465);
     },
 
     testJB2Pure() {
-        return this._imageTest("boy_jb2.djvu", 0, "boy_jb2.png");
+        return this._imageTest("boy_jb2.djvu", 0, "boy_jb2.png", -650210314);
     },
 
     testJB2WithBitOfBackground() {
-        return this._imageTest("DjVu3Spec.djvu", 47, "DjVu3Spec_48.png");
+        return this._imageTest("DjVu3Spec.djvu", 47, "DjVu3Spec_48.png", 1367724765);
     },
 
     testJB2WhereRemovingOfEmptyEdgesOfBitmapsBeforeAddingToDictRequired() {
@@ -264,7 +267,7 @@ var Tests = {
     },
 
     testFGbzColoredMask() {
-        return this._imageTest("navm_fgbz.djvu", 2, "navm_fgbz_3.png");
+        return this._imageTest("navm_fgbz.djvu", 2, "navm_fgbz_3.png", 1017482741);
     }
 
     /*test3LayerColorImage() { // отключен так как не ясен алгоритм масштабирования слоев
