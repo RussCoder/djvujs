@@ -1,4 +1,3 @@
-import { combineReducers } from 'redux';
 import Consts from '../constants/consts';
 
 const DjVu = window.DjVu;
@@ -22,7 +21,7 @@ const initialState = {
 
 const rootReducer = (state = initialState, action) => {
     switch (action.type) {
-        case Consts.IMAGE_DATA_RECIEVED_ACTION:
+        case Consts.IMAGE_DATA_RECEIVED_ACTION:
             clearTimeout(state.imageDataUrlTimeout);
             return {
                 ...state,

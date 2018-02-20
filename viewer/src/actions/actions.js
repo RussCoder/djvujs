@@ -1,5 +1,4 @@
 import Consts from '../constants/consts.js';
-import setDataUrlTimeout from './dataUrlCreator';
 
 const Actions = {
 
@@ -17,17 +16,9 @@ const Actions = {
             });
     },
 
-    renderCurrentPageAction: () => (dispatch, getState) => {
-        const { currentPageNumber, djvuWorker } = getState();
-        djvuWorker.getPageImageDataWithDPI(currentPageNumber - 1).then(obj => {
-            dispatch({
-                type: Consts.IMAGE_DATA_RECIEVED_ACTION,
-                imageDataUrlTimeout: setDataUrlTimeout(obj.imageData, dispatch),
-                imageData: obj.imageData,
-                imageDPI: obj.dpi
-            });
-        })
-    },
+    renderCurrentPageAction: () => ({
+        type: Consts.RENDER_CURRENT_PAGE_ACTION
+    }),
 
     setNewPageNumberAction: (pageNumber) => (dispatch, getState) => {
         dispatch({
