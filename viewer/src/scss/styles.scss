@@ -145,6 +145,11 @@ body.disable_scroll_djvujs {
         overflow: auto;
         height: 95%;
         text-align: center;
+        cursor: grab;
+
+        &.grabbing {
+            cursor: grabbing;
+        }
         
         .image {
             position: relative;

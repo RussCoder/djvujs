@@ -18,7 +18,10 @@ class ScaleGizmo extends React.Component {
     render() {
         const currentValue = Math.round(this.props.scale * 100);
         return (
-            <div className="scale_gizmo">
+            <div
+                className="scale_gizmo"
+                title="You also can scale the image via Ctrl+MouseWheel"
+            >
                 <input className="scale"
                     type="range"
                     min="0"

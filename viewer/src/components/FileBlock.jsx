@@ -40,6 +40,7 @@ class FileBlock extends React.Component {
             <div
                 className="file_block"
                 onClick={this.onClick}
+                title="Open another .djvu file!"
             >
                 <FontAwesomeIcon
                     icon={faUpload}

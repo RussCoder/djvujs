@@ -26,11 +26,13 @@ class FullPageViewButton extends React.Component {
         };
 
         return (
-            <FontAwesomeIcon
-                className={cx(classes)}
-                icon={this.props.isFullPageView ? faCompress : faExpand}
-                onClick={this.onClick}
-            />
+            <div title="Switch full page mode!">
+                <FontAwesomeIcon
+                    className={cx(classes)}
+                    icon={this.props.isFullPageView ? faCompress : faExpand}
+                    onClick={this.onClick}
+                />
+            </div>
         );
     }
 }

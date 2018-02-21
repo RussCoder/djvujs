@@ -2,6 +2,8 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 
+import Actions from '../actions/actions';
+
 const DEFAULT_DPI = 100;
 
 class ImageBlock extends React.Component {
@@ -11,7 +13,8 @@ class ImageBlock extends React.Component {
         imageHeight: PropTypes.number,
         imageData: PropTypes.object,
         imageDPI: PropTypes.number,
-        imageUrl: PropTypes.string
+        imageUrl: PropTypes.string,
+        userScale: PropTypes.number
     };
 
     constructor(props) {
@@ -62,10 +65,10 @@ class ImageBlock extends React.Component {
         if (!this.props.dataUrl && this.props.imageData) {
             this.drawImageOnCanvas();
         } else if (this.state.isCanvasMode) {
-            this.changeImageTimeout = setTimeout(() => {          
-                this.setState({ isCanvasMode: false });            
-            }, 250);        
-        } else {  
+            this.changeImageTimeout = setTimeout(() => {
+                this.setState({ isCanvasMode: false });
+            }, 250);
+        } else {
             this.canvas.height = this.canvas.width = 0;
         }
     }
@@ -119,10 +122,62 @@ class ImageBlock extends React.Component {
         this.img = node;
     };
 
+    wrapperRef = (node) => this.wrapper = node;
+
+    onWheel = (e) => {
+        if (!e.ctrlKey) {
+            return;
+        }
+        e.preventDefault();
+        const scaleCoef = 0.0005;
+        const scaleDelta = scaleCoef * (-e.deltaY);
+        const newScale = this.props.userScale + scaleDelta;
+        this.props.dispatch(Actions.setUserScaleAction(newScale));
+    };
+
+    handleMoving = (e) => {
+        e.preventDefault();
+        if (!this.state.initialGrabbingState) {
+            return;
+        }
+        const { clientX, clientY, scrollLeft, scrollTop } = this.state.initialGrabbingState;
+        const deltaX = clientX - e.clientX;
+        const deltaY = clientY - e.clientY;
+
+        this.wrapper.scrollLeft = scrollLeft + deltaX;
+        this.wrapper.scrollTop = scrollTop + deltaY;
+    };
+
+    startMoving = (e) => {
+        this.setState({
+            initialGrabbingState: {
+                clientX: e.clientX,
+                clientY: e.clientY,
+                scrollLeft: this.wrapper.scrollLeft,
+                scrollTop: this.wrapper.scrollTop
+            }
+        });
+        this.wrapper.addEventListener('mousemove', this.handleMoving);
+    };
+
+    finishMoving = (e) => {
+        this.setState({ initialGrabbingState: null });
+        this.wrapper.removeEventListener('mousemove', this.handleMoving);
+    };
+
     render() {
         const isCanvasMode = this.state.isCanvasMode;
+        const grabbingStyle = this.state.initialGrabbingState ? " grabbing" : "";
+
         return (
-            <div className="image_wrapper">
+            <div
+                className={"image_wrapper" + grabbingStyle}
+                onWheel={this.onWheel}
+                ref={this.wrapperRef}
+                onMouseDown={this.startMoving}
+                onMouseUp={this.finishMoving}
+                onMouseOut={this.finishMoving}
+            >
                 <div className="image">
                     <div style={{ opacity: 0, width: this.getScaledImageWidth(), height: this.getScaledImageHeight() }} />
                     <img

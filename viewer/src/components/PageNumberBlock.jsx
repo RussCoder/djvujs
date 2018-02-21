@@ -34,7 +34,10 @@ class PageNumberBlock extends React.Component {
 
     render() {
         return (
-            <div className="page_number_block">
+            <div
+                className="page_number_block"
+                title="Click on the number to enter it manually!"
+            >
                 <FontAwesomeIcon
                     icon={faArrowAltCircleLeft}
                     onClick={this.goToPrevPage}
