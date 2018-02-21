@@ -14,16 +14,7 @@ class App extends Component {
     };
 
     render() {
-        let fullPageViewClass = "";
-        const disableScrollClass = 'disable_scroll_djvujs';
-        if (this.props.isFullPageView) {
-            fullPageViewClass = " full_page_view";
-            document.querySelector('html').classList.add(disableScrollClass);
-            document.body.classList.add(disableScrollClass);
-        } else {
-            document.querySelector('html').classList.remove(disableScrollClass);
-            document.body.classList.remove(disableScrollClass);
-        }
+        const fullPageViewClass = this.props.isFullPageView ? " full_page_view" : "";
 
         return (
             <div className={"djvu_viewer" + fullPageViewClass}>

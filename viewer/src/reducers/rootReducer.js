@@ -16,16 +16,13 @@ const initialState = {
     currentPageNumber: 1,
     pagesCount: null,
     isFullPageView: false,
-    imageDataUrlTimeout: null
 };
 
 const rootReducer = (state = initialState, action) => {
     switch (action.type) {
         case Consts.IMAGE_DATA_RECEIVED_ACTION:
-            clearTimeout(state.imageDataUrlTimeout);
             return {
                 ...state,
-                imageDataUrlTimeout: action.imageDataUrlTimeout,
                 imageWidth: action.imageData.width,
                 imageHeight: action.imageData.height,
                 imageData: { a: action.imageData },
@@ -34,11 +31,9 @@ const rootReducer = (state = initialState, action) => {
             };
 
         case Consts.DATA_URL_CREATED_ACTION:
-            clearTimeout(state.imageDataUrlTimeout);
             state.imageData.a = null;
             return {
                 ...state,
-                imageDataUrlTimeout: null,
                 dataUrl: action.dataUrl,
                 imageData: null
             }

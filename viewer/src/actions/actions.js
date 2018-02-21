@@ -39,10 +39,21 @@ const Actions = {
         dataUrl: dataUrl
     }),
 
-    toggleFullPageViewAction: (isFullPageView) => ({
-        type: Consts.TOGGLE_FULL_PAGE_VIEW_ACTION,
-        isFullPageView: isFullPageView
-    })
+    toggleFullPageViewAction: (isFullPageView) => (dispatch) => {
+        const disableScrollClass = 'disable_scroll_djvujs';
+        if (isFullPageView) {
+            document.querySelector('html').classList.add(disableScrollClass);
+            document.body.classList.add(disableScrollClass);
+        } else {
+            document.querySelector('html').classList.remove(disableScrollClass);
+            document.body.classList.remove(disableScrollClass);
+        }
+
+        dispatch({
+            type: Consts.TOGGLE_FULL_PAGE_VIEW_ACTION,
+            isFullPageView: isFullPageView
+        });
+    }
 };
 
 export default Actions;

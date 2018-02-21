@@ -5,7 +5,7 @@
       "install": "cd library && npm install && cd .. && cd viewer && npm install && cd ..",
       "build": "cd library && npm run build && cd .. && cd viewer && npm run build && cd .. && npm run copy",
       "copy": "node .js",
-      "all": "npm run clean && npm run install && npm run build"
+      "make": "npm run clean && npm run install && npm run build"
     }
   }
   
