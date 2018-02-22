@@ -16,7 +16,7 @@ var rerunButton = document.querySelector('#rerun');
 rerunButton.onclick = rerun;
 document.querySelector('#redraw').onclick = redrawPage;
 
-var pageNumber = 0;
+var pageNumber = 1;
 var djvuUrl = 'assets/DjVu3Spec.djvu';
 
 document.querySelector('#next').onclick = () => {
@@ -126,14 +126,14 @@ function readDjvu(buf) {
 function redrawPage() {
     console.log('**** Render Page ****');
     var time = performance.now();
+    var page = djvuDocument.getPage(pageNumber);
     Globals.drawImage(
-        djvuDocument.pages[pageNumber].getImageData(),
-        djvuDocument.pages[pageNumber].dpi * 1
+        page.getImageData(),
+        page.getDpi() * 1
     );
     //console.log(doc.pages[pageNumber].getText());
     time = performance.now() - time;
     console.log("Redraw time", time);
-    djvuDocument.pages[pageNumber].reset();
     console.log('**** ***** **** ****');
     renderTimeOutput.innerText = Math.round(time);
 }

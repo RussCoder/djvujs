@@ -1,7 +1,7 @@
 'use strict';
 
 var DjVu = {
-    VERSION: '0.0.7',
+    VERSION: '0.0.8',
     IS_DEBUG: false
 };
 

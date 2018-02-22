@@ -21,7 +21,7 @@ class DjVuPage {
         this.djbz = null;
         this.bg44arr = new Array();
         this.fg44 = null;
-        
+
         /**
          * @type {IWImage}
          */
@@ -56,8 +56,12 @@ class DjVuPage {
     /**
      * Свойство необходимое для корректного отображения страницы - влияет на 100% масштаб.
      */
-    get dpi() {
-        return this.info ? this.info.dpi : undefined;
+    getDpi() {
+        if (this.info) {
+            return this.info.dpi;
+        } else {
+            return this.init().info.dpi;
+        }
     }
 
     // метод поиска зависимостей, то есть INCLChunk

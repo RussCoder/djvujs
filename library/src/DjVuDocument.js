@@ -26,7 +26,12 @@ class DjVuDocument {
         this.pages = []; //страницы FORMDJVU
         //разделяемые ресурсы
         this.djvi = {};
+        this.navm = null; // человеческое оглавление 
 
+        this.init();
+    }
+
+    init() {
         if (this.dirm) {
             var id = this.bs.readStr4();
             var length = this.bs.getInt32();
@@ -64,6 +69,20 @@ class DjVuDocument {
         }
     }
 
+    getPage(number) {
+        this.lastRequestedPage && this.lastRequestedPage.reset();
+        this.lastRequestedPage = this.pages[number - 1];
+        return this.lastRequestedPage;
+    }
+
+    getPageUnsafe(number) {
+        return this.pages[number - 1];
+    }
+
+    resetLastRequestedPage() {
+        this.lastRequestedPage && this.lastRequestedPage.reset();
+        this.lastRequestedPage = null;
+    }
 
     countFiles() {
         var count = 0;
@@ -189,7 +208,7 @@ class DjVuDocument {
                 console.warn("Excess dict ", this.dirm.ids[i]);
             }
         }
-        
+
         djvuWriter.writeDirmChunk(dirm);
         if (this.navm) {
             djvuWriter.writeChunk(this.navm);

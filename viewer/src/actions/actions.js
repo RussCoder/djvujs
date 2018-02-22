@@ -5,7 +5,7 @@ const Actions = {
     createDocumentFromArrayBufferAction: (arrayBuffer, fileName = "***") => (dispatch, getState) => {
         const worker = getState().djvuWorker;
         worker.createDocument(arrayBuffer)
-            .then(() => worker.getPageNumber())
+            .then(() => worker.getPageCount())
             .then(pagesCount => {
                 dispatch({
                     type: Consts.DOCUMENT_CREATED_ACTION,

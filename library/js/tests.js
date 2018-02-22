@@ -167,7 +167,7 @@ var Tests = {
             .then(buffer => {
                 return djvuWorker.createDocument(buffer);
             })
-            .then(() => djvuWorker.getPageImageDataWithDPI(pageNum))
+            .then(() => djvuWorker.getPageImageDataWithDpi(pageNum))
             .then(obj => {
                 resultImageData = obj.imageData;
                 return TestHelper.getImageDataByImageURI(`/assets/${imageName}`);
@@ -201,7 +201,7 @@ var Tests = {
             })
             .then(() => {
                 return Promise.all([
-                    djvuWorker.getPageText(0),
+                    djvuWorker.getPageText(1),
                     DjVu.Utils.loadFile('/assets/DjVu3Spec_1.txt', 'text')
                 ]);
             })
@@ -215,7 +215,7 @@ var Tests = {
     },
 
     testCreateDocumentFromPictures() {
-        djvuWorker.startMultyPageDocument(90, 0, 0);
+        djvuWorker.startMultiPageDocument(90, 0, 0);
         return Promise.all([
             TestHelper.getImageDataByImageURI(`/assets/boy.png`),
             TestHelper.getImageDataByImageURI(`/assets/chicken.png`)
@@ -224,10 +224,9 @@ var Tests = {
         }).then(() => {
             return Promise.all([
                 DjVu.Utils.loadFile(`/assets/boy_and_chicken.djvu`),
-                djvuWorker.endMultyPageDocument()
+                djvuWorker.endMultiPageDocument()
             ]);
         }).then(arrayBuffers => {
-            console.log(arrayBuffers);
             return TestHelper.compareArrayBuffers(...arrayBuffers);
         });
     },
@@ -247,27 +246,27 @@ var Tests = {
     },
 
     testGrayscaleBG44() {
-        return this._imageTest("boy.djvu", 0, "boy.png", -1560338846);
+        return this._imageTest("boy.djvu", 1, "boy.png", -1560338846);
     },
 
     testColorBG44() {
-        return this._imageTest("chicken.djvu", 0, "chicken.png", 1973539465);
+        return this._imageTest("chicken.djvu", 1, "chicken.png", 1973539465);
     },
 
     testJB2Pure() {
-        return this._imageTest("boy_jb2.djvu", 0, "boy_jb2.png", -650210314);
+        return this._imageTest("boy_jb2.djvu", 1, "boy_jb2.png", -650210314);
     },
 
     testJB2WithBitOfBackground() {
-        return this._imageTest("DjVu3Spec.djvu", 47, "DjVu3Spec_48.png", 1367724765);
+        return this._imageTest("DjVu3Spec.djvu", 48, "DjVu3Spec_48.png", 1367724765);
     },
 
     testJB2WhereRemovingOfEmptyEdgesOfBitmapsBeforeAddingToDictRequired() {
-        return this._imageTest("problem_page.djvu", 0, "problem_page.png", 826528816);
+        return this._imageTest("problem_page.djvu", 1, "problem_page.png", 826528816);
     },
 
     testFGbzColoredMask() {
-        return this._imageTest("navm_fgbz.djvu", 2, "navm_fgbz_3.png", 1017482741);
+        return this._imageTest("navm_fgbz.djvu", 3, "navm_fgbz_3.png", 1017482741);
     }
 
     /*test3LayerColorImage() { // отключен так как не ясен алгоритм масштабирования слоев

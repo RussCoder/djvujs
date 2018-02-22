@@ -67,12 +67,12 @@ function initWorker() {
             });
         },
 
-        getPageImageDataWithDPI(obj) {
+        getPageImageDataWithDpi(obj) {
             var pagenum = +obj.pagenumber;
             var imageData = djvuDocument.pages[pagenum].getImageData();
-            var dpi = djvuDocument.pages[pagenum].dpi;
+            var dpi = djvuDocument.pages[pagenum].getDpi();
             postMessage({
-                command: 'getPageImageDataWithDPI',
+                command: 'getPageImageDataWithDpi',
                 id: obj.id,
                 buffer: imageData.data.buffer,
                 width: imageData.width,
@@ -82,9 +82,9 @@ function initWorker() {
             djvuDocument.pages[pagenum].reset(); // зачищаем данные декодирования
         },
 
-        getPageNumber(obj) {
+        getPageCount(obj) {
             postMessage({
-                command: 'getPageNumber',
+                command: 'getPageCount',
                 id: obj.id,
                 pageNumber: djvuDocument.pages.length
             });
@@ -95,10 +95,10 @@ function initWorker() {
             postMessage({ command: 'getDocumentMetaData', id: obj.id, str: str });
         },
 
-        startMultyPageDocument(obj) {
+        startMultiPageDocument(obj) {
             iwiw = new IWImageWriter(obj.slicenumber, obj.delayInit, obj.grayscale);
-            iwiw.startMultyPageDocument();
-            postMessage({ command: 'createDocumentFromPictures', id: obj.id });
+            iwiw.startMultiPageDocument();
+            postMessage({ command: 'startMultiPageDocument', id: obj.id });
         },
 
         addPageToDocument(obj) {
@@ -107,9 +107,9 @@ function initWorker() {
             postMessage({ command: 'addPageToDocument', id: obj.id });
         },
 
-        endMultyPageDocument(obj) {
-            var buffer = iwiw.endMultyPageDocument();
-            postMessage({ command: 'endMultyPageDocument', id: obj.id, buffer: buffer }, [buffer]);
+        endMultiPageDocument(obj) {
+            var buffer = iwiw.endMultiPageDocument();
+            postMessage({ command: 'endMultiPageDocument', id: obj.id, buffer: buffer }, [buffer]);
         },
 
         createDocumentFromPictures(obj) {

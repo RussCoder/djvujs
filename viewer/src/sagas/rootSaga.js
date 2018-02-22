@@ -16,7 +16,7 @@ const getImageDataURL = (imageData) => {
 
 function* createImageDataUrl(action) {
     const { currentPageNumber, djvuWorker } = yield select();
-    const obj = yield djvuWorker.getPageImageDataWithDPI(currentPageNumber - 1);
+    const obj = yield djvuWorker.getPageImageDataWithDpi(currentPageNumber);
     const imageData = obj.imageData;
 
     yield put({

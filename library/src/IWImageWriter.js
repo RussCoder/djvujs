@@ -19,7 +19,7 @@ class IWImageWriter {
         return this.imageData.height;
     }
 
-    startMultyPageDocument() {
+    startMultiPageDocument() {
         this.dw = new DjVuWriter();
         this.dw.startDJVM();
         this.pageBuffers = [];
@@ -29,7 +29,7 @@ class IWImageWriter {
         dirm.dflags = 129; // 1000 0001
         dirm.flags = [];
         dirm.ids = [];
-        dirm.sizes = []; 
+        dirm.sizes = [];
         // titles and names are not used by this encoder
     }
 
@@ -43,7 +43,7 @@ class IWImageWriter {
         this.dirm.sizes.push(buffer.byteLength); // размеры
     }
 
-    endMultyPageDocument() {
+    endMultiPageDocument() {
         this.dw.writeDirmChunk(this.dirm);
         var len = this.pageBuffers.length;
         for (var i = 0; i < len; i++) {
@@ -56,7 +56,7 @@ class IWImageWriter {
         return buffer;
     }
 
-    createMultyPageDocument(imageArray) {
+    createMultiPageDocument(imageArray) {
         var dw = new DjVuWriter();
         dw.startDJVM();
         var length = imageArray.length;
