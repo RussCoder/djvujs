@@ -5,7 +5,7 @@ body.disable_scroll_djvujs {
     overflow: hidden !important;
 }
 
-.djvu_viewer {
+.djvu_js_viewer {
 
     font-size: 14px;
     overflow: hidden;
@@ -46,6 +46,12 @@ body.disable_scroll_djvujs {
                 font-size: 2em;
             }
 
+            .djvujs_version {
+                margin-top: -2em;
+                font-style: italic;
+                font-size: 0.8em;
+            }
+            
             div {
                 margin: 1em;
             }

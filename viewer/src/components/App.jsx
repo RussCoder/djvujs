@@ -17,7 +17,7 @@ class App extends Component {
         const fullPageViewClass = this.props.isFullPageView ? " full_page_view" : "";
 
         return (
-            <div className={"djvu_viewer" + fullPageViewClass}>
+            <div className={"djvu_js_viewer" + fullPageViewClass}>
                 {this.props.isFileLoaded ? <ImageBlock /> : <InitialScreen />}
                 <DownPanel />
             </div>
