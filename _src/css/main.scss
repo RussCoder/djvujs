@@ -93,3 +93,9 @@ pre {
     padding: 0.5em;
     background: #f4f4f7;
 }
+
+blockquote {
+    font-style: italic;
+    border-left: 0.5em solid $lineColor;
+    padding-left: 1em;
+}

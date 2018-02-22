@@ -2,7 +2,7 @@ var DjVu = (function () {
 'use strict';
 
 var DjVu = {
-    VERSION: '0.0.7',
+    VERSION: '0.0.8',
     IS_DEBUG: false
 };
 DjVu.Utils = {
@@ -2402,8 +2402,12 @@ class DjVuPage {
         this.iffchunks = [];
         this.dependencies = null;
     }
-    get dpi() {
-        return this.info ? this.info.dpi : undefined;
+    getDpi() {
+        if (this.info) {
+            return this.info.dpi;
+        } else {
+            return this.init().info.dpi;
+        }
     }
     getDependencies() {
         if (this.info || this.dependencies) {
@@ -2692,6 +2696,10 @@ class DjVuDocument {
         this.getINCLChunkCallback = id => this.djvi[id].innerChunk;
         this.pages = [];
         this.djvi = {};
+        this.navm = null;
+        this.init();
+    }
+    init() {
         if (this.dirm) {
             var id = this.bs.readStr4();
             var length = this.bs.getInt32();
@@ -2725,6 +2733,18 @@ class DjVuDocument {
             this.bs.jump(-12);
             this.pages.push(new DjVuPage(this.bs.fork(this.length + 4)));
         }
+    }
+    getPage(number) {
+        this.lastRequestedPage && this.lastRequestedPage.reset();
+        this.lastRequestedPage = this.pages[number - 1];
+        return this.lastRequestedPage;
+    }
+    getPageUnsafe(number) {
+        return this.pages[number - 1];
+    }
+    resetLastRequestedPage() {
+        this.lastRequestedPage && this.lastRequestedPage.reset();
+        this.lastRequestedPage = null;
     }
     countFiles() {
         var count = 0;
@@ -2899,35 +2919,25 @@ class DjVuDocument {
 class DjVuWorker {
     constructor(path) {
         if (!path) {
-            var script = document.querySelector('script[src*="djvu."]');
+            var script = document.querySelector('script#djvu_js_lib, script[src*="djvu."]');
             this.path = script ? script.src : '/src/DjVuWorkerScript.js';
         } else {
             this.path = path;
         }
-        this.worker = new Worker(this.path);
-        this.worker.onmessage = (event) => {
-            this.messageHandler(event);
-        };
-        this.worker.onerror = (event) => {
-            this.errorHandler(event);
-        };
-        this.callbacks = new TempRepository();
-        this.pagenumber;
+        this.reset();
     }
     reset() {
-        this.worker.terminate();
+        this.worker && this.worker.terminate();
         this.worker = new Worker(this.path);
-        this.worker.onmessage = (event) => {
-            this.messageHandler(event);
-        };
-        this.worker.onerror = (event) => {
-            this.errorHandler(event);
-        };
+        this.worker.onmessage = (e) => this.messageHandler(e);
+        this.worker.onerror = (e) => this.errorHandler(e);
+        this.callbacks = new TempRepository();
     }
     _postMessage(message) {
         this.worker.postMessage(message);
     }
     errorHandler(event) {
+        console.error("DjVu.js Worker error!", event);
     }
     messageHandler(event) {
         var obj = event.data;
@@ -2939,14 +2949,13 @@ class DjVuWorker {
             case 'Process':
                 this.onprocess ? this.onprocess(obj.percent) : 0;
                 break;
-            case 'getPageImageDataWithDPI':
+            case 'getPageImageDataWithDpi':
                 callback.resolve({
                     imageData: new ImageData(new Uint8ClampedArray(obj.buffer), obj.width, obj.height),
                     dpi: obj.dpi
                 });
                 break;
             case 'createDocument':
-                this.pagenumber = obj.pagenumber;
                 callback.resolve();
                 break;
             case 'slice':
@@ -2955,19 +2964,19 @@ class DjVuWorker {
             case 'createDocumentFromPictures':
                 callback.resolve(obj.buffer);
                 break;
-            case 'startMultyPageDocument':
+            case 'startMultiPageDocument':
                 callback.resolve();
                 break;
             case 'addPageToDocument':
                 callback.resolve();
                 break;
-            case 'endMultyPageDocument':
+            case 'endMultiPageDocument':
                 callback.resolve(obj.buffer);
                 break;
             case 'getDocumentMetaData':
                 callback.resolve(obj.str);
                 break;
-            case 'getPageNumber':
+            case 'getPageCount':
                 callback.resolve(obj.pageNumber);
                 break;
             case 'getPageText':
@@ -2977,11 +2986,11 @@ class DjVuWorker {
                 console.error("Unexpected message from DjVuWorker: ", obj);
         }
     }
-    getPageNumber() {
+    getPageCount() {
         return new Promise((resolve, reject) => {
             var id = this.callbacks.add({ resolve, reject });
             this.worker.postMessage({
-                command: 'getPageNumber',
+                command: 'getPageCount',
                 id: id
             });
         });
@@ -2996,11 +3005,11 @@ class DjVuWorker {
             });
         });
     }
-    startMultyPageDocument(slicenumber, delayInit, grayscale) {
+    startMultiPageDocument(slicenumber, delayInit, grayscale) {
         return new Promise((resolve, reject) => {
             var id = this.callbacks.add({ resolve: resolve, reject: reject });
             this.worker.postMessage({
-                command: 'startMultyPageDocument',
+                command: 'startMultiPageDocument',
                 id: id,
                 slicenumber: slicenumber,
                 delayInit: delayInit,
@@ -3023,11 +3032,11 @@ class DjVuWorker {
             }, [simpleImage.buffer]);
         });
     }
-    endMultyPageDocument() {
+    endMultiPageDocument() {
         return new Promise((resolve, reject) => {
             var id = this.callbacks.add({ resolve: resolve, reject: reject });
             this.worker.postMessage({
-                command: 'endMultyPageDocument',
+                command: 'endMultiPageDocument',
                 id: id
             });
         });
@@ -3038,16 +3047,16 @@ class DjVuWorker {
             this.worker.postMessage({ command: 'createDocument', id: id, buffer: buffer }, [buffer]);
         });
     }
-    getPageImageDataWithDPI(pagenumber) {
+    getPageImageDataWithDpi(pagenumber) {
         return new Promise((resolve, reject) => {
             var id = this.callbacks.add({ resolve: resolve, reject: reject });
-            this.worker.postMessage({ command: 'getPageImageDataWithDPI', id: id, pagenumber: pagenumber });
+            this.worker.postMessage({ command: 'getPageImageDataWithDpi', id: id, pagenumber: pagenumber - 1 });
         });
     }
     getPageText(pagenumber) {
         return new Promise((resolve, reject) => {
             var id = this.callbacks.add({ resolve: resolve, reject: reject });
-            this.worker.postMessage({ command: 'getPageText', id: id, pagenumber: pagenumber });
+            this.worker.postMessage({ command: 'getPageText', id: id, pagenumber: pagenumber - 1 });
         });
     }
     slice(_from, _to) {
@@ -3402,7 +3411,7 @@ class IWImageWriter {
     get height() {
         return this.imageData.height;
     }
-    startMultyPageDocument() {
+    startMultiPageDocument() {
         this.dw = new DjVuWriter();
         this.dw.startDJVM();
         this.pageBuffers = [];
@@ -3423,7 +3432,7 @@ class IWImageWriter {
         this.dirm.ids.push('p' + this.dirm.ids.length);
         this.dirm.sizes.push(buffer.byteLength);
     }
-    endMultyPageDocument() {
+    endMultiPageDocument() {
         this.dw.writeDirmChunk(this.dirm);
         var len = this.pageBuffers.length;
         for (var i = 0; i < len; i++) {
@@ -3435,7 +3444,7 @@ class IWImageWriter {
         delete this.dirm;
         return buffer;
     }
-    createMultyPageDocument(imageArray) {
+    createMultiPageDocument(imageArray) {
         var dw = new DjVuWriter();
         dw.startDJVM();
         var length = imageArray.length;
@@ -3612,12 +3621,12 @@ function initWorker() {
                 });
             });
         },
-        getPageImageDataWithDPI(obj) {
+        getPageImageDataWithDpi(obj) {
             var pagenum = +obj.pagenumber;
             var imageData = djvuDocument.pages[pagenum].getImageData();
-            var dpi = djvuDocument.pages[pagenum].dpi;
+            var dpi = djvuDocument.pages[pagenum].getDpi();
             postMessage({
-                command: 'getPageImageDataWithDPI',
+                command: 'getPageImageDataWithDpi',
                 id: obj.id,
                 buffer: imageData.data.buffer,
                 width: imageData.width,
@@ -3626,9 +3635,9 @@ function initWorker() {
             }, [imageData.data.buffer]);
             djvuDocument.pages[pagenum].reset();
         },
-        getPageNumber(obj) {
+        getPageCount(obj) {
             postMessage({
-                command: 'getPageNumber',
+                command: 'getPageCount',
                 id: obj.id,
                 pageNumber: djvuDocument.pages.length
             });
@@ -3637,19 +3646,19 @@ function initWorker() {
             var str = djvuDocument.toString(obj.html);
             postMessage({ command: 'getDocumentMetaData', id: obj.id, str: str });
         },
-        startMultyPageDocument(obj) {
+        startMultiPageDocument(obj) {
             iwiw = new IWImageWriter(obj.slicenumber, obj.delayInit, obj.grayscale);
-            iwiw.startMultyPageDocument();
-            postMessage({ command: 'createDocumentFromPictures', id: obj.id });
+            iwiw.startMultiPageDocument();
+            postMessage({ command: 'startMultiPageDocument', id: obj.id });
         },
         addPageToDocument(obj) {
             var imageData = new ImageData(new Uint8ClampedArray(obj.simpleImage.buffer), obj.simpleImage.width, obj.simpleImage.height);
             iwiw.addPageToDocument(imageData);
             postMessage({ command: 'addPageToDocument', id: obj.id });
         },
-        endMultyPageDocument(obj) {
-            var buffer = iwiw.endMultyPageDocument();
-            postMessage({ command: 'endMultyPageDocument', id: obj.id, buffer: buffer }, [buffer]);
+        endMultiPageDocument(obj) {
+            var buffer = iwiw.endMultiPageDocument();
+            postMessage({ command: 'endMultiPageDocument', id: obj.id, buffer: buffer }, [buffer]);
         },
         createDocumentFromPictures(obj) {
             var sims = obj.images;
