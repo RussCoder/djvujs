@@ -197,16 +197,11 @@ class IWDecoder extends IWCodecBaseClass {
         }
     }
 
-    getBytemap(noInverse) {
+    getBytemap() {
         var fullWidth = Math.ceil(this.info.width / 32) * 32;
         var fullHeight = Math.ceil(this.info.height / 32) * 32;
         var blockRows = Math.ceil(this.info.height / 32);
         var blockCols = Math.ceil(this.info.width / 32);
-        //полный двумерный массив пикселей
-        // var bitmap = new Array(fullHeight);
-        // for (var i = 0; i < fullHeight; i++) {
-        //     bitmap[i] = new Float32Array(fullWidth);
-        // }
 
         var bm = new LinearBytemap(fullWidth, fullHeight);
         for (var r = 0; r < blockRows; r++) {
@@ -224,104 +219,100 @@ class IWDecoder extends IWCodecBaseClass {
                 }
             }
         }
-        if (!noInverse) {
-            this.inverseWaveletTransform(bm);
-        }
+
+        this.inverseWaveletTransform(bm);
+
         return bm;
     }
 
     inverseWaveletTransform(bitmap) {
-        //return;
-        var s = 16;
-        while (s) {
+        var a, b, c, d;
+
+        for (var s = 16, sDegree = 4; s !== 0; s >>= 1, sDegree--) { // 2^4 === 16
             //для столбцов
-            var kmax = Math.floor((this.info.height - 1) / s);
+            var kmax = (this.info.height - 1) >> sDegree;
+            var border = kmax - 3;
             for (var i = 0; i < this.info.width; i += s) {
                 //Lifting
                 for (var k = 0; k <= kmax; k += 2) {
-                    var a, b, c, d;
-                    //-------------
-                    if (k - 1 < 0) {
-                        a = 0;
-                    } else {
-                        a = bitmap.get((k - 1) * s, i);
-                    }
-                    //-------------
-                    if (k - 3 < 0) {
-                        c = 0;
-                    } else {
-                        c = bitmap.get((k - 3) * s, i);
-                    }
-                    //-------------
-                    if (k + 1 > kmax) {
-                        b = 0;
-                    } else {
-                        b = bitmap.get((k + 1) * s, i);
-                    }
-                    //-------------
-                    if (k + 3 > kmax) {
-                        d = 0;
-                    } else {
-                        d = bitmap.get((k + 3) * s, i);
-                    }
-                    //-------------
-                    bitmap.sub(k * s, i, (9 * (a + b) - (c + d) + 16) >> 5);
+                    a = k - 1 < 0 ? 0 : bitmap.get((k - 1) << sDegree, i);
+                    c = k - 3 < 0 ? 0 : bitmap.get((k - 3) << sDegree, i);
+                    a += k + 1 > kmax ? 0 : bitmap.get((k + 1) << sDegree, i);
+                    c += k + 3 > kmax ? 0 : bitmap.get((k + 3) << sDegree, i);
+                    bitmap.sub(k << sDegree, i, (a * 9 - c + 16) >> 5);
                 }
+
                 //Prediction 
-                for (var k = 1; k <= kmax; k += 2) {
-                    if ((k - 3 >= 0) && (k + 3 <= kmax)) {
-                        bitmap.add(k * s, i,
-                            (9 * (bitmap.get((k - 1) * s, i) + bitmap.get((k + 1) * s, i)) - (bitmap.get((k - 3) * s, i) + bitmap.get((k + 3) * s, i)) + 8) >> 4
-                        );
-                    } else if (k + 1 <= kmax) {
-                        bitmap.add(k * s, i, (bitmap.get((k - 1) * s, i) + bitmap.get((k + 1) * s, i) + 1) >> 1);
+                var columnPredictionSpecialCase = (k) => {
+                    if (k + 1 <= kmax) {
+                        bitmap.add(k << sDegree, i, (bitmap.get((k - 1) << sDegree, i) + bitmap.get((k + 1) << sDegree, i) + 1) >> 1);
                     } else {
-                        bitmap.add(k * s, i, bitmap.get((k - 1) * s, i));
+                        bitmap.add(k << sDegree, i, bitmap.get((k - 1) << sDegree, i));
                     }
                 }
+
+                columnPredictionSpecialCase(1);
+
+                for (var k = 3; k <= border; k += 2) {
+                    a = bitmap.get((k - 1) << sDegree, i) + bitmap.get((k + 1) << sDegree, i);
+                    bitmap.add(k << sDegree, i,
+                        (a * 9 - (bitmap.get((k - 3) << sDegree, i) + bitmap.get((k + 3) << sDegree, i)) + 8) >> 4
+                    );
+                };
+
+                for (; k <= kmax; k += 2) {
+                    columnPredictionSpecialCase(k);
+                }
+
+                // for (var k = 1; k <= kmax; k += 2) {
+                //     if ((k >= 3) && (k + 3 <= kmax)) {
+                //         a = bitmap.get((k - 1) << sDegree, i) + bitmap.get((k + 1) << sDegree, i);
+                //         bitmap.add(k << sDegree, i,
+                //             (a * 9 - (bitmap.get((k - 3) << sDegree, i) + bitmap.get((k + 3) << sDegree, i)) + 8) >> 4
+                //         );
+                //     } else if (k + 1 <= kmax) {
+                //         bitmap.add(k << sDegree, i, (bitmap.get((k - 1) << sDegree, i) + bitmap.get((k + 1) << sDegree, i) + 1) >> 1);
+                //     } else {
+                //         bitmap.add(k << sDegree, i, bitmap.get((k - 1) << sDegree, i));
+                //     }
+                // }
             }
+
             //для строк
-            kmax = Math.floor((this.info.width - 1) / s);
+            kmax = (this.info.width - 1) >> sDegree;
+            var border = kmax - 3;
             for (var i = 0; i < this.info.height; i += s) {
                 //Lifting
                 for (var k = 0; k <= kmax; k += 2) {
-                    var a, b, c, d;
-                    if (k - 1 < 0) {
-                        a = 0;
-                    } else {
-                        a = bitmap.get(i, (k - 1) * s);
-                    }
-                    if (k - 3 < 0) {
-                        c = 0;
-                    } else {
-                        c = bitmap.get(i, (k - 3) * s);
-                    }
-                    if (k + 1 > kmax) {
-                        b = 0;
-                    } else {
-                        b = bitmap.get(i, (k + 1) * s);
-                    }
-                    if (k + 3 > kmax) {
-                        d = 0;
-                    } else {
-                        d = bitmap.get(i, (k + 3) * s);
-                    }
-                    bitmap.sub(i, k * s, (9 * (a + b) - (c + d) + 16) >> 5);
+                    a = k - 1 < 0 ? 0 : bitmap.get(i, (k - 1) << sDegree);
+                    c = k - 3 < 0 ? 0 : bitmap.get(i, (k - 3) << sDegree);
+                    a += k + 1 > kmax ? 0 : b = bitmap.get(i, (k + 1) << sDegree);
+                    c += k + 3 > kmax ? 0 : bitmap.get(i, (k + 3) << sDegree);
+                    bitmap.sub(i, k << sDegree, ((a << 3) + a - c + 16) >> 5);
                 }
-                //Prediction 
-                for (var k = 1; k <= kmax; k += 2) {
-                    if ((k - 3 >= 0) && (k + 3 <= kmax)) {
-                        bitmap.add(i, k * s,
-                            (9 * (bitmap.get(i, (k - 1) * s) + bitmap.get(i, (k + 1) * s)) - (bitmap.get(i, (k - 3) * s) + bitmap.get(i, (k + 3) * s)) + 8) >> 4
-                        );
-                    } else if (k + 1 <= kmax) {
-                        bitmap.add(i, k * s, (bitmap.get(i, (k - 1) * s) + bitmap.get(i, (k + 1) * s) + 1) >> 1);
+
+                //Prediction
+                var rowPredictionSpecialCase = (k) => {
+                    if (k + 1 <= kmax) {
+                        bitmap.add(i, k << sDegree, (bitmap.get(i, (k - 1) << sDegree) + bitmap.get(i, (k + 1) << sDegree) + 1) >> 1);
                     } else {
-                        bitmap.add(i, k * s, bitmap.get(i, (k - 1) * s));
+                        bitmap.add(i, k << sDegree, bitmap.get(i, (k - 1) << sDegree));
                     }
+                };
+
+                rowPredictionSpecialCase(1);
+
+                for (var k = 3; k <= border; k += 2) {
+                    a = bitmap.get(i, (k - 1) << sDegree) + bitmap.get(i, (k + 1) << sDegree);
+                    bitmap.add(i, k << sDegree,
+                        (a * 9 - (bitmap.get(i, (k - 3) << sDegree) + bitmap.get(i, (k + 3) << sDegree)) + 8) >> 4
+                    );
+                }
+
+                for (; k <= kmax; k += 2) {
+                    rowPredictionSpecialCase(k);
                 }
             }
-            s >>= 1; // деление на 2
         }
     }
 }
@@ -330,7 +321,7 @@ class IWDecoder extends IWCodecBaseClass {
 class LinearBytemap {
     constructor(width, height) {
         this.width = width;
-        this.array = new Float32Array(width * height);
+        this.array = new Int16Array(width * height);
     }
 
     byIndex(i) {
@@ -338,18 +329,18 @@ class LinearBytemap {
     }
 
     get(i, j) {
-        return this.array[(i * this.width) + j];
+        return this.array[i * this.width + j];
     }
 
     set(i, j, val) {
-        this.array[(i * this.width) + j] = val;
+        this.array[i * this.width + j] = val;
     }
 
     sub(i, j, val) {
-        this.array[(i * this.width) + j] -= val;
+        this.array[i * this.width + j] -= val;
     }
 
     add(i, j, val) {
-        this.array[(i * this.width) + j] += val;
+        this.array[i * this.width + j] += val;
     }
 }

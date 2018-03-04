@@ -294,7 +294,9 @@ class DjVuPage {
                 this.bgimage.decodeChunk(zp, chunk.header);
             }
             );
+            var pixelMapTime = performance.now();
             this.bgimage.createPixelmap();
+            DjVu.IS_DEBUG && console.log("Background pixelmap creating time = ", performance.now() - pixelMapTime);
         }
         DjVu.IS_DEBUG && console.log("Background decoding time = ", performance.now() - time);
         time = performance.now();
@@ -302,7 +304,9 @@ class DjVuPage {
             this.fgimage = new IWImage();
             let zp = new ZPDecoder(this.fg44.bs);
             this.fgimage.decodeChunk(zp, this.fg44.header);
+            var pixelMapTime = performance.now();
             this.fgimage.createPixelmap();
+            DjVu.IS_DEBUG && console.log("Foreground pixelmap creating time = ", performance.now() - pixelMapTime);
         }
         DjVu.IS_DEBUG && console.log("Foreground decoding time = ", performance.now() - time);
         this.decoded = true;

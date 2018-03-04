@@ -70,7 +70,11 @@ class IWCodecBaseClass {
         );
         this.bucketstate = new Uint8Array(16);
         this.coeffstate = new Array(16);
-        for (var i = 0; i < 16; this.coeffstate[i++] = new Uint8Array(16)) { }
+        var buffer = new ArrayBuffer(256);
+        for (var i = 0; i < 16; i++) {
+            this.coeffstate[i] = new Uint8Array(buffer, i << 4, 16)
+        }
+        //for (var i = 0; i < 16; this.coeffstate[i++] = new Uint8Array(16)) { }
         this.bbstate = 0;
         this.decodeBucketCtx = new Uint8Array(1);
         this.decodeCoefCtx = new Uint8Array(80);
