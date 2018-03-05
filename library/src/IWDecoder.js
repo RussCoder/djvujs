@@ -16,22 +16,20 @@ class IWDecoder extends IWCodecBaseClass {
     decodeSlice(zp, imageinfo) {
         if (!this.info) {
             this.init(imageinfo);
-        } else {
-            this.info.slices = imageinfo.slices;
         }
+
         this.zp = zp;
         if (!this.is_null_slice()) {
             // по блокам идем        
-            for (var i = 0; i < this.blocks.length; i++) {
-                var block = this.blocks[i];
+            this.blocks.forEach(block => {
                 this.preliminaryFlagComputation(block);
                 // четыре подхода декодирования
-                if (this.blockBandDecodingPass(block, this.curband)) {
+                if (this.blockBandDecodingPass()) {
                     this.bucketDecodingPass(block, this.curband);
                     this.newlyActiveCoefficientDecodingPass(block, this.curband);
                 }
-                this.previouslyActiveCoefficientDecodingPass(block, this.curband);
-            }
+                this.previouslyActiveCoefficientDecodingPass(block);
+            });
         }
         // уменьшаем шаги 
         this.finish_code_slice();
@@ -41,27 +39,27 @@ class IWDecoder extends IWCodecBaseClass {
         var boff = 0;
         var step = this.quant_hi[this.curband];
         var indices = this.getBandBuckets(this.curband);
-        for (var i = indices.from; i <= indices.to; i++ ,
-            boff++) {
+        for (var i = indices.from; i <= indices.to; i++ , boff++) {
             for (var j = 0; j < 16; j++) {
                 if (this.coeffstate[boff][j] & 2 /*ACTIVE*/) {
                     if (!this.curband) {
                         step = this.quant_lo[j];
                     }
                     var des = 0;
-                    var coef = Math.abs(block.buckets[i][j]);
-                    if (coef <= 3 * step) {
+                    var coef = block.getBucketCoef(i, j);
+                    var absCoef = Math.abs(coef);
+                    if (absCoef <= 3 * step) {
                         des = this.zp.decode(this.inreaseCoefCtx, 0);
-                        coef += step >> 2;
+                        absCoef += step >> 2;
                     } else {
                         des = this.zp.IWdecode();
                     }
                     if (des) {
-                        coef += step >> 1;
+                        absCoef += step >> 1;
                     } else {
-                        coef += -step + (step >> 1);
+                        absCoef += -step + (step >> 1);
                     }
-                    block.buckets[i][j] = block.buckets[i][j] < 0 ? -coef : coef;
+                    block.setBucketCoef(i, j, coef < 0 ? -absCoef : absCoef);
                 }
             }
         }
@@ -73,20 +71,19 @@ class IWDecoder extends IWCodecBaseClass {
         var indices = this.getBandBuckets(band);
         //проверка на 0 группу позже
         var step = this.quant_hi[this.curband];
-        for (var i = indices.from; i <= indices.to; i++ ,
-            boff++) {
+        for (var i = indices.from; i <= indices.to; i++ , boff++) {
             if (this.bucketstate[boff] & 4/*NEW*/) {
                 var shift = 0;
                 if (this.bucketstate[boff] & 2/*ACTIVE*/) {
                     shift = 8;
                 }
-                var bucket = block.buckets[i];
                 var np = 0;
                 for (var j = 0; j < 16; j++) {
                     if (this.coeffstate[boff][j] & 8/*UNK*/) {
                         np++;
                     }
                 }
+
                 for (var j = 0; j < 16; j++) {
                     if (this.coeffstate[boff][j] & 8/*UNK*/) {
                         var ip = Math.min(7, np);
@@ -98,7 +95,7 @@ class IWDecoder extends IWCodecBaseClass {
                                 step = this.quant_lo[j];
                             }
                             //todo сравнить нужно ли 2 слагаемое
-                            bucket[j] = sign * (step + (step >> 1) - (step >> 3));
+                            block.setBucketCoef(i, j, sign * (step + (step >> 1) - (step >> 3)));
                         }
                         if (np) {
                             np--;
@@ -113,8 +110,7 @@ class IWDecoder extends IWCodecBaseClass {
         var indices = this.getBandBuckets(band);
         // смещение сегмента
         var boff = 0;
-        for (var i = indices.from; i <= indices.to; i++ ,
-            boff++) {
+        for (var i = indices.from; i <= indices.to; i++ , boff++) {
             // проверка потенциального флага сегмента         
             if (!(this.bucketstate[boff] & 8/*UNK*/)) {
                 continue;
@@ -162,13 +158,10 @@ class IWDecoder extends IWCodecBaseClass {
         if (this.curband) {
             //смещение сегмента в массиве флагов
             var boff = 0;
-            for (var j = indices.from; j <= indices.to; j++ ,
-                boff++) {
+            for (var j = indices.from; j <= indices.to; j++ , boff++) {
                 bstatetmp = 0;
-                var bucket = block.buckets[j];
-                for (var k = 0; k < bucket.length; k++) {
-                    //var index = k + 16 * boff;
-                    if (bucket[k] === 0) {
+                for (var k = 0; k < 16; k++) {
+                    if (block.getBucketCoef(j, k) === 0) {
                         this.coeffstate[boff][k] = 8/*UNK*/;
                     } else {
                         this.coeffstate[boff][k] = 2/*ACTIVE*/;
@@ -180,11 +173,10 @@ class IWDecoder extends IWCodecBaseClass {
             }
         } else {
             //если нулевая группа            
-            var bucket = block.buckets[0];
-            for (var k = 0; k < bucket.length; k++) {
+            for (var k = 0; k < 16; k++) {
                 //если шаг в допустимых пределах
                 if (this.coeffstate[0][k] !== 1/*ZERO*/) {
-                    if (bucket[k] === 0) {
+                    if (block.getBucketCoef(0, k) === 0) {
                         this.coeffstate[0][k] = 8/*UNK*/;
                     } else {
                         this.coeffstate[0][k] = 2/*ACTIVE*/;

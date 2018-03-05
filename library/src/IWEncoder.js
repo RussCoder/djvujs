@@ -121,7 +121,7 @@ class IWEncoder extends IWCodecBaseClass {
         this.blocks = []; // TODO: переделать через Block.createBlockArray()
         for (var r = 0; r < blockRows; r++) {
             for (var c = 0; c < blockCols; c++) {
-                var block = new Block(buffer, (r * blockCols + c) << 11);
+                var block = new Block(buffer, (r * blockCols + c) << 11, true);
                 for (var i = 0; i < 1024; i++) {
                     /*var bits = [];
                     for (var j = 0; j < 10; j++) {
@@ -145,7 +145,7 @@ class IWEncoder extends IWCodecBaseClass {
         // блоки в которые будем класть закодированные биты
         this.eblocks = new Array(length);
         for (var i = 0; i < length; i++) {
-            this.eblocks[i] = new Block(buffer, i << 11);
+            this.eblocks[i] = new Block(buffer, i << 11, true);
         }
     }
 

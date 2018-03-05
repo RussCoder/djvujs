@@ -13,14 +13,24 @@ class Bytemap extends Array {
 
 //блок - структурная единица исходного изображения
 class Block {
-    constructor(buffer, offset) {
+    constructor(buffer, offset, withBuckets = false) {
         this.array = new Int16Array(buffer, offset, 1024);
-        this.buckets = new Array(64);
-        var boff = 0; // bucket offset
-        for (var i = 0; i < 64; i++) {
-            this.buckets[i] = new Int16Array(buffer, offset | boff, 16);
-            offset += 32;
+
+        if (withBuckets) { // just for IWEncoder, чтобы не переписывать код
+            this.buckets = new Array(64);
+            for (var i = 0; i < 64; i++) {
+                this.buckets[i] = new Int16Array(buffer, offset, 16);
+                offset += 32;
+            }
         }
+    }
+
+    setBucketCoef(bucketNumber, index, value) {
+        this.array[(bucketNumber << 4) | index] = value; // index from 0 to 15
+    }
+
+    getBucketCoef(bucketNumber, index) {
+        return this.array[(bucketNumber << 4) | index]; // index from 0 to 15
     }
 
     getCoef(n) {
