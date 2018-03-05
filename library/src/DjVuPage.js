@@ -224,28 +224,24 @@ class DjVuPage {
         var image = maskImage;
         var pixelArray = image.data;
         //набираем изображение по пикселям
+        var rowIndexOffset = ((this.info.height - 1) * this.info.width) << 2;
+        var width4 = this.info.width << 2;
         for (var i = 0; i < this.info.height; i++) {
-            var rowIndexOffset = (this.info.height - i - 1) * this.info.width;
-            var bis = Math.floor(i / bgscale);
-            var fis = Math.floor(i / fgscale);
-            for (var j = 0; j < this.info.width; j++) {
-                //var pixel;
-                var index = (rowIndexOffset + j) << 2;
-                if (pixelArray[index]) {
-                    //var js = Math.floor(j / bgscale);
-                    //pixel = bgpixelmap.getPixel(bis, Math.floor(j / bgscale));
-                    bgpixelmap.writePixel(bis, Math.floor(j / bgscale), pixelArray, index);
-                } else {
-                    //var js = Math.floor(j / fgscale);
-                    //pixel = fgpixelmap.getPixel(fis, Math.floor(j / fgscale));
-                    fgpixelmap.writePixel(fis, Math.floor(j / fgscale), pixelArray, index);
-                }
+            var bis = i / bgscale >> 0;
+            var fis = i / fgscale >> 0;
+            var bgIndexOffset = bgpixelmap.width * bis;
+            var fgIndexOffset = fgpixelmap.width * fis;
 
-                // pixelArray[index] = pixel.r;
-                // pixelArray[index + 1] = pixel.g;
-                // pixelArray[index + 2] = pixel.b;
-                //pixelArray[index + 3] = 255; уже сделано при создании изображения
+            var index = rowIndexOffset;
+            for (var j = 0; j < this.info.width; j++) {
+                if (pixelArray[index]) {
+                    bgpixelmap.writePixel(bgIndexOffset + (j / bgscale >> 0), pixelArray, index);
+                } else {
+                    fgpixelmap.writePixel(fgIndexOffset + (j / fgscale >> 0), pixelArray, index);
+                }
+                index += 4;
             }
+            rowIndexOffset -= width4;
         }
 
         return image;
@@ -253,22 +249,21 @@ class DjVuPage {
 
     createImageFromMaskImageAndBackgroundPixelMap(maskImage, bgpixelmap, bgscale) {
         var pixelArray = maskImage.data;
-        //var pixel;
         //набираем изображение по пикселям
+        var rowOffset = (this.info.height - 1) * this.info.width << 2;
+        var width4 = this.info.width << 2;
         for (var i = 0; i < this.info.height; i++) {
+            var bgRowOffset = (i / bgscale >> 0) * bgpixelmap.width;
+            var index = rowOffset;
             for (var j = 0; j < this.info.width; j++) {
-                var index = ((this.info.height - i - 1) * this.info.width + j) * 4;
-                if (pixelArray[index + 3]) {
-                    var is = Math.floor(i / bgscale);
-                    var js = Math.floor(j / bgscale);
-                    bgpixelmap.writePixel(is, js, pixelArray, index);
-                    // pixelArray[index] = pixel.r;
-                    // pixelArray[index + 1] = pixel.g;
-                    // pixelArray[index + 2] = pixel.b;
+                if (pixelArray[index | 3]) {
+                    bgpixelmap.writePixel(bgRowOffset + (j / bgscale >> 0), pixelArray, index);
                 } else {
-                    pixelArray[index + 3] = 255;
+                    pixelArray[index | 3] = 255;
                 }
+                index += 4;
             }
+            rowOffset -= width4;
         }
 
         return maskImage;

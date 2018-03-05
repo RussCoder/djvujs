@@ -50,14 +50,14 @@ class IWImage {
         var height = this.info.height;
         var image = new ImageData(width, height);
 
+        var width4 = width << 2;
         for (var i = 0; i < height; i++) {
-            for (var j = 0; j < width; j++) {          
-                let index = ((height - i - 1) * width + j) << 2;
-                this.pixelmap.writePixel(i, j, image.data, index);
-                // image.data[index] = pixel.r;
-                // image.data[index + 1] = pixel.g;
-                // image.data[index + 2] = pixel.b;
-                image.data[index | 3] = 255;
+            var rowOffset = i * this.pixelmap.width;
+            var pixelIndex = ((height - i - 1) * width) << 2;
+            for (var j = 0; j < width; j++) {
+                this.pixelmap.writePixel(rowOffset + j, image.data, pixelIndex);
+                image.data[pixelIndex | 3] = 255;
+                pixelIndex += 4;
             }
         }
         return image;
@@ -67,54 +67,52 @@ class IWImage {
 
 class Pixelmap {
     constructor(ybytemap, cbbytemap, crbytemap) {
-        this.ybytemap = ybytemap;
-        this.cbbytemap = cbbytemap;
-        this.crbytemap = crbytemap;
-        //this.pixel = { r: 0, g: 0, b: 0 }; // промежуточный объект, чтобы не создавать каждый раз
+        this.width = ybytemap.width;
+
+        var length = ybytemap.array.length;
+        this.r = new Uint8ClampedArray(length);
+        this.g = new Uint8ClampedArray(length);
+        this.b = new Uint8ClampedArray(length);
+
+        if (cbbytemap) {
+            for (var i = 0; i < length; i++) {
+                var y = this._normalize(ybytemap.byIndex(i));
+                var b = this._normalize(cbbytemap.byIndex(i));
+                var r = this._normalize(crbytemap.byIndex(i));
+
+                var t2 = r + (r >> 1);
+                var t3 = y + 128 - (b >> 2);
+
+                this.r[i] = y + 128 + t2;
+                this.g[i] = t3 - (t2 >> 1);
+                this.b[i] = t3 + (b << 1);
+            }
+        } else {
+            for (var i = 0; i < length; i++) {
+                var v = this._normalize(ybytemap.byIndex(i));
+                v = 127 - v;
+                this.r[i] = v;
+                this.g[i] = v;
+                this.b[i] = v;
+            }
+        }
     }
 
     _normalize(val) {
         val = (val + 32) >> 6;   // убираем 6 дробных бит в этом псевдо дробном числе
         if (val < -128) {
-            val = -128;
+            return -128;
         } else if (val >= 128) {
-            val = 127;
+            return 127;
         }
         return val;
     }
 
-    writePixel(i, j, pixelArray, pixelIndex) {
-
-        var index = this.ybytemap.width * i + j;
-
-        if (this.cbbytemap) { // случай цветного изображения
-            // данный код откопирован из djvulibre, не совпадает со спецификацией
-            var y = this._normalize(this.ybytemap.byIndex(index));
-            var b = this._normalize(this.cbbytemap.byIndex(index));
-            var r = this._normalize(this.crbytemap.byIndex(index));
-
-            //var t1 = b >> 2;
-            var t2 = r + (r >> 1);
-            var t3 = y + 128 - (b >> 2);
-
-            pixelArray[pixelIndex] = y + 128 + t2;
-            pixelArray[pixelIndex | 1] = t3 - (t2 >> 1);
-            pixelArray[pixelIndex | 2] = t3 + (b << 1);
-
-            /*return { // Uint8ClampsedArray должен сам обработать это
-                r: Math.max(0, Math.min(255, tr)),
-                g: Math.max(0, Math.min(255, tg)),
-                b: Math.max(0, Math.min(255, tb))
-            }*/
-        } else { // серое изображение
-            var v = this._normalize(this.ybytemap.byIndex(index));
-            v = 127 - v;
-            pixelArray[pixelIndex] = v;
-            pixelArray[pixelIndex | 1] = v;
-            pixelArray[pixelIndex | 2] = v;
-        }
-
-        //return this.pixel;
+    writePixel(index, pixelArray, pixelIndex) {
+        //var index = this.width * i + j;
+        pixelArray[pixelIndex] = this.r[index];
+        pixelArray[pixelIndex | 1] = this.g[index];
+        pixelArray[pixelIndex | 2] = this.b[index];
     }
 
 }

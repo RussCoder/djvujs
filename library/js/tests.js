@@ -32,7 +32,7 @@ function runAllTests() {
                         });
                     }
                 } else {
-                    TestHelper.writeLog(`Error: ${result}`, "red");
+                    TestHelper.writeLog(`Error: ${JSON.stringify(result)}`, "red");
                     TestHelper.writeLog(`${testName} failed!`, "red");
                 }
                 TestHelper.writeLog(`It has taken ${Math.round(testTime)} milliseconds`, "blue");
