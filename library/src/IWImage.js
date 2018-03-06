@@ -115,4 +115,35 @@ class Pixelmap {
         pixelArray[pixelIndex | 2] = this.b[index];
     }
 
+    // writeLayer(maskPixelArray, scaleFactor, imageWidth, imageHeight, checker) {
+
+    //     var maskRowOffset = (imageHeight - 1) * imageWidth << 2;
+    //     var width4 = imageWidth << 2;
+    //     var widthStep = width4 * scaleFactor;
+
+    //     var layerRowOffset = 0;
+    //     for (var i = 0, li = 0; i < imageHeight; i += scaleFactor, li++) {
+
+    //         for (var j = 0, lj = 0; j < imageWidth; j += scaleFactor, lj++) {
+    //             var layerIndex = layerRowOffset + lj;
+    //             var intermediateMaskRowOffset = maskRowOffset;
+    //             for (var k = 0; k < scaleFactor; k++) {
+
+    //                 for (var m = 0; m < scaleFactor; m++) {
+    //                     var index = intermediateMaskRowOffset + ((m + j) << 2);
+    //                     if (maskPixelArray[index] === checker) {
+    //                         maskPixelArray[index] = this.r[layerIndex];
+    //                         maskPixelArray[index | 1] = this.g[layerIndex];
+    //                         maskPixelArray[index | 2] = this.b[layerIndex];
+    //                     }
+    //                 }
+
+    //                 intermediateMaskRowOffset -= width4;
+    //             }
+    //         }
+
+    //         layerRowOffset += this.width;
+    //         maskRowOffset -= widthStep;
+    //     }
+    // }
 }

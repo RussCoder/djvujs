@@ -16,8 +16,8 @@ var rerunButton = document.querySelector('#rerun');
 rerunButton.onclick = rerun;
 document.querySelector('#redraw').onclick = redrawPage;
 
-var pageNumber = 48;
-var djvuUrl = 'assets/DjVu3Spec.djvu';
+var pageNumber = 1;
+var djvuUrl = 'assets/colorbook.djvu';
 
 document.querySelector('#next').onclick = () => {
     pageNumber++;
@@ -129,7 +129,7 @@ function redrawPage() {
     var page = djvuDocument.getPage(pageNumber);
     Globals.drawImage(
         page.getImageData(),
-        page.getDpi() * 0.5
+        page.getDpi() * 1
     );
     //console.log(doc.pages[pageNumber].getText());
     time = performance.now() - time;
