@@ -2,7 +2,8 @@
 
 var DjVu = {
     VERSION: '0.0.9',
-    IS_DEBUG: false
+    IS_DEBUG: false,
+    setDebugMode: (flag) => DjVu.IS_DEBUG = flag
 };
 
 DjVu.Utils = {

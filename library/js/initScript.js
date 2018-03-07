@@ -4,7 +4,7 @@
  * Скрипт для тестирования библиотеки непосредственно в синхронном режиме
  */
 
-DjVu.IS_DEBUG = true;
+DjVu.setDebugMode(true);
 
 var fileSize = 0;
 var output;
@@ -112,7 +112,7 @@ function readDjvu(buf) {
     var link = document.querySelector('#dochref');
     var time = performance.now();
     console.log("Buffer length = " + buf.byteLength);
-    djvuDocument = new DjVuDocument(buf);
+    djvuDocument = new DjVu.Document(buf);
     Globals.counter = 0;
 
     redrawPage();
@@ -129,7 +129,7 @@ function redrawPage() {
     var page = djvuDocument.getPage(pageNumber);
     Globals.drawImage(
         page.getImageData(),
-        page.getDpi() * 1
+        page.getDpi() * 1.5
     );
     //console.log(doc.pages[pageNumber].getText());
     time = performance.now() - time;

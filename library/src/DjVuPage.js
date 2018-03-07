@@ -269,6 +269,30 @@ class DjVuPage {
         return maskImage;
     }
 
+    decodeForeground() {
+        if (this.fg44) {
+            this.fgimage = new IWImage();
+            let zp = new ZPDecoder(this.fg44.bs);
+            this.fgimage.decodeChunk(zp, this.fg44.header);
+            var pixelMapTime = performance.now();
+            this.fgimage.createPixelmap();
+            DjVu.IS_DEBUG && console.log("Foreground pixelmap creating time = ", performance.now() - pixelMapTime);
+        }
+    }
+
+    decodeBackground() {
+        if (this.bg44arr.length) {
+            this.bgimage = new IWImage();
+            this.bg44arr.forEach((chunk) => {
+                var zp = new ZPDecoder(chunk.bs);
+                this.bgimage.decodeChunk(zp, chunk.header);
+            });
+            var pixelMapTime = performance.now();
+            this.bgimage.createPixelmap();
+            DjVu.IS_DEBUG && console.log("Background pixelmap creating time = ", performance.now() - pixelMapTime);
+        }
+    }
+
     /**
      * Раскодирование всех 3 слоев изображения страницы, вызыват init()
      * @returns {DjVuPage}
@@ -278,32 +302,19 @@ class DjVuPage {
             return this;
         }
         this.init();
+
         var time = performance.now();
         this.sjbz ? this.sjbz.decode(this.djbz) : 0;
         DjVu.IS_DEBUG && console.log("Mask decoding time = ", performance.now() - time);
+
         time = performance.now();
-        if (this.bg44arr.length) {
-            this.bgimage = new IWImage();
-            this.bg44arr.forEach((chunk) => {
-                var zp = new ZPDecoder(chunk.bs);
-                this.bgimage.decodeChunk(zp, chunk.header);
-            }
-            );
-            var pixelMapTime = performance.now();
-            this.bgimage.createPixelmap();
-            DjVu.IS_DEBUG && console.log("Background pixelmap creating time = ", performance.now() - pixelMapTime);
-        }
-        DjVu.IS_DEBUG && console.log("Background decoding time = ", performance.now() - time);
-        time = performance.now();
-        if (this.fg44) {
-            this.fgimage = new IWImage();
-            let zp = new ZPDecoder(this.fg44.bs);
-            this.fgimage.decodeChunk(zp, this.fg44.header);
-            var pixelMapTime = performance.now();
-            this.fgimage.createPixelmap();
-            DjVu.IS_DEBUG && console.log("Foreground pixelmap creating time = ", performance.now() - pixelMapTime);
-        }
+        this.decodeForeground();
         DjVu.IS_DEBUG && console.log("Foreground decoding time = ", performance.now() - time);
+
+        time = performance.now();
+        this.decodeBackground();
+        DjVu.IS_DEBUG && console.log("Background decoding time = ", performance.now() - time);
+
         this.decoded = true;
         return this;
     }
