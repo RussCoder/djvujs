@@ -30,12 +30,10 @@ class IWImage {
     }
 
     createPixelmap() {
-        if (!this.pixelmap) {
-            var ybitmap = this.ycodec.getBytemap();
-            var cbbitmap = this.cbcodec ? this.cbcodec.getBytemap() : null;
-            var crbitmap = this.crcodec ? this.crcodec.getBytemap() : null;
-            this.pixelmap = new Pixelmap(ybitmap, cbbitmap, crbitmap);
-        }
+        var ybitmap = this.ycodec.getBytemap();
+        var cbbitmap = this.cbcodec ? this.cbcodec.getBytemap() : null;
+        var crbitmap = this.crcodec ? this.crcodec.getBytemap() : null;
+        this.pixelmap = new Pixelmap(ybitmap, cbbitmap, crbitmap);
     }
 
     /**
@@ -43,7 +41,7 @@ class IWImage {
      */
     getImage() {
         if (!this.pixelmap) {
-            this.pixelmap = this.createPixelmap();
+            this.createPixelmap();
         }
 
         var width = this.info.width;

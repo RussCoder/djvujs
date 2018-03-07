@@ -128,14 +128,28 @@ function redrawPage() {
     var time = performance.now();
     var page = djvuDocument.getPage(pageNumber);
     Globals.drawImage(
-        page.getImageData(),
+        page.getImageData(true),
         page.getDpi() * 1.5
     );
     //console.log(doc.pages[pageNumber].getText());
     time = performance.now() - time;
     console.log("Redraw time", time);
     console.log('**** ***** **** ****');
+
     renderTimeOutput.innerText = Math.round(time);
+
+    setTimeout(() => {
+        console.log('**** Refine Page ****');
+        var time = performance.now();
+        Globals.drawImage(
+            page.getImageData(),
+            page.getDpi() * 1.5
+        );
+        time = performance.now() - time;
+        console.log("Refine time", time);
+        console.log('**** ***** **** ****');
+    }, 50);
+   
 }
 
 function splitDjvu(buf) {

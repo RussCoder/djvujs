@@ -43,6 +43,8 @@ class DjVuPage {
         this.text = null;
 
         this.decoded = false;
+        this.isBackgroundCompletelyDecoded = false;
+        this.isFirstBgChunkDecoded = false;
         this.info = null;
 
 
@@ -145,8 +147,8 @@ class DjVuPage {
      * Метод генерации изображения для общего случая (все 3 слоя)
      * @returns {ImageData}
      */
-    getImageData() {
-        this.decode();
+    getImageData(isOnlyFirstBgChunk = false) {
+        this.decode(isOnlyFirstBgChunk);
         var time = performance.now();
         //достаем маску
         if (!this.sjbz) {
@@ -167,12 +169,8 @@ class DjVuPage {
         var fgscale, bgscale, fgpixelmap, bgpixelmap;
 
         function fakePixelMap(r, g, b) { // ??? нужно ли это вообще ??? Пока что не встречал таких примеров
-            var pixel = { r, g, b };
             return {
-                getPixel(i, j) {
-                    return pixel;
-                },
-                writePixel(i, j, pixelArray, pixelIndex) {
+                writePixel(index, pixelArray, pixelIndex) {
                     pixelArray[pixelIndex] = r;
                     pixelArray[pixelIndex | 1] = g;
                     pixelArray[pixelIndex | 2] = b;
@@ -280,16 +278,32 @@ class DjVuPage {
         }
     }
 
-    decodeBackground() {
+    decodeBackground(isOnlyFirstChunk = false) {
+        if (this.isBackgroundCompletelyDecoded || this.isFirstBgChunkDecoded && isOnlyFirstChunk) {
+            return;
+        }
+
         if (this.bg44arr.length) {
-            this.bgimage = new IWImage();
-            this.bg44arr.forEach((chunk) => {
+            this.bgimage = this.bgimage || new IWImage();
+            var to = isOnlyFirstChunk ? 1 : this.bg44arr.length;
+            var from = this.isFirstBgChunkDecoded ? 1 : 0;
+            for (var i = from; i < to; i++) {
+                var chunk = this.bg44arr[i];
                 var zp = new ZPDecoder(chunk.bs);
+                var time = performance.now();
                 this.bgimage.decodeChunk(zp, chunk.header);
-            });
+                DjVu.IS_DEBUG && console.log("Background chuck decoding time = ", performance.now() - time);
+            }
+
             var pixelMapTime = performance.now();
             this.bgimage.createPixelmap();
             DjVu.IS_DEBUG && console.log("Background pixelmap creating time = ", performance.now() - pixelMapTime);
+
+            if (isOnlyFirstChunk) {
+                this.isFirstBgChunkDecoded = true;
+            } else {
+                this.isBackgroundCompletelyDecoded = true;
+            }
         }
     }
 
@@ -297,8 +311,9 @@ class DjVuPage {
      * Раскодирование всех 3 слоев изображения страницы, вызыват init()
      * @returns {DjVuPage}
      */
-    decode() {
+    decode(onlyFirstChunk = false) {
         if (this.decoded) {
+            this.decodeBackground(onlyFirstChunk);
             return this;
         }
         this.init();
@@ -312,7 +327,7 @@ class DjVuPage {
         DjVu.IS_DEBUG && console.log("Foreground decoding time = ", performance.now() - time);
 
         time = performance.now();
-        this.decodeBackground();
+        this.decodeBackground(onlyFirstChunk);
         DjVu.IS_DEBUG && console.log("Background decoding time = ", performance.now() - time);
 
         this.decoded = true;
