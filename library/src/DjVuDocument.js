@@ -1,6 +1,11 @@
-'use strict';
+import DjViChunk from './DjViChunk';
+import DjVuPage from './DjVuPage';
+import { DjVuError, DIRMChunk, NAVMChunk } from './IFFChunks';
+import DjVuWriter from './DjVuWriter';
+import DjVu from './DjVu';
+import ByteStream from './ByteStream';
 
-class DjVuDocument {
+export default class DjVuDocument {
     constructor(arraybuffer) {
         this.buffer = arraybuffer;
         this.bs = new ByteStream(arraybuffer);

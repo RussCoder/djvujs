@@ -1,36 +1,7 @@
-'use strict';
+import JB2Codec from './JB2Codec';
+import { Baseline } from './JB2Structures';
 
-// структура для вычисления позиции символов на картинке
-class Baseline {
-    constructor() {
-        this.arr = new Array(3);
-    }
-    add(val) {
-        this.arr.shift();
-        this.arr.push(val);
-    }
-    getVal() {
-        if (!this.arr[0]) {
-            return this.arr[1] ? this.arr[1] : this.arr[2];
-        }
-        if (this.arr[0] >= this.arr[1] && this.arr[0] <= this.arr[2]
-            || this.arr[0] <= this.arr[1] && this.arr[0] >= this.arr[2]) {
-            return this.arr[0];
-        }
-        else if (this.arr[1] >= this.arr[0] && this.arr[1] <= this.arr[2]
-            || this.arr[1] <= this.arr[0] && this.arr[1] >= this.arr[2]) {
-            return this.arr[1];
-        }
-        else {
-            return this.arr[2];
-        }
-    }
-    reinit() {
-        this.arr[0] = this.arr[1] = this.arr[2] = 0;
-    }
-}
-
-class JB2Image extends JB2Codec {
+export default class JB2Image extends JB2Codec {
     constructor(bs) {
         super(bs);
         //словарь (может быть заменен диной словаря на некоторое время)

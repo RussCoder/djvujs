@@ -1,6 +1,6 @@
-'use strict';
+import JB2Codec from './JB2Codec';
 
-class JB2Dict extends JB2Codec {
+ export default class JB2Dict extends JB2Codec {
     constructor(bs) {
         super(bs);
         this.dict = [];

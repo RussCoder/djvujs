@@ -1,10 +1,11 @@
-'use strict';
+import { IFFChunk } from './IFFChunks';
+import BZZDecoder from './bzz/BZZDecoder';
 
 /**
  * Класс для порций TXTa и TXTz.
  * Реализован не полностью, пока что только сырой текст декодируется и читается
  */
-class DjVuText extends IFFChunk {
+export default class DjVuText extends IFFChunk {
     constructor(bs) {
         super(bs);
         this.isParsed = false;

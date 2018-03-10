@@ -1,17 +1,17 @@
-'use strict';
+import BZZDecoder from './bzz/BZZDecoder';
 
 /**
  * Простейший класс ошибки, не содержит рекурсивных данных, чтобы иметь возможность копироваться
  * между потоками в сообщениях
  */
-class DjVuError {
+export class DjVuError {
     constructor(message) {
         this.message = message;
     }
 }
 
 // простейший шаблон порции данных
-class IFFChunk {
+export class IFFChunk {
     constructor(bs) {
         this.id = bs.readStr4();
         this.length = bs.getInt32();
@@ -22,7 +22,7 @@ class IFFChunk {
     }
 }
 
-class ColorChunk extends IFFChunk {
+export class ColorChunk extends IFFChunk {
     constructor(bs) {
         super(bs);
         this.header = new СolorChunkDataHeader(bs);
@@ -35,7 +35,7 @@ class ColorChunk extends IFFChunk {
 /**
  * Порция данных содержащая в себе параметры изображения (всей страницы)
  */
-class INFOChunk extends IFFChunk {
+export class INFOChunk extends IFFChunk {
     constructor(bs) {
         super(bs);
         this.width = bs.getInt16();
@@ -91,7 +91,7 @@ class СolorChunkDataHeader {
     }
 }
 
-class INCLChunk extends IFFChunk {
+export class INCLChunk extends IFFChunk {
     constructor(bs) {
         super(bs);
         this.ref = this.bs.readStrUTF();
@@ -107,12 +107,12 @@ class INCLChunk extends IFFChunk {
  * Нестандартная порция данных. 
  * Обычно содержит в себе информацию о программе-кодировщике
  */
-class CIDaChunk extends INCLChunk { }
+export class CIDaChunk extends INCLChunk { }
 
 /**
  * Оглавление человеко-читаемое
  */
-class NAVMChunk extends IFFChunk {
+export class NAVMChunk extends IFFChunk {
     constructor(bs) {
         super(bs);
     }
@@ -126,7 +126,7 @@ class NAVMChunk extends IFFChunk {
  * Порция данных машинного оглавления документа. 
  * Содержит сведения о структуре многостраничного документа
  */
-class DIRMChunk extends IFFChunk {
+export class DIRMChunk extends IFFChunk {
     constructor(bs) {
         super(bs);
         this.dflags = bs.byte();

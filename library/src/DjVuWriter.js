@@ -1,10 +1,13 @@
-'use strict';
+import ByteStreamWriter from './ByteStreamWriter';
+import { ZPEncoder } from './ZPCodec';
+import BZZEncoder from './bzz/BZZEncoder';
+
 
 /**
  * Класс предназначенный для создания итогового файла. 
  * Определяет более высокоуровневые функции, нежели ByteStreamWriter
  */
-class DjVuWriter {
+export default class DjVuWriter {
     constructor(length) {
         this.bsw = new ByteStreamWriter(length || 1024 * 1024);
     }

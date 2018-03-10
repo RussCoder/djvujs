@@ -1,69 +1,5 @@
-'use strict';
 
-class IWImage {
-    constructor() {
-        this.ycodec = new IWDecoder();
-        this.cslice = 0; // current slice
-        this.info = null;
-        this.pixelmap = null;
-    }
-
-    decodeChunk(zp, header) {
-        if (!this.info) {
-            this.info = header;
-            if (!header.grayscale) {
-                this.crcodec = new IWDecoder();
-                this.cbcodec = new IWDecoder();
-            }
-        } else {
-            this.info.slices = header.slices;
-        }
-
-        for (var i = 0; i < this.info.slices; i++) {
-            this.cslice++;
-            this.ycodec.decodeSlice(zp, header);
-            if (this.crcodec && this.cbcodec && this.cslice > this.info.delayInit) {
-                this.cbcodec.decodeSlice(zp, header);
-                this.crcodec.decodeSlice(zp, header);
-            }
-        }
-    }
-
-    createPixelmap() {
-        var ybitmap = this.ycodec.getBytemap();
-        var cbbitmap = this.cbcodec ? this.cbcodec.getBytemap() : null;
-        var crbitmap = this.crcodec ? this.crcodec.getBytemap() : null;
-        this.pixelmap = new Pixelmap(ybitmap, cbbitmap, crbitmap);
-    }
-
-    /**
-     * @returns {ImageData}
-     */
-    getImage() {
-        if (!this.pixelmap) {
-            this.createPixelmap();
-        }
-
-        var width = this.info.width;
-        var height = this.info.height;
-        var image = new ImageData(width, height);
-
-        var width4 = width << 2;
-        for (var i = 0; i < height; i++) {
-            var rowOffset = i * this.pixelmap.width;
-            var pixelIndex = ((height - i - 1) * width) << 2;
-            for (var j = 0; j < width; j++) {
-                this.pixelmap.writePixel(rowOffset + j, image.data, pixelIndex);
-                image.data[pixelIndex | 3] = 255;
-                pixelIndex += 4;
-            }
-        }
-        return image;
-    }
-}
-
-
-class Pixelmap {
+export class Pixelmap {
     constructor(ybytemap, cbbytemap, crbytemap) {
         this.width = ybytemap.width;
 
@@ -144,4 +80,86 @@ class Pixelmap {
     //         maskRowOffset -= widthStep;
     //     }
     // }
+}
+
+export class LinearBytemap {
+    constructor(width, height) {
+        this.width = width;
+        this.array = new Int16Array(width * height);
+    }
+
+    byIndex(i) {
+        return this.array[i];
+    }
+
+    get(i, j) {
+        return this.array[i * this.width + j];
+    }
+
+    set(i, j, val) {
+        this.array[i * this.width + j] = val;
+    }
+
+    sub(i, j, val) {
+        this.array[i * this.width + j] -= val;
+    }
+
+    add(i, j, val) {
+        this.array[i * this.width + j] += val;
+    }
+}
+
+export class Bytemap extends Array {
+    constructor(width, height) {
+        super(height);
+        this.height = height;
+        this.width = width;
+        for (var i = 0; i < height; i++) {
+            this[i] = new Int16Array(width);
+        }
+    }
+}
+
+//блок - структурная единица исходного изображения
+export class Block {
+    constructor(buffer, offset, withBuckets = false) {
+        this.array = new Int16Array(buffer, offset, 1024);
+
+        if (withBuckets) { // just for IWEncoder, чтобы не переписывать код
+            this.buckets = new Array(64);
+            for (var i = 0; i < 64; i++) {
+                this.buckets[i] = new Int16Array(buffer, offset, 16);
+                offset += 32;
+            }
+        }
+    }
+
+    setBucketCoef(bucketNumber, index, value) {
+        this.array[(bucketNumber << 4) | index] = value; // index from 0 to 15
+    }
+
+    getBucketCoef(bucketNumber, index) {
+        return this.array[(bucketNumber << 4) | index]; // index from 0 to 15
+    }
+
+    getCoef(n) {
+        return this.array[n];
+    }
+
+    setCoef(n, val) {
+        this.array[n] = val;
+    }
+
+    /**
+     * Функция создания массива блоков на основе одного буфера, более быстрого выделения памяти
+     * @returns {Array<Block>}
+     */
+    static createBlockArray(length) {
+        var blocks = new Array(length);
+        var buffer = new ArrayBuffer(length << 11);  // выделяем память под все блоки
+        for (var i = 0; i < length; i++) {
+            blocks[i] = new Block(buffer, i << 11);
+        }
+        return blocks;
+    }
 }

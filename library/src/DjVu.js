@@ -26,3 +26,5 @@ DjVu.Utils = {
         });
     }
 };
+
+export default DjVu;

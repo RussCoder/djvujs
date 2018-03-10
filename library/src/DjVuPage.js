@@ -1,9 +1,15 @@
-'use strict';
+import { INCLChunk, DIRMChunk, ColorChunk, CIDaChunk, IFFChunk, INFOChunk } from './IFFChunks';
+import JB2Dict from './jb2/JB2Dict';
+import JB2Image from './jb2/JB2Image';
+import DjVuPalette from './DjVuPalette';
+import IWImage from './iw44/IWImage';
+import DjVuText from './DjVuText';
+import { ZPDecoder } from './ZPCodec';
 
 /**
  * Страница документа
  */
-class DjVuPage {
+export default class DjVuPage {
     /**
      * Принимает байтовый поток и id из машинного оглавления документа. 
      */

@@ -1,63 +1,5 @@
-'use strict';
-
-class Bytemap extends Array {
-    constructor(width, height) {
-        super(height);
-        this.height = height;
-        this.width = width;
-        for (var i = 0; i < height; i++) {
-            this[i] = new Int16Array(width);
-        }
-    }
-}
-
-//блок - структурная единица исходного изображения
-class Block {
-    constructor(buffer, offset, withBuckets = false) {
-        this.array = new Int16Array(buffer, offset, 1024);
-
-        if (withBuckets) { // just for IWEncoder, чтобы не переписывать код
-            this.buckets = new Array(64);
-            for (var i = 0; i < 64; i++) {
-                this.buckets[i] = new Int16Array(buffer, offset, 16);
-                offset += 32;
-            }
-        }
-    }
-
-    setBucketCoef(bucketNumber, index, value) {
-        this.array[(bucketNumber << 4) | index] = value; // index from 0 to 15
-    }
-
-    getBucketCoef(bucketNumber, index) {
-        return this.array[(bucketNumber << 4) | index]; // index from 0 to 15
-    }
-
-    getCoef(n) {
-        return this.array[n];
-    }
-
-    setCoef(n, val) {
-        this.array[n] = val;
-    }
-
-    /**
-     * Функция создания массива блоков на основе одного буфера, более быстрого выделения памяти
-     * @returns {Array<Block>}
-     */
-    static createBlockArray(length) {
-        var blocks = new Array(length);
-        var buffer = new ArrayBuffer(length << 11);  // выделяем память под все блоки
-        for (var i = 0; i < length; i++) {
-            blocks[i] = new Block(buffer, i << 11);
-        }
-        return blocks;
-    }
-}
 
 //класс общих данных для кодирования и декодирования картинки
-
-
 /**
  * There are 4 magic values: 
  * 1 for ZERO // this coeff never hits this bit
@@ -67,7 +9,7 @@ class Block {
  * these 4 are flags. It turned out that it works much faster with raw constats 
  * rather than with const variables or properties from the prototype. 
  */
-class IWCodecBaseClass {
+export default class IWCodecBaseClass {
     constructor() {
         this.quant_lo = Uint32Array.of(
             0x004000, 0x008000, 0x008000, 0x010000, 0x010000,

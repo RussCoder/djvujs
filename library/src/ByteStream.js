@@ -1,11 +1,9 @@
-'use strict';
-
 /**
  * Объект байтового потока. Предоставляет API для чтения сырого ArrayBuffer как потока байт.
  * После вызова каждого метода чтения, внутренный указатель смещается автоматически.
  * Можно читать числа, строки, массив байт разной длины. 
  */
-class ByteStream {
+export default class ByteStream {
     constructor(buffer, offsetx, length) {
         this.buffer = buffer;
         this.offsetx = offsetx || 0;

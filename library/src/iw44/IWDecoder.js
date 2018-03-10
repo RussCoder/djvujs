@@ -1,6 +1,7 @@
-'use strict';
+import IWCodecBaseClass from './IWCodecBaseClass';
+import { LinearBytemap, Block } from './IWStructures';
 
-class IWDecoder extends IWCodecBaseClass {
+export default class IWDecoder extends IWCodecBaseClass {
 
     constructor() {
         super();
@@ -350,32 +351,5 @@ class IWDecoder extends IWCodecBaseClass {
                 }
             }
         }
-    }
-}
-
-class LinearBytemap {
-    constructor(width, height) {
-        this.width = width;
-        this.array = new Int16Array(width * height);
-    }
-
-    byIndex(i) {
-        return this.array[i];
-    }
-
-    get(i, j) {
-        return this.array[i * this.width + j];
-    }
-
-    set(i, j, val) {
-        this.array[i * this.width + j] = val;
-    }
-
-    sub(i, j, val) {
-        this.array[i * this.width + j] -= val;
-    }
-
-    add(i, j, val) {
-        this.array[i * this.width + j] += val;
     }
 }

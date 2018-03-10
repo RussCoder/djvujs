@@ -1,6 +1,6 @@
 'use strict';
 
-class ZPEncoder {
+export class ZPEncoder {
     constructor(bsw) {
         //byteStreamWriter
         this.bsw = bsw || new ByteStreamWriter();
@@ -173,7 +173,7 @@ class ZPEncoder {
 }
 
 
-class ZPDecoder {
+export class ZPDecoder {
     constructor(bs) {
         this.bs = bs;
         this.a = 0x0000;

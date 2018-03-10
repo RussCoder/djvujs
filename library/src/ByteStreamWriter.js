@@ -1,6 +1,4 @@
-'use strict';
-
-class ByteStreamWriter {
+export default class ByteStreamWriter {
     constructor(length) {
         //размер шага роста используемой памяти
         this.growStep = length || 4096;

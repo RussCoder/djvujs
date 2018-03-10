@@ -1,5 +1,7 @@
-'use strict';
-class IWEncoder extends IWCodecBaseClass {
+import IWCodecBaseClass from './IWCodecBaseClass';
+import { Block } from './IWStructures';
+
+export default class IWEncoder extends IWCodecBaseClass {
 
     constructor(bytemap) {
         super();

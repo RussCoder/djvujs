@@ -1,6 +1,10 @@
-'use strict';
+import DjVuWriter from '../DjVuWriter';
+import ByteStreamWriter from '../ByteStreamWriter';
+import IWEncoder from './IWEncoder';
+import { ZPEncoder } from '../ZPCodec';
+import { Bytemap } from './IWStructures';
 
-class IWImageWriter {
+export default class IWImageWriter {
 
     constructor(slicenumber, delayInit, grayscale) {
         // число кусочков кодируемых

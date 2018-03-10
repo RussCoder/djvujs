@@ -1,10 +1,8 @@
-'use strict';
-
 /**
  * Объект создающий фоновый поток. Предоставляет интерфейс и инкапсулирует логику связи с 
  * объектом DjVuDocument в фоновом потоке выполнения.
  */
-class DjVuWorker {
+export default class DjVuWorker {
     constructor(path) {
         if (!path) {
             var script = document.querySelector('script#djvu_js_lib, script[src*="djvu."]');

@@ -1,6 +1,7 @@
-'use strict';
+import { IFFChunk } from './IFFChunks';
+import BZZDecoder from './bzz/BZZDecoder';
 
-class DjVuPalette extends IFFChunk {
+export default class DjVuPalette extends IFFChunk {
 
     /** @param {ByteStream} bs */
     constructor(bs) {

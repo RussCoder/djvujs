@@ -1,10 +1,10 @@
-'use strict';
+import { ZPEncoder } from '../ZPCodec';
 
 /*
 * Предполагается, что все данные будут закодированы одним блоком.
 * Причем блок уже будет оканчиваться дополнительным 0 в качестве конечного символа
 */
-class BZZEncoder {
+export default class BZZEncoder {
     constructor(zp) {
         this.zp = zp || new ZPEncoder();
         // this.minblock = 10; // оставлено для документации, сейчас не используется

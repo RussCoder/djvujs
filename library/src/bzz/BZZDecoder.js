@@ -1,6 +1,8 @@
-'use strict';
+import {ZPDecoder} from '../ZPCodec';
+import ByteStreamWriter from '../ByteStreamWriter';
+import ByteStream from '../ByteStream';
 
-class BZZDecoder {
+export default class BZZDecoder {
     constructor(zp) {
         this.zp = zp;
         // this.minblock = 10; // нигде не используется, оставлено для документации

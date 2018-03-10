@@ -1,36 +1,10 @@
-'use strict';
+import DjVuDocument from './DjVuDocument';
+import IWImageWriter from './iw44/IWImageWriter';
 
 /**
  * Это скрипт для выполнения в фоновом потоке. 
  */
-
-function initWorker() {
-    // #if FALSE_FLAG - delete this block on building the library
-    // подгружаем всю библиотеку, адреса относительно директории DjVuWorkerScript
-    importScripts(
-        "DjVu.js",
-        'ByteStream.js',
-        "ZPCodec.js",
-        "IFFChunks.js",
-        "BZZDecoder.js",
-        "BZZEncoder.js",
-        "DjVuText.js",
-        "IWCodecBaseClass.js",
-        "IWDecoder.js",
-        "IWEncoder.js",
-        "IWImage.js",
-        "DjVuPalette.js",
-        "JB2Codec.js",
-        "JB2Dict.js",
-        "JB2Image.js",
-        "DjViChunk.js",
-        "DjVuPage.js",
-        "DjVuDocument.js",
-        "ByteStreamWriter.js",
-        "IWImageWriter.js",
-        "DjVuWriter.js"
-    );
-    // #endif
+export default function initWorker() {
 
     /** @type {DjVuDocument} */
     var djvuDocument; // главный объект документа
@@ -141,9 +115,4 @@ function initWorker() {
             djvuDocument = new DjVuDocument(djvuDocument.buffer);
         }
     };
-
-}
-
-if (!Function('return this;')().document) {
-    initWorker();
 }

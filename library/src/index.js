@@ -1,8 +1,11 @@
-import DjVu from "./DjVu.js";
-import DjVuDocument from "./DjVuDocument.js";
-import DjVuWorker from "./DjVuWorker.js";
+import DjVu from "./DjVu";
+import DjVuDocument from "./DjVuDocument";
+import DjVuWorker from "./DjVuWorker";
+import initWorker from './DjVuWorkerScript';
 
-import './DjVuWorkerScript.js';
+if (!Function('return this;')().document) { // if inside a Worker
+    initWorker();
+}
 
 export default Object.assign({}, DjVu, {
     Worker: DjVuWorker,

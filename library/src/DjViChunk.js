@@ -1,6 +1,6 @@
-'use strict';
+import JB2Dict from './jb2/JB2Dict';
 
-class DjViChunk {
+export default class DjViChunk {
     constructor(bs, dirmID) {
         this.bs = bs;
         this.id = bs.readStr4();
