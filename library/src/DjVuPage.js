@@ -1,23 +1,20 @@
-import { INCLChunk, DIRMChunk, ColorChunk, CIDaChunk, IFFChunk, INFOChunk } from './IFFChunks';
+import { INCLChunk, DIRMChunk, ColorChunk, CIDaChunk, IFFChunk, INFOChunk, CompositeChunk } from './chunks/IFFChunks';
 import JB2Dict from './jb2/JB2Dict';
 import JB2Image from './jb2/JB2Image';
-import DjVuPalette from './DjVuPalette';
+import DjVuPalette from './chunks/DjVuPalette';
 import IWImage from './iw44/IWImage';
-import DjVuText from './DjVuText';
+import DjVuText from './chunks/DjVuText';
 import { ZPDecoder } from './ZPCodec';
 
 /**
  * Страница документа
  */
-export default class DjVuPage {
+export default class DjVuPage extends CompositeChunk {
     /**
      * Принимает байтовый поток и id из машинного оглавления документа. 
      */
     constructor(bs, dirmID, getINCLChunkCallback) {
-        this.id = "FORM:DJVU"; // данная информация была проверена в DjVuDocument
-        this.length = bs.length - 8;
-        this.dirmID = dirmID; // нужно для метаданных
-        this.bs = bs;
+        super(bs, dirmID);
         this.getINCLChunkCallback = getINCLChunkCallback; // метод для получения глобальной порции данных (словарь обычно) от документа по id
         this.reset();
     }
@@ -389,12 +386,8 @@ export default class DjVuPage {
     }
 
     toString() {
-        var str = '[DirmID: "' + this.dirmID + '"]\n';
-        str += this.id + ' ' + this.length + "\n";
         this.init();
-        for (var i = 0; i < this.iffchunks.length; i++) {
-            str += this.iffchunks[i].toString();
-        }
-        return str + '\n';
+        var str = this.iffchunks.reduce((str, chunk) => str + chunk.toString(), '');
+        return super.toString(str);
     }
 }

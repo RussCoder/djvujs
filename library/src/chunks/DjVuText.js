@@ -1,5 +1,5 @@
 import { IFFChunk } from './IFFChunks';
-import BZZDecoder from './bzz/BZZDecoder';
+import BZZDecoder from '../bzz/BZZDecoder';
 
 /**
  * Класс для порций TXTa и TXTz.

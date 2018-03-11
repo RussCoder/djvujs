@@ -16,8 +16,8 @@ var rerunButton = document.querySelector('#rerun');
 rerunButton.onclick = rerun;
 document.querySelector('#redraw').onclick = redrawPage;
 
-var pageNumber = 1;
-var djvuUrl = 'assets/DjVu3Spec.djvu';
+var pageNumber = 2;
+var djvuUrl = 'assets/czech.djvu';
 
 document.querySelector('#next').onclick = () => {
     pageNumber++;
@@ -114,6 +114,9 @@ function readDjvu(buf) {
     console.log("Buffer length = " + buf.byteLength);
     djvuDocument = new DjVu.Document(buf);
     Globals.counter = 0;
+
+    writeln(djvuDocument.toString(true));
+    return;
 
     redrawPage();
     //saveStringAsFile(doc.pages[pageNumber].getText());

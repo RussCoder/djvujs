@@ -1,6 +1,6 @@
 import { ZPDecoder } from '../ZPCodec';
 import { Bitmap, NumContext } from './JB2Structures';
-import { IFFChunk } from '../IFFChunks';
+import { IFFChunk } from '../chunks/IFFChunks';
 
 export default class JB2Codec extends IFFChunk {
     constructor(bs) {

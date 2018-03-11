@@ -106,9 +106,9 @@ function readImagesAndCreateDocument() {
                 var imageData = ctx.getImageData(0, 0, image.width, image.height);
                 return djvuWorker.addPageToDocument(imageData);
             },
-            (e) => {
-                $("#procmess").text("Ошибка при загрузке файлов! " + e.message);
-            })
+                (e) => {
+                    $("#procmess").text("Ошибка при загрузке файлов! " + e.message);
+                })
             .then(() => {
                 if (++i < files.length) {
                     $("#procmess").text("Задание выполняется ... " + Math.round(i / files.length * 100) + ' %');
@@ -138,9 +138,9 @@ function createPicDocument(imageArray) {
             $("#procmess").text("Задание выполненено !!!");
             $('#filehref').prop('href', DjVu.Worker.createArrayBufferURL(buffer)).show(400);
         },
-        () => {
-            $("#procmess").text("Ошибка при обработке файла !!!");
-        });
+            () => {
+                $("#procmess").text("Ошибка при обработке файла !!!");
+            });
     djvuWorker.onprocess = (percent) => {
         $("#procmess").text("Задание выполняется ... " + (percent * 100 >> 0) + '%');
     }
@@ -166,15 +166,16 @@ function sliceFuncPrepare() {
             fr.onload = () => {
                 var buf = fr.result;
                 djvuWorker.createDocument(buf)
-                    .then(() => {
+                    .then(() => djvuWorker.getPageCount())
+                    .then(pageCount => {
                         $("#procmess").text('');
-                        sliceblock.find('.info').text('Документ содержит ' + djvuWorker.pagenumber
-                            + ' страниц. Вы можете ввести значение от 1 до ' + djvuWorker.pagenumber);
+                        sliceblock.find('.info').text('Документ содержит ' + pageCount
+                            + ' страниц. Вы можете ввести значение от 1 до ' + pageCount);
                         $('#slicebut').off('off').click(sliceFunc).prop('disabled', false);
                     },
-                    () => {
-                        $("#procmess").text("Ошибка при обработке файла !!!");
-                    });
+                        () => {
+                            $("#procmess").text("Ошибка при обработке файла !!!");
+                        });
             }
         }
         else {
@@ -187,16 +188,16 @@ function sliceFunc() {
     $("#procmess").text("Задание выполняется ...");
     $('#filehref').hide();
     var from = +$("#firstnum").val() - 1;
-    var to = +$("#secondnum").val();
+    var to = +$("#secondnum").val() + 1;
     djvuWorker.slice(from, to)
         .then((buffer) => {
             $("#procmess").text("Задание выполненено !!!");
             $('#filehref').prop('href', DjVu.Worker.createArrayBufferURL(buffer)).show(400);
         },
-        (e) => { // reject
-            console.error(e);
-            $("#procmess").text("Ошибка при обработке файла !!!");
-        });
+            (e) => { // reject
+                console.error(e);
+                $("#procmess").text("Ошибка при обработке файла !!!");
+            });
 }
 
 initDjVuApplication();

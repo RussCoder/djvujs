@@ -1,8 +1,9 @@
-import DjViChunk from './DjViChunk';
+import DjViChunk from './chunks/DjViChunk';
 import DjVuPage from './DjVuPage';
-import { DjVuError, DIRMChunk, NAVMChunk } from './IFFChunks';
+import { DjVuError, DIRMChunk, NAVMChunk } from './chunks/IFFChunks';
 import DjVuWriter from './DjVuWriter';
 import DjVu from './DjVu';
+import ThumChunk from './chunks/ThumChunk';
 import ByteStream from './ByteStream';
 
 export default class DjVuDocument {
@@ -29,6 +30,7 @@ export default class DjVuDocument {
          * @type {Array<DjVuPage>}
          */
         this.pages = []; //страницы FORMDJVU
+        this.thumbs = [];
         //разделяемые ресурсы
         this.djvi = {};
         this.navm = null; // человеческое оглавление 
@@ -61,6 +63,9 @@ export default class DjVuDocument {
                     case "FORMDJVI":
                         //через строчку id chunk INCL ссылается на нужный ресурс
                         this.djvi[this.dirm.ids[i]] = new DjViChunk(this.bs.fork(length + 8), this.dirm.ids[i]);
+                        break;
+                    case "FORMTHUM":
+                        this.thumbs.push(new ThumChunk(this.bs.fork(length + 8), this.dirm.ids[i]));
                         break;
                     default:
                         console.error("Incorrectr chunk ID: ", id);
@@ -124,7 +129,10 @@ export default class DjVuDocument {
             str += this.navm.toString();
         }
         for (var prop in this.djvi) {
-            str += this.djvi[prop];
+            str += this.djvi[prop].toString();
+        }
+        for (var thumb of this.thumbs) {
+            str += thumb.toString();
         }
         this.pages.forEach(item => str += item.toString());
         return html ? str.replace(/\n/g, '<br>') : str;
@@ -154,7 +162,7 @@ export default class DjVuDocument {
         dirm.titles = [];
         dirm.sizes = [];
         dirm.ids = [];
-        var chuckBS = [];
+        var chunkBS = [];
         var pageCount = 0;
         var addedPageCount = 0;
         // все зависимости страниц в новом документе
@@ -192,8 +200,7 @@ export default class DjVuDocument {
                 //если она не входит в заданный дапазон
                 if (!(addedPageCount < pageNumber && pageCount > from)) {
                     continue;
-                }
-                else {
+                } else {
                     addedPageCount++;
                 }
             }
@@ -206,11 +213,7 @@ export default class DjVuDocument {
                 dirm.names.push(this.dirm.names[i]);
                 dirm.titles.push(this.dirm.titles[i]);
                 var cbs = new ByteStream(this.buffer, this.dirm.offsets[i], this.dirm.sizes[i]);
-                chuckBS.push(cbs);
-            }
-
-            if (!(this.dirm.ids[i] in dependencies) && !(this.dirm.flags[i] & 1)) {
-                console.warn("Excess dict ", this.dirm.ids[i]);
+                chunkBS.push(cbs);
             }
         }
 
@@ -219,8 +222,8 @@ export default class DjVuDocument {
             djvuWriter.writeChunk(this.navm);
         }
 
-        for (var i = 0; i < chuckBS.length; i++) {
-            djvuWriter.writeFormChunkBS(chuckBS[i]);
+        for (var i = 0; i < chunkBS.length; i++) {
+            djvuWriter.writeFormChunkBS(chunkBS[i]);
         }
         var newbuffer = djvuWriter.getBuffer();
         DjVu.IS_DEBUG && console.log("New Buffer size = ", newbuffer.byteLength);

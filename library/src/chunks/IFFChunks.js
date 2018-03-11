@@ -1,4 +1,4 @@
-import BZZDecoder from './bzz/BZZDecoder';
+import BZZDecoder from '../bzz/BZZDecoder';
 
 /**
  * Простейший класс ошибки, не содержит рекурсивных данных, чтобы иметь возможность копироваться
@@ -19,6 +19,19 @@ export class IFFChunk {
     }
     toString() {
         return this.id + " " + this.length + '\n';
+    }
+}
+
+export class CompositeChunk extends IFFChunk {
+    constructor(bs, dirmID) {
+        super(bs);
+        this.dirmID = dirmID;
+        this.id += ':' + bs.readStr4(); // read secondary id
+    }
+
+    toString(innerString = '') {
+        var str = '[DirmID: "' + this.dirmID + '"]\n' + super.toString();
+        return str + innerString + '\n';
     }
 }
 
