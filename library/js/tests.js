@@ -190,6 +190,20 @@ var Tests = {
             });
     },
 
+    _sliceTest(source, from, to, result) {
+        var resultBuffer;
+        return DjVu.Utils.loadFile(source)
+            .then(buffer => djvuWorker.createDocument(buffer))
+            .then(() => djvuWorker.slice(from, to))
+            .then(_resultBuffer => {
+                resultBuffer = _resultBuffer;
+                return DjVu.Utils.loadFile(result);
+            })
+            .then(canonicBuffer => {
+                return TestHelper.compareArrayBuffers(canonicBuffer, resultBuffer);
+            });
+    },
+
     /*test3LayerSiglePageDocument() { // отключен так как не ясен алгоритм масштабирования слоев
         return this._imageTest("happy_birthday.djvu", 0, "happy_birthday.png");
     },*/
@@ -232,17 +246,11 @@ var Tests = {
     },
 
     testSliceDocument() {
-        var resultBuffer;
-        return DjVu.Utils.loadFile(`/assets/DjVu3Spec.djvu`)
-            .then(buffer => djvuWorker.createDocument(buffer))
-            .then(() => djvuWorker.slice(4, 10))
-            .then(_resultBuffer => {
-                resultBuffer = _resultBuffer;
-                return DjVu.Utils.loadFile(`/assets/DjVu3Spec_5-10.djvu`);
-            })
-            .then(canonicBuffer => {
-                return TestHelper.compareArrayBuffers(canonicBuffer, resultBuffer);
-            });
+        return this._sliceTest(`/assets/DjVu3Spec.djvu`, 5, 10, `/assets/DjVu3Spec_5-10.djvu`);
+    },
+
+    testSliceDocumentWithAnnotations() {
+        return this._sliceTest(`/assets/czech.djvu`, 1, 3, `/assets/czech_1-3.djvu`);
     },
 
     testGrayscaleBG44() {

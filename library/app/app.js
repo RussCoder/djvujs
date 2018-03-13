@@ -187,8 +187,8 @@ function sliceFuncPrepare() {
 function sliceFunc() {
     $("#procmess").text("Задание выполняется ...");
     $('#filehref').hide();
-    var from = +$("#firstnum").val() - 1;
-    var to = +$("#secondnum").val() + 1;
+    var from = +$("#firstnum").val();
+    var to = +$("#secondnum").val();
     djvuWorker.slice(from, to)
         .then((buffer) => {
             $("#procmess").text("Задание выполненено !!!");

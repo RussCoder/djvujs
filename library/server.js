@@ -68,6 +68,8 @@ wss.broadcast = function (data) {
 
 console.log(`WebSocket server is listening on port 8080 \n`);
 
+fs.watch('./js/', () => wss.broadcast('reload')); // watch debug .js files
+
 const watcher = rollup.watch(rollupConfig);
 
 watcher.on('event', event => {

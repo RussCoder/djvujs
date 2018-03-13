@@ -150,23 +150,23 @@ export default class DjVuDocument {
         return url;
     }
 
-    // создает новый документ со страницы from включая ее до to не включая
-    slice(from, to) {
+    /**
+     *  Creates a new DjVuDocument with pages from "from" to "to", including first and last pages.
+     */
+    slice(from = 1, to = this.pages.length) {
         //Globals.Timer.start('sliceTime');
-        from = from || 0;
-        to = to || this.pages.length;
         var djvuWriter = new DjVuWriter();
         djvuWriter.startDJVM();
         var dirm = {};
         dirm.dflags = this.dirm.dflags;
-        var pageNumber = to - from;
+        var pageNumber = to - from + 1;
         dirm.flags = [];
         dirm.names = [];
         dirm.titles = [];
         dirm.sizes = [];
         dirm.ids = [];
         var chunkBS = [];
-        var pageCount = 0;
+        var pageIndex = 0;
         var addedPageCount = 0;
         // все зависимости страниц в новом документе
         // нужно чтобы не копировать лишние словари
@@ -174,11 +174,10 @@ export default class DjVuDocument {
 
         // находим все зависимости в первом проходе
         for (var i = 0; i < this.dirm.nfiles && addedPageCount < pageNumber; i++) {
-            //если это страница
-            if (this.dirm.flags[i] & 1) {
-                pageCount++;
-                //если она не входит в заданный дапазон
-                if (!(addedPageCount < pageNumber && pageCount > from)) {
+            var isPage = (this.dirm.flags[i] & 63) === 1;
+            if (isPage) {
+                pageIndex++;
+                if (pageIndex < from) {
                     continue;
                 }
                 else {
@@ -193,23 +192,25 @@ export default class DjVuDocument {
             }
         }
 
-        pageCount = 0;
+        pageIndex = 0;
         addedPageCount = 0;
         // теперь все словари и страницы, которые нужны
         for (var i = 0; i < this.dirm.nfiles && addedPageCount < pageNumber; i++) {
-            //если это страница
-            if (this.dirm.flags[i] & 1) {
-                pageCount++;
+            var isPage = (this.dirm.flags[i] & 63) === 1;
+            if (isPage) {
+                pageIndex++;
                 //если она не входит в заданный дапазон
-                if (!(addedPageCount < pageNumber && pageCount > from)) {
+                if (pageIndex < from) {
                     continue;
                 } else {
                     addedPageCount++;
                 }
             }
 
+            
             //копируем страницы и словари. Эскизы пропускаем - пока что это не реализовано
-            if ((this.dirm.ids[i] in dependencies) || (this.dirm.flags[i] & 1)) {
+            if ((this.dirm.ids[i] in dependencies) || isPage) {
+                console.log(addedPageCount, pageNumber, !!isPage, this.dirm.ids[i], this.dirm.flags[i]);
                 dirm.flags.push(this.dirm.flags[i]);
                 dirm.sizes.push(this.dirm.sizes[i]);
                 dirm.ids.push(this.dirm.ids[i]);

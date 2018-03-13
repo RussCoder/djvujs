@@ -144,9 +144,9 @@ export class DIRMChunk extends IFFChunk {
         super(bs);
         this.dflags = bs.byte();
         this.nfiles = bs.getInt16();
-        this.offsets = new Array(this.nfiles);
-        this.sizes = new Array(this.nfiles);
-        this.flags = new Array(this.nfiles);
+        this.offsets = new Int32Array(this.nfiles);
+        this.sizes = new Uint32Array(this.nfiles);
+        this.flags = new Uint8Array(this.nfiles);
         this.ids = new Array(this.nfiles);
         this.names = new Array(this.nfiles);
         this.titles = new Array(this.nfiles);
@@ -172,16 +172,10 @@ export class DIRMChunk extends IFFChunk {
 
     toString() {
         var str = super.toString();
-        str += "{Files: " + this.nfiles + '}\n';
-        /* str += "offsets: ";
-         this.offsets.forEach(item => str += item + " ");
-         str += '\n';
-         str += "sizes: ";
-         str += this.sizes.join(' ') + '\n';
-         str += "flags: ";
-         str += this.flags.join(' ') + '\n';
-         str += "ids: ";
-         str += this.ids.join(' ') + '\n\n'; */
+        str += "FilesCount: " + this.nfiles + '\n';
+        /*for (var i = 0; i < this.ids.length; i++) {
+            str += `id: ${this.ids[i]}, flag: ${this.flags[i]}, offset: ${this.offsets[i]}, size: ${this.sizes[i]}\n`
+        }*/
         return str + '\n';
     }
 }
