@@ -23,6 +23,9 @@ export default class DjVuDocument {
             this.bs.jump(-8);
             this.dirm = new DIRMChunk(this.bs.fork(length + 8));
             this.bs.jump(8 + length + (length & 1 ? 1 : 0));
+
+            // all chunks of the file in the order which they are listed in the DIRM chunk
+            this.dirmOrderedChunks = new Array(this.dirm.getFilesCount());
         }
         this.getINCLChunkCallback = id => this.djvi[id].innerChunk;
 
@@ -54,18 +57,17 @@ export default class DjVuDocument {
                 this.bs.jump(-12);
                 switch (id) {
                     case "FORMDJVU":
-                        this.pages.push(new DjVuPage(
+                        this.pages.push(this.dirmOrderedChunks[i] = new DjVuPage(
                             this.bs.fork(length + 8),
-                            this.dirm.ids[i],
                             this.getINCLChunkCallback
                         ));
                         break;
                     case "FORMDJVI":
                         //через строчку id chunk INCL ссылается на нужный ресурс
-                        this.djvi[this.dirm.ids[i]] = new DjViChunk(this.bs.fork(length + 8), this.dirm.ids[i]);
+                        this.dirmOrderedChunks[i] = this.djvi[this.dirm.ids[i]] = new DjViChunk(this.bs.fork(length + 8));
                         break;
                     case "FORMTHUM":
-                        this.thumbs.push(new ThumChunk(this.bs.fork(length + 8), this.dirm.ids[i]));
+                        this.thumbs.push(this.dirmOrderedChunks[i] = new ThumChunk(this.bs.fork(length + 8)));
                         break;
                     default:
                         console.error("Incorrectr chunk ID: ", id);
@@ -124,21 +126,17 @@ export default class DjVuDocument {
      */
     toString(html) {
         var str = this.formatID + '\n';
-        if (this.dirm) {
+        if (this.dirm) { // multi page document
             str += this.id + " " + this.length + '\n\n';
             str += this.dirm.toString();
+            this.dirmOrderedChunks.forEach((chunk, i) => {
+                str += this.dirm.getMetadataStringByIndex(i) + chunk.toString();
+            });
+        } else { // single page document
+            str += this.pages[0].toString();
         }
-        if (this.navm) {
-            str += this.navm.toString();
-        }
-        for (var prop in this.djvi) {
-            str += this.djvi[prop].toString();
-        }
-        for (var thumb of this.thumbs) {
-            str += thumb.toString();
-        }
-        this.pages.forEach(item => str += item.toString());
-        return html ? str.replace(/\n/g, '<br>') : str;
+
+        return html ? str.replace(/\n/g, '<br>').replace(/\s/g, '&nbsp;') : str;
     }
 
     /**
@@ -207,10 +205,9 @@ export default class DjVuDocument {
                 }
             }
 
-            
+
             //копируем страницы и словари. Эскизы пропускаем - пока что это не реализовано
             if ((this.dirm.ids[i] in dependencies) || isPage) {
-                console.log(addedPageCount, pageNumber, !!isPage, this.dirm.ids[i], this.dirm.flags[i]);
                 dirm.flags.push(this.dirm.flags[i]);
                 dirm.sizes.push(this.dirm.sizes[i]);
                 dirm.ids.push(this.dirm.ids[i]);

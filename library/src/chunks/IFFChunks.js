@@ -23,15 +23,13 @@ export class IFFChunk {
 }
 
 export class CompositeChunk extends IFFChunk {
-    constructor(bs, dirmID) {
+    constructor(bs) {
         super(bs);
-        this.dirmID = dirmID;
         this.id += ':' + bs.readStr4(); // read secondary id
     }
-
+    
     toString(innerString = '') {
-        var str = '[DirmID: "' + this.dirmID + '"]\n' + super.toString();
-        return str + innerString + '\n';
+        return super.toString() + '    ' + innerString.replace(/\n/g, '\n    ') + '\n';
     }
 }
 
@@ -170,12 +168,17 @@ export class DIRMChunk extends IFFChunk {
         }
     }
 
+    getFilesCount() {
+        return this.nfiles;
+    }
+
+    getMetadataStringByIndex(i) {
+        return `[id: "${this.ids[i]}", flag: ${this.flags[i]}, offset: ${this.offsets[i]}, size: ${this.sizes[i]}]\n`;
+    }
+
     toString() {
         var str = super.toString();
         str += "FilesCount: " + this.nfiles + '\n';
-        /*for (var i = 0; i < this.ids.length; i++) {
-            str += `id: ${this.ids[i]}, flag: ${this.flags[i]}, offset: ${this.offsets[i]}, size: ${this.sizes[i]}\n`
-        }*/
         return str + '\n';
     }
 }

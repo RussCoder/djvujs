@@ -3,8 +3,8 @@ import { IFFChunk, CompositeChunk } from './IFFChunks';
 import DjVuAnno from './DjVuAnno';
 
 export default class DjViChunk extends CompositeChunk {
-    constructor(bs, dirmID) {
-        super(bs, dirmID);
+    constructor(bs) {
+        super(bs);
         this.innerChunk = null;
         this.init();
     }

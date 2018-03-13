@@ -13,8 +13,8 @@ export default class DjVuPage extends CompositeChunk {
     /**
      * Принимает байтовый поток и id из машинного оглавления документа. 
      */
-    constructor(bs, dirmID, getINCLChunkCallback) {
-        super(bs, dirmID);
+    constructor(bs, getINCLChunkCallback) {
+        super(bs);
         this.getINCLChunkCallback = getINCLChunkCallback; // метод для получения глобальной порции данных (словарь обычно) от документа по id
         this.reset();
     }
