@@ -1,7 +1,7 @@
-import replace from 'rollup-plugin-re';
-import cleanup from 'rollup-plugin-cleanup';
+const replace = require('rollup-plugin-re');
+const cleanup = require('rollup-plugin-cleanup');
 
-export default {
+module.exports = {
     input: './src/index.js',
     output: [{
         file: 'dist/djvu.js',

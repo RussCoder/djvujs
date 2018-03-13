@@ -6,8 +6,10 @@
     "build": "rollup --config"
   },
   "devDependencies": {
+    "colors": "^1.2.1",
     "rollup": "^0.56.5",
     "rollup-plugin-cleanup": "^2.0.0",
-    "rollup-plugin-re": "^1.0.6"
+    "rollup-plugin-re": "^1.0.6",
+    "ws": "^5.0.0"
   }
 }

@@ -66,7 +66,7 @@ function redrawPage() {
     var time = performance.now();
     return Promise.all([
         djvuWorker.getPageText(pageNumber), 
-        djvuWorker.getPageImageDataWithDPI(pageNumber)
+        djvuWorker.getPageImageDataWithDpi(pageNumber)
     ]).then(data => {
         output.innerText = data[0];
         Globals.drawImage(data[1].imageData, data[1].dpi);

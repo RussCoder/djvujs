@@ -2,7 +2,11 @@ const http = require('http');
 const url = require('url');
 const fs = require('fs');
 const path = require('path');
-const child_process = require('child_process');
+const WebSocket = require('ws');
+const colors = require('colors');
+const rollup = require('rollup');
+const rollupConfig = require('./rollup.config.js');
+
 // you can pass the parameter in the command line. e.g. node server.js 3000
 const port = process.argv[2] || 9000;
 
@@ -53,8 +57,37 @@ http.createServer(function (req, res) {
     });
 }).listen(parseInt(port));
 
-console.log(`Server is listening on port ${port}`);
+console.log(`Http server is listening on port ${port}`);
 
-const watchProcess = child_process.exec('npm run watch');
-watchProcess.stdout.pipe(process.stdout);
-watchProcess.stderr.pipe(process.stderr);
+const wss = new WebSocket.Server({ port: 8080 });
+wss.broadcast = function (data) {
+    this.clients.forEach(client => {
+        client.send(data);
+    });
+}
+
+console.log(`WebSocket server is listening on port 8080 \n`);
+
+const watcher = rollup.watch(rollupConfig);
+
+watcher.on('event', event => {
+    switch (event.code) {
+        case 'BUNDLE_START':
+            console.log('Start building ...'.blue.bold);
+            break;
+        case 'BUNDLE_END':
+            console.log(`Bundle was created in ${event.duration} ms! \n`.green.bold);
+            wss.broadcast('reload');
+            break;
+        case 'ERROR':
+            console.log('\n Error occured! \n'.red.bold);
+            console.log(event);
+            console.log('\n');
+            break;
+        case 'FATAL':
+            console.log('\n Fatal Error occured! \n'.red.bold);
+            console.log(event);
+            process.exit();
+            break;
+    }
+});
