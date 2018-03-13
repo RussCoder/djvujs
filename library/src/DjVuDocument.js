@@ -80,8 +80,11 @@ export default class DjVuDocument {
     }
 
     getPage(number) {
-        this.lastRequestedPage && this.lastRequestedPage.reset();
-        this.lastRequestedPage = this.pages[number - 1];
+        var page = this.pages[number - 1];
+        if (this.lastRequestedPage && this.lastRequestedPage !== page) {
+            this.lastRequestedPage.reset();
+        }
+        this.lastRequestedPage = page;
         return this.lastRequestedPage;
     }
 

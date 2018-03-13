@@ -32,7 +32,7 @@ export default function initWorker() {
         getPageText(obj) {
             return new Promise((resolve, reject) => {
                 var pagenum = +obj.pagenumber;
-                var text = djvuDocument.pages[pagenum].getText();
+                var text = djvuDocument.getPage(pagenum).getText();
                 postMessage({
                     command: 'getPageText',
                     id: obj.id,
@@ -43,8 +43,9 @@ export default function initWorker() {
 
         getPageImageDataWithDpi(obj) {
             var pagenum = +obj.pagenumber;
-            var imageData = djvuDocument.pages[pagenum].getImageData();
-            var dpi = djvuDocument.pages[pagenum].getDpi();
+            var page = djvuDocument.getPage(pagenum);
+            var imageData = page.getImageData(obj.onlyFirstBgChunk);
+            var dpi = page.getDpi();
             postMessage({
                 command: 'getPageImageDataWithDpi',
                 id: obj.id,
@@ -53,7 +54,6 @@ export default function initWorker() {
                 height: imageData.height,
                 dpi: dpi
             }, [imageData.data.buffer]);
-            djvuDocument.pages[pagenum].reset(); // зачищаем данные декодирования
         },
 
         getPageCount(obj) {

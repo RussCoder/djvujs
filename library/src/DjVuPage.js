@@ -377,7 +377,7 @@ export default class DjVuPage extends CompositeChunk {
     }
 
     getText() {
-        this.decode();
+        this.init();
         if (this.text) {
             return this.text.getText();
         } else {

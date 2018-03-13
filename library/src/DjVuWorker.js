@@ -146,17 +146,22 @@ export default class DjVuWorker {
         });
     }
 
-    getPageImageDataWithDpi(pagenumber) {
+    getPageImageDataWithDpi(pagenumber, onlyFirstBgChunk = false) {
         return new Promise((resolve, reject) => {
             var id = this.callbacks.add({ resolve: resolve, reject: reject });
-            this.worker.postMessage({ command: 'getPageImageDataWithDpi', id: id, pagenumber: pagenumber - 1 });
+            this.worker.postMessage({
+                command: 'getPageImageDataWithDpi',
+                id: id,
+                pagenumber: pagenumber,
+                onlyFirstBgChunk: onlyFirstBgChunk
+            });
         });
     }
 
     getPageText(pagenumber) {
         return new Promise((resolve, reject) => {
             var id = this.callbacks.add({ resolve: resolve, reject: reject });
-            this.worker.postMessage({ command: 'getPageText', id: id, pagenumber: pagenumber - 1 });
+            this.worker.postMessage({ command: 'getPageText', id: id, pagenumber: pagenumber });
         });
     }
 

@@ -27,8 +27,8 @@ document.querySelector('#prev').onclick = () => {
     redrawPage();
 };
 
-var pageNumber = 5;
-var djvuUrl = 'assets/DjVu3Spec.djvu';
+var pageNumber = 1;
+var djvuUrl = 'assets/colorbook.djvu';
 
 window.onload = function () {
     output = document.getElementById("output");
@@ -66,15 +66,21 @@ function redrawPage() {
     var time = performance.now();
     return Promise.all([
         djvuWorker.getPageText(pageNumber), 
-        djvuWorker.getPageImageDataWithDpi(pageNumber)
+        djvuWorker.getPageImageDataWithDpi(pageNumber, true)
     ]).then(data => {
         output.innerText = data[0];
-        Globals.drawImage(data[1].imageData, data[1].dpi);
+        Globals.drawImage(data[1].imageData, data[1].dpi * 1.5);
         time = performance.now() - time;
         console.log("Redraw time", time);
         console.log('**** ***** **** ****');
         renderTimeOutput.innerText = Math.round(time);
-    });
+        time = performance.now();
+        return djvuWorker.getPageImageDataWithDpi(pageNumber);
+    }).then(data => {
+        Globals.drawImage(data.imageData, data.dpi * 1.5);
+        console.log("Refine time", performance.now() - time);
+        console.log('**** ***** **** ****');
+    })
 }
 
 function loadPicture() {
