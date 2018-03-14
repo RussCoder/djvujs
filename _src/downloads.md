@@ -2,7 +2,7 @@
 
 Here you can download the library and the viewer .js and .css files.
 
-<a href="/dist/djvu.js" download="djvu.js">Download DjVu.js library (version 0.0.8)</a>
+<a href="/dist/djvu.js" download="djvu.js">Download DjVu.js library (version 0.1.0)</a>
 
 <a href="/dist/djvu_viewer.js" download="djvu_viewer.js">Download DjVu.js Viewer .js file (version 0.0.1)</a>
 

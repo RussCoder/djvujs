@@ -1,11 +1,12 @@
 var DjVu = (function () {
 'use strict';
 
-var DjVu = {
-    VERSION: '0.0.8',
-    IS_DEBUG: false
+var DjVu$1 = {
+    VERSION: '0.1.0',
+    IS_DEBUG: false,
+    setDebugMode: (flag) => DjVu$1.IS_DEBUG = flag
 };
-DjVu.Utils = {
+DjVu$1.Utils = {
     loadFile(url, responseType = 'arraybuffer') {
         return new Promise((resolve, reject) => {
             var xhr = new XMLHttpRequest();
@@ -15,128 +16,13 @@ DjVu.Utils = {
                 if (xhr.status !== 200) {
                     return reject({ message: "Something went wrong!", xhr: xhr })
                 }
-                DjVu.IS_DEBUG && console.log("File loaded: ", e.loaded);
+                DjVu$1.IS_DEBUG && console.log("File loaded: ", e.loaded);
                 resolve(xhr.response);
             };
             xhr.send();
         });
     }
 };
-
-class ByteStreamWriter {
-    constructor(length) {
-        this.growStep = length || 4096;
-        this.buffer = new ArrayBuffer(this.growStep);
-        this.viewer = new DataView(this.buffer);
-        this.offset = 0;
-        this.offsetMarks = {};
-    }
-    reset() {
-        this.offset = 0;
-        this.offsetMarks = {};
-    }
-    saveOffsetMark(mark) {
-        this.offsetMarks[mark] = this.offset;
-        return this;
-    }
-    get bufferLength() {
-        return this.buffer.byteLength;
-    }
-    writeByte(byte) {
-        this.checkOffset();
-        this.viewer.setUint8(this.offset++, byte);
-        return this;
-    }
-    writeStr(str) {
-        var byte;
-        for (var i = 0; i < str.length; i++) {
-            byte = str.charCodeAt(i);
-            this.writeByte(byte);
-        }
-        return this;
-    }
-    writeInt32(val) {
-        this.checkOffset(3);
-        this.viewer.setInt32(this.offset, val);
-        this.offset += 4;
-        return this;
-    }
-    rewriteInt32(off, val) {
-        var xoff = off;
-        if (typeof (xoff) === 'string') {
-            xoff = this.offsetMarks[off];
-            this.offsetMarks[off] += 4;
-        }
-        this.viewer.setInt32(xoff, val);
-    }
-    rewriteSize(offmark) {
-        if (!this.offsetMarks[offmark]) throw new Error('Unexisting offset mark');
-        var xoff = this.offsetMarks[offmark];
-        this.viewer.setInt32(xoff, this.offset - xoff - 4);
-    }
-    getBuffer() {
-        if (this.offset === this.buffer.byteLength) {
-            return this.buffer;
-        }
-        return this.buffer.slice(0, this.offset);
-    }
-    checkOffset(bytes) {
-        bytes = bytes || 0;
-        var bool = this.offset + bytes >= this.bufferLength;
-        if (bool) {
-            this.extense();
-        }
-        return bool;
-    }
-    extense() {
-        var newlength = this.bufferLength + this.buffer.byteLength;
-        var nb = new ArrayBuffer(newlength);
-        new Uint8Array(nb).set(new Uint8Array(this.buffer));
-        this.buffer = nb;
-        this.viewer = new DataView(this.buffer);
-    }
-    jump(length) {
-        length = +length;
-        if (length > 0) {
-            this.checkOffset(length - 1);
-        }
-        this.offset += length;
-        return this;
-    }
-    writeByteStream(bs) {
-        this.writeArray(bs.toUint8Array());
-    }
-    writeArray(arr) {
-        while (this.checkOffset(arr.length - 1)) { }
-        new Uint8Array(this.buffer).set(arr, this.offset);
-        this.offset += arr.length;
-    }
-    writeBuffer(buffer) {
-        this.writeArray(new Uint8Array(buffer));
-    }
-    writeStrNT(str) {
-        this.writeStr(str);
-        this.writeByte(0);
-    }
-    writeInt16(val) {
-        this.checkOffset(1);
-        this.viewer.setInt16(this.offset, val);
-        this.offset += 2;
-        return this;
-    }
-    writeUint16(val) {
-        this.checkOffset(1);
-        this.viewer.setUint16(this.offset, val);
-        this.offset += 2;
-        return this;
-    }
-    writeInt24(val) {
-        this.writeByte((val >> 16) & 0xff)
-            .writeByte((val >> 8) & 0xff)
-            .writeByte(val & 0xff);
-        return this;
-    }
-}
 
 class ZPEncoder {
     constructor(bsw) {
@@ -469,6 +355,2088 @@ ZPEncoder.prototype.dn = ZPDecoder.prototype.dn = Uint8Array.of(
     242, 7, 10, 245, 2, 1, 83, 250, 2, 143, 246
 );
 
+let Bitmap$1 = class Bitmap {
+    constructor(width, height) {
+        var length = Math.ceil(width * height / 8);
+        this.height = height;
+        this.width = width;
+        this.innerArray = new Uint8Array(length);
+    }
+    get(i, j) {
+        if (!this.hasRow(i) || j < 0 || j >= this.width) {
+            return 0;
+        }
+        var tmp = i * this.width + j;
+        var index = tmp >> 3;
+        var bitIndex = tmp & 7;
+        var mask = 128 >> bitIndex;
+        var answ = (this.innerArray[index] & mask) ? 1 : 0;
+        return answ;
+    }
+    set(i, j) {
+        var tmp = i * this.width + j;
+        var index = tmp >> 3;
+        var bitIndex = tmp & 7;
+        var mask = 128 >> bitIndex;
+        this.innerArray[index] |= mask;
+        return;
+    }
+    hasRow(r) {
+        return r >= 0 && r < this.height;
+    }
+    removeEmptyEdges() {
+        var bottomShift = 0;
+        var topShift = 0;
+        var leftShift = 0;
+        var rightShift = 0;
+        main_cycle: for (var i = 0; i < this.height; i++) {
+            for (var j = 0; j < this.width; j++) {
+                if (this.get(i, j)) {
+                    break main_cycle;
+                }
+            }
+            bottomShift++;
+        }
+        main_cycle: for (var i = this.height - 1; i >= 0; i--) {
+            for (var j = 0; j < this.width; j++) {
+                if (this.get(i, j)) {
+                    break main_cycle;
+                }
+            }
+            topShift++;
+        }
+        main_cycle: for (var j = 0; j < this.width; j++) {
+            for (var i = 0; i < this.height; i++) {
+                if (this.get(i, j)) {
+                    break main_cycle;
+                }
+            }
+            leftShift++;
+        }
+        main_cycle: for (var j = this.width - 1; j >= 0; j--) {
+            for (var i = 0; i < this.height; i++) {
+                if (this.get(i, j)) {
+                    break main_cycle;
+                }
+            }
+            rightShift++;
+        }
+        if (topShift || bottomShift || leftShift || rightShift) {
+            var newWidth = this.width - leftShift - rightShift;
+            var newHeight = this.height - topShift - bottomShift;
+            var newBitMap = new Bitmap$1(newWidth, newHeight);
+            for (var i = bottomShift, p = 0; p < newHeight; p++, i++) {
+                for (var j = leftShift, q = 0; q < newWidth; q++, j++) {
+                    if (this.get(i, j)) {
+                        newBitMap.set(p, q);
+                    }
+                }
+            }
+            return newBitMap;
+        }
+        return this;
+    }
+};
+class NumContext {
+    constructor() {
+        this.ctx = [0];
+        this._left = null;
+        this._right = null;
+    }
+    get left() {
+        if (!this._left) {
+            this._left = new NumContext();
+        }
+        return this._left;
+    }
+    get right() {
+        if (!this._right) {
+            this._right = new NumContext();
+        }
+        return this._right;
+    }
+}
+class Baseline {
+    constructor() {
+        this.arr = new Array(3);
+    }
+    add(val) {
+        this.arr.shift();
+        this.arr.push(val);
+    }
+    getVal() {
+        if (!this.arr[0]) {
+            return this.arr[1] ? this.arr[1] : this.arr[2];
+        }
+        if (this.arr[0] >= this.arr[1] && this.arr[0] <= this.arr[2]
+            || this.arr[0] <= this.arr[1] && this.arr[0] >= this.arr[2]) {
+            return this.arr[0];
+        }
+        else if (this.arr[1] >= this.arr[0] && this.arr[1] <= this.arr[2]
+            || this.arr[1] <= this.arr[0] && this.arr[1] >= this.arr[2]) {
+            return this.arr[1];
+        } else {
+            return this.arr[2];
+        }
+    }
+    reinit() {
+        this.arr[0] = this.arr[1] = this.arr[2] = 0;
+    }
+}
+
+let ByteStreamWriter$1 = class ByteStreamWriter {
+    constructor(length) {
+        this.growStep = length || 4096;
+        this.buffer = new ArrayBuffer(this.growStep);
+        this.viewer = new DataView(this.buffer);
+        this.offset = 0;
+        this.offsetMarks = {};
+    }
+    reset() {
+        this.offset = 0;
+        this.offsetMarks = {};
+    }
+    saveOffsetMark(mark) {
+        this.offsetMarks[mark] = this.offset;
+        return this;
+    }
+    get bufferLength() {
+        return this.buffer.byteLength;
+    }
+    writeByte(byte) {
+        this.checkOffset();
+        this.viewer.setUint8(this.offset++, byte);
+        return this;
+    }
+    writeStr(str) {
+        var byte;
+        for (var i = 0; i < str.length; i++) {
+            byte = str.charCodeAt(i);
+            this.writeByte(byte);
+        }
+        return this;
+    }
+    writeInt32(val) {
+        this.checkOffset(3);
+        this.viewer.setInt32(this.offset, val);
+        this.offset += 4;
+        return this;
+    }
+    rewriteInt32(off, val) {
+        var xoff = off;
+        if (typeof (xoff) === 'string') {
+            xoff = this.offsetMarks[off];
+            this.offsetMarks[off] += 4;
+        }
+        this.viewer.setInt32(xoff, val);
+    }
+    rewriteSize(offmark) {
+        if (!this.offsetMarks[offmark]) throw new Error('Unexisting offset mark');
+        var xoff = this.offsetMarks[offmark];
+        this.viewer.setInt32(xoff, this.offset - xoff - 4);
+    }
+    getBuffer() {
+        if (this.offset === this.buffer.byteLength) {
+            return this.buffer;
+        }
+        return this.buffer.slice(0, this.offset);
+    }
+    checkOffset(bytes) {
+        bytes = bytes || 0;
+        var bool = this.offset + bytes >= this.bufferLength;
+        if (bool) {
+            this.extense();
+        }
+        return bool;
+    }
+    extense() {
+        var newlength = this.bufferLength + this.buffer.byteLength;
+        var nb = new ArrayBuffer(newlength);
+        new Uint8Array(nb).set(new Uint8Array(this.buffer));
+        this.buffer = nb;
+        this.viewer = new DataView(this.buffer);
+    }
+    jump(length) {
+        length = +length;
+        if (length > 0) {
+            this.checkOffset(length - 1);
+        }
+        this.offset += length;
+        return this;
+    }
+    writeByteStream(bs) {
+        this.writeArray(bs.toUint8Array());
+    }
+    writeArray(arr) {
+        while (this.checkOffset(arr.length - 1)) { }
+        new Uint8Array(this.buffer).set(arr, this.offset);
+        this.offset += arr.length;
+    }
+    writeBuffer(buffer) {
+        this.writeArray(new Uint8Array(buffer));
+    }
+    writeStrNT(str) {
+        this.writeStr(str);
+        this.writeByte(0);
+    }
+    writeInt16(val) {
+        this.checkOffset(1);
+        this.viewer.setInt16(this.offset, val);
+        this.offset += 2;
+        return this;
+    }
+    writeUint16(val) {
+        this.checkOffset(1);
+        this.viewer.setUint16(this.offset, val);
+        this.offset += 2;
+        return this;
+    }
+    writeInt24(val) {
+        this.writeByte((val >> 16) & 0xff)
+            .writeByte((val >> 8) & 0xff)
+            .writeByte(val & 0xff);
+        return this;
+    }
+};
+
+class ByteStream {
+    constructor(buffer, offsetx, length) {
+        this.buffer = buffer;
+        this.offsetx = offsetx || 0;
+        this.offset = 0;
+        this.length = length || buffer.byteLength;
+        if (this.length + offsetx > buffer.byteLength) {
+            this.length = buffer.byteLength - offsetx;
+            console.error("Incorrect length in ByteStream!");
+        }
+        this.viewer = new DataView(this.buffer, this.offsetx, this.length);
+    }
+    getUint8Array(length) {
+        length = length || this.restLength();
+        var off = this.offset;
+        this.offset += length;
+        return new Uint8Array(this.buffer, this.offsetx + off, length);
+    }
+    toUint8Array() {
+        return new Uint8Array(this.buffer, this.offsetx, this.length);
+    }
+    restLength() {
+        return this.length - this.offset;
+    }
+    reset() {
+        this.offset = 0;
+    }
+    byte() {
+        if (this.offset >= this.length) {
+            this.offset++;
+            return 0xff;
+        }
+        return this.viewer.getUint8(this.offset++);
+    }
+    getInt8() {
+        return this.viewer.getInt8(this.offset++);
+    }
+    getInt16() {
+        let tmp = this.viewer.getInt16(this.offset);
+        this.offset += 2;
+        return tmp;
+    }
+    getUint16() {
+        let tmp = this.viewer.getUint16(this.offset);
+        this.offset += 2;
+        return tmp;
+    }
+    getInt32() {
+        let tmp = this.viewer.getInt32(this.offset);
+        this.offset += 4;
+        return tmp;
+    }
+    getUint8() {
+        return this.viewer.getUint8(this.offset++);
+    }
+    getInt24() {
+        var uint = this.getUint24();
+        return (uint & 0x800000) ? (0xffffff - val + 1) * -1 : uint
+    }
+    getUint24() {
+        return (this.byte() << 16) | (this.byte() << 8) | this.byte();
+    }
+    jump(length) {
+        this.offset += length;
+    }
+    setOffset(offset) {
+        this.offset = offset;
+    }
+    readChunkName() {
+        return this.readStr4();
+    }
+    readStr4() {
+        var str = "";
+        for (var i = 0; i < 4; i++) {
+            var byte = this.viewer.getUint8(this.offset++);
+            str += String.fromCharCode(byte);
+        }
+        return str;
+    }
+    readStrNT() {
+        var str = "";
+        var byte = this.viewer.getUint8(this.offset++);
+        while (byte) {
+            str += String.fromCharCode(byte);
+            byte = this.viewer.getUint8(this.offset++);
+        }
+        return str;
+    }
+    readStrUTF(byteLength) {
+        var array = this.getUint8Array(byteLength);
+        return String.fromCodePoint ? String.fromCodePoint(...array) : String.fromCharCode(...array);
+    }
+    fork(_length) {
+        var length = _length || (this.length - this.offset);
+        return new ByteStream(this.buffer, this.offsetx + this.offset, length);
+    }
+    clone() {
+        return new ByteStream(this.buffer, this.offsetx, this.length);
+    }
+    isEmpty() {
+        return this.offset >= this.length;
+    }
+}
+
+class BZZDecoder {
+    constructor(zp) {
+        this.zp = zp;
+        this.maxblock = 4096;
+        this.FREQMAX = 4;
+        this.CTXIDS = 3;
+        this.mtf = new Uint8Array(256);
+        for (let i = 0; i < 256; i++) {
+            this.mtf[i] = i;
+        }
+        this.ctx = new Uint8Array(300);
+        this.size = 0;
+        this.blocksize = 0;
+        this.data = null;
+    }
+    decode_raw(bits) {
+        let n = 1;
+        let m = (1 << bits);
+        while (n < m) {
+            let b = this.zp.decode();
+            n = (n << 1) | b;
+        }
+        return n - m;
+    }
+    decode_binary(ctxoff, bits) {
+        let n = 1;
+        let m = (1 << bits);
+        ctxoff--;
+        while (n < m) {
+            let b = this.zp.decode(this.ctx, ctxoff + n);
+            n = (n << 1) | b;
+        }
+        return n - m;
+    }
+    _decode() {
+        this.size = this.decode_raw(24);
+        if (!this.size) {
+            return 0;
+        }
+        if (this.size > this.maxblock * 1024) {
+            throw new Error("Too big block. Error");
+        }
+        if (this.blocksize < this.size) {
+            this.blocksize = this.size;
+            this.data = new Uint8Array(this.blocksize);
+        } else if (this.data == null) {
+            this.data = new Uint8Array(this.blocksize);
+        }
+        let fshift = 0;
+        if (this.zp.decode()) {
+            fshift++;
+            if (this.zp.decode()) {
+                fshift++;
+            }
+        }
+        let freq = new Array(this.FREQMAX);
+        for (let i = 0; i < this.FREQMAX; freq[i++] = 0);
+        let fadd = 4;
+        let mtfno = 3;
+        let markerpos = -1;
+        for (let i = 0; i < this.size; i++) {
+            let ctxid = this.CTXIDS - 1;
+            if (ctxid > mtfno) {
+                ctxid = mtfno;
+            }
+            var ctxoff = 0;
+            switch (0)
+            {
+                default:
+                    if (this.zp.decode(this.ctx, ctxoff + ctxid) != 0) {
+                        mtfno = 0;
+                        this.data[i] = this.mtf[mtfno];
+                        break;
+                    }
+                    ctxoff += this.CTXIDS;
+                    if (this.zp.decode(this.ctx, ctxoff + ctxid) != 0) {
+                        mtfno = 1;
+                        this.data[i] = this.mtf[mtfno];
+                        break;
+                    }
+                    ctxoff += this.CTXIDS;
+                    if (this.zp.decode(this.ctx, ctxoff + 0) != 0) {
+                        mtfno = 2 + this.decode_binary(ctxoff + 1, 1);
+                        this.data[i] = this.mtf[mtfno];
+                        break;
+                    }
+                    ctxoff += (1 + 1);
+                    if (this.zp.decode(this.ctx, ctxoff + 0) != 0) {
+                        mtfno = 4 + this.decode_binary(ctxoff + 1, 2);
+                        this.data[i] = this.mtf[mtfno];
+                        break;
+                    }
+                    ctxoff += (1 + 3);
+                    if (this.zp.decode(this.ctx, ctxoff + 0) != 0) {
+                        mtfno = 8 + this.decode_binary(ctxoff + 1, 3);
+                        this.data[i] = this.mtf[mtfno];
+                        break;
+                    }
+                    ctxoff += (1 + 7);
+                    if (this.zp.decode(this.ctx, ctxoff + 0) != 0) {
+                        mtfno = 16 + this.decode_binary(ctxoff + 1, 4);
+                        this.data[i] = this.mtf[mtfno];
+                        break;
+                    }
+                    ctxoff += (1 + 15);
+                    if (this.zp.decode(this.ctx, ctxoff + 0) != 0) {
+                        mtfno = 32 + this.decode_binary(ctxoff + 1, 5);
+                        this.data[i] = this.mtf[mtfno];
+                        break;
+                    }
+                    ctxoff += (1 + 31);
+                    if (this.zp.decode(this.ctx, ctxoff + 0) != 0) {
+                        mtfno = 64 + this.decode_binary(ctxoff + 1, 6);
+                        this.data[i] = this.mtf[mtfno];
+                        break;
+                    }
+                    ctxoff += (1 + 63);
+                    if (this.zp.decode(this.ctx, ctxoff + 0) != 0) {
+                        mtfno = 128 + this.decode_binary(ctxoff + 1, 7);
+                        this.data[i] = this.mtf[mtfno];
+                        break;
+                    }
+                    mtfno = 256;
+                    this.data[i] = 0;
+                    markerpos = i;
+                    continue;
+            }
+            let k;
+            fadd = fadd + (fadd >> fshift);
+            if (fadd > 0x10000000) {
+                fadd >>= 24;
+                freq[0] >>= 24;
+                freq[1] >>= 24;
+                freq[2] >>= 24;
+                freq[3] >>= 24;
+                for (k = 4; k < this.FREQMAX; k++) {
+                    freq[k] >>= 24;
+                }
+            }
+            let fc = fadd;
+            if (mtfno < this.FREQMAX) {
+                fc += freq[mtfno];
+            }
+            for (k = mtfno; k >= this.FREQMAX; k--) {
+                this.mtf[k] = this.mtf[k - 1];
+            }
+            for (; (k > 0) && ((0xffffffff & fc) >= (0xffffffff & freq[k - 1])); k--) {
+                this.mtf[k] = this.mtf[k - 1];
+                freq[k] = freq[k - 1];
+            }
+            this.mtf[k] = this.data[i];
+            freq[k] = fc;
+        }
+        if ((markerpos < 1) || (markerpos >= this.size)) {
+            throw new Error("ByteStream.corrupt");
+        }
+        let pos = new Uint32Array(this.size);
+        for (let j = 0; j < this.size; pos[j++] = 0);
+        let count = new Array(256);
+        for (let i = 0; i < 256; count[i++] = 0);
+        for (let i = 0; i < markerpos; i++) {
+            let c = this.data[i];
+            pos[i] = (c << 24) | (count[0xff & c] & 0xffffff);
+            count[0xff & c]++;
+        }
+        for (let i = markerpos + 1; i < this.size; i++) {
+            let c = this.data[i];
+            pos[i] = (c << 24) | (count[0xff & c] & 0xffffff);
+            count[0xff & c]++;
+        }
+        let last = 1;
+        for (let i = 0; i < 256; i++) {
+            let tmp = count[i];
+            count[i] = last;
+            last += tmp;
+        }
+        let j = 0;
+        last = this.size - 1;
+        while (last > 0) {
+            let n = pos[j];
+            let c = pos[j] >> 24;
+            this.data[--last] = 0xff & c;
+            j = count[0xff & c] + (n & 0xffffff);
+        }
+        if (j != markerpos) {
+            throw new Error("ByteStream.corrupt");
+        }
+        return this.size;
+    }
+    getByteStream() {
+        var bsw, size;
+        while (size = this._decode()) {
+            if (!bsw) {
+                bsw = new ByteStreamWriter$1(size - 1);
+                var arr = new Uint8Array(this.data.buffer, 0, this.data.length - 1);
+                bsw.writeArray(arr);
+            }
+        }
+        this.data = null;
+        return new ByteStream(bsw.getBuffer());
+    }
+    static decodeByteStream(bs) {
+        return new BZZDecoder(new ZPDecoder(bs)).getByteStream();
+    }
+}
+
+class DjVuError {
+    constructor(message) {
+        this.message = message;
+    }
+}
+class IFFChunk {
+    constructor(bs) {
+        this.id = bs.readStr4();
+        this.length = bs.getInt32();
+        this.bs = bs;
+    }
+    toString() {
+        return this.id + " " + this.length + '\n';
+    }
+}
+class CompositeChunk extends IFFChunk {
+    constructor(bs) {
+        super(bs);
+        this.id += ':' + bs.readStr4();
+    }
+    toString(innerString = '') {
+        return super.toString() + '    ' + innerString.replace(/\n/g, '\n    ') + '\n';
+    }
+}
+class ColorChunk extends IFFChunk {
+    constructor(bs) {
+        super(bs);
+        this.header = new СolorChunkDataHeader(bs);
+    }
+    toString() {
+        return this.id + " " + this.length + this.header.toString();
+    }
+}
+class INFOChunk extends IFFChunk {
+    constructor(bs) {
+        super(bs);
+        this.width = bs.getInt16();
+        this.height = bs.getInt16();
+        this.minver = bs.getInt8();
+        this.majver = bs.getInt8();
+        this.dpi = bs.getUint8();
+        this.dpi |= bs.getUint8() << 8;
+        this.gamma = bs.getInt8();
+        this.flags = bs.getInt8();
+    }
+    toString() {
+        var str = super.toString();
+        str += "{" + 'width:' + this.width + ', '
+            + 'height:' + this.height + ', '
+            + 'minver:' + this.minver + ', '
+            + 'majver:' + this.majver + ', '
+            + 'dpi:' + this.dpi + ','
+            + 'gamma:' + this.gamma + ', '
+            + 'flags:' + this.flags + '}\n';
+        return str;
+    }
+}
+class СolorChunkDataHeader {
+    constructor(bs) {
+        this.serial = bs.getUint8();
+        this.slices = bs.getUint8();
+        if (!this.serial) {
+            this.majver = bs.getUint8();
+            this.grayscale = this.majver >> 7;
+            this.minver = bs.getUint8();
+            this.width = bs.getUint16();
+            this.height = bs.getUint16();
+            var byte = bs.getUint8();
+            this.delayInit = byte & 127;
+            if (!byte & 128) {
+                console.warn('Old image reconstruction should be applied!');
+            }
+        }
+    }
+    toString() {
+        return '\n' + JSON.stringify(this) + "\n";
+    }
+}
+class INCLChunk extends IFFChunk {
+    constructor(bs) {
+        super(bs);
+        this.ref = this.bs.readStrUTF();
+    }
+    toString() {
+        var str = super.toString();
+        str += "{Reference: " + this.ref + '}\n';
+        return str;
+    }
+}
+class CIDaChunk extends INCLChunk { }
+class NAVMChunk extends IFFChunk {
+    constructor(bs) {
+        super(bs);
+    }
+    toString() {
+        return super.toString() + '\n';
+    }
+}
+class DIRMChunk extends IFFChunk {
+    constructor(bs) {
+        super(bs);
+        this.dflags = bs.byte();
+        this.nfiles = bs.getInt16();
+        this.offsets = new Int32Array(this.nfiles);
+        this.sizes = new Uint32Array(this.nfiles);
+        this.flags = new Uint8Array(this.nfiles);
+        this.ids = new Array(this.nfiles);
+        this.names = new Array(this.nfiles);
+        this.titles = new Array(this.nfiles);
+        for (var i = 0; i < this.nfiles; i++) {
+            this.offsets[i] = bs.getInt32();
+        }
+        var bsbs = bs.fork(this.length - 3 - 4 * this.nfiles);
+        var bsz = BZZDecoder.decodeByteStream(bsbs);
+        for (var i = 0; i < this.nfiles; i++) {
+            this.sizes[i] = bsz.getUint24();
+        }
+        for (var i = 0; i < this.nfiles; i++) {
+            this.flags[i] = bsz.byte();
+        }
+        for (var i = 0; i < this.nfiles && !bsz.isEmpty(); i++) {
+            this.ids[i] = bsz.readStrNT();
+            this.names[i] = this.flags[i] & 128 ? bsz.readStrNT() : this.ids[i];
+            this.titles[i] = this.flags[i] & 64 ? bsz.readStrNT() : this.ids[i];
+        }
+    }
+    getFilesCount() {
+        return this.nfiles;
+    }
+    getMetadataStringByIndex(i) {
+        return `[id: "${this.ids[i]}", flag: ${this.flags[i]}, offset: ${this.offsets[i]}, size: ${this.sizes[i]}]\n`;
+    }
+    toString() {
+        var str = super.toString();
+        str += "FilesCount: " + this.nfiles + '\n';
+        return str + '\n';
+    }
+}
+
+class JB2Codec extends IFFChunk {
+    constructor(bs) {
+        super(bs);
+        this.zp = new ZPDecoder(this.bs);
+        this.directBitmapCtx = new Uint8Array(1024);
+        this.refinementBitmapCtx = new Uint8Array(2048);
+        this.offsetTypeCtx = [0];
+        this.resetNumContexts();
+    }
+    resetNumContexts() {
+        this.recordTypeCtx = new NumContext();
+        this.imageSizeCtx = new NumContext();
+        this.symbolWidthCtx = new NumContext();
+        this.symbolHeightCtx = new NumContext();
+        this.inheritDictSizeCtx = new NumContext();
+        this.hoffCtx = new NumContext();
+        this.voffCtx = new NumContext();
+        this.shoffCtx = new NumContext();
+        this.svoffCtx = new NumContext();
+        this.symbolIndexCtx = new NumContext();
+        this.symbolHeightDiffCtx = new NumContext();
+        this.symbolWidthDiffCtx = new NumContext();
+        this.commentLengthCtx = new NumContext();
+        this.commentOctetCtx = new NumContext();
+        this.horizontalAbsLocationCtx = new NumContext();
+        this.verticalAbsLocationCtx = new NumContext();
+    }
+    decodeNum(low, high, numctx) {
+        let negative = false;
+        let cutoff;
+        cutoff = 0;
+        for (let phase = 1, range = 0xffffffff; range != 1;) {
+            let decision = (low >= cutoff) || ((high >= cutoff) && this.zp.decode(numctx.ctx, 0));
+            numctx = decision ? numctx.right : numctx.left;
+            switch (phase) {
+                case 1:
+                    negative = !decision;
+                    if (negative) {
+                        let temp = - low - 1;
+                        low = - high - 1;
+                        high = temp;
+                    }
+                    phase = 2; cutoff = 1;
+                    break;
+                case 2:
+                    if (!decision) {
+                        phase = 3;
+                        range = (cutoff + 1) / 2;
+                        if (range == 1)
+                            cutoff = 0;
+                        else
+                            cutoff -= range / 2;
+                    }
+                    else {
+                        cutoff += cutoff + 1;
+                    }
+                    break;
+                case 3:
+                    range /= 2;
+                    if (range != 1) {
+                        if (!decision)
+                            cutoff -= range / 2;
+                        else
+                            cutoff += range / 2;
+                    }
+                    else if (!decision) {
+                        cutoff--;
+                    }
+                    break;
+            }
+        }
+        return (negative) ? (- cutoff - 1) : cutoff;
+    }
+    toString() {
+        var str = super.toString();
+        return str;
+    }
+    decodeBitmap(width, height) {
+        var bitmap = new Bitmap$1(width, height);
+        for (let i = height - 1; i >= 0; i--) {
+            for (let j = 0; j < width; j++) {
+                var ind = this.getCtxIndex(bitmap, i, j);
+                this.zp.decode(this.directBitmapCtx, ind) ? bitmap.set(i, j) : 0;
+            }
+        }
+        return bitmap;
+    }
+    getCtxIndex(bm, i, j) {
+        var index = 0;
+        let r = i + 2;
+        if (bm.hasRow(r)) {
+            index = ((bm.get(r, j - 1) || 0) << 9) | (bm.get(r, j) << 8) | ((bm.get(r, j + 1) || 0) << 7);
+        }
+        r--;
+        if (bm.hasRow(r)) {
+            index |= ((bm.get(r, j - 2) || 0) << 6) | ((bm.get(r, j - 1) || 0) << 5) |
+                (bm.get(r, j) << 4) | ((bm.get(r, j + 1) || 0) << 3) | ((bm.get(r, j + 2) || 0) << 2);
+        }
+        index |= ((bm.get(i, j - 2) || 0) << 1) | (bm.get(i, j - 1) || 0);
+        return index;
+    }
+    decodeBitmapRef(width, height, mbm) {
+        let cbm = new Bitmap$1(width, height);
+        var alignInfo = this.alignBitmaps(cbm, mbm);
+        for (let i = height - 1; i >= 0; i--) {
+            for (let j = 0; j < width; j++) {
+                this.zp.decode(this.refinementBitmapCtx,
+                    this.getCtxIndexRef(cbm, mbm, alignInfo, i, j)) ? cbm.set(i, j) : 0;
+            }
+        }
+        return cbm;
+    }
+    getCtxIndexRef(cbm, mbm, alignInfo, i, j) {
+        var index = 0;
+        let r = i + 1;
+        if (cbm.hasRow(r)) {
+            index = ((cbm.get(r, j - 1) || 0) << 10) | (cbm.get(r, j) << 9) | ((cbm.get(r, j + 1) || 0) << 8);
+        }
+        index |= (cbm.get(i, j - 1) || 0) << 7;
+        r = i + alignInfo.rowshift + 1;
+        let c = j + alignInfo.colshift;
+        index |= mbm.hasRow(r) ? mbm.get(r, c) << 6 : 0;
+        r--;
+        if (mbm.hasRow(r)) {
+            index |= ((mbm.get(r, c - 1) || 0) << 5) | (mbm.get(r, c) << 4) | ((mbm.get(r, c + 1) || 0) << 3);
+        }
+        r--;
+        if (mbm.hasRow(r)) {
+            index |= ((mbm.get(r, c - 1) || 0) << 2) | (mbm.get(r, c) << 1) | (mbm.get(r, c + 1) || 0);
+        }
+        return index;
+    }
+    alignBitmaps(cbm, mbm) {
+        let cwidth = cbm.width - 1;
+        let cheight = cbm.height - 1;
+        let crow, ccol, mrow, mcol;
+        crow = cheight >> 1;
+        ccol = cwidth >> 1;
+        mrow = (mbm.height - 1) >> 1;
+        mcol = (mbm.width - 1) >> 1;
+        return {
+            'rowshift': mrow - crow,
+            'colshift': mcol - ccol
+        };
+    }
+    decodeComment() {
+        var length = this.decodeNum(0, 262142, this.commentLengthCtx);
+        var comment = new Uint8Array(length);
+        for (var i = 0; i < length; comment[i++] = this.decodeNum(0, 255, this.commentOctetCtx)) { }
+        return comment;
+    }
+    drawBitmap(bm) {
+        var image = document.createElement('canvas')
+            .getContext('2d')
+            .createImageData(bm.width, bm.height);
+        for (let i = 0; i < bm.height; i++) {
+            for (let j = 0; j < bm.width; j++) {
+                let v = bm.get(i, j) ? 0 : 255;
+                let index = ((bm.height - i - 1) * bm.width + j) * 4;
+                image.data[index] = v;
+                image.data[index + 1] = v;
+                image.data[index + 2] = v;
+                image.data[index + 3] = 255;
+            }
+        }
+        Globals.drawImage(image);
+    }
+}
+
+class JB2Dict extends JB2Codec {
+    constructor(bs) {
+        super(bs);
+        this.dict = [];
+        this.isDecoded = false;
+    }
+    decode(djbz) {
+        if (this.isDecoded) {
+            return;
+        }
+        var type = this.decodeNum(0, 11, this.recordTypeCtx);
+        if (type == 9) {
+            var size = this.decodeNum(0, 262142, this.inheritDictSizeCtx);
+            djbz.decode();
+            this.dict = djbz.dict.slice(0, size);
+            type = this.decodeNum(0, 11, this.recordTypeCtx);
+        }
+        this.decodeNum(0, 262142, this.imageSizeCtx);
+        this.decodeNum(0, 262142, this.imageSizeCtx);
+        var flag = this.zp.decode([0], 0);
+        if (flag) {
+            throw new Error("Bad flag!!!");
+        }
+        type = this.decodeNum(0, 11, this.recordTypeCtx);
+        var width, widthdiff, heightdiff, symbolIndex;
+        var height;
+        var bm;
+        while (type !== 11) {
+            switch (type) {
+                case 2:
+                    width = this.decodeNum(0, 262142, this.symbolWidthCtx);
+                    height = this.decodeNum(0, 262142, this.symbolHeightCtx);
+                    bm = this.decodeBitmap(width, height);
+                    this.dict.push(bm);
+                    break;
+                case 5:
+                    symbolIndex = this.decodeNum(0, this.dict.length - 1, this.symbolIndexCtx);
+                    widthdiff = this.decodeNum(-262143, 262142, this.symbolWidthDiffCtx);
+                    heightdiff = this.decodeNum(-262143, 262142, this.symbolHeightDiffCtx);
+                    var mbm = this.dict[symbolIndex];
+                    var cbm = this.decodeBitmapRef(mbm.width + widthdiff, heightdiff + mbm.height, mbm);
+                    this.dict.push(cbm.removeEmptyEdges());
+                    break;
+                case 9:
+                    console.log("RESET DICT");
+                    this.resetNumContexts();
+                    break;
+                case 10:
+                                      this.decodeComment();
+                    break;
+                default:
+                    throw new Error("Unsupported type in JB2Dict: " + type);
+            }
+            type = this.decodeNum(0, 11, this.recordTypeCtx);
+            if (type > 11) {
+                console.error("TYPE ERROR " + type);
+                break;
+            }
+        }
+        this.isDecoded = true;
+    }
+}
+
+class DjVuAnno extends IFFChunk { }
+
+class DjViChunk extends CompositeChunk {
+    constructor(bs) {
+        super(bs);
+        this.innerChunk = null;
+        this.init();
+    }
+    init() {
+        while (!this.bs.isEmpty()) {
+            let id = this.bs.readStr4();
+            let length = this.bs.getInt32();
+            this.bs.jump(-8);
+            let chunkBs = this.bs.fork(length + 8);
+            this.bs.jump(8 + length + (length & 1 ? 1 : 0));
+            switch (id) {
+                case 'Djbz':
+                    this.innerChunk = new JB2Dict(chunkBs);
+                    break;
+                case 'ANTa':
+                case 'ANTz':
+                    this.innerChunk = new DjVuAnno(chunkBs);
+                    break;
+                default:
+                    this.innerChunk = new IFFChunk(chunkBs);
+                    console.error("Unsupported chunk inside the DJVI chunk: ", id);
+                    break;
+            }
+        }
+    }
+    toString() {
+        return super.toString(this.innerChunk.toString());
+    }
+}
+
+class JB2Image extends JB2Codec {
+    constructor(bs) {
+        super(bs);
+        this.dict = [];
+        this.blitList = [];
+        this.init();
+    }
+    addBlit(bitmap, x, y) {
+        this.blitList.push({ bitmap, x, y });
+    }
+    init() {
+        let type = this.decodeNum(0, 11, this.recordTypeCtx);
+        if (type == 9) {
+            this.dict = this.decodeNum(0, 262142, this.inheritDictSizeCtx);
+            type = this.decodeNum(0, 11, this.recordTypeCtx);
+        }
+        this.width = this.decodeNum(0, 262142, this.imageSizeCtx) || 200;
+        this.height = this.decodeNum(0, 262142, this.imageSizeCtx) || 200;
+        this.bitmap = false;
+        this.lastLeft = 0;
+        this.lastBottom = this.height - 1;
+        this.firstLeft = -1;
+        this.firstBottom = this.height - 1;
+        let flag = this.zp.decode([0], 0);
+        if (flag) {
+            throw new Error("Bad flag!!!");
+        }
+        this.baseline = new Baseline();
+    }
+    toString() {
+        let str = super.toString();
+        str += "{width: " + this.width + ", height: " + this.height + '}\n';
+        return str;
+    }
+    decode(djbz) {
+        if (+this.dict) {
+            djbz.decode();
+            this.dict = djbz.dict.slice(0, this.dict);
+        }
+        var type = this.decodeNum(0, 11, this.recordTypeCtx);
+        let width;
+        let height, index;
+        let bm;
+        while (type !== 11                                   ) {
+            switch (type) {
+                case 1:
+                    width = this.decodeNum(0, 262142, this.symbolWidthCtx);
+                    height = this.decodeNum(0, 262142, this.symbolHeightCtx);
+                    bm = this.decodeBitmap(width, height);
+                    var coords = this.decodeSymbolCoords(bm.width, bm.height);
+                    this.addBlit(bm, coords.x, coords.y);
+                    this.dict.push(bm);
+                    break;
+                case 2:
+                    width = this.decodeNum(0, 262142, this.symbolWidthCtx);
+                    height = this.decodeNum(0, 262142, this.symbolHeightCtx);
+                    bm = this.decodeBitmap(width, height);
+                    this.dict.push(bm);
+                    break;
+                case 3:
+                    width = this.decodeNum(0, 262142, this.symbolWidthCtx);
+                    height = this.decodeNum(0, 262142, this.symbolHeightCtx);
+                    bm = this.decodeBitmap(width, height);
+                    var coords = this.decodeSymbolCoords(bm.width, bm.height);
+                    this.addBlit(bm, coords.x, coords.y);
+                    break;
+                case 4:
+                    index = this.decodeNum(0, this.dict.length - 1, this.symbolIndexCtx);
+                    var widthdiff = this.decodeNum(-262143, 262142, this.symbolWidthDiffCtx);
+                    var heightdiff = this.decodeNum(-262143, 262142, this.symbolHeightDiffCtx);
+                    var mbm = this.dict[index];
+                    var cbm = this.decodeBitmapRef(mbm.width + widthdiff, heightdiff + mbm.height, mbm);
+                    var coords = this.decodeSymbolCoords(cbm.width, cbm.height);
+                    this.addBlit(cbm, coords.x, coords.y);
+                    this.dict.push(cbm.removeEmptyEdges());
+                    break;
+                case 5:
+                    index = this.decodeNum(0, this.dict.length - 1, this.symbolIndexCtx);
+                    widthdiff = this.decodeNum(-262143, 262142, this.symbolWidthDiffCtx);
+                    heightdiff = this.decodeNum(-262143, 262142, this.symbolHeightDiffCtx);
+                    var mbm = this.dict[index];
+                    var cbm = this.decodeBitmapRef(mbm.width + widthdiff, heightdiff + mbm.height, mbm);
+                    this.dict.push(cbm.removeEmptyEdges());
+                    break;
+                case 6:
+                    index = this.decodeNum(0, this.dict.length - 1, this.symbolIndexCtx);
+                    var widthdiff = this.decodeNum(-262143, 262142, this.symbolWidthDiffCtx);
+                    var heightdiff = this.decodeNum(-262143, 262142, this.symbolHeightDiffCtx);
+                    var mbm = this.dict[index];
+                    var cbm = this.decodeBitmapRef(mbm.width + widthdiff, heightdiff + mbm.height, mbm);
+                    var coords = this.decodeSymbolCoords(cbm.width, cbm.height);
+                    this.addBlit(cbm, coords.x, coords.y);
+                    break;
+                case 7:
+                    index = this.decodeNum(0, this.dict.length - 1, this.symbolIndexCtx);
+                    bm = this.dict[index];
+                    var coords = this.decodeSymbolCoords(bm.width, bm.height);
+                    this.addBlit(bm, coords.x, coords.y);
+                    break;
+                case 8:
+                    width = this.decodeNum(0, 262142, this.symbolWidthCtx);
+                    height = this.decodeNum(0, 262142, this.symbolHeightCtx);
+                    bm = this.decodeBitmap(width, height);
+                    var coords = this.decodeAbsoluteLocationCoords(bm.width, bm.height);
+                    this.addBlit(bm, coords.x, coords.y);
+                    break;
+                case 9:
+                    console.log("RESET NUM CONTEXTS");
+                    this.resetNumContexts();
+                    break;
+                case 10:
+                    this.decodeComment();
+                    break;
+                default:
+                    throw new Error("Unsupported type in JB2Image: " + type);
+            }
+            type = this.decodeNum(0, 11, this.recordTypeCtx);
+            if (type > 11) {
+                console.error("TYPE ERROR " + type);
+                break;
+            }
+        }
+    }
+    decodeAbsoluteLocationCoords(width, height) {
+        var left = this.decodeNum(1, this.width, this.horizontalAbsLocationCtx);
+        var top = this.decodeNum(1, this.height, this.verticalAbsLocationCtx);
+        return {
+            x: left,
+            y: top - height
+        }
+    }
+    decodeSymbolCoords(width, height) {
+        var flag = this.zp.decode(this.offsetTypeCtx, 0);
+        var horizontalOffsetCtx = flag ? this.hoffCtx : this.shoffCtx;
+        var verticalOffsetCtx = flag ? this.voffCtx : this.svoffCtx;
+        var horizontalOffset = this.decodeNum(-262143, 262142, horizontalOffsetCtx);
+        var verticalOffset = this.decodeNum(-262143, 262142, verticalOffsetCtx);
+        var x, y;
+        if (flag) {
+            x = this.firstLeft + horizontalOffset;
+            y = this.firstBottom + verticalOffset - height + 1;
+            this.firstLeft = x;
+            this.firstBottom = y;
+            this.baseline.reinit();
+        }
+        else {
+            x = this.lastRight + horizontalOffset;
+            y = this.baseline.getVal() + verticalOffset;
+        }
+        this.baseline.add(y);
+        this.lastRight = x + width - 1;
+        return {
+            'x': x,
+            'y': y
+        };
+    }
+    copyToBitmap(bm, x, y) {
+        if (!this.bitmap) {
+            this.bitmap = new Bitmap(this.width, this.height);
+        }
+        for (var i = y, k = 0; k < bm.height; k++, i++) {
+            for (var j = x, t = 0; t < bm.width; t++, j++) {
+                if (bm.get(k, t)) {
+                    this.bitmap.set(i, j);
+                }
+            }
+        }
+    }
+    getBitmap() {
+        if (!this.bitmap) {
+            this.blitList.forEach(blit => this.copyToBitmap(blit.bitmap, blit.x, blit.y));
+        }
+        return this.bitmap;
+    }
+    getMaskImage() {
+        var imageData = new ImageData(this.width, this.height);
+        var pixelArray = imageData.data;
+        var time = performance.now();
+        pixelArray.fill(255);
+        for (var blitIndex = 0; blitIndex < this.blitList.length; blitIndex++) {
+            var blit = this.blitList[blitIndex];
+            var bm = blit.bitmap;
+            for (var i = blit.y, k = 0; k < bm.height; k++, i++) {
+                for (var j = blit.x, t = 0; t < bm.width; t++, j++) {
+                    if (bm.get(k, t)) {
+                        var pixelIndex = ((this.height - i - 1) * this.width + j) * 4;
+                        pixelArray[pixelIndex] = 0;
+                    }
+                }
+            }
+        }
+        DjVu.IS_DEBUG && console.log("JB2Image mask image creating time = ", performance.now() - time);
+        return imageData;
+    }
+    getImage(palette = null, isMarkMaskPixels = false) {
+        if (palette && palette.getDataSize() !== this.blitList.length) {
+            palette = null;
+        }
+        var pixelArray = new Uint8ClampedArray(this.width * this.height * 4);
+        var time = performance.now();
+        pixelArray.fill(255);
+        var blackPixel = { r: 0, g: 0, b: 0 };
+        var alpha = isMarkMaskPixels ? 0 : 255;
+        for (var blitIndex = 0; blitIndex < this.blitList.length; blitIndex++) {
+            var blit = this.blitList[blitIndex];
+            var pixel = palette ? palette.getPixelByBlitIndex(blitIndex) : blackPixel;
+            var bm = blit.bitmap;
+            for (var i = blit.y, k = 0; k < bm.height; k++, i++) {
+                for (var j = blit.x, t = 0; t < bm.width; t++, j++) {
+                    if (bm.get(k, t)) {
+                        var pixelIndex = ((this.height - i - 1) * this.width + j) << 2;
+                        pixelArray[pixelIndex] = pixel.r;
+                        pixelArray[pixelIndex | 1] = pixel.g;
+                        pixelArray[pixelIndex | 2] = pixel.b;
+                        pixelArray[pixelIndex | 3] = alpha;
+                    }
+                }
+            }
+        }
+        DjVu.IS_DEBUG && console.log("JB2Image creating time = ", performance.now() - time);
+        return new ImageData(pixelArray, this.width, this.height);
+    }
+    getImageFromBitmap() {
+        this.getBitmap();
+        var time = performance.now();
+        var image = new ImageData(this.width, this.height);
+        for (var i = 0; i < this.height; i++) {
+            for (var j = 0; j < this.width; j++) {
+                var v = this.bitmap.get(i, j) ? 0 : 255;
+                var index = ((this.height - i - 1) * this.width + j) * 4;
+                image.data[index] = v;
+                image.data[index + 1] = v;
+                image.data[index + 2] = v;
+                image.data[index + 3] = 255;
+            }
+        }
+        DjVu.IS_DEBUG && console.log("JB2Image creating time = ", performance.now() - time);
+        return image;
+    }
+}
+
+class DjVuPalette extends IFFChunk {
+    constructor(bs) {
+        var time = performance.now();
+        super(bs);
+        this.pixel = { r: 0, g: 0, b: 0 };
+        this.version = bs.getUint8();
+        if (this.version & 0x7f) {
+            throw "Bad Djvu Pallete version!";
+        }
+        this.palleteSize = bs.getInt16();
+        if (this.palleteSize < 0 || this.palleteSize > 65535) {
+            throw "Bad Djvu Pallete size!";
+        }
+        this.colorArray = bs.getUint8Array(this.palleteSize * 3);
+        if (this.version & 0x80) {
+            this.dataSize = bs.getInt24();
+            if (this.dataSize < 0) {
+                throw "Bad Djvu Pallete data size!";
+            }
+            var bsz = BZZDecoder.decodeByteStream(bs.fork());
+            this.colorIndices = new Int16Array(this.dataSize);
+            for (var i = 0; i < this.dataSize; i++) {
+                var index = bsz.getInt16();
+                if (index < 0 || index >= this.palleteSize) {
+                    throw "Bad Djvu Pallete index! " + index;
+                }
+                this.colorIndices[i] = index;
+            }
+        }
+        DjVu.IS_DEBUG && console.log('DjvuPalette time ', performance.now() - time);
+    }
+    getDataSize() {
+        return this.dataSize;
+    }
+    getPixelByBlitIndex(index) {
+        var colorIndex = this.colorIndices[index] * 3;
+        this.pixel.r = this.colorArray[colorIndex + 2];
+        this.pixel.g = this.colorArray[colorIndex + 1];
+        this.pixel.b = this.colorArray[colorIndex];
+        return this.pixel;
+    }
+    toString() {
+        var str = super.toString();
+        str += "Pallete size: " + this.palleteSize + "\n";
+        str += "Data size: " + this.dataSize + "\n";
+        return str;
+    }
+}
+
+class IWCodecBaseClass {
+    constructor() {
+        this.quant_lo = Uint32Array.of(
+            0x004000, 0x008000, 0x008000, 0x010000, 0x010000,
+            0x010000, 0x010000, 0x010000, 0x010000, 0x010000,
+            0x010000, 0x010000, 0x020000, 0x020000, 0x020000, 0x020000
+        );
+        this.quant_hi = Uint32Array.of(
+            0, 0x020000, 0x020000, 0x040000, 0x040000,
+            0x040000, 0x080000, 0x040000, 0x040000, 0x080000
+        );
+        this.bucketstate = new Uint8Array(16);
+        this.coeffstate = new Array(16);
+        var buffer = new ArrayBuffer(256);
+        for (var i = 0; i < 16; i++) {
+            this.coeffstate[i] = new Uint8Array(buffer, i << 4, 16);
+        }
+        this.bbstate = 0;
+        this.decodeBucketCtx = new Uint8Array(1);
+        this.decodeCoefCtx = new Uint8Array(80);
+        this.activateCoefCtx = new Uint8Array(16);
+        this.inreaseCoefCtx = new Uint8Array(1);
+        this.curband = 0;
+    }
+    getBandBuckets(band) {
+        return this.bandBuckets[band];
+    }
+    is_null_slice() {
+        if (this.curband == 0)
+        {
+            var is_null = 1;
+            for (var i = 0; i < 16; i++) {
+                var threshold = this.quant_lo[i];
+                this.coeffstate[0][i] = 1        ;
+                if (threshold > 0 && threshold < 0x8000) {
+                    this.coeffstate[0][i] = 8       ;
+                    is_null = 0;
+                }
+            }
+            return is_null;
+        } else
+        {
+            var threshold = this.quant_hi[this.curband];
+            return (!(threshold > 0 && threshold < 0x8000));
+        }
+    }
+    finish_code_slice() {
+        this.quant_hi[this.curband] = this.quant_hi[this.curband] >> 1;
+        if (this.curband === 0) {
+            for (var i = 0; i < 16; i++)
+                this.quant_lo[i] = this.quant_lo[i] >> 1;
+        }
+        this.curband++;
+        if (this.curband === 10) {
+            this.curband = 0;
+        }
+    }
+}
+IWCodecBaseClass.prototype.ZERO = 1;
+IWCodecBaseClass.prototype.ACTIVE = 2;
+IWCodecBaseClass.prototype.NEW = 4;
+IWCodecBaseClass.prototype.UNK = 8;
+IWCodecBaseClass.prototype.zigzagRow = Uint8Array.of(0, 0, 16, 16, 0, 0, 16, 16, 8, 8, 24, 24, 8, 8, 24, 24, 0, 0, 16, 16, 0, 0, 16, 16, 8, 8, 24, 24, 8, 8, 24, 24, 4, 4, 20, 20, 4, 4, 20, 20, 12, 12, 28, 28, 12, 12, 28, 28, 4, 4, 20, 20, 4, 4, 20, 20, 12, 12, 28, 28, 12, 12, 28, 28, 0, 0, 16, 16, 0, 0, 16, 16, 8, 8, 24, 24, 8, 8, 24, 24, 0, 0, 16, 16, 0, 0, 16, 16, 8, 8, 24, 24, 8, 8, 24, 24, 4, 4, 20, 20, 4, 4, 20, 20, 12, 12, 28, 28, 12, 12, 28, 28, 4, 4, 20, 20, 4, 4, 20, 20, 12, 12, 28, 28, 12, 12, 28, 28, 2, 2, 18, 18, 2, 2, 18, 18, 10, 10, 26, 26, 10, 10, 26, 26, 2, 2, 18, 18, 2, 2, 18, 18, 10, 10, 26, 26, 10, 10, 26, 26, 6, 6, 22, 22, 6, 6, 22, 22, 14, 14, 30, 30, 14, 14, 30, 30, 6, 6, 22, 22, 6, 6, 22, 22, 14, 14, 30, 30, 14, 14, 30, 30, 2, 2, 18, 18, 2, 2, 18, 18, 10, 10, 26, 26, 10, 10, 26, 26, 2, 2, 18, 18, 2, 2, 18, 18, 10, 10, 26, 26, 10, 10, 26, 26, 6, 6, 22, 22, 6, 6, 22, 22, 14, 14, 30, 30, 14, 14, 30, 30, 6, 6, 22, 22, 6, 6, 22, 22, 14, 14, 30, 30, 14, 14, 30, 30, 0, 0, 16, 16, 0, 0, 16, 16, 8, 8, 24, 24, 8, 8, 24, 24, 0, 0, 16, 16, 0, 0, 16, 16, 8, 8, 24, 24, 8, 8, 24, 24, 4, 4, 20, 20, 4, 4, 20, 20, 12, 12, 28, 28, 12, 12, 28, 28, 4, 4, 20, 20, 4, 4, 20, 20, 12, 12, 28, 28, 12, 12, 28, 28, 0, 0, 16, 16, 0, 0, 16, 16, 8, 8, 24, 24, 8, 8, 24, 24, 0, 0, 16, 16, 0, 0, 16, 16, 8, 8, 24, 24, 8, 8, 24, 24, 4, 4, 20, 20, 4, 4, 20, 20, 12, 12, 28, 28, 12, 12, 28, 28, 4, 4, 20, 20, 4, 4, 20, 20, 12, 12, 28, 28, 12, 12, 28, 28, 2, 2, 18, 18, 2, 2, 18, 18, 10, 10, 26, 26, 10, 10, 26, 26, 2, 2, 18, 18, 2, 2, 18, 18, 10, 10, 26, 26, 10, 10, 26, 26, 6, 6, 22, 22, 6, 6, 22, 22, 14, 14, 30, 30, 14, 14, 30, 30, 6, 6, 22, 22, 6, 6, 22, 22, 14, 14, 30, 30, 14, 14, 30, 30, 2, 2, 18, 18, 2, 2, 18, 18, 10, 10, 26, 26, 10, 10, 26, 26, 2, 2, 18, 18, 2, 2, 18, 18, 10, 10, 26, 26, 10, 10, 26, 26, 6, 6, 22, 22, 6, 6, 22, 22, 14, 14, 30, 30, 14, 14, 30, 30, 6, 6, 22, 22, 6, 6, 22, 22, 14, 14, 30, 30, 14, 14, 30, 30, 1, 1, 17, 17, 1, 1, 17, 17, 9, 9, 25, 25, 9, 9, 25, 25, 1, 1, 17, 17, 1, 1, 17, 17, 9, 9, 25, 25, 9, 9, 25, 25, 5, 5, 21, 21, 5, 5, 21, 21, 13, 13, 29, 29, 13, 13, 29, 29, 5, 5, 21, 21, 5, 5, 21, 21, 13, 13, 29, 29, 13, 13, 29, 29, 1, 1, 17, 17, 1, 1, 17, 17, 9, 9, 25, 25, 9, 9, 25, 25, 1, 1, 17, 17, 1, 1, 17, 17, 9, 9, 25, 25, 9, 9, 25, 25, 5, 5, 21, 21, 5, 5, 21, 21, 13, 13, 29, 29, 13, 13, 29, 29, 5, 5, 21, 21, 5, 5, 21, 21, 13, 13, 29, 29, 13, 13, 29, 29, 3, 3, 19, 19, 3, 3, 19, 19, 11, 11, 27, 27, 11, 11, 27, 27, 3, 3, 19, 19, 3, 3, 19, 19, 11, 11, 27, 27, 11, 11, 27, 27, 7, 7, 23, 23, 7, 7, 23, 23, 15, 15, 31, 31, 15, 15, 31, 31, 7, 7, 23, 23, 7, 7, 23, 23, 15, 15, 31, 31, 15, 15, 31, 31, 3, 3, 19, 19, 3, 3, 19, 19, 11, 11, 27, 27, 11, 11, 27, 27, 3, 3, 19, 19, 3, 3, 19, 19, 11, 11, 27, 27, 11, 11, 27, 27, 7, 7, 23, 23, 7, 7, 23, 23, 15, 15, 31, 31, 15, 15, 31, 31, 7, 7, 23, 23, 7, 7, 23, 23, 15, 15, 31, 31, 15, 15, 31, 31, 1, 1, 17, 17, 1, 1, 17, 17, 9, 9, 25, 25, 9, 9, 25, 25, 1, 1, 17, 17, 1, 1, 17, 17, 9, 9, 25, 25, 9, 9, 25, 25, 5, 5, 21, 21, 5, 5, 21, 21, 13, 13, 29, 29, 13, 13, 29, 29, 5, 5, 21, 21, 5, 5, 21, 21, 13, 13, 29, 29, 13, 13, 29, 29, 1, 1, 17, 17, 1, 1, 17, 17, 9, 9, 25, 25, 9, 9, 25, 25, 1, 1, 17, 17, 1, 1, 17, 17, 9, 9, 25, 25, 9, 9, 25, 25, 5, 5, 21, 21, 5, 5, 21, 21, 13, 13, 29, 29, 13, 13, 29, 29, 5, 5, 21, 21, 5, 5, 21, 21, 13, 13, 29, 29, 13, 13, 29, 29, 3, 3, 19, 19, 3, 3, 19, 19, 11, 11, 27, 27, 11, 11, 27, 27, 3, 3, 19, 19, 3, 3, 19, 19, 11, 11, 27, 27, 11, 11, 27, 27, 7, 7, 23, 23, 7, 7, 23, 23, 15, 15, 31, 31, 15, 15, 31, 31, 7, 7, 23, 23, 7, 7, 23, 23, 15, 15, 31, 31, 15, 15, 31, 31, 3, 3, 19, 19, 3, 3, 19, 19, 11, 11, 27, 27, 11, 11, 27, 27, 3, 3, 19, 19, 3, 3, 19, 19, 11, 11, 27, 27, 11, 11, 27, 27, 7, 7, 23, 23, 7, 7, 23, 23, 15, 15, 31, 31, 15, 15, 31, 31, 7, 7, 23, 23, 7, 7, 23, 23, 15, 15, 31, 31, 15, 15, 31, 31);
+IWCodecBaseClass.prototype.zigzagCol = Uint8Array.of(0, 16, 0, 16, 8, 24, 8, 24, 0, 16, 0, 16, 8, 24, 8, 24, 4, 20, 4, 20, 12, 28, 12, 28, 4, 20, 4, 20, 12, 28, 12, 28, 0, 16, 0, 16, 8, 24, 8, 24, 0, 16, 0, 16, 8, 24, 8, 24, 4, 20, 4, 20, 12, 28, 12, 28, 4, 20, 4, 20, 12, 28, 12, 28, 2, 18, 2, 18, 10, 26, 10, 26, 2, 18, 2, 18, 10, 26, 10, 26, 6, 22, 6, 22, 14, 30, 14, 30, 6, 22, 6, 22, 14, 30, 14, 30, 2, 18, 2, 18, 10, 26, 10, 26, 2, 18, 2, 18, 10, 26, 10, 26, 6, 22, 6, 22, 14, 30, 14, 30, 6, 22, 6, 22, 14, 30, 14, 30, 0, 16, 0, 16, 8, 24, 8, 24, 0, 16, 0, 16, 8, 24, 8, 24, 4, 20, 4, 20, 12, 28, 12, 28, 4, 20, 4, 20, 12, 28, 12, 28, 0, 16, 0, 16, 8, 24, 8, 24, 0, 16, 0, 16, 8, 24, 8, 24, 4, 20, 4, 20, 12, 28, 12, 28, 4, 20, 4, 20, 12, 28, 12, 28, 2, 18, 2, 18, 10, 26, 10, 26, 2, 18, 2, 18, 10, 26, 10, 26, 6, 22, 6, 22, 14, 30, 14, 30, 6, 22, 6, 22, 14, 30, 14, 30, 2, 18, 2, 18, 10, 26, 10, 26, 2, 18, 2, 18, 10, 26, 10, 26, 6, 22, 6, 22, 14, 30, 14, 30, 6, 22, 6, 22, 14, 30, 14, 30, 1, 17, 1, 17, 9, 25, 9, 25, 1, 17, 1, 17, 9, 25, 9, 25, 5, 21, 5, 21, 13, 29, 13, 29, 5, 21, 5, 21, 13, 29, 13, 29, 1, 17, 1, 17, 9, 25, 9, 25, 1, 17, 1, 17, 9, 25, 9, 25, 5, 21, 5, 21, 13, 29, 13, 29, 5, 21, 5, 21, 13, 29, 13, 29, 3, 19, 3, 19, 11, 27, 11, 27, 3, 19, 3, 19, 11, 27, 11, 27, 7, 23, 7, 23, 15, 31, 15, 31, 7, 23, 7, 23, 15, 31, 15, 31, 3, 19, 3, 19, 11, 27, 11, 27, 3, 19, 3, 19, 11, 27, 11, 27, 7, 23, 7, 23, 15, 31, 15, 31, 7, 23, 7, 23, 15, 31, 15, 31, 1, 17, 1, 17, 9, 25, 9, 25, 1, 17, 1, 17, 9, 25, 9, 25, 5, 21, 5, 21, 13, 29, 13, 29, 5, 21, 5, 21, 13, 29, 13, 29, 1, 17, 1, 17, 9, 25, 9, 25, 1, 17, 1, 17, 9, 25, 9, 25, 5, 21, 5, 21, 13, 29, 13, 29, 5, 21, 5, 21, 13, 29, 13, 29, 3, 19, 3, 19, 11, 27, 11, 27, 3, 19, 3, 19, 11, 27, 11, 27, 7, 23, 7, 23, 15, 31, 15, 31, 7, 23, 7, 23, 15, 31, 15, 31, 3, 19, 3, 19, 11, 27, 11, 27, 3, 19, 3, 19, 11, 27, 11, 27, 7, 23, 7, 23, 15, 31, 15, 31, 7, 23, 7, 23, 15, 31, 15, 31, 0, 16, 0, 16, 8, 24, 8, 24, 0, 16, 0, 16, 8, 24, 8, 24, 4, 20, 4, 20, 12, 28, 12, 28, 4, 20, 4, 20, 12, 28, 12, 28, 0, 16, 0, 16, 8, 24, 8, 24, 0, 16, 0, 16, 8, 24, 8, 24, 4, 20, 4, 20, 12, 28, 12, 28, 4, 20, 4, 20, 12, 28, 12, 28, 2, 18, 2, 18, 10, 26, 10, 26, 2, 18, 2, 18, 10, 26, 10, 26, 6, 22, 6, 22, 14, 30, 14, 30, 6, 22, 6, 22, 14, 30, 14, 30, 2, 18, 2, 18, 10, 26, 10, 26, 2, 18, 2, 18, 10, 26, 10, 26, 6, 22, 6, 22, 14, 30, 14, 30, 6, 22, 6, 22, 14, 30, 14, 30, 0, 16, 0, 16, 8, 24, 8, 24, 0, 16, 0, 16, 8, 24, 8, 24, 4, 20, 4, 20, 12, 28, 12, 28, 4, 20, 4, 20, 12, 28, 12, 28, 0, 16, 0, 16, 8, 24, 8, 24, 0, 16, 0, 16, 8, 24, 8, 24, 4, 20, 4, 20, 12, 28, 12, 28, 4, 20, 4, 20, 12, 28, 12, 28, 2, 18, 2, 18, 10, 26, 10, 26, 2, 18, 2, 18, 10, 26, 10, 26, 6, 22, 6, 22, 14, 30, 14, 30, 6, 22, 6, 22, 14, 30, 14, 30, 2, 18, 2, 18, 10, 26, 10, 26, 2, 18, 2, 18, 10, 26, 10, 26, 6, 22, 6, 22, 14, 30, 14, 30, 6, 22, 6, 22, 14, 30, 14, 30, 1, 17, 1, 17, 9, 25, 9, 25, 1, 17, 1, 17, 9, 25, 9, 25, 5, 21, 5, 21, 13, 29, 13, 29, 5, 21, 5, 21, 13, 29, 13, 29, 1, 17, 1, 17, 9, 25, 9, 25, 1, 17, 1, 17, 9, 25, 9, 25, 5, 21, 5, 21, 13, 29, 13, 29, 5, 21, 5, 21, 13, 29, 13, 29, 3, 19, 3, 19, 11, 27, 11, 27, 3, 19, 3, 19, 11, 27, 11, 27, 7, 23, 7, 23, 15, 31, 15, 31, 7, 23, 7, 23, 15, 31, 15, 31, 3, 19, 3, 19, 11, 27, 11, 27, 3, 19, 3, 19, 11, 27, 11, 27, 7, 23, 7, 23, 15, 31, 15, 31, 7, 23, 7, 23, 15, 31, 15, 31, 1, 17, 1, 17, 9, 25, 9, 25, 1, 17, 1, 17, 9, 25, 9, 25, 5, 21, 5, 21, 13, 29, 13, 29, 5, 21, 5, 21, 13, 29, 13, 29, 1, 17, 1, 17, 9, 25, 9, 25, 1, 17, 1, 17, 9, 25, 9, 25, 5, 21, 5, 21, 13, 29, 13, 29, 5, 21, 5, 21, 13, 29, 13, 29, 3, 19, 3, 19, 11, 27, 11, 27, 3, 19, 3, 19, 11, 27, 11, 27, 7, 23, 7, 23, 15, 31, 15, 31, 7, 23, 7, 23, 15, 31, 15, 31, 3, 19, 3, 19, 11, 27, 11, 27, 3, 19, 3, 19, 11, 27, 11, 27, 7, 23, 7, 23, 15, 31, 15, 31, 7, 23, 7, 23, 15, 31, 15, 31);
+IWCodecBaseClass.prototype.bandBuckets = [
+    { from: 0, to: 0 },
+    { from: 1, to: 1 },
+    { from: 2, to: 2 },
+    { from: 3, to: 3 },
+    { from: 4, to: 7 },
+    { from: 8, to: 11 },
+    { from: 12, to: 15 },
+    { from: 16, to: 31 },
+    { from: 32, to: 47 },
+    { from: 48, to: 63 }
+];
+
+class Pixelmap {
+    constructor(ybytemap, cbbytemap, crbytemap) {
+        this.width = ybytemap.width;
+        var length = ybytemap.array.length;
+        this.r = new Uint8ClampedArray(length);
+        this.g = new Uint8ClampedArray(length);
+        this.b = new Uint8ClampedArray(length);
+        if (cbbytemap) {
+            for (var i = 0; i < length; i++) {
+                var y = this._normalize(ybytemap.byIndex(i));
+                var b = this._normalize(cbbytemap.byIndex(i));
+                var r = this._normalize(crbytemap.byIndex(i));
+                var t2 = r + (r >> 1);
+                var t3 = y + 128 - (b >> 2);
+                this.r[i] = y + 128 + t2;
+                this.g[i] = t3 - (t2 >> 1);
+                this.b[i] = t3 + (b << 1);
+            }
+        } else {
+            for (var i = 0; i < length; i++) {
+                var v = this._normalize(ybytemap.byIndex(i));
+                v = 127 - v;
+                this.r[i] = v;
+                this.g[i] = v;
+                this.b[i] = v;
+            }
+        }
+    }
+    _normalize(val) {
+        val = (val + 32) >> 6;
+        if (val < -128) {
+            return -128;
+        } else if (val >= 128) {
+            return 127;
+        }
+        return val;
+    }
+    writePixel(index, pixelArray, pixelIndex) {
+        pixelArray[pixelIndex] = this.r[index];
+        pixelArray[pixelIndex | 1] = this.g[index];
+        pixelArray[pixelIndex | 2] = this.b[index];
+    }
+}
+class LinearBytemap {
+    constructor(width, height) {
+        this.width = width;
+        this.array = new Int16Array(width * height);
+    }
+    byIndex(i) {
+        return this.array[i];
+    }
+    get(i, j) {
+        return this.array[i * this.width + j];
+    }
+    set(i, j, val) {
+        this.array[i * this.width + j] = val;
+    }
+    sub(i, j, val) {
+        this.array[i * this.width + j] -= val;
+    }
+    add(i, j, val) {
+        this.array[i * this.width + j] += val;
+    }
+}
+class Bytemap extends Array {
+    constructor(width, height) {
+        super(height);
+        this.height = height;
+        this.width = width;
+        for (var i = 0; i < height; i++) {
+            this[i] = new Int16Array(width);
+        }
+    }
+}
+class Block {
+    constructor(buffer, offset, withBuckets = false) {
+        this.array = new Int16Array(buffer, offset, 1024);
+        if (withBuckets) {
+            this.buckets = new Array(64);
+            for (var i = 0; i < 64; i++) {
+                this.buckets[i] = new Int16Array(buffer, offset, 16);
+                offset += 32;
+            }
+        }
+    }
+    setBucketCoef(bucketNumber, index, value) {
+        this.array[(bucketNumber << 4) | index] = value;
+    }
+    getBucketCoef(bucketNumber, index) {
+        return this.array[(bucketNumber << 4) | index];
+    }
+    getCoef(n) {
+        return this.array[n];
+    }
+    setCoef(n, val) {
+        this.array[n] = val;
+    }
+    static createBlockArray(length) {
+        var blocks = new Array(length);
+        var buffer = new ArrayBuffer(length << 11);
+        for (var i = 0; i < length; i++) {
+            blocks[i] = new Block(buffer, i << 11);
+        }
+        return blocks;
+    }
+}
+
+class IWDecoder extends IWCodecBaseClass {
+    constructor() {
+        super();
+    }
+    init(imageinfo) {
+        this.info = imageinfo;
+        let blockCount = Math.ceil(this.info.width / 32) * Math.ceil(this.info.height / 32);
+        this.blocks = Block.createBlockArray(blockCount);
+    }
+    decodeSlice(zp, imageinfo) {
+        if (!this.info) {
+            this.init(imageinfo);
+        }
+        this.zp = zp;
+        if (!this.is_null_slice()) {
+            this.blocks.forEach(block => {
+                this.preliminaryFlagComputation(block);
+                if (this.blockBandDecodingPass()) {
+                    this.bucketDecodingPass(block, this.curband);
+                    this.newlyActiveCoefficientDecodingPass(block, this.curband);
+                }
+                this.previouslyActiveCoefficientDecodingPass(block);
+            });
+        }
+        this.finish_code_slice();
+    }
+    previouslyActiveCoefficientDecodingPass(block) {
+        var boff = 0;
+        var step = this.quant_hi[this.curband];
+        var indices = this.getBandBuckets(this.curband);
+        for (var i = indices.from; i <= indices.to; i++, boff++) {
+            for (var j = 0; j < 16; j++) {
+                if (this.coeffstate[boff][j] & 2           ) {
+                    if (!this.curband) {
+                        step = this.quant_lo[j];
+                    }
+                    var des = 0;
+                    var coef = block.getBucketCoef(i, j);
+                    var absCoef = Math.abs(coef);
+                    if (absCoef <= 3 * step) {
+                        des = this.zp.decode(this.inreaseCoefCtx, 0);
+                        absCoef += step >> 2;
+                    } else {
+                        des = this.zp.IWdecode();
+                    }
+                    if (des) {
+                        absCoef += step >> 1;
+                    } else {
+                        absCoef += -step + (step >> 1);
+                    }
+                    block.setBucketCoef(i, j, coef < 0 ? -absCoef : absCoef);
+                }
+            }
+        }
+    }
+    newlyActiveCoefficientDecodingPass(block, band) {
+        var boff = 0;
+        var indices = this.getBandBuckets(band);
+        var step = this.quant_hi[this.curband];
+        for (var i = indices.from; i <= indices.to; i++, boff++) {
+            if (this.bucketstate[boff] & 4       ) {
+                var shift = 0;
+                if (this.bucketstate[boff] & 2          ) {
+                    shift = 8;
+                }
+                var np = 0;
+                for (var j = 0; j < 16; j++) {
+                    if (this.coeffstate[boff][j] & 8       ) {
+                        np++;
+                    }
+                }
+                for (var j = 0; j < 16; j++) {
+                    if (this.coeffstate[boff][j] & 8       ) {
+                        var ip = Math.min(7, np);
+                        var des = this.zp.decode(this.activateCoefCtx, shift + ip);
+                        if (des) {
+                            var sign = this.zp.IWdecode() ? -1 : 1;
+                            np = 0;
+                            if (!this.curband) {
+                                step = this.quant_lo[j];
+                            }
+                            block.setBucketCoef(i, j, sign * (step + (step >> 1) - (step >> 3)));
+                        }
+                        if (np) {
+                            np--;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    bucketDecodingPass(block, band) {
+        var indices = this.getBandBuckets(band);
+        var boff = 0;
+        for (var i = indices.from; i <= indices.to; i++, boff++) {
+            if (!(this.bucketstate[boff] & 8       )) {
+                continue;
+            }
+            var n = 0;
+            if (band) {
+                var t = 4 * i;
+                for (var j = t; j < t + 4; j++) {
+                    if (block.getCoef(j)) {
+                        n++;
+                    }
+                }
+                if (n === 4) {
+                    n--;
+                }
+            }
+            if (this.bbstate & 2          ) {
+                n |= 4;
+            }
+            if (this.zp.decode(this.decodeCoefCtx, n + band * 8)) {
+                this.bucketstate[boff] |= 4       ;
+            }
+        }
+    }
+    blockBandDecodingPass() {
+        var indices = this.getBandBuckets(this.curband);
+        var bcount = indices.to - indices.from + 1;
+        if (bcount < 16 || (this.bbstate & 2          )) {
+            this.bbstate |= 4        ;
+        } else if (this.bbstate & 8       ) {
+            if (this.zp.decode(this.decodeBucketCtx, 0)) {
+                this.bbstate |= 4       ;
+            }
+        }
+        return this.bbstate & 4       ;
+    }
+    preliminaryFlagComputation(block) {
+        this.bbstate = 0;
+        var bstatetmp = 0;
+        var indices = this.getBandBuckets(this.curband);
+        if (this.curband) {
+            var boff = 0;
+            for (var j = indices.from; j <= indices.to; j++, boff++) {
+                bstatetmp = 0;
+                for (var k = 0; k < 16; k++) {
+                    if (block.getBucketCoef(j, k) === 0) {
+                        this.coeffstate[boff][k] = 8       ;
+                    } else {
+                        this.coeffstate[boff][k] = 2          ;
+                    }
+                    bstatetmp |= this.coeffstate[boff][k];
+                }
+                this.bucketstate[boff] = bstatetmp;
+                this.bbstate |= bstatetmp;
+            }
+        } else {
+            for (var k = 0; k < 16; k++) {
+                if (this.coeffstate[0][k] !== 1        ) {
+                    if (block.getBucketCoef(0, k) === 0) {
+                        this.coeffstate[0][k] = 8       ;
+                    } else {
+                        this.coeffstate[0][k] = 2          ;
+                    }
+                }
+                bstatetmp |= this.coeffstate[0][k];
+            }
+            this.bucketstate[0] = bstatetmp;
+            this.bbstate |= bstatetmp;
+        }
+    }
+    getBytemap() {
+        var fullWidth = Math.ceil(this.info.width / 32) * 32;
+        var fullHeight = Math.ceil(this.info.height / 32) * 32;
+        var blockRows = Math.ceil(this.info.height / 32);
+        var blockCols = Math.ceil(this.info.width / 32);
+        var bm = new LinearBytemap(fullWidth, fullHeight);
+        for (var r = 0; r < blockRows; r++) {
+            for (var c = 0; c < blockCols; c++) {
+                var block = this.blocks[r * blockCols + c];
+                for (var i = 0; i < 1024; i++) {
+                    bm.set(this.zigzagRow[i] + 32 * r, this.zigzagCol[i] + 32 * c, block.getCoef(i));
+                }
+            }
+        }
+        DjVu.IS_DEBUG && console.time("inverseTime");
+        this.inverseWaveletTransform(bm);
+        DjVu.IS_DEBUG && console.timeEnd("inverseTime");
+        return bm;
+    }
+    inverseWaveletTransform(bitmap) {
+        var height = this.info.height;
+        var width = this.info.width;
+        var a, c, kmax, k, i, border;
+        var prev3, prev1, next1, next3;
+        for (var s = 16, sDegree = 4; s !== 0; s >>= 1, sDegree--) {
+            kmax = (height - 1) >> sDegree;
+            border = kmax - 3;
+            for (i = 0; i < width; i += s) {
+                k = 0;
+                prev1 = 0; next1 = 0;
+                next3 = 1 > kmax ? 0 : bitmap.get(1 << sDegree, i);
+                for (k = 0; k <= kmax; k += 2) {
+                    prev3 = prev1; prev1 = next1; next1 = next3;
+                    next3 = (k + 3) > kmax ? 0 : bitmap.get((k + 3) << sDegree, i);
+                    a = prev1 + next1;
+                    c = prev3 + next3;
+                    bitmap.sub(k << sDegree, i, ((a << 3) + a - c + 16) >> 5);
+                }
+                k = 1;
+                prev1 = bitmap.get((k - 1) << sDegree, i);
+                if (k + 1 <= kmax) {
+                    next1 = bitmap.get((k + 1) << sDegree, i);
+                    bitmap.add(k << sDegree, i, (prev1 + next1 + 1) >> 1);
+                } else {
+                    bitmap.add(k << sDegree, i, prev1);
+                }
+                if (border >= 3) {
+                    next3 = bitmap.get((k + 3) << sDegree, i);
+                }
+                for (k = 3; k <= border; k += 2) {
+                    prev3 = prev1; prev1 = next1; next1 = next3;
+                    next3 = bitmap.get((k + 3) << sDegree, i);
+                    a = prev1 + next1;
+                    bitmap.add(k << sDegree, i,
+                        ((a << 3) + a - (prev3 + next3) + 8) >> 4
+                    );
+                }
+                for (; k <= kmax; k += 2) {
+                    prev1 = next1; next1 = next3; next3 = 0;
+                    if (k + 1 <= kmax) {
+                        bitmap.add(k << sDegree, i, (prev1 + next1 + 1) >> 1);
+                    } else {
+                        bitmap.add(k << sDegree, i, prev1);
+                    }
+                }
+            }
+            kmax = (width - 1) >> sDegree;
+            border = kmax - 3;
+            for (i = 0; i < height; i += s) {
+                k = 0;
+                prev1 = 0;
+                next1 = 0;
+                next3 = 1 > kmax ? 0 : bitmap.get(i, 1 << sDegree);
+                for (k = 0; k <= kmax; k += 2) {
+                    prev3 = prev1; prev1 = next1; next1 = next3;
+                    next3 = k + 3 > kmax ? 0 : bitmap.get(i, (k + 3) << sDegree);
+                    a = prev1 + next1;
+                    c = prev3 + next3;
+                    bitmap.sub(i, k << sDegree, ((a << 3) + a - c + 16) >> 5);
+                }
+                k = 1;
+                prev1 = bitmap.get(i, (k - 1) << sDegree);
+                if (k + 1 <= kmax) {
+                    next1 = bitmap.get(i, (k + 1) << sDegree);
+                    bitmap.add(i, k << sDegree, (prev1 + next1 + 1) >> 1);
+                } else {
+                    bitmap.add(i, k << sDegree, prev1);
+                }
+                if (border >= 3) {
+                    next3 = bitmap.get(i, (k + 3) << sDegree);
+                }
+                for (k = 3; k <= border; k += 2) {
+                    prev3 = prev1; prev1 = next1; next1 = next3;
+                    next3 = bitmap.get(i, (k + 3) << sDegree);
+                    a = prev1 + next1;
+                    bitmap.add(i, k << sDegree,
+                        ((a << 3) + a - (prev3 + next3) + 8) >> 4
+                    );
+                }
+                for (; k <= kmax; k += 2) {
+                    prev1 = next1; next1 = next3; next3 = 0;
+                    if (k + 1 <= kmax) {
+                        bitmap.add(i, k << sDegree, (prev1 + next1 + 1) >> 1);
+                    } else {
+                        bitmap.add(i, k << sDegree, prev1);
+                    }
+                }
+            }
+        }
+    }
+}
+
+class IWImage {
+    constructor() {
+        this.ycodec = new IWDecoder();
+        this.cslice = 0;
+        this.info = null;
+        this.pixelmap = null;
+    }
+    decodeChunk(zp, header) {
+        if (!this.info) {
+            this.info = header;
+            if (!header.grayscale) {
+                this.crcodec = new IWDecoder();
+                this.cbcodec = new IWDecoder();
+            }
+        } else {
+            this.info.slices = header.slices;
+        }
+        for (var i = 0; i < this.info.slices; i++) {
+            this.cslice++;
+            this.ycodec.decodeSlice(zp, header);
+            if (this.crcodec && this.cbcodec && this.cslice > this.info.delayInit) {
+                this.cbcodec.decodeSlice(zp, header);
+                this.crcodec.decodeSlice(zp, header);
+            }
+        }
+    }
+    createPixelmap() {
+        var ybitmap = this.ycodec.getBytemap();
+        var cbbitmap = this.cbcodec ? this.cbcodec.getBytemap() : null;
+        var crbitmap = this.crcodec ? this.crcodec.getBytemap() : null;
+        this.pixelmap = new Pixelmap(ybitmap, cbbitmap, crbitmap);
+    }
+    getImage() {
+        if (!this.pixelmap) {
+            this.createPixelmap();
+        }
+        var width = this.info.width;
+        var height = this.info.height;
+        var image = new ImageData(width, height);
+        for (var i = 0; i < height; i++) {
+            var rowOffset = i * this.pixelmap.width;
+            var pixelIndex = ((height - i - 1) * width) << 2;
+            for (var j = 0; j < width; j++) {
+                this.pixelmap.writePixel(rowOffset + j, image.data, pixelIndex);
+                image.data[pixelIndex | 3] = 255;
+                pixelIndex += 4;
+            }
+        }
+        return image;
+    }
+}
+
+class DjVuText extends IFFChunk {
+    constructor(bs) {
+        super(bs);
+        this.isParsed = false;
+        this.dbs = this.id === 'TXTz' ? null : this.bs;
+    }
+    decode() {
+        if (this.isParsed) {
+            return;
+        }
+        if (!this.dbs) {
+            this.dbs = BZZDecoder.decodeByteStream(this.bs);
+        }
+        this.textLength = this.dbs.getInt24();
+        this.text = this.dbs.readStrUTF(this.textLength);
+        this.version = this.dbs.getUint8();
+        if (this.version !== 1) {
+            console.warn("The version in " + this.id + " isn't equal to 1!");
+        }
+        this.isParsed = true;
+    }
+    getText() {
+        this.decode();
+        return this.text;
+    }
+    toString() {
+        this.decode();
+        var st = "Text length = " + this.textLength + "\n";
+        return super.toString() + st;
+    }
+}
+
+class DjVuPage extends CompositeChunk {
+    constructor(bs, getINCLChunkCallback) {
+        super(bs);
+        this.getINCLChunkCallback = getINCLChunkCallback;
+        this.reset();
+    }
+    reset() {
+        this.bs.setOffset(12);
+        this.djbz = null;
+        this.bg44arr = new Array();
+        this.fg44 = null;
+        this.bgimage = null;
+        this.fgimage = null;
+        this.sjbz = null;
+        this.fgbz = null;
+        this.text = null;
+        this.decoded = false;
+        this.isBackgroundCompletelyDecoded = false;
+        this.isFirstBgChunkDecoded = false;
+        this.info = null;
+        this.iffchunks = [];
+        this.dependencies = null;
+    }
+    getDpi() {
+        if (this.info) {
+            return this.info.dpi;
+        } else {
+            return this.init().info.dpi;
+        }
+    }
+    getDependencies() {
+        if (this.info || this.dependencies) {
+            return this.dependencies;
+        }
+        this.dependencies = [];
+        var bs = this.bs.fork();
+        while (!bs.isEmpty()) {
+            var chunk;
+            var id = bs.readStr4();
+            var length = bs.getInt32();
+            bs.jump(-8);
+            var chunkBs = bs.fork(length + 8);
+            bs.jump(8 + length + (length & 1 ? 1 : 0));
+            if (id === "INCL") {
+                chunk = new INCLChunk(chunkBs);
+                this.dependencies.push(chunk.ref);
+            }
+        }
+        return this.dependencies;
+    }
+    init() {
+        if (this.info) {
+            return this;
+        }
+        this.dependencies = [];
+        this.info = new INFOChunk(this.bs.fork(18));
+        this.bs.jump(18);
+        this.iffchunks.push(this.info);
+        while (!this.bs.isEmpty()) {
+            var chunk;
+            var id = this.bs.readStr4();
+            var length = this.bs.getInt32();
+            this.bs.jump(-8);
+            var chunkBs = this.bs.fork(length + 8);
+            this.bs.jump(8 + length + (length & 1 ? 1 : 0));
+            if (id == "FG44") {
+                chunk = this.fg44 = new ColorChunk(chunkBs);
+            } else if (id == "BG44") {
+                this.bg44arr.push(chunk = new ColorChunk(chunkBs));
+            } else if (id == 'Sjbz') {
+                chunk = this.sjbz = new JB2Image(chunkBs);
+            } else if (id === "INCL") {
+                chunk = this.incl = new INCLChunk(chunkBs);
+                var inclChunk = this.getINCLChunkCallback(this.incl.ref);
+                inclChunk.id === "Djbz" ? this.djbz = inclChunk : this.iffchunks.push(inclChunk);
+                this.dependencies.push(chunk.ref);
+            } else if (id === "CIDa") {
+                chunk = new CIDaChunk(chunkBs);
+            } else if (id === 'Djbz') {
+                chunk = this.djbz = new JB2Dict(chunkBs);
+            } else if (id === 'FGbz') {
+                chunk = this.fgbz = new DjVuPalette(chunkBs);
+            } else if (id === 'TXTa' || id === 'TXTz') {
+                chunk = this.text = new DjVuText(chunkBs);
+            } else {
+                chunk = new IFFChunk(chunkBs);
+            }
+            this.iffchunks.push(chunk);
+        }
+        return this;
+    }
+    getImageData(isOnlyFirstBgChunk = false) {
+        this.decode(isOnlyFirstBgChunk);
+        var time = performance.now();
+        if (!this.sjbz) {
+            if (this.bgimage) {
+                return this.bgimage.getImage();
+            }
+            else if (this.fgimage) {
+                return this.fgimage.getImage();
+            } else {
+                return null;
+            }
+        }
+        if (!this.bgimage && !this.fgimage) {
+            return this.sjbz.getImage(this.fgbz);
+        }
+        var fgscale, bgscale, fgpixelmap, bgpixelmap;
+        function fakePixelMap(r, g, b) {
+            return {
+                writePixel(index, pixelArray, pixelIndex) {
+                    pixelArray[pixelIndex] = r;
+                    pixelArray[pixelIndex | 1] = g;
+                    pixelArray[pixelIndex | 2] = b;
+                }
+            }
+        }
+        if (this.bgimage) {
+            bgscale = Math.round(this.info.width / this.bgimage.info.width);
+            bgpixelmap = this.bgimage.pixelmap;
+        } else {
+            bgscale = 1;
+            bgpixelmap = fakePixelMap(255, 255, 255);
+        }
+        if (this.fgimage) {
+            fgscale = Math.round(this.info.width / this.fgimage.info.width);
+            fgpixelmap = this.fgimage.pixelmap;
+        } else {
+            fgscale = 1;
+            fgpixelmap = fakePixelMap(0, 0, 0);
+        }
+        var image;
+        if (!this.fgbz) {
+            image = this.createImageFromMaskImageAndPixelMaps(
+                this.sjbz.getMaskImage(),
+                fgpixelmap,
+                bgpixelmap,
+                fgscale,
+                bgscale
+            );
+        } else {
+            image = this.createImageFromMaskImageAndBackgroundPixelMap(
+                this.sjbz.getImage(this.fgbz, true),
+                bgpixelmap,
+                bgscale
+            );
+        }
+        DjVu.IS_DEBUG && console.log("DataImage creating time = ", performance.now() - time);
+        return image;
+    }
+    createImageFromMaskImageAndPixelMaps(maskImage, fgpixelmap, bgpixelmap, fgscale, bgscale) {
+        var image = maskImage;
+        var pixelArray = image.data;
+        var rowIndexOffset = ((this.info.height - 1) * this.info.width) << 2;
+        var width4 = this.info.width << 2;
+        for (var i = 0; i < this.info.height; i++) {
+            var bis = i / bgscale >> 0;
+            var fis = i / fgscale >> 0;
+            var bgIndexOffset = bgpixelmap.width * bis;
+            var fgIndexOffset = fgpixelmap.width * fis;
+            var index = rowIndexOffset;
+            for (var j = 0; j < this.info.width; j++) {
+                if (pixelArray[index]) {
+                    bgpixelmap.writePixel(bgIndexOffset + (j / bgscale >> 0), pixelArray, index);
+                } else {
+                    fgpixelmap.writePixel(fgIndexOffset + (j / fgscale >> 0), pixelArray, index);
+                }
+                index += 4;
+            }
+            rowIndexOffset -= width4;
+        }
+        return image;
+    }
+    createImageFromMaskImageAndBackgroundPixelMap(maskImage, bgpixelmap, bgscale) {
+        var pixelArray = maskImage.data;
+        var rowOffset = (this.info.height - 1) * this.info.width << 2;
+        var width4 = this.info.width << 2;
+        for (var i = 0; i < this.info.height; i++) {
+            var bgRowOffset = (i / bgscale >> 0) * bgpixelmap.width;
+            var index = rowOffset;
+            for (var j = 0; j < this.info.width; j++) {
+                if (pixelArray[index | 3]) {
+                    bgpixelmap.writePixel(bgRowOffset + (j / bgscale >> 0), pixelArray, index);
+                } else {
+                    pixelArray[index | 3] = 255;
+                }
+                index += 4;
+            }
+            rowOffset -= width4;
+        }
+        return maskImage;
+    }
+    decodeForeground() {
+        if (this.fg44) {
+            this.fgimage = new IWImage();
+            let zp = new ZPDecoder(this.fg44.bs);
+            this.fgimage.decodeChunk(zp, this.fg44.header);
+            var pixelMapTime = performance.now();
+            this.fgimage.createPixelmap();
+            DjVu.IS_DEBUG && console.log("Foreground pixelmap creating time = ", performance.now() - pixelMapTime);
+        }
+    }
+    decodeBackground(isOnlyFirstChunk = false) {
+        if (this.isBackgroundCompletelyDecoded || this.isFirstBgChunkDecoded && isOnlyFirstChunk) {
+            return;
+        }
+        if (this.bg44arr.length) {
+            this.bgimage = this.bgimage || new IWImage();
+            var to = isOnlyFirstChunk ? 1 : this.bg44arr.length;
+            var from = this.isFirstBgChunkDecoded ? 1 : 0;
+            for (var i = from; i < to; i++) {
+                var chunk = this.bg44arr[i];
+                var zp = new ZPDecoder(chunk.bs);
+                var time = performance.now();
+                this.bgimage.decodeChunk(zp, chunk.header);
+                DjVu.IS_DEBUG && console.log("Background chuck decoding time = ", performance.now() - time);
+            }
+            var pixelMapTime = performance.now();
+            this.bgimage.createPixelmap();
+            DjVu.IS_DEBUG && console.log("Background pixelmap creating time = ", performance.now() - pixelMapTime);
+            if (isOnlyFirstChunk) {
+                this.isFirstBgChunkDecoded = true;
+            } else {
+                this.isBackgroundCompletelyDecoded = true;
+            }
+        }
+    }
+    decode(onlyFirstChunk = false) {
+        if (this.decoded) {
+            this.decodeBackground(onlyFirstChunk);
+            return this;
+        }
+        this.init();
+        var time = performance.now();
+        this.sjbz ? this.sjbz.decode(this.djbz) : 0;
+        DjVu.IS_DEBUG && console.log("Mask decoding time = ", performance.now() - time);
+        time = performance.now();
+        this.decodeForeground();
+        DjVu.IS_DEBUG && console.log("Foreground decoding time = ", performance.now() - time);
+        time = performance.now();
+        this.decodeBackground(onlyFirstChunk);
+        DjVu.IS_DEBUG && console.log("Background decoding time = ", performance.now() - time);
+        this.decoded = true;
+        return this;
+    }
+    getBackgroundImageData() {
+        this.decode();
+        if (this.bg44arr.length) {
+            this.bg44arr.forEach((chunk) => {
+                let zp = new ZPDecoder(chunk.bs);
+                this.bgimage.decodeChunk(zp, chunk.header);
+            }
+            );
+            return this.bgimage.getImage();
+        } else {
+            return null;
+        }
+    }
+    getForegroundImageData() {
+        this.decode();
+        if (this.fg44) {
+            this.fgimage = new IWImage();
+            let zp = new ZPDecoder(this.fg44.bs);
+            this.fgimage.decodeChunk(zp, this.fg44.header);
+            return this.fgimage.getImage();
+        } else {
+            return null;
+        }
+    }
+    getMaskImageData() {
+        this.decode();
+        return this.sjbz && this.sjbz.getImage(this.fgbz);
+    }
+    getText() {
+        this.init();
+        if (this.text) {
+            return this.text.getText();
+        } else {
+            return "";
+        }
+    }
+    toString() {
+        this.init();
+        var str = this.iffchunks.reduce((str, chunk) => str + chunk.toString(), '');
+        return super.toString(str);
+    }
+}
+
 class BZZEncoder {
     constructor(zp) {
         this.zp = zp || new ZPEncoder();
@@ -679,7 +2647,7 @@ class BZZEncoder {
 
 class DjVuWriter {
     constructor(length) {
-        this.bsw = new ByteStreamWriter(length || 1024 * 1024);
+        this.bsw = new ByteStreamWriter$1(length || 1024 * 1024);
     }
     startDJVM() {
         this.bsw.writeStr('AT&T').writeStr('FORM').saveOffsetMark('fileSize')
@@ -693,7 +2661,7 @@ class DjVuWriter {
             .writeInt16(dirm.flags.length)
             .saveOffsetMark('DIRMoffsets')
             .jump(4 * dirm.flags.length);
-        var tmpBS = new ByteStreamWriter();
+        var tmpBS = new ByteStreamWriter$1();
         for (var i = 0; i < dirm.sizes.length; i++) {
             tmpBS.writeInt24(dirm.sizes[i]);
         }
@@ -711,7 +2679,7 @@ class DjVuWriter {
         }
         tmpBS.writeByte(0);
         var tmpBuffer = tmpBS.getBuffer();
-        var bzzBS = new ByteStreamWriter();
+        var bzzBS = new ByteStreamWriter$1();
         var zp = new ZPEncoder(bzzBS);
         var bzz = new BZZEncoder(zp);
         bzz.encode(tmpBuffer);
@@ -768,1914 +2736,9 @@ class DjVuWriter {
     }
 }
 
-class ByteStream {
-    constructor(buffer, offsetx, length) {
-        this.buffer = buffer;
-        this.offsetx = offsetx || 0;
-        this.offset = 0;
-        this.length = length || buffer.byteLength;
-        if (this.length + offsetx > buffer.byteLength) {
-            this.length = buffer.byteLength - offsetx;
-            console.error("Incorrect length in ByteStream!");
-        }
-        this.viewer = new DataView(this.buffer, this.offsetx, this.length);
-    }
-    getUint8Array(length) {
-        length = length || this.restLength();
-        var off = this.offset;
-        this.offset += length;
-        return new Uint8Array(this.buffer, this.offsetx + off, length);
-    }
-    toUint8Array() {
-        return new Uint8Array(this.buffer, this.offsetx, this.length);
-    }
-    restLength() {
-        return this.length - this.offset;
-    }
-    reset() {
-        this.offset = 0;
-    }
-    byte() {
-        if (this.offset >= this.length) {
-            this.offset++;
-            return 0xff;
-        }
-        return this.viewer.getUint8(this.offset++);
-    }
-    getInt8() {
-        return this.viewer.getInt8(this.offset++);
-    }
-    getInt16() {
-        let tmp = this.viewer.getInt16(this.offset);
-        this.offset += 2;
-        return tmp;
-    }
-    getUint16() {
-        let tmp = this.viewer.getUint16(this.offset);
-        this.offset += 2;
-        return tmp;
-    }
-    getInt32() {
-        let tmp = this.viewer.getInt32(this.offset);
-        this.offset += 4;
-        return tmp;
-    }
-    getUint8() {
-        return this.viewer.getUint8(this.offset++);
-    }
-    getInt24() {
-        var uint = this.getUint24();
-        return (uint & 0x800000) ? (0xffffff - val + 1) * -1 : uint
-    }
-    getUint24() {
-        return (this.byte() << 16) | (this.byte() << 8) | this.byte();
-    }
-    jump(length) {
-        this.offset += length;
-    }
-    setOffset(offset) {
-        this.offset = offset;
-    }
-    readChunkName() {
-        return this.readStr4();
-    }
-    readStr4() {
-        var str = "";
-        for (var i = 0; i < 4; i++) {
-            var byte = this.viewer.getUint8(this.offset++);
-            str += String.fromCharCode(byte);
-        }
-        return str;
-    }
-    readStrNT() {
-        var str = "";
-        var byte = this.viewer.getUint8(this.offset++);
-        while (byte) {
-            str += String.fromCharCode(byte);
-            byte = this.viewer.getUint8(this.offset++);
-        }
-        return str;
-    }
-    readStrUTF(byteLength) {
-        var array = this.getUint8Array(byteLength);
-        return String.fromCodePoint ? String.fromCodePoint(...array) : String.fromCharCode(...array);
-    }
-    fork(_length) {
-        var length = _length || (this.length - this.offset);
-        return new ByteStream(this.buffer, this.offsetx + this.offset, length);
-    }
-    clone() {
-        return new ByteStream(this.buffer, this.offsetx, this.length);
-    }
-    isEmpty() {
-        return this.offset >= this.length;
-    }
-}
+class ThumChunk extends CompositeChunk { }
 
-class Bytemap extends Array {
-    constructor(width, height) {
-        super(height);
-        this.height = height;
-        this.width = width;
-        for (var i = 0; i < height; i++) {
-            this[i] = new Int16Array(width);
-        }
-    }
-}
-class Block {
-    constructor(buffer, offset) {
-        this.array = new Int16Array(buffer, offset, 1024);
-        this.buckets = new Array(64);
-        var boff = 0;
-        for (var i = 0; i < 64; i++) {
-            this.buckets[i] = new Int16Array(buffer, offset | boff, 16);
-            offset += 32;
-        }
-    }
-    getCoef(n) {
-        return this.array[n];
-    }
-    setCoef(n, val) {
-        this.array[n] = val;
-    }
-    static createBlockArray(length) {
-        var blocks = new Array(length);
-        var buffer = new ArrayBuffer(length << 11);
-        for (var i = 0; i < length; i++) {
-            blocks[i] = new Block(buffer, i << 11);
-        }
-        return blocks;
-    }
-}
-class IWCodecBaseClass {
-    constructor() {
-        this.quant_lo = Uint32Array.of(
-            0x004000, 0x008000, 0x008000, 0x010000, 0x010000,
-            0x010000, 0x010000, 0x010000, 0x010000, 0x010000,
-            0x010000, 0x010000, 0x020000, 0x020000, 0x020000, 0x020000
-        );
-        this.quant_hi = Uint32Array.of(
-            0, 0x020000, 0x020000, 0x040000, 0x040000,
-            0x040000, 0x080000, 0x040000, 0x040000, 0x080000
-        );
-        this.bucketstate = new Uint8Array(16);
-        this.coeffstate = new Array(16);
-        for (var i = 0; i < 16; this.coeffstate[i++] = new Uint8Array(16)) { }
-        this.bbstate = 0;
-        this.decodeBucketCtx = new Uint8Array(1);
-        this.decodeCoefCtx = new Uint8Array(80);
-        this.activateCoefCtx = new Uint8Array(16);
-        this.inreaseCoefCtx = new Uint8Array(1);
-        this.curband = 0;
-    }
-    getBandBuckets(band) {
-        return this.bandBuckets[band];
-    }
-    is_null_slice() {
-        if (this.curband == 0)
-        {
-            var is_null = 1;
-            for (var i = 0; i < 16; i++) {
-                var threshold = this.quant_lo[i];
-                this.coeffstate[0][i] = 1        ;
-                if (threshold > 0 && threshold < 0x8000) {
-                    this.coeffstate[0][i] = 8       ;
-                    is_null = 0;
-                }
-            }
-            return is_null;
-        } else
-        {
-            var threshold = this.quant_hi[this.curband];
-            return (!(threshold > 0 && threshold < 0x8000));
-        }
-    }
-    finish_code_slice() {
-        this.quant_hi[this.curband] = this.quant_hi[this.curband] >> 1;
-        if (this.curband === 0) {
-            for (var i = 0; i < 16; i++)
-                this.quant_lo[i] = this.quant_lo[i] >> 1;
-        }
-        this.curband++;
-        if (this.curband === 10) {
-            this.curband = 0;
-        }
-    }
-}
-IWCodecBaseClass.prototype.ZERO = 1;
-IWCodecBaseClass.prototype.ACTIVE = 2;
-IWCodecBaseClass.prototype.NEW = 4;
-IWCodecBaseClass.prototype.UNK = 8;
-IWCodecBaseClass.prototype.zigzagRow = Uint8Array.of(0, 0, 16, 16, 0, 0, 16, 16, 8, 8, 24, 24, 8, 8, 24, 24, 0, 0, 16, 16, 0, 0, 16, 16, 8, 8, 24, 24, 8, 8, 24, 24, 4, 4, 20, 20, 4, 4, 20, 20, 12, 12, 28, 28, 12, 12, 28, 28, 4, 4, 20, 20, 4, 4, 20, 20, 12, 12, 28, 28, 12, 12, 28, 28, 0, 0, 16, 16, 0, 0, 16, 16, 8, 8, 24, 24, 8, 8, 24, 24, 0, 0, 16, 16, 0, 0, 16, 16, 8, 8, 24, 24, 8, 8, 24, 24, 4, 4, 20, 20, 4, 4, 20, 20, 12, 12, 28, 28, 12, 12, 28, 28, 4, 4, 20, 20, 4, 4, 20, 20, 12, 12, 28, 28, 12, 12, 28, 28, 2, 2, 18, 18, 2, 2, 18, 18, 10, 10, 26, 26, 10, 10, 26, 26, 2, 2, 18, 18, 2, 2, 18, 18, 10, 10, 26, 26, 10, 10, 26, 26, 6, 6, 22, 22, 6, 6, 22, 22, 14, 14, 30, 30, 14, 14, 30, 30, 6, 6, 22, 22, 6, 6, 22, 22, 14, 14, 30, 30, 14, 14, 30, 30, 2, 2, 18, 18, 2, 2, 18, 18, 10, 10, 26, 26, 10, 10, 26, 26, 2, 2, 18, 18, 2, 2, 18, 18, 10, 10, 26, 26, 10, 10, 26, 26, 6, 6, 22, 22, 6, 6, 22, 22, 14, 14, 30, 30, 14, 14, 30, 30, 6, 6, 22, 22, 6, 6, 22, 22, 14, 14, 30, 30, 14, 14, 30, 30, 0, 0, 16, 16, 0, 0, 16, 16, 8, 8, 24, 24, 8, 8, 24, 24, 0, 0, 16, 16, 0, 0, 16, 16, 8, 8, 24, 24, 8, 8, 24, 24, 4, 4, 20, 20, 4, 4, 20, 20, 12, 12, 28, 28, 12, 12, 28, 28, 4, 4, 20, 20, 4, 4, 20, 20, 12, 12, 28, 28, 12, 12, 28, 28, 0, 0, 16, 16, 0, 0, 16, 16, 8, 8, 24, 24, 8, 8, 24, 24, 0, 0, 16, 16, 0, 0, 16, 16, 8, 8, 24, 24, 8, 8, 24, 24, 4, 4, 20, 20, 4, 4, 20, 20, 12, 12, 28, 28, 12, 12, 28, 28, 4, 4, 20, 20, 4, 4, 20, 20, 12, 12, 28, 28, 12, 12, 28, 28, 2, 2, 18, 18, 2, 2, 18, 18, 10, 10, 26, 26, 10, 10, 26, 26, 2, 2, 18, 18, 2, 2, 18, 18, 10, 10, 26, 26, 10, 10, 26, 26, 6, 6, 22, 22, 6, 6, 22, 22, 14, 14, 30, 30, 14, 14, 30, 30, 6, 6, 22, 22, 6, 6, 22, 22, 14, 14, 30, 30, 14, 14, 30, 30, 2, 2, 18, 18, 2, 2, 18, 18, 10, 10, 26, 26, 10, 10, 26, 26, 2, 2, 18, 18, 2, 2, 18, 18, 10, 10, 26, 26, 10, 10, 26, 26, 6, 6, 22, 22, 6, 6, 22, 22, 14, 14, 30, 30, 14, 14, 30, 30, 6, 6, 22, 22, 6, 6, 22, 22, 14, 14, 30, 30, 14, 14, 30, 30, 1, 1, 17, 17, 1, 1, 17, 17, 9, 9, 25, 25, 9, 9, 25, 25, 1, 1, 17, 17, 1, 1, 17, 17, 9, 9, 25, 25, 9, 9, 25, 25, 5, 5, 21, 21, 5, 5, 21, 21, 13, 13, 29, 29, 13, 13, 29, 29, 5, 5, 21, 21, 5, 5, 21, 21, 13, 13, 29, 29, 13, 13, 29, 29, 1, 1, 17, 17, 1, 1, 17, 17, 9, 9, 25, 25, 9, 9, 25, 25, 1, 1, 17, 17, 1, 1, 17, 17, 9, 9, 25, 25, 9, 9, 25, 25, 5, 5, 21, 21, 5, 5, 21, 21, 13, 13, 29, 29, 13, 13, 29, 29, 5, 5, 21, 21, 5, 5, 21, 21, 13, 13, 29, 29, 13, 13, 29, 29, 3, 3, 19, 19, 3, 3, 19, 19, 11, 11, 27, 27, 11, 11, 27, 27, 3, 3, 19, 19, 3, 3, 19, 19, 11, 11, 27, 27, 11, 11, 27, 27, 7, 7, 23, 23, 7, 7, 23, 23, 15, 15, 31, 31, 15, 15, 31, 31, 7, 7, 23, 23, 7, 7, 23, 23, 15, 15, 31, 31, 15, 15, 31, 31, 3, 3, 19, 19, 3, 3, 19, 19, 11, 11, 27, 27, 11, 11, 27, 27, 3, 3, 19, 19, 3, 3, 19, 19, 11, 11, 27, 27, 11, 11, 27, 27, 7, 7, 23, 23, 7, 7, 23, 23, 15, 15, 31, 31, 15, 15, 31, 31, 7, 7, 23, 23, 7, 7, 23, 23, 15, 15, 31, 31, 15, 15, 31, 31, 1, 1, 17, 17, 1, 1, 17, 17, 9, 9, 25, 25, 9, 9, 25, 25, 1, 1, 17, 17, 1, 1, 17, 17, 9, 9, 25, 25, 9, 9, 25, 25, 5, 5, 21, 21, 5, 5, 21, 21, 13, 13, 29, 29, 13, 13, 29, 29, 5, 5, 21, 21, 5, 5, 21, 21, 13, 13, 29, 29, 13, 13, 29, 29, 1, 1, 17, 17, 1, 1, 17, 17, 9, 9, 25, 25, 9, 9, 25, 25, 1, 1, 17, 17, 1, 1, 17, 17, 9, 9, 25, 25, 9, 9, 25, 25, 5, 5, 21, 21, 5, 5, 21, 21, 13, 13, 29, 29, 13, 13, 29, 29, 5, 5, 21, 21, 5, 5, 21, 21, 13, 13, 29, 29, 13, 13, 29, 29, 3, 3, 19, 19, 3, 3, 19, 19, 11, 11, 27, 27, 11, 11, 27, 27, 3, 3, 19, 19, 3, 3, 19, 19, 11, 11, 27, 27, 11, 11, 27, 27, 7, 7, 23, 23, 7, 7, 23, 23, 15, 15, 31, 31, 15, 15, 31, 31, 7, 7, 23, 23, 7, 7, 23, 23, 15, 15, 31, 31, 15, 15, 31, 31, 3, 3, 19, 19, 3, 3, 19, 19, 11, 11, 27, 27, 11, 11, 27, 27, 3, 3, 19, 19, 3, 3, 19, 19, 11, 11, 27, 27, 11, 11, 27, 27, 7, 7, 23, 23, 7, 7, 23, 23, 15, 15, 31, 31, 15, 15, 31, 31, 7, 7, 23, 23, 7, 7, 23, 23, 15, 15, 31, 31, 15, 15, 31, 31);
-IWCodecBaseClass.prototype.zigzagCol = Uint8Array.of(0, 16, 0, 16, 8, 24, 8, 24, 0, 16, 0, 16, 8, 24, 8, 24, 4, 20, 4, 20, 12, 28, 12, 28, 4, 20, 4, 20, 12, 28, 12, 28, 0, 16, 0, 16, 8, 24, 8, 24, 0, 16, 0, 16, 8, 24, 8, 24, 4, 20, 4, 20, 12, 28, 12, 28, 4, 20, 4, 20, 12, 28, 12, 28, 2, 18, 2, 18, 10, 26, 10, 26, 2, 18, 2, 18, 10, 26, 10, 26, 6, 22, 6, 22, 14, 30, 14, 30, 6, 22, 6, 22, 14, 30, 14, 30, 2, 18, 2, 18, 10, 26, 10, 26, 2, 18, 2, 18, 10, 26, 10, 26, 6, 22, 6, 22, 14, 30, 14, 30, 6, 22, 6, 22, 14, 30, 14, 30, 0, 16, 0, 16, 8, 24, 8, 24, 0, 16, 0, 16, 8, 24, 8, 24, 4, 20, 4, 20, 12, 28, 12, 28, 4, 20, 4, 20, 12, 28, 12, 28, 0, 16, 0, 16, 8, 24, 8, 24, 0, 16, 0, 16, 8, 24, 8, 24, 4, 20, 4, 20, 12, 28, 12, 28, 4, 20, 4, 20, 12, 28, 12, 28, 2, 18, 2, 18, 10, 26, 10, 26, 2, 18, 2, 18, 10, 26, 10, 26, 6, 22, 6, 22, 14, 30, 14, 30, 6, 22, 6, 22, 14, 30, 14, 30, 2, 18, 2, 18, 10, 26, 10, 26, 2, 18, 2, 18, 10, 26, 10, 26, 6, 22, 6, 22, 14, 30, 14, 30, 6, 22, 6, 22, 14, 30, 14, 30, 1, 17, 1, 17, 9, 25, 9, 25, 1, 17, 1, 17, 9, 25, 9, 25, 5, 21, 5, 21, 13, 29, 13, 29, 5, 21, 5, 21, 13, 29, 13, 29, 1, 17, 1, 17, 9, 25, 9, 25, 1, 17, 1, 17, 9, 25, 9, 25, 5, 21, 5, 21, 13, 29, 13, 29, 5, 21, 5, 21, 13, 29, 13, 29, 3, 19, 3, 19, 11, 27, 11, 27, 3, 19, 3, 19, 11, 27, 11, 27, 7, 23, 7, 23, 15, 31, 15, 31, 7, 23, 7, 23, 15, 31, 15, 31, 3, 19, 3, 19, 11, 27, 11, 27, 3, 19, 3, 19, 11, 27, 11, 27, 7, 23, 7, 23, 15, 31, 15, 31, 7, 23, 7, 23, 15, 31, 15, 31, 1, 17, 1, 17, 9, 25, 9, 25, 1, 17, 1, 17, 9, 25, 9, 25, 5, 21, 5, 21, 13, 29, 13, 29, 5, 21, 5, 21, 13, 29, 13, 29, 1, 17, 1, 17, 9, 25, 9, 25, 1, 17, 1, 17, 9, 25, 9, 25, 5, 21, 5, 21, 13, 29, 13, 29, 5, 21, 5, 21, 13, 29, 13, 29, 3, 19, 3, 19, 11, 27, 11, 27, 3, 19, 3, 19, 11, 27, 11, 27, 7, 23, 7, 23, 15, 31, 15, 31, 7, 23, 7, 23, 15, 31, 15, 31, 3, 19, 3, 19, 11, 27, 11, 27, 3, 19, 3, 19, 11, 27, 11, 27, 7, 23, 7, 23, 15, 31, 15, 31, 7, 23, 7, 23, 15, 31, 15, 31, 0, 16, 0, 16, 8, 24, 8, 24, 0, 16, 0, 16, 8, 24, 8, 24, 4, 20, 4, 20, 12, 28, 12, 28, 4, 20, 4, 20, 12, 28, 12, 28, 0, 16, 0, 16, 8, 24, 8, 24, 0, 16, 0, 16, 8, 24, 8, 24, 4, 20, 4, 20, 12, 28, 12, 28, 4, 20, 4, 20, 12, 28, 12, 28, 2, 18, 2, 18, 10, 26, 10, 26, 2, 18, 2, 18, 10, 26, 10, 26, 6, 22, 6, 22, 14, 30, 14, 30, 6, 22, 6, 22, 14, 30, 14, 30, 2, 18, 2, 18, 10, 26, 10, 26, 2, 18, 2, 18, 10, 26, 10, 26, 6, 22, 6, 22, 14, 30, 14, 30, 6, 22, 6, 22, 14, 30, 14, 30, 0, 16, 0, 16, 8, 24, 8, 24, 0, 16, 0, 16, 8, 24, 8, 24, 4, 20, 4, 20, 12, 28, 12, 28, 4, 20, 4, 20, 12, 28, 12, 28, 0, 16, 0, 16, 8, 24, 8, 24, 0, 16, 0, 16, 8, 24, 8, 24, 4, 20, 4, 20, 12, 28, 12, 28, 4, 20, 4, 20, 12, 28, 12, 28, 2, 18, 2, 18, 10, 26, 10, 26, 2, 18, 2, 18, 10, 26, 10, 26, 6, 22, 6, 22, 14, 30, 14, 30, 6, 22, 6, 22, 14, 30, 14, 30, 2, 18, 2, 18, 10, 26, 10, 26, 2, 18, 2, 18, 10, 26, 10, 26, 6, 22, 6, 22, 14, 30, 14, 30, 6, 22, 6, 22, 14, 30, 14, 30, 1, 17, 1, 17, 9, 25, 9, 25, 1, 17, 1, 17, 9, 25, 9, 25, 5, 21, 5, 21, 13, 29, 13, 29, 5, 21, 5, 21, 13, 29, 13, 29, 1, 17, 1, 17, 9, 25, 9, 25, 1, 17, 1, 17, 9, 25, 9, 25, 5, 21, 5, 21, 13, 29, 13, 29, 5, 21, 5, 21, 13, 29, 13, 29, 3, 19, 3, 19, 11, 27, 11, 27, 3, 19, 3, 19, 11, 27, 11, 27, 7, 23, 7, 23, 15, 31, 15, 31, 7, 23, 7, 23, 15, 31, 15, 31, 3, 19, 3, 19, 11, 27, 11, 27, 3, 19, 3, 19, 11, 27, 11, 27, 7, 23, 7, 23, 15, 31, 15, 31, 7, 23, 7, 23, 15, 31, 15, 31, 1, 17, 1, 17, 9, 25, 9, 25, 1, 17, 1, 17, 9, 25, 9, 25, 5, 21, 5, 21, 13, 29, 13, 29, 5, 21, 5, 21, 13, 29, 13, 29, 1, 17, 1, 17, 9, 25, 9, 25, 1, 17, 1, 17, 9, 25, 9, 25, 5, 21, 5, 21, 13, 29, 13, 29, 5, 21, 5, 21, 13, 29, 13, 29, 3, 19, 3, 19, 11, 27, 11, 27, 3, 19, 3, 19, 11, 27, 11, 27, 7, 23, 7, 23, 15, 31, 15, 31, 7, 23, 7, 23, 15, 31, 15, 31, 3, 19, 3, 19, 11, 27, 11, 27, 3, 19, 3, 19, 11, 27, 11, 27, 7, 23, 7, 23, 15, 31, 15, 31, 7, 23, 7, 23, 15, 31, 15, 31);
-IWCodecBaseClass.prototype.bandBuckets = [
-    { from: 0, to: 0 },
-    { from: 1, to: 1 },
-    { from: 2, to: 2 },
-    { from: 3, to: 3 },
-    { from: 4, to: 7 },
-    { from: 8, to: 11 },
-    { from: 12, to: 15 },
-    { from: 16, to: 31 },
-    { from: 32, to: 47 },
-    { from: 48, to: 63 }
-];
-
-class IWDecoder extends IWCodecBaseClass {
-    constructor() {
-        super();
-    }
-    init(imageinfo) {
-        this.info = imageinfo;
-        let blockCount = Math.ceil(this.info.width / 32) * Math.ceil(this.info.height / 32);
-        this.blocks = Block.createBlockArray(blockCount);
-    }
-    decodeSlice(zp, imageinfo) {
-        if (!this.info) {
-            this.init(imageinfo);
-        } else {
-            this.info.slices = imageinfo.slices;
-        }
-        this.zp = zp;
-        if (!this.is_null_slice()) {
-            for (var i = 0; i < this.blocks.length; i++) {
-                var block = this.blocks[i];
-                this.preliminaryFlagComputation(block);
-                if (this.blockBandDecodingPass(block, this.curband)) {
-                    this.bucketDecodingPass(block, this.curband);
-                    this.newlyActiveCoefficientDecodingPass(block, this.curband);
-                }
-                this.previouslyActiveCoefficientDecodingPass(block, this.curband);
-            }
-        }
-        this.finish_code_slice();
-    }
-    previouslyActiveCoefficientDecodingPass(block) {
-        var boff = 0;
-        var step = this.quant_hi[this.curband];
-        var indices = this.getBandBuckets(this.curband);
-        for (var i = indices.from; i <= indices.to; i++ ,
-            boff++) {
-            for (var j = 0; j < 16; j++) {
-                if (this.coeffstate[boff][j] & 2           ) {
-                    if (!this.curband) {
-                        step = this.quant_lo[j];
-                    }
-                    var des = 0;
-                    var coef = Math.abs(block.buckets[i][j]);
-                    if (coef <= 3 * step) {
-                        des = this.zp.decode(this.inreaseCoefCtx, 0);
-                        coef += step >> 2;
-                    } else {
-                        des = this.zp.IWdecode();
-                    }
-                    if (des) {
-                        coef += step >> 1;
-                    } else {
-                        coef += -step + (step >> 1);
-                    }
-                    block.buckets[i][j] = block.buckets[i][j] < 0 ? -coef : coef;
-                }
-            }
-        }
-    }
-    newlyActiveCoefficientDecodingPass(block, band) {
-        var boff = 0;
-        var indices = this.getBandBuckets(band);
-        var step = this.quant_hi[this.curband];
-        for (var i = indices.from; i <= indices.to; i++ ,
-            boff++) {
-            if (this.bucketstate[boff] & 4       ) {
-                var shift = 0;
-                if (this.bucketstate[boff] & 2          ) {
-                    shift = 8;
-                }
-                var bucket = block.buckets[i];
-                var np = 0;
-                for (var j = 0; j < 16; j++) {
-                    if (this.coeffstate[boff][j] & 8       ) {
-                        np++;
-                    }
-                }
-                for (var j = 0; j < 16; j++) {
-                    if (this.coeffstate[boff][j] & 8       ) {
-                        var ip = Math.min(7, np);
-                        var des = this.zp.decode(this.activateCoefCtx, shift + ip);
-                        if (des) {
-                            var sign = this.zp.IWdecode() ? -1 : 1;
-                            np = 0;
-                            if (!this.curband) {
-                                step = this.quant_lo[j];
-                            }
-                            bucket[j] = sign * (step + (step >> 1) - (step >> 3));
-                        }
-                        if (np) {
-                            np--;
-                        }
-                    }
-                }
-            }
-        }
-    }
-    bucketDecodingPass(block, band) {
-        var indices = this.getBandBuckets(band);
-        var boff = 0;
-        for (var i = indices.from; i <= indices.to; i++ ,
-            boff++) {
-            if (!(this.bucketstate[boff] & 8       )) {
-                continue;
-            }
-            var n = 0;
-            if (band) {
-                var t = 4 * i;
-                for (var j = t; j < t + 4; j++) {
-                    if (block.getCoef(j)) {
-                        n++;
-                    }
-                }
-                if (n === 4) {
-                    n--;
-                }
-            }
-            if (this.bbstate & 2          ) {
-                n |= 4;
-            }
-            if (this.zp.decode(this.decodeCoefCtx, n + band * 8)) {
-                this.bucketstate[boff] |= 4       ;
-            }
-        }
-    }
-    blockBandDecodingPass() {
-        var indices = this.getBandBuckets(this.curband);
-        var bcount = indices.to - indices.from + 1;
-        if (bcount < 16 || (this.bbstate & 2          )) {
-            this.bbstate |= 4        ;
-        } else if (this.bbstate & 8       ) {
-            if (this.zp.decode(this.decodeBucketCtx, 0)) {
-                this.bbstate |= 4       ;
-            }
-        }
-        return this.bbstate & 4       ;
-    }
-    preliminaryFlagComputation(block) {
-        this.bbstate = 0;
-        var bstatetmp = 0;
-        var indices = this.getBandBuckets(this.curband);
-        if (this.curband) {
-            var boff = 0;
-            for (var j = indices.from; j <= indices.to; j++ ,
-                boff++) {
-                bstatetmp = 0;
-                var bucket = block.buckets[j];
-                for (var k = 0; k < bucket.length; k++) {
-                    if (bucket[k] === 0) {
-                        this.coeffstate[boff][k] = 8       ;
-                    } else {
-                        this.coeffstate[boff][k] = 2          ;
-                    }
-                    bstatetmp |= this.coeffstate[boff][k];
-                }
-                this.bucketstate[boff] = bstatetmp;
-                this.bbstate |= bstatetmp;
-            }
-        } else {
-            var bucket = block.buckets[0];
-            for (var k = 0; k < bucket.length; k++) {
-                if (this.coeffstate[0][k] !== 1        ) {
-                    if (bucket[k] === 0) {
-                        this.coeffstate[0][k] = 8       ;
-                    } else {
-                        this.coeffstate[0][k] = 2          ;
-                    }
-                }
-                bstatetmp |= this.coeffstate[0][k];
-            }
-            this.bucketstate[0] = bstatetmp;
-            this.bbstate |= bstatetmp;
-        }
-    }
-    getBytemap(noInverse) {
-        var fullWidth = Math.ceil(this.info.width / 32) * 32;
-        var fullHeight = Math.ceil(this.info.height / 32) * 32;
-        var blockRows = Math.ceil(this.info.height / 32);
-        var blockCols = Math.ceil(this.info.width / 32);
-        var bm = new LinearBytemap(fullWidth, fullHeight);
-        for (var r = 0; r < blockRows; r++) {
-            for (var c = 0; c < blockCols; c++) {
-                var block = this.blocks[r * blockCols + c];
-                for (var i = 0; i < 1024; i++) {
-                    bm.set(this.zigzagRow[i] + 32 * r, this.zigzagCol[i] + 32 * c, block.getCoef(i));
-                }
-            }
-        }
-        if (!noInverse) {
-            this.inverseWaveletTransform(bm);
-        }
-        return bm;
-    }
-    inverseWaveletTransform(bitmap) {
-        var s = 16;
-        while (s) {
-            var kmax = Math.floor((this.info.height - 1) / s);
-            for (var i = 0; i < this.info.width; i += s) {
-                for (var k = 0; k <= kmax; k += 2) {
-                    var a, b, c, d;
-                    if (k - 1 < 0) {
-                        a = 0;
-                    } else {
-                        a = bitmap.get((k - 1) * s, i);
-                    }
-                    if (k - 3 < 0) {
-                        c = 0;
-                    } else {
-                        c = bitmap.get((k - 3) * s, i);
-                    }
-                    if (k + 1 > kmax) {
-                        b = 0;
-                    } else {
-                        b = bitmap.get((k + 1) * s, i);
-                    }
-                    if (k + 3 > kmax) {
-                        d = 0;
-                    } else {
-                        d = bitmap.get((k + 3) * s, i);
-                    }
-                    bitmap.sub(k * s, i, (9 * (a + b) - (c + d) + 16) >> 5);
-                }
-                for (var k = 1; k <= kmax; k += 2) {
-                    if ((k - 3 >= 0) && (k + 3 <= kmax)) {
-                        bitmap.add(k * s, i,
-                            (9 * (bitmap.get((k - 1) * s, i) + bitmap.get((k + 1) * s, i)) - (bitmap.get((k - 3) * s, i) + bitmap.get((k + 3) * s, i)) + 8) >> 4
-                        );
-                    } else if (k + 1 <= kmax) {
-                        bitmap.add(k * s, i, (bitmap.get((k - 1) * s, i) + bitmap.get((k + 1) * s, i) + 1) >> 1);
-                    } else {
-                        bitmap.add(k * s, i, bitmap.get((k - 1) * s, i));
-                    }
-                }
-            }
-            kmax = Math.floor((this.info.width - 1) / s);
-            for (var i = 0; i < this.info.height; i += s) {
-                for (var k = 0; k <= kmax; k += 2) {
-                    var a, b, c, d;
-                    if (k - 1 < 0) {
-                        a = 0;
-                    } else {
-                        a = bitmap.get(i, (k - 1) * s);
-                    }
-                    if (k - 3 < 0) {
-                        c = 0;
-                    } else {
-                        c = bitmap.get(i, (k - 3) * s);
-                    }
-                    if (k + 1 > kmax) {
-                        b = 0;
-                    } else {
-                        b = bitmap.get(i, (k + 1) * s);
-                    }
-                    if (k + 3 > kmax) {
-                        d = 0;
-                    } else {
-                        d = bitmap.get(i, (k + 3) * s);
-                    }
-                    bitmap.sub(i, k * s, (9 * (a + b) - (c + d) + 16) >> 5);
-                }
-                for (var k = 1; k <= kmax; k += 2) {
-                    if ((k - 3 >= 0) && (k + 3 <= kmax)) {
-                        bitmap.add(i, k * s,
-                            (9 * (bitmap.get(i, (k - 1) * s) + bitmap.get(i, (k + 1) * s)) - (bitmap.get(i, (k - 3) * s) + bitmap.get(i, (k + 3) * s)) + 8) >> 4
-                        );
-                    } else if (k + 1 <= kmax) {
-                        bitmap.add(i, k * s, (bitmap.get(i, (k - 1) * s) + bitmap.get(i, (k + 1) * s) + 1) >> 1);
-                    } else {
-                        bitmap.add(i, k * s, bitmap.get(i, (k - 1) * s));
-                    }
-                }
-            }
-            s >>= 1;
-        }
-    }
-}
-class LinearBytemap {
-    constructor(width, height) {
-        this.width = width;
-        this.array = new Float32Array(width * height);
-    }
-    byIndex(i) {
-        return this.array[i];
-    }
-    get(i, j) {
-        return this.array[(i * this.width) + j];
-    }
-    set(i, j, val) {
-        this.array[(i * this.width) + j] = val;
-    }
-    sub(i, j, val) {
-        this.array[(i * this.width) + j] -= val;
-    }
-    add(i, j, val) {
-        this.array[(i * this.width) + j] += val;
-    }
-}
-
-class IWImage {
-    constructor() {
-        this.ycodec = new IWDecoder();
-        this.cslice = 0;
-        this.info = null;
-        this.pixelmap = null;
-    }
-    decodeChunk(zp, header) {
-        if (!this.info) {
-            this.info = header;
-            if (!header.grayscale) {
-                this.crcodec = new IWDecoder();
-                this.cbcodec = new IWDecoder();
-            }
-        } else {
-            this.info.slices = header.slices;
-        }
-        for (var i = 0; i < this.info.slices; i++) {
-            this.cslice++;
-            this.ycodec.decodeSlice(zp, header);
-            if (this.crcodec && this.cbcodec && this.cslice > this.info.delayInit) {
-                this.cbcodec.decodeSlice(zp, header);
-                this.crcodec.decodeSlice(zp, header);
-            }
-        }
-    }
-    createPixelmap() {
-        if (!this.pixelmap) {
-            var ybitmap = this.ycodec.getBytemap();
-            var cbbitmap = this.cbcodec ? this.cbcodec.getBytemap() : null;
-            var crbitmap = this.crcodec ? this.crcodec.getBytemap() : null;
-            this.pixelmap = new Pixelmap(ybitmap, cbbitmap, crbitmap);
-        }
-    }
-    getImage() {
-        if (!this.pixelmap) {
-            this.pixelmap = this.createPixelmap();
-        }
-        var width = this.info.width;
-        var height = this.info.height;
-        var image = new ImageData(width, height);
-        for (var i = 0; i < height; i++) {
-            for (var j = 0; j < width; j++) {
-                let index = ((height - i - 1) * width + j) << 2;
-                this.pixelmap.writePixel(i, j, image.data, index);
-                image.data[index | 3] = 255;
-            }
-        }
-        return image;
-    }
-}
-class Pixelmap {
-    constructor(ybytemap, cbbytemap, crbytemap) {
-        this.ybytemap = ybytemap;
-        this.cbbytemap = cbbytemap;
-        this.crbytemap = crbytemap;
-    }
-    _normalize(val) {
-        val = (val + 32) >> 6;
-        if (val < -128) {
-            val = -128;
-        } else if (val >= 128) {
-            val = 127;
-        }
-        return val;
-    }
-    writePixel(i, j, pixelArray, pixelIndex) {
-        var index = this.ybytemap.width * i + j;
-        if (this.cbbytemap) {
-            var y = this._normalize(this.ybytemap.byIndex(index));
-            var b = this._normalize(this.cbbytemap.byIndex(index));
-            var r = this._normalize(this.crbytemap.byIndex(index));
-            var t2 = r + (r >> 1);
-            var t3 = y + 128 - (b >> 2);
-            pixelArray[pixelIndex] = y + 128 + t2;
-            pixelArray[pixelIndex | 1] = t3 - (t2 >> 1);
-            pixelArray[pixelIndex | 2] = t3 + (b << 1);
-        } else {
-            var v = this._normalize(this.ybytemap.byIndex(index));
-            v = 127 - v;
-            pixelArray[pixelIndex] = v;
-            pixelArray[pixelIndex | 1] = v;
-            pixelArray[pixelIndex | 2] = v;
-        }
-    }
-}
-
-class BZZDecoder {
-    constructor(zp) {
-        this.zp = zp;
-        this.maxblock = 4096;
-        this.FREQMAX = 4;
-        this.CTXIDS = 3;
-        this.mtf = new Uint8Array(256);
-        for (let i = 0; i < 256; i++) {
-            this.mtf[i] = i;
-        }
-        this.ctx = new Uint8Array(300);
-        this.size = 0;
-        this.blocksize = 0;
-        this.data = null;
-    }
-    decode_raw(bits) {
-        let n = 1;
-        let m = (1 << bits);
-        while (n < m) {
-            let b = this.zp.decode();
-            n = (n << 1) | b;
-        }
-        return n - m;
-    }
-    decode_binary(ctxoff, bits) {
-        let n = 1;
-        let m = (1 << bits);
-        ctxoff--;
-        while (n < m) {
-            let b = this.zp.decode(this.ctx, ctxoff + n);
-            n = (n << 1) | b;
-        }
-        return n - m;
-    }
-    _decode() {
-        this.size = this.decode_raw(24);
-        if (!this.size) {
-            return 0;
-        }
-        if (this.size > this.maxblock * 1024) {
-            throw new Error("Too big block. Error");
-        }
-        if (this.blocksize < this.size) {
-            this.blocksize = this.size;
-            this.data = new Uint8Array(this.blocksize);
-        } else if (this.data == null) {
-            this.data = new Uint8Array(this.blocksize);
-        }
-        let fshift = 0;
-        if (this.zp.decode()) {
-            fshift++;
-            if (this.zp.decode()) {
-                fshift++;
-            }
-        }
-        let freq = new Array(this.FREQMAX);
-        for (let i = 0; i < this.FREQMAX; freq[i++] = 0);
-        let fadd = 4;
-        let mtfno = 3;
-        let markerpos = -1;
-        for (let i = 0; i < this.size; i++) {
-            let ctxid = this.CTXIDS - 1;
-            if (ctxid > mtfno) {
-                ctxid = mtfno;
-            }
-            var ctxoff = 0;
-            switch (0)
-            {
-                default:
-                    if (this.zp.decode(this.ctx, ctxoff + ctxid) != 0) {
-                        mtfno = 0;
-                        this.data[i] = this.mtf[mtfno];
-                        break;
-                    }
-                    ctxoff += this.CTXIDS;
-                    if (this.zp.decode(this.ctx, ctxoff + ctxid) != 0) {
-                        mtfno = 1;
-                        this.data[i] = this.mtf[mtfno];
-                        break;
-                    }
-                    ctxoff += this.CTXIDS;
-                    if (this.zp.decode(this.ctx, ctxoff + 0) != 0) {
-                        mtfno = 2 + this.decode_binary(ctxoff + 1, 1);
-                        this.data[i] = this.mtf[mtfno];
-                        break;
-                    }
-                    ctxoff += (1 + 1);
-                    if (this.zp.decode(this.ctx, ctxoff + 0) != 0) {
-                        mtfno = 4 + this.decode_binary(ctxoff + 1, 2);
-                        this.data[i] = this.mtf[mtfno];
-                        break;
-                    }
-                    ctxoff += (1 + 3);
-                    if (this.zp.decode(this.ctx, ctxoff + 0) != 0) {
-                        mtfno = 8 + this.decode_binary(ctxoff + 1, 3);
-                        this.data[i] = this.mtf[mtfno];
-                        break;
-                    }
-                    ctxoff += (1 + 7);
-                    if (this.zp.decode(this.ctx, ctxoff + 0) != 0) {
-                        mtfno = 16 + this.decode_binary(ctxoff + 1, 4);
-                        this.data[i] = this.mtf[mtfno];
-                        break;
-                    }
-                    ctxoff += (1 + 15);
-                    if (this.zp.decode(this.ctx, ctxoff + 0) != 0) {
-                        mtfno = 32 + this.decode_binary(ctxoff + 1, 5);
-                        this.data[i] = this.mtf[mtfno];
-                        break;
-                    }
-                    ctxoff += (1 + 31);
-                    if (this.zp.decode(this.ctx, ctxoff + 0) != 0) {
-                        mtfno = 64 + this.decode_binary(ctxoff + 1, 6);
-                        this.data[i] = this.mtf[mtfno];
-                        break;
-                    }
-                    ctxoff += (1 + 63);
-                    if (this.zp.decode(this.ctx, ctxoff + 0) != 0) {
-                        mtfno = 128 + this.decode_binary(ctxoff + 1, 7);
-                        this.data[i] = this.mtf[mtfno];
-                        break;
-                    }
-                    mtfno = 256;
-                    this.data[i] = 0;
-                    markerpos = i;
-                    continue;
-            }
-            let k;
-            fadd = fadd + (fadd >> fshift);
-            if (fadd > 0x10000000) {
-                fadd >>= 24;
-                freq[0] >>= 24;
-                freq[1] >>= 24;
-                freq[2] >>= 24;
-                freq[3] >>= 24;
-                for (k = 4; k < this.FREQMAX; k++) {
-                    freq[k] >>= 24;
-                }
-            }
-            let fc = fadd;
-            if (mtfno < this.FREQMAX) {
-                fc += freq[mtfno];
-            }
-            for (k = mtfno; k >= this.FREQMAX; k--) {
-                this.mtf[k] = this.mtf[k - 1];
-            }
-            for (; (k > 0) && ((0xffffffff & fc) >= (0xffffffff & freq[k - 1])); k--) {
-                this.mtf[k] = this.mtf[k - 1];
-                freq[k] = freq[k - 1];
-            }
-            this.mtf[k] = this.data[i];
-            freq[k] = fc;
-        }
-        if ((markerpos < 1) || (markerpos >= this.size)) {
-            throw new Error("ByteStream.corrupt");
-        }
-        let pos = new Uint32Array(this.size);
-        for (let j = 0; j < this.size; pos[j++] = 0);
-        let count = new Array(256);
-        for (let i = 0; i < 256; count[i++] = 0);
-        for (let i = 0; i < markerpos; i++) {
-            let c = this.data[i];
-            pos[i] = (c << 24) | (count[0xff & c] & 0xffffff);
-            count[0xff & c]++;
-        }
-        for (let i = markerpos + 1; i < this.size; i++) {
-            let c = this.data[i];
-            pos[i] = (c << 24) | (count[0xff & c] & 0xffffff);
-            count[0xff & c]++;
-        }
-        let last = 1;
-        for (let i = 0; i < 256; i++) {
-            let tmp = count[i];
-            count[i] = last;
-            last += tmp;
-        }
-        let j = 0;
-        last = this.size - 1;
-        while (last > 0) {
-            let n = pos[j];
-            let c = pos[j] >> 24;
-            this.data[--last] = 0xff & c;
-            j = count[0xff & c] + (n & 0xffffff);
-        }
-        if (j != markerpos) {
-            throw new Error("ByteStream.corrupt");
-        }
-        return this.size;
-    }
-    getByteStream() {
-        var bsw, size;
-        while (size = this._decode()) {
-            if (!bsw) {
-                bsw = new ByteStreamWriter(size - 1);
-                var arr = new Uint8Array(this.data.buffer, 0, this.data.length - 1);
-                bsw.writeArray(arr);
-            }
-        }
-        this.data = null;
-        return new ByteStream(bsw.getBuffer());
-    }
-    static decodeByteStream(bs) {
-        return new BZZDecoder(new ZPDecoder(bs)).getByteStream();
-    }
-}
-
-class DjVuError {
-    constructor(message) {
-        this.message = message;
-    }
-}
-class IFFChunk {
-    constructor(bs) {
-        this.id = bs.readStr4();
-        this.length = bs.getInt32();
-        this.bs = bs;
-    }
-    toString() {
-        return this.id + " " + this.length + '\n';
-    }
-}
-class ColorChunk extends IFFChunk {
-    constructor(bs) {
-        super(bs);
-        this.header = new СolorChunkDataHeader(bs);
-    }
-    toString() {
-        return this.id + " " + this.length + this.header.toString();
-    }
-}
-class INFOChunk extends IFFChunk {
-    constructor(bs) {
-        super(bs);
-        this.width = bs.getInt16();
-        this.height = bs.getInt16();
-        this.minver = bs.getInt8();
-        this.majver = bs.getInt8();
-        this.dpi = bs.getUint8();
-        this.dpi |= bs.getUint8() << 8;
-        this.gamma = bs.getInt8();
-        this.flags = bs.getInt8();
-    }
-    toString() {
-        var str = super.toString();
-        str += "{" + 'width:' + this.width + ', '
-            + 'height:' + this.height + ', '
-            + 'minver:' + this.minver + ', '
-            + 'majver:' + this.majver + ', '
-            + 'dpi:' + this.dpi + ','
-            + 'gamma:' + this.gamma + ', '
-            + 'flags:' + this.flags + '}\n';
-        return str;
-    }
-}
-class СolorChunkDataHeader {
-    constructor(bs) {
-        this.serial = bs.getUint8();
-        this.slices = bs.getUint8();
-        if (!this.serial) {
-            this.majver = bs.getUint8();
-            this.grayscale = this.majver >> 7;
-            this.minver = bs.getUint8();
-            this.width = bs.getUint16();
-            this.height = bs.getUint16();
-            var byte = bs.getUint8();
-            this.delayInit = byte & 127;
-            if (!byte & 128) {
-                console.warn('Old image reconstruction should be applied!');
-            }
-        }
-    }
-    toString() {
-        return '\n' + JSON.stringify(this) + "\n";
-    }
-}
-class INCLChunk extends IFFChunk {
-    constructor(bs) {
-        super(bs);
-        this.ref = this.bs.readStrUTF();
-    }
-    toString() {
-        var str = super.toString();
-        str += "{Reference: " + this.ref + '}\n';
-        return str;
-    }
-}
-class CIDaChunk extends INCLChunk { }
-class NAVMChunk extends IFFChunk {
-    constructor(bs) {
-        super(bs);
-    }
-    toString() {
-        return super.toString() + '\n';
-    }
-}
-class DIRMChunk extends IFFChunk {
-    constructor(bs) {
-        super(bs);
-        this.dflags = bs.byte();
-        this.nfiles = bs.getInt16();
-        this.offsets = new Array(this.nfiles);
-        this.sizes = new Array(this.nfiles);
-        this.flags = new Array(this.nfiles);
-        this.ids = new Array(this.nfiles);
-        this.names = new Array(this.nfiles);
-        this.titles = new Array(this.nfiles);
-        for (var i = 0; i < this.nfiles; i++) {
-            this.offsets[i] = bs.getInt32();
-        }
-        var bsbs = bs.fork(this.length - 3 - 4 * this.nfiles);
-        var bsz = BZZDecoder.decodeByteStream(bsbs);
-        for (var i = 0; i < this.nfiles; i++) {
-            this.sizes[i] = bsz.getUint24();
-        }
-        for (var i = 0; i < this.nfiles; i++) {
-            this.flags[i] = bsz.byte();
-        }
-        for (var i = 0; i < this.nfiles && !bsz.isEmpty(); i++) {
-            this.ids[i] = bsz.readStrNT();
-            this.names[i] = this.flags[i] & 128 ? bsz.readStrNT() : this.ids[i];
-            this.titles[i] = this.flags[i] & 64 ? bsz.readStrNT() : this.ids[i];
-        }
-    }
-    toString() {
-        var str = super.toString();
-        str += "{Files: " + this.nfiles + '}\n';
-        return str + '\n';
-    }
-}
-
-class DjVuText extends IFFChunk {
-    constructor(bs) {
-        super(bs);
-        this.isParsed = false;
-        this.dbs = this.id === 'TXTz' ? null : this.bs;
-    }
-    decode() {
-        if (this.isParsed) {
-            return;
-        }
-        if (!this.dbs) {
-            this.dbs = BZZDecoder.decodeByteStream(this.bs);
-        }
-        this.textLength = this.dbs.getInt24();
-        this.text = this.dbs.readStrUTF(this.textLength);
-        this.version = this.dbs.getUint8();
-        if (this.version !== 1) {
-            console.warn("The version in " + this.id + " isn't equal to 1!");
-        }
-        this.isParsed = true;
-    }
-    getText() {
-        this.decode();
-        return this.text;
-    }
-    toString() {
-        this.decode();
-        var st = "Text length = " + this.textLength + "\n";
-        return super.toString() + st;
-    }
-}
-
-class DjVuPalette extends IFFChunk {
-    constructor(bs) {
-        var time = performance.now();
-        super(bs);
-        this.pixel = { r: 0, g: 0, b: 0 };
-        this.version = bs.getUint8();
-        if (this.version & 0x7f) {
-            throw "Bad Djvu Pallete version!";
-        }
-        this.palleteSize = bs.getInt16();
-        if (this.palleteSize < 0 || this.palleteSize > 65535) {
-            throw "Bad Djvu Pallete size!";
-        }
-        this.colorArray = bs.getUint8Array(this.palleteSize * 3);
-        if (this.version & 0x80) {
-            this.dataSize = bs.getInt24();
-            if (this.dataSize < 0) {
-                throw "Bad Djvu Pallete data size!";
-            }
-            var bsz = BZZDecoder.decodeByteStream(bs.fork());
-            this.colorIndices = new Int16Array(this.dataSize);
-            for (var i = 0; i < this.dataSize; i++) {
-                var index = bsz.getInt16();
-                if (index < 0 || index >= this.palleteSize) {
-                    throw "Bad Djvu Pallete index! " + index;
-                }
-                this.colorIndices[i] = index;
-            }
-        }
-        DjVu.IS_DEBUG && console.log('DjvuPalette time ', performance.now() - time);
-    }
-    getDataSize() {
-        return this.dataSize;
-    }
-    getPixelByBlitIndex(index) {
-        var colorIndex = this.colorIndices[index] * 3;
-        this.pixel.r = this.colorArray[colorIndex + 2];
-        this.pixel.g = this.colorArray[colorIndex + 1];
-        this.pixel.b = this.colorArray[colorIndex];
-        return this.pixel;
-    }
-    toString() {
-        var str = super.toString();
-        str += "Pallete size: " + this.palleteSize + "\n";
-        str += "Data size: " + this.dataSize + "\n";
-        return str;
-    }
-}
-
-class Bitmap$1 {
-    constructor(width, height) {
-        var length = Math.ceil(width * height / 8);
-        this.height = height;
-        this.width = width;
-        this.innerArray = new Uint8Array(length);
-    }
-    get(i, j) {
-        if (!this.hasRow(i) || j < 0 || j >= this.width) {
-            return 0;
-        }
-        var tmp = i * this.width + j;
-        var index = tmp >> 3;
-        var bitIndex = tmp & 7;
-        var mask = 128 >> bitIndex;
-        var answ = (this.innerArray[index] & mask) ? 1 : 0;
-        return answ;
-    }
-    set(i, j) {
-        var tmp = i * this.width + j;
-        var index = tmp >> 3;
-        var bitIndex = tmp & 7;
-        var mask = 128 >> bitIndex;
-        this.innerArray[index] |= mask;
-        return;
-    }
-    hasRow(r) {
-        return r >= 0 && r < this.height;
-    }
-    removeEmptyEdges() {
-        var bottomShift = 0;
-        var topShift = 0;
-        var leftShift = 0;
-        var rightShift = 0;
-        main_cycle: for (var i = 0; i < this.height; i++) {
-            for (var j = 0; j < this.width; j++) {
-                if (this.get(i, j)) {
-                    break main_cycle;
-                }
-            }
-            bottomShift++;
-        }
-        main_cycle: for (var i = this.height - 1; i >= 0; i--) {
-            for (var j = 0; j < this.width; j++) {
-                if (this.get(i, j)) {
-                    break main_cycle;
-                }
-            }
-            topShift++;
-        }
-        main_cycle: for (var j = 0; j < this.width; j++) {
-            for (var i = 0; i < this.height; i++) {
-                if (this.get(i, j)) {
-                    break main_cycle;
-                }
-            }
-            leftShift++;
-        }
-        main_cycle: for (var j = this.width - 1; j >= 0; j--) {
-            for (var i = 0; i < this.height; i++) {
-                if (this.get(i, j)) {
-                    break main_cycle;
-                }
-            }
-            rightShift++;
-        }
-        if (topShift || bottomShift || leftShift || rightShift) {
-            var newWidth = this.width - leftShift - rightShift;
-            var newHeight = this.height - topShift - bottomShift;
-            var newBitMap = new Bitmap$1(newWidth, newHeight);
-            for (var i = bottomShift, p = 0; p < newHeight; p++ , i++) {
-                for (var j = leftShift, q = 0; q < newWidth; q++ , j++) {
-                    if (this.get(i, j)) {
-                        newBitMap.set(p, q);
-                    }
-                }
-            }
-            return newBitMap;
-        }
-        return this;
-    }
-}
-class NumContext {
-    constructor() {
-        this.ctx = [0];
-        this._left = null;
-        this._right = null;
-    }
-    get left() {
-        if (!this._left) {
-            this._left = new NumContext();
-        }
-        return this._left;
-    }
-    get right() {
-        if (!this._right) {
-            this._right = new NumContext();
-        }
-        return this._right;
-    }
-}
-class JB2Codec extends IFFChunk {
-    constructor(bs) {
-        super(bs);
-        this.zp = new ZPDecoder(this.bs);
-        this.directBitmapCtx = new Uint8Array(1024);
-        this.refinementBitmapCtx = new Uint8Array(2048);
-        this.offsetTypeCtx = [0];
-        this.resetNumContexts();
-    }
-    resetNumContexts() {
-        this.recordTypeCtx = new NumContext();
-        this.imageSizeCtx = new NumContext();
-        this.symbolWidthCtx = new NumContext();
-        this.symbolHeightCtx = new NumContext();
-        this.inheritDictSizeCtx = new NumContext();
-        this.hoffCtx = new NumContext();
-        this.voffCtx = new NumContext();
-        this.shoffCtx = new NumContext();
-        this.svoffCtx = new NumContext();
-        this.symbolIndexCtx = new NumContext();
-        this.symbolHeightDiffCtx = new NumContext();
-        this.symbolWidthDiffCtx = new NumContext();
-        this.commentLengthCtx = new NumContext();
-        this.commentOctetCtx = new NumContext();
-        this.horizontalAbsLocationCtx = new NumContext();
-        this.verticalAbsLocationCtx = new NumContext();
-    }
-    decodeNum(low, high, numctx) {
-        let negative = false;
-        let cutoff;
-        cutoff = 0;
-        for (let phase = 1, range = 0xffffffff; range != 1;) {
-            let decision = (low >= cutoff) || ((high >= cutoff) && this.zp.decode(numctx.ctx, 0));
-            numctx = decision ? numctx.right : numctx.left;
-            switch (phase) {
-                case 1:
-                    negative = !decision;
-                    if (negative) {
-                        let temp = - low - 1;
-                        low = - high - 1;
-                        high = temp;
-                    }
-                    phase = 2; cutoff = 1;
-                    break;
-                case 2:
-                    if (!decision) {
-                        phase = 3;
-                        range = (cutoff + 1) / 2;
-                        if (range == 1)
-                            cutoff = 0;
-                        else
-                            cutoff -= range / 2;
-                    }
-                    else {
-                        cutoff += cutoff + 1;
-                    }
-                    break;
-                case 3:
-                    range /= 2;
-                    if (range != 1) {
-                        if (!decision)
-                            cutoff -= range / 2;
-                        else
-                            cutoff += range / 2;
-                    }
-                    else if (!decision) {
-                        cutoff--;
-                    }
-                    break;
-            }
-        }
-        return (negative) ? (- cutoff - 1) : cutoff;
-    }
-    toString() {
-        var str = super.toString();
-        return str;
-    }
-    decodeBitmap(width, height) {
-        var bitmap = new Bitmap$1(width, height);
-        for (let i = height - 1; i >= 0; i--) {
-            for (let j = 0; j < width; j++) {
-                var ind = this.getCtxIndex(bitmap, i, j);
-                this.zp.decode(this.directBitmapCtx, ind) ? bitmap.set(i, j) : 0;
-            }
-        }
-        return bitmap;
-    }
-    getCtxIndex(bm, i, j) {
-        var index = 0;
-        let r = i + 2;
-        if (bm.hasRow(r)) {
-            index = ((bm.get(r, j - 1) || 0) << 9) | (bm.get(r, j) << 8) | ((bm.get(r, j + 1) || 0) << 7);
-        }
-        r--;
-        if (bm.hasRow(r)) {
-            index |= ((bm.get(r, j - 2) || 0) << 6) | ((bm.get(r, j - 1) || 0) << 5) |
-                (bm.get(r, j) << 4) | ((bm.get(r, j + 1) || 0) << 3) | ((bm.get(r, j + 2) || 0) << 2);
-        }
-        index |= ((bm.get(i, j - 2) || 0) << 1) | (bm.get(i, j - 1) || 0);
-        return index;
-    }
-    decodeBitmapRef(width, height, mbm) {
-        let cbm = new Bitmap$1(width, height);
-        var alignInfo = this.alignBitmaps(cbm, mbm);
-        for (let i = height - 1; i >= 0; i--) {
-            for (let j = 0; j < width; j++) {
-                this.zp.decode(this.refinementBitmapCtx,
-                    this.getCtxIndexRef(cbm, mbm, alignInfo, i, j)) ? cbm.set(i, j) : 0;
-            }
-        }
-        return cbm;
-    }
-    getCtxIndexRef(cbm, mbm, alignInfo, i, j) {
-        var index = 0;
-        let r = i + 1;
-        if (cbm.hasRow(r)) {
-            index = ((cbm.get(r, j - 1) || 0) << 10) | (cbm.get(r, j) << 9) | ((cbm.get(r, j + 1) || 0) << 8);
-        }
-        index |= (cbm.get(i, j - 1) || 0) << 7;
-        r = i + alignInfo.rowshift + 1;
-        let c = j + alignInfo.colshift;
-        index |= mbm.hasRow(r) ? mbm.get(r, c) << 6 : 0;
-        r--;
-        if (mbm.hasRow(r)) {
-            index |= ((mbm.get(r, c - 1) || 0) << 5) | (mbm.get(r, c) << 4) | ((mbm.get(r, c + 1) || 0) << 3);
-        }
-        r--;
-        if (mbm.hasRow(r)) {
-            index |= ((mbm.get(r, c - 1) || 0) << 2) | (mbm.get(r, c) << 1) | (mbm.get(r, c + 1) || 0);
-        }
-        return index;
-    }
-    alignBitmaps(cbm, mbm) {
-        let cwidth = cbm.width - 1;
-        let cheight = cbm.height - 1;
-        let crow, ccol, mrow, mcol;
-        crow = cheight >> 1;
-        ccol = cwidth >> 1;
-        mrow = (mbm.height - 1) >> 1;
-        mcol = (mbm.width - 1) >> 1;
-        return {
-            'rowshift': mrow - crow,
-            'colshift': mcol - ccol
-        };
-    }
-    decodeComment() {
-        var length = this.decodeNum(0, 262142, this.commentLengthCtx);
-        var comment = new Uint8Array(length);
-        for (let i = 0; i < length; comment[i++] = this.decodeNum(0, 255, this.commentOctetCtx)) { }
-        return comment;
-    }
-    drawBitmap(bm) {
-        var image = document.createElement('canvas')
-            .getContext('2d')
-            .createImageData(bm.width, bm.height);
-        for (let i = 0; i < bm.height; i++) {
-            for (let j = 0; j < bm.width; j++) {
-                let v = bm.get(i, j) ? 0 : 255;
-                let index = ((bm.height - i - 1) * bm.width + j) * 4;
-                image.data[index] = v;
-                image.data[index + 1] = v;
-                image.data[index + 2] = v;
-                image.data[index + 3] = 255;
-            }
-        }
-        Globals.drawImage(image);
-    }
-}
-
-class JB2Dict extends JB2Codec {
-    constructor(bs) {
-        super(bs);
-        this.dict = [];
-        this.isDecoded = false;
-    }
-    decode(djbz) {
-        if (this.isDecoded) {
-            return;
-        }
-        var type = this.decodeNum(0, 11, this.recordTypeCtx);
-        if (type == 9) {
-            var size = this.decodeNum(0, 262142, this.inheritDictSizeCtx);
-            djbz.decode();
-            this.dict = djbz.dict.slice(0, size);
-            type = this.decodeNum(0, 11, this.recordTypeCtx);
-        }
-        this.decodeNum(0, 262142, this.imageSizeCtx);
-        this.decodeNum(0, 262142, this.imageSizeCtx);
-        var flag = this.zp.decode([0], 0);
-        if (flag) {
-            throw new Error("Bad flag!!!");
-        }
-        type = this.decodeNum(0, 11, this.recordTypeCtx);
-        var width, widthdiff, heightdiff, symbolIndex;
-        var height;
-        var bm;
-        while (type !== 11) {
-            switch (type) {
-                case 2:
-                    width = this.decodeNum(0, 262142, this.symbolWidthCtx);
-                    height = this.decodeNum(0, 262142, this.symbolHeightCtx);
-                    bm = this.decodeBitmap(width, height);
-                    this.dict.push(bm);
-                    break;
-                case 5:
-                    symbolIndex = this.decodeNum(0, this.dict.length - 1, this.symbolIndexCtx);
-                    widthdiff = this.decodeNum(-262143, 262142, this.symbolWidthDiffCtx);
-                    heightdiff = this.decodeNum(-262143, 262142, this.symbolHeightDiffCtx);
-                    var mbm = this.dict[symbolIndex];
-                    var cbm = this.decodeBitmapRef(mbm.width + widthdiff, heightdiff + mbm.height, mbm);
-                    this.dict.push(cbm.removeEmptyEdges());
-                    break;
-                case 9:
-                    console.log("RESET DICT");
-                    this.resetNumContexts();
-                    break;
-                case 10:
-                                      this.decodeComment();
-                    break;
-                default:
-                    throw new Error("Unsupported type in JB2Dict: " + type);
-            }
-            type = this.decodeNum(0, 11, this.recordTypeCtx);
-            if (type > 11) {
-                console.error("TYPE ERROR " + type);
-                break;
-            }
-        }
-        this.isDecoded = true;
-    }
-}
-
-class Baseline {
-    constructor() {
-        this.arr = new Array(3);
-    }
-    add(val) {
-        this.arr.shift();
-        this.arr.push(val);
-    }
-    getVal() {
-        if (!this.arr[0]) {
-            return this.arr[1] ? this.arr[1] : this.arr[2];
-        }
-        if (this.arr[0] >= this.arr[1] && this.arr[0] <= this.arr[2]
-            || this.arr[0] <= this.arr[1] && this.arr[0] >= this.arr[2]) {
-            return this.arr[0];
-        }
-        else if (this.arr[1] >= this.arr[0] && this.arr[1] <= this.arr[2]
-            || this.arr[1] <= this.arr[0] && this.arr[1] >= this.arr[2]) {
-            return this.arr[1];
-        }
-        else {
-            return this.arr[2];
-        }
-    }
-    reinit() {
-        this.arr[0] = this.arr[1] = this.arr[2] = 0;
-    }
-}
-class JB2Image extends JB2Codec {
-    constructor(bs) {
-        super(bs);
-        this.dict = [];
-        this.blitList = [];
-        this.init();
-    }
-    addBlit(bitmap, x, y) {
-        this.blitList.push({ bitmap, x, y });
-    }
-    init() {
-        let type = this.decodeNum(0, 11, this.recordTypeCtx);
-        if (type == 9) {
-            this.dict = this.decodeNum(0, 262142, this.inheritDictSizeCtx);
-            type = this.decodeNum(0, 11, this.recordTypeCtx);
-        }
-        this.width = this.decodeNum(0, 262142, this.imageSizeCtx) || 200;
-        this.height = this.decodeNum(0, 262142, this.imageSizeCtx) || 200;
-        this.bitmap = false;
-        this.lastLeft = 0;
-        this.lastBottom = this.height - 1;
-        this.firstLeft = -1;
-        this.firstBottom = this.height - 1;
-        let flag = this.zp.decode([0], 0);
-        if (flag) {
-            throw new Error("Bad flag!!!");
-        }
-        this.baseline = new Baseline();
-    }
-    toString() {
-        let str = super.toString();
-        str += "{width: " + this.width + ", height: " + this.height + '}\n';
-        return str;
-    }
-    decode(djbz) {
-        if (+this.dict) {
-            djbz.decode();
-            this.dict = djbz.dict.slice(0, this.dict);
-        }
-        var type = this.decodeNum(0, 11, this.recordTypeCtx);
-        let width, hoff, voff, flag;
-        let height, index;
-        let bm;
-        while (type !== 11                                   ) {
-            switch (type) {
-                case 1:
-                    width = this.decodeNum(0, 262142, this.symbolWidthCtx);
-                    height = this.decodeNum(0, 262142, this.symbolHeightCtx);
-                    bm = this.decodeBitmap(width, height);
-                    var coords = this.decodeSymbolCoords(bm.width, bm.height);
-                    this.addBlit(bm, coords.x, coords.y);
-                    this.dict.push(bm);
-                    break;
-                case 2:
-                    width = this.decodeNum(0, 262142, this.symbolWidthCtx);
-                    height = this.decodeNum(0, 262142, this.symbolHeightCtx);
-                    bm = this.decodeBitmap(width, height);
-                    this.dict.push(bm);
-                    break;
-                case 3:
-                    width = this.decodeNum(0, 262142, this.symbolWidthCtx);
-                    height = this.decodeNum(0, 262142, this.symbolHeightCtx);
-                    bm = this.decodeBitmap(width, height);
-                    var coords = this.decodeSymbolCoords(bm.width, bm.height);
-                    this.addBlit(bm, coords.x, coords.y);
-                    break;
-                case 4:
-                    index = this.decodeNum(0, this.dict.length - 1, this.symbolIndexCtx);
-                    var widthdiff = this.decodeNum(-262143, 262142, this.symbolWidthDiffCtx);
-                    var heightdiff = this.decodeNum(-262143, 262142, this.symbolHeightDiffCtx);
-                    var mbm = this.dict[index];
-                    var cbm = this.decodeBitmapRef(mbm.width + widthdiff, heightdiff + mbm.height, mbm);
-                    var coords = this.decodeSymbolCoords(cbm.width, cbm.height);
-                    this.addBlit(cbm, coords.x, coords.y);
-                    this.dict.push(cbm.removeEmptyEdges());
-                    break;
-                case 5:
-                    index = this.decodeNum(0, this.dict.length - 1, this.symbolIndexCtx);
-                    widthdiff = this.decodeNum(-262143, 262142, this.symbolWidthDiffCtx);
-                    heightdiff = this.decodeNum(-262143, 262142, this.symbolHeightDiffCtx);
-                    var mbm = this.dict[index];
-                    var cbm = this.decodeBitmapRef(mbm.width + widthdiff, heightdiff + mbm.height, mbm);
-                    this.dict.push(cbm.removeEmptyEdges());
-                    break;
-                case 6:
-                    index = this.decodeNum(0, this.dict.length - 1, this.symbolIndexCtx);
-                    var widthdiff = this.decodeNum(-262143, 262142, this.symbolWidthDiffCtx);
-                    var heightdiff = this.decodeNum(-262143, 262142, this.symbolHeightDiffCtx);
-                    var mbm = this.dict[index];
-                    var cbm = this.decodeBitmapRef(mbm.width + widthdiff, heightdiff + mbm.height, mbm);
-                    var coords = this.decodeSymbolCoords(cbm.width, cbm.height);
-                    this.addBlit(cbm, coords.x, coords.y);
-                    break;
-                case 7:
-                    index = this.decodeNum(0, this.dict.length - 1, this.symbolIndexCtx);
-                    bm = this.dict[index];
-                    var coords = this.decodeSymbolCoords(bm.width, bm.height);
-                    this.addBlit(bm, coords.x, coords.y);
-                    break;
-                case 8:
-                    width = this.decodeNum(0, 262142, this.symbolWidthCtx);
-                    height = this.decodeNum(0, 262142, this.symbolHeightCtx);
-                    bm = this.decodeBitmap(width, height);
-                    var coords = this.decodeAbsoluteLocationCoords(bm.width, bm.height);
-                    this.addBlit(bm, coords.x, coords.y);
-                    break;
-                case 9:
-                    console.log("RESET NUM CONTEXTS");
-                    this.resetNumContexts();
-                    break;
-                case 10:
-                    this.decodeComment();
-                    break;
-                default:
-                    throw new Error("Unsupported type in JB2Image: " + type);
-            }
-            type = this.decodeNum(0, 11, this.recordTypeCtx);
-            if (type > 11) {
-                console.error("TYPE ERROR " + type);
-                break;
-            }
-        }
-    }
-    decodeAbsoluteLocationCoords(width, height) {
-        var left = this.decodeNum(1, this.width, this.horizontalAbsLocationCtx);
-        var top = this.decodeNum(1, this.height, this.verticalAbsLocationCtx);
-        return {
-            x: left,
-            y: top - height
-        }
-    }
-    decodeSymbolCoords(width, height) {
-        var flag = this.zp.decode(this.offsetTypeCtx, 0);
-        var horizontalOffsetCtx = flag ? this.hoffCtx : this.shoffCtx;
-        var verticalOffsetCtx = flag ? this.voffCtx : this.svoffCtx;
-        var horizontalOffset = this.decodeNum(-262143, 262142, horizontalOffsetCtx);
-        var verticalOffset = this.decodeNum(-262143, 262142, verticalOffsetCtx);
-        var x, y;
-        if (flag) {
-            x = this.firstLeft + horizontalOffset;
-            y = this.firstBottom + verticalOffset - height + 1;
-            this.firstLeft = x;
-            this.firstBottom = y;
-            this.baseline.reinit();
-        }
-        else {
-            x = this.lastRight + horizontalOffset;
-            y = this.baseline.getVal() + verticalOffset;
-        }
-        this.baseline.add(y);
-        this.lastRight = x + width - 1;
-        return {
-            'x': x,
-            'y': y
-        };
-    }
-    copyToBitmap(bm, x, y) {
-        if (!this.bitmap) {
-            this.bitmap = new Bitmap(this.width, this.height);
-        }
-        for (var i = y, k = 0; k < bm.height; k++ , i++) {
-            for (var j = x, t = 0; t < bm.width; t++ , j++) {
-                if (bm.get(k, t)) {
-                    this.bitmap.set(i, j);
-                }
-            }
-        }
-    }
-    getBitmap() {
-        if (!this.bitmap) {
-            this.blitList.forEach(blit => this.copyToBitmap(blit.bitmap, blit.x, blit.y));
-        }
-        return this.bitmap;
-    }
-    getMaskImage() {
-        var imageData = new ImageData(this.width, this.height);
-        var pixelArray = imageData.data;
-        var time = performance.now();
-        pixelArray.fill(255);
-        for (var blitIndex = 0; blitIndex < this.blitList.length; blitIndex++) {
-            var blit = this.blitList[blitIndex];
-            var bm = blit.bitmap;
-            for (var i = blit.y, k = 0; k < bm.height; k++ , i++) {
-                for (var j = blit.x, t = 0; t < bm.width; t++ , j++) {
-                    if (bm.get(k, t)) {
-                        var pixelIndex = ((this.height - i - 1) * this.width + j) * 4;
-                        pixelArray[pixelIndex] = 0;
-                    }
-                }
-            }
-        }
-        DjVu.IS_DEBUG && console.log("JB2Image mask image creating time = ", performance.now() - time);
-        return imageData;
-    }
-    getImage(palette = null, isMarkMaskPixels = false) {
-        if (palette && palette.getDataSize() !== this.blitList.length) {
-            palette = null;
-        }
-        var pixelArray = new Uint8ClampedArray(this.width * this.height * 4);
-        var time = performance.now();
-        pixelArray.fill(255);
-        var blackPixel = { r: 0, g: 0, b: 0 };
-        var alpha = isMarkMaskPixels ? 0 : 255;
-        for (var blitIndex = 0; blitIndex < this.blitList.length; blitIndex++) {
-            var blit = this.blitList[blitIndex];
-            var pixel = palette ? palette.getPixelByBlitIndex(blitIndex) : blackPixel;
-            var bm = blit.bitmap;
-            for (var i = blit.y, k = 0; k < bm.height; k++ , i++) {
-                for (var j = blit.x, t = 0; t < bm.width; t++ , j++) {
-                    if (bm.get(k, t)) {
-                        var pixelIndex = ((this.height - i - 1) * this.width + j) << 2;
-                        pixelArray[pixelIndex] = pixel.r;
-                        pixelArray[pixelIndex | 1] = pixel.g;
-                        pixelArray[pixelIndex | 2] = pixel.b;
-                        pixelArray[pixelIndex | 3] = alpha;
-                    }
-                }
-            }
-        }
-        DjVu.IS_DEBUG && console.log("JB2Image creating time = ", performance.now() - time);
-        return new ImageData(pixelArray, this.width, this.height);
-    }
-    getImageFromBitmap() {
-        this.getBitmap();
-        var time = performance.now();
-        var image = new ImageData(this.width, this.height);
-        for (var i = 0; i < this.height; i++) {
-            for (var j = 0; j < this.width; j++) {
-                var v = this.bitmap.get(i, j) ? 0 : 255;
-                var index = ((this.height - i - 1) * this.width + j) * 4;
-                image.data[index] = v;
-                image.data[index + 1] = v;
-                image.data[index + 2] = v;
-                image.data[index + 3] = 255;
-            }
-        }
-        DjVu.IS_DEBUG && console.log("JB2Image creating time = ", performance.now() - time);
-        return image;
-    }
-}
-
-class DjVuPage {
-    constructor(bs, dirmID, getINCLChunkCallback) {
-        this.id = "FORM:DJVU";
-        this.length = bs.length - 8;
-        this.dirmID = dirmID;
-        this.bs = bs;
-        this.getINCLChunkCallback = getINCLChunkCallback;
-        this.reset();
-    }
-    reset() {
-        this.bs.setOffset(12);
-        this.djbz = null;
-        this.bg44arr = new Array();
-        this.fg44 = null;
-        this.bgimage = null;
-        this.fgimage = null;
-        this.sjbz = null;
-        this.fgbz = null;
-        this.text = null;
-        this.decoded = false;
-        this.info = null;
-        this.iffchunks = [];
-        this.dependencies = null;
-    }
-    getDpi() {
-        if (this.info) {
-            return this.info.dpi;
-        } else {
-            return this.init().info.dpi;
-        }
-    }
-    getDependencies() {
-        if (this.info || this.dependencies) {
-            return this.dependencies;
-        }
-        this.dependencies = [];
-        var bs = this.bs.fork();
-        while (!bs.isEmpty()) {
-            var chunk;
-            var id = bs.readStr4();
-            var length = bs.getInt32();
-            bs.jump(-8);
-            var chunkBs = bs.fork(length + 8);
-            bs.jump(8 + length + (length & 1 ? 1 : 0));
-            if (id === "INCL") {
-                chunk = new INCLChunk(chunkBs);
-                this.dependencies.push(chunk.ref);
-            }
-        }
-        return this.dependencies;
-    }
-    init() {
-        if (this.info) {
-            return this;
-        }
-        this.dependencies = [];
-        this.info = new INFOChunk(this.bs.fork(18));
-        this.bs.jump(18);
-        this.iffchunks.push(this.info);
-        while (!this.bs.isEmpty()) {
-            var chunk;
-            var id = this.bs.readStr4();
-            var length = this.bs.getInt32();
-            this.bs.jump(-8);
-            var chunkBs = this.bs.fork(length + 8);
-            this.bs.jump(8 + length + (length & 1 ? 1 : 0));
-            if (id == "FG44") {
-                chunk = this.fg44 = new ColorChunk(chunkBs);
-            } else if (id == "BG44") {
-                this.bg44arr.push(chunk = new ColorChunk(chunkBs));
-            } else if (id == 'Sjbz') {
-                chunk = this.sjbz = new JB2Image(chunkBs);
-            } else if (id === "INCL") {
-                chunk = this.incl = new INCLChunk(chunkBs);
-                var inclChunk = this.getINCLChunkCallback(this.incl.ref);
-                inclChunk.id === "Djbz" ? this.djbz = inclChunk : this.iffchunks.push(inclChunk);
-                this.dependencies.push(chunk.ref);
-            } else if (id === "CIDa") {
-                chunk = new CIDaChunk(chunkBs);
-            } else if (id === 'Djbz') {
-                chunk = this.djbz = new JB2Dict(chunkBs);
-            } else if (id === 'FGbz') {
-                chunk = this.fgbz = new DjVuPalette(chunkBs);
-            } else if (id === 'TXTa' || id === 'TXTz') {
-                chunk = this.text = new DjVuText(chunkBs);
-            } else {
-                chunk = new IFFChunk(chunkBs);
-            }
-            this.iffchunks.push(chunk);
-        }
-        return this;
-    }
-    getImageData() {
-        this.decode();
-        var time = performance.now();
-        if (!this.sjbz) {
-            if (this.bgimage) {
-                return this.bgimage.getImage();
-            }
-            else if (this.fgimage) {
-                return this.fgimage.getImage();
-            } else {
-                return null;
-            }
-        }
-        if (!this.bgimage && !this.fgimage) {
-            return this.sjbz.getImage(this.fgbz);
-        }
-        var fgscale, bgscale, fgpixelmap, bgpixelmap;
-        function fakePixelMap(r, g, b) {
-            var pixel = { r, g, b };
-            return {
-                getPixel(i, j) {
-                    return pixel;
-                },
-                writePixel(i, j, pixelArray, pixelIndex) {
-                    pixelArray[pixelIndex] = r;
-                    pixelArray[pixelIndex | 1] = g;
-                    pixelArray[pixelIndex | 2] = b;
-                }
-            }
-        }
-        if (this.bgimage) {
-            bgscale = Math.round(this.info.width / this.bgimage.info.width);
-            bgpixelmap = this.bgimage.pixelmap;
-        } else {
-            bgscale = 1;
-            bgpixelmap = fakePixelMap(255, 255, 255);
-        }
-        if (this.fgimage) {
-            fgscale = Math.round(this.info.width / this.fgimage.info.width);
-            fgpixelmap = this.fgimage.pixelmap;
-        } else {
-            fgscale = 1;
-            fgpixelmap = fakePixelMap(0, 0, 0);
-        }
-        var image;
-        if (!this.fgbz) {
-            image = this.createImageFromMaskImageAndPixelMaps(
-                this.sjbz.getMaskImage(),
-                fgpixelmap,
-                bgpixelmap,
-                fgscale,
-                bgscale
-            );
-        } else {
-            image = this.createImageFromMaskImageAndBackgroundPixelMap(
-                this.sjbz.getImage(this.fgbz, true),
-                bgpixelmap,
-                bgscale
-            );
-        }
-        DjVu.IS_DEBUG && console.log("DataImage creating time = ", performance.now() - time);
-        return image;
-    }
-    createImageFromMaskImageAndPixelMaps(maskImage, fgpixelmap, bgpixelmap, fgscale, bgscale) {
-        var image = maskImage;
-        var pixelArray = image.data;
-        for (var i = 0; i < this.info.height; i++) {
-            var rowIndexOffset = (this.info.height - i - 1) * this.info.width;
-            var bis = Math.floor(i / bgscale);
-            var fis = Math.floor(i / fgscale);
-            for (var j = 0; j < this.info.width; j++) {
-                var index = (rowIndexOffset + j) << 2;
-                if (pixelArray[index]) {
-                    bgpixelmap.writePixel(bis, Math.floor(j / bgscale), pixelArray, index);
-                } else {
-                    fgpixelmap.writePixel(fis, Math.floor(j / fgscale), pixelArray, index);
-                }
-            }
-        }
-        return image;
-    }
-    createImageFromMaskImageAndBackgroundPixelMap(maskImage, bgpixelmap, bgscale) {
-        var pixelArray = maskImage.data;
-        for (var i = 0; i < this.info.height; i++) {
-            for (var j = 0; j < this.info.width; j++) {
-                var index = ((this.info.height - i - 1) * this.info.width + j) * 4;
-                if (pixelArray[index + 3]) {
-                    var is = Math.floor(i / bgscale);
-                    var js = Math.floor(j / bgscale);
-                    bgpixelmap.writePixel(is, js, pixelArray, index);
-                } else {
-                    pixelArray[index + 3] = 255;
-                }
-            }
-        }
-        return maskImage;
-    }
-    decode() {
-        if (this.decoded) {
-            return this;
-        }
-        this.init();
-        var time = performance.now();
-        this.sjbz ? this.sjbz.decode(this.djbz) : 0;
-        DjVu.IS_DEBUG && console.log("Mask decoding time = ", performance.now() - time);
-        time = performance.now();
-        if (this.bg44arr.length) {
-            this.bgimage = new IWImage();
-            this.bg44arr.forEach((chunk) => {
-                var zp = new ZPDecoder(chunk.bs);
-                this.bgimage.decodeChunk(zp, chunk.header);
-            }
-            );
-            this.bgimage.createPixelmap();
-        }
-        DjVu.IS_DEBUG && console.log("Background decoding time = ", performance.now() - time);
-        time = performance.now();
-        if (this.fg44) {
-            this.fgimage = new IWImage();
-            let zp = new ZPDecoder(this.fg44.bs);
-            this.fgimage.decodeChunk(zp, this.fg44.header);
-            this.fgimage.createPixelmap();
-        }
-        DjVu.IS_DEBUG && console.log("Foreground decoding time = ", performance.now() - time);
-        this.decoded = true;
-        return this;
-    }
-    getBackgroundImageData() {
-        this.decode();
-        if (this.bg44arr.length) {
-            this.bg44arr.forEach((chunk) => {
-                let zp = new ZPDecoder(chunk.bs);
-                this.bgimage.decodeChunk(zp, chunk.header);
-            }
-            );
-            return this.bgimage.getImage();
-        } else {
-            return null;
-        }
-    }
-    getForegroundImageData() {
-        this.decode();
-        if (this.fg44) {
-            this.fgimage = new IWImage();
-            let zp = new ZPDecoder(this.fg44.bs);
-            this.fgimage.decodeChunk(zp, this.fg44.header);
-            return this.fgimage.getImage();
-        } else {
-            return null;
-        }
-    }
-    getMaskImageData() {
-        this.decode();
-        return this.sjbz && this.sjbz.getImage(this.fgbz);
-    }
-    getText() {
-        this.decode();
-        if (this.text) {
-            return this.text.getText();
-        } else {
-            return "";
-        }
-    }
-    toString() {
-        var str = '[DirmID: "' + this.dirmID + '"]\n';
-        str += this.id + ' ' + this.length + "\n";
-        this.init();
-        for (var i = 0; i < this.iffchunks.length; i++) {
-            str += this.iffchunks[i].toString();
-        }
-        return str + '\n';
-    }
-}
-
-class DjViChunk {
-    constructor(bs, dirmID) {
-        this.bs = bs;
-        this.id = bs.readStr4();
-        this.dirmID = dirmID;
-        this.length = bs.getInt32();
-        this.id += bs.readStr4();
-        this.innerChunk = null;
-        this.init();
-    }
-    init() {
-        while (!this.bs.isEmpty()) {
-            let id = this.bs.readStr4();
-            let length = this.bs.getInt32();
-            this.bs.jump(-8);
-            let chunkBs = this.bs.fork(length + 8);
-            this.bs.jump(8 + length + (length & 1 ? 1 : 0));
-            this.innerChunk = id === 'Djbz' ? new JB2Dict(chunkBs) : new IFFChunk(chunkBs);
-            if (id != 'Djbz') {
-                console.error("Unsupported chunk inside the DJVI chunk: ", id);
-            }
-        }
-    }
-    toString() {
-        var str = '[DirmID: "' + this.dirmID + '"]\n';
-        str += this.id + ' ' + this.length + "\n";
-        str += this.innerChunk.toString();
-        return str + '\n';
-    }
-}
-
-class DjVuDocument {
+let DjVuDocument$1 = class DjVuDocument {
     constructor(arraybuffer) {
         this.buffer = arraybuffer;
         this.bs = new ByteStream(arraybuffer);
@@ -2692,9 +2755,11 @@ class DjVuDocument {
             this.bs.jump(-8);
             this.dirm = new DIRMChunk(this.bs.fork(length + 8));
             this.bs.jump(8 + length + (length & 1 ? 1 : 0));
+            this.dirmOrderedChunks = new Array(this.dirm.getFilesCount());
         }
         this.getINCLChunkCallback = id => this.djvi[id].innerChunk;
         this.pages = [];
+        this.thumbs = [];
         this.djvi = {};
         this.navm = null;
         this.init();
@@ -2715,14 +2780,16 @@ class DjVuDocument {
                 this.bs.jump(-12);
                 switch (id) {
                     case "FORMDJVU":
-                        this.pages.push(new DjVuPage(
+                        this.pages.push(this.dirmOrderedChunks[i] = new DjVuPage(
                             this.bs.fork(length + 8),
-                            this.dirm.ids[i],
                             this.getINCLChunkCallback
                         ));
                         break;
                     case "FORMDJVI":
-                        this.djvi[this.dirm.ids[i]] = new DjViChunk(this.bs.fork(length + 8), this.dirm.ids[i]);
+                        this.dirmOrderedChunks[i] = this.djvi[this.dirm.ids[i]] = new DjViChunk(this.bs.fork(length + 8));
+                        break;
+                    case "FORMTHUM":
+                        this.thumbs.push(this.dirmOrderedChunks[i] = new ThumChunk(this.bs.fork(length + 8)));
                         break;
                     default:
                         console.error("Incorrectr chunk ID: ", id);
@@ -2735,8 +2802,11 @@ class DjVuDocument {
         }
     }
     getPage(number) {
-        this.lastRequestedPage && this.lastRequestedPage.reset();
-        this.lastRequestedPage = this.pages[number - 1];
+        var page = this.pages[number - 1];
+        if (this.lastRequestedPage && this.lastRequestedPage !== page) {
+            this.lastRequestedPage.reset();
+        }
+        this.lastRequestedPage = page;
         return this.lastRequestedPage;
     }
     getPageUnsafe(number) {
@@ -2751,7 +2821,6 @@ class DjVuDocument {
         var bs = this.bs.clone();
         bs.jump(16);
         while (!bs.isEmpty()) {
-            var chunk;
             var id = bs.readStr4();
             var length = bs.getInt32();
             bs.jump(-8);
@@ -2768,42 +2837,39 @@ class DjVuDocument {
         if (this.dirm) {
             str += this.id + " " + this.length + '\n\n';
             str += this.dirm.toString();
+            this.dirmOrderedChunks.forEach((chunk, i) => {
+                str += this.dirm.getMetadataStringByIndex(i) + chunk.toString();
+            });
+        } else {
+            str += this.pages[0].toString();
         }
-        if (this.navm) {
-            str += this.navm.toString();
-        }
-        for (var prop in this.djvi) {
-            str += this.djvi[prop];
-        }
-        this.pages.forEach(item => str += item.toString());
-        return html ? str.replace(/\n/g, '<br>') : str;
+        return html ? str.replace(/\n/g, '<br>').replace(/\s/g, '&nbsp;') : str;
     }
     createObjectURL() {
         var blob = new Blob([this.bs.buffer]);
         var url = URL.createObjectURL(blob);
         return url;
     }
-    slice(from, to) {
-        from = from || 0;
-        to = to || this.pages.length;
+    slice(from = 1, to = this.pages.length) {
         var djvuWriter = new DjVuWriter();
         djvuWriter.startDJVM();
         var dirm = {};
         dirm.dflags = this.dirm.dflags;
-        var pageNumber = to - from;
+        var pageNumber = to - from + 1;
         dirm.flags = [];
         dirm.names = [];
         dirm.titles = [];
         dirm.sizes = [];
         dirm.ids = [];
-        var chuckBS = [];
-        var pageCount = 0;
+        var chunkBS = [];
+        var pageIndex = 0;
         var addedPageCount = 0;
         var dependencies = {};
         for (var i = 0; i < this.dirm.nfiles && addedPageCount < pageNumber; i++) {
-            if (this.dirm.flags[i] & 1) {
-                pageCount++;
-                if (!(addedPageCount < pageNumber && pageCount > from)) {
+            var isPage = (this.dirm.flags[i] & 63) === 1;
+            if (isPage) {
+                pageIndex++;
+                if (pageIndex < from) {
                     continue;
                 }
                 else {
@@ -2817,41 +2883,38 @@ class DjVuDocument {
                 }
             }
         }
-        pageCount = 0;
+        pageIndex = 0;
         addedPageCount = 0;
         for (var i = 0; i < this.dirm.nfiles && addedPageCount < pageNumber; i++) {
-            if (this.dirm.flags[i] & 1) {
-                pageCount++;
-                if (!(addedPageCount < pageNumber && pageCount > from)) {
+            var isPage = (this.dirm.flags[i] & 63) === 1;
+            if (isPage) {
+                pageIndex++;
+                if (pageIndex < from) {
                     continue;
-                }
-                else {
+                } else {
                     addedPageCount++;
                 }
             }
-            if ((this.dirm.ids[i] in dependencies) || (this.dirm.flags[i] & 1)) {
+            if ((this.dirm.ids[i] in dependencies) || isPage) {
                 dirm.flags.push(this.dirm.flags[i]);
                 dirm.sizes.push(this.dirm.sizes[i]);
                 dirm.ids.push(this.dirm.ids[i]);
                 dirm.names.push(this.dirm.names[i]);
                 dirm.titles.push(this.dirm.titles[i]);
                 var cbs = new ByteStream(this.buffer, this.dirm.offsets[i], this.dirm.sizes[i]);
-                chuckBS.push(cbs);
-            }
-            if (!(this.dirm.ids[i] in dependencies) && !(this.dirm.flags[i] & 1)) {
-                console.warn("Excess dict ", this.dirm.ids[i]);
+                chunkBS.push(cbs);
             }
         }
         djvuWriter.writeDirmChunk(dirm);
         if (this.navm) {
             djvuWriter.writeChunk(this.navm);
         }
-        for (var i = 0; i < chuckBS.length; i++) {
-            djvuWriter.writeFormChunkBS(chuckBS[i]);
+        for (var i = 0; i < chunkBS.length; i++) {
+            djvuWriter.writeFormChunkBS(chunkBS[i]);
         }
         var newbuffer = djvuWriter.getBuffer();
-        DjVu.IS_DEBUG && console.log("New Buffer size = ", newbuffer.byteLength);
-        var doc = new DjVuDocument(newbuffer);
+        DjVu$1.IS_DEBUG && console.log("New Buffer size = ", newbuffer.byteLength);
+        var doc = new DjVuDocument$1(newbuffer);
         return doc;
     }
     static concat(doc1, doc2) {
@@ -2912,9 +2975,9 @@ class DjVuDocument {
         for (var i = 0; i < length; i++) {
             dw.writeFormChunkBS(pages[i].bs);
         }
-        return new DjVuDocument(dw.getBuffer());
+        return new DjVuDocument$1(dw.getBuffer());
     }
-}
+};
 
 class DjVuWorker {
     constructor(path) {
@@ -3047,16 +3110,21 @@ class DjVuWorker {
             this.worker.postMessage({ command: 'createDocument', id: id, buffer: buffer }, [buffer]);
         });
     }
-    getPageImageDataWithDpi(pagenumber) {
+    getPageImageDataWithDpi(pagenumber, onlyFirstBgChunk = false) {
         return new Promise((resolve, reject) => {
             var id = this.callbacks.add({ resolve: resolve, reject: reject });
-            this.worker.postMessage({ command: 'getPageImageDataWithDpi', id: id, pagenumber: pagenumber - 1 });
+            this.worker.postMessage({
+                command: 'getPageImageDataWithDpi',
+                id: id,
+                pagenumber: pagenumber,
+                onlyFirstBgChunk: onlyFirstBgChunk
+            });
         });
     }
     getPageText(pagenumber) {
         return new Promise((resolve, reject) => {
             var id = this.callbacks.add({ resolve: resolve, reject: reject });
-            this.worker.postMessage({ command: 'getPageText', id: id, pagenumber: pagenumber - 1 });
+            this.worker.postMessage({ command: 'getPageText', id: id, pagenumber: pagenumber });
         });
     }
     slice(_from, _to) {
@@ -3217,7 +3285,7 @@ class IWEncoder extends IWCodecBaseClass {
         this.blocks = [];
         for (var r = 0; r < blockRows; r++) {
             for (var c = 0; c < blockCols; c++) {
-                var block = new Block(buffer, (r * blockCols + c) << 11);
+                var block = new Block(buffer, (r * blockCols + c) << 11, true);
                 for (var i = 0; i < 1024; i++) {
                     var val = 0;
                     if (bitmap[this.zigzagRow[i] + 32 * r]) {
@@ -3232,7 +3300,7 @@ class IWEncoder extends IWCodecBaseClass {
         buffer = new ArrayBuffer(length << 11);
         this.eblocks = new Array(length);
         for (var i = 0; i < length; i++) {
-            this.eblocks[i] = new Block(buffer, i << 11);
+            this.eblocks[i] = new Block(buffer, i << 11, true);
         }
     }
     encodeSlice(zp) {
@@ -3255,14 +3323,12 @@ class IWEncoder extends IWCodecBaseClass {
         var boff = 0;
         var step = this.quant_hi[this.curband];
         var indices = this.getBandBuckets(this.curband);
-        for (var i = indices.from; i <= indices.to; i++ ,
-            boff++) {
+        for (var i = indices.from; i <= indices.to; i++, boff++) {
             for (var j = 0; j < 16; j++) {
                 if (this.coeffstate[boff][j] & this.ACTIVE) {
                     if (!this.curband) {
                         step = this.quant_lo[j];
                     }
-                    var des = 0;
                     var coef = Math.abs(block.buckets[i][j]);
                     var ecoef = eblock.buckets[i][j];
                     var pix = coef >= ecoef ? 1 : 0;
@@ -3280,8 +3346,7 @@ class IWEncoder extends IWCodecBaseClass {
         var boff = 0;
         var indices = this.getBandBuckets(this.curband);
         var step = this.quant_hi[this.curband];
-        for (var i = indices.from; i <= indices.to; i++ ,
-            boff++) {
+        for (var i = indices.from; i <= indices.to; i++, boff++) {
             if (this.bucketstate[boff] & this.NEW) {
                 var shift = 0;
                 if (this.bucketstate[boff] & this.ACTIVE) {
@@ -3319,8 +3384,7 @@ class IWEncoder extends IWCodecBaseClass {
     bucketEncodingPass(eblock) {
         var indices = this.getBandBuckets(this.curband);
         var boff = 0;
-        for (var i = indices.from; i <= indices.to; i++ ,
-            boff++) {
+        for (var i = indices.from; i <= indices.to; i++, boff++) {
             if (!(this.bucketstate[boff] & this.UNK)) {
                 continue;
             }
@@ -3359,7 +3423,7 @@ class IWEncoder extends IWCodecBaseClass {
         var step = this.quant_hi[this.curband];
         if (this.curband) {
             var boff = 0;
-            for (var j = indices.from; j <= indices.to; j++ , boff++) {
+            for (var j = indices.from; j <= indices.to; j++, boff++) {
                 bstatetmp = 0;
                 var bucket = block.buckets[j];
                 var ebucket = eblock.buckets[j];
@@ -3424,7 +3488,7 @@ class IWImageWriter {
         dirm.sizes = [];
     }
     addPageToDocument(imageData) {
-        var tbsw = new ByteStreamWriter();
+        var tbsw = new ByteStreamWriter$1();
         this.writeImagePage(tbsw, imageData);
         var buffer = tbsw.getBuffer();
         this.pageBuffers.push(buffer);
@@ -3456,7 +3520,7 @@ class IWImageWriter {
         dirm.flags = new Array(imageArray.length);
         dirm.ids = new Array(imageArray.length);
         dirm.sizes = new Array(imageArray.length);
-        var tbsw = new ByteStreamWriter();
+        var tbsw = new ByteStreamWriter$1();
         for (var i = 0; i < imageArray.length; i++) {
             this.writeImagePage(tbsw, imageArray[i]);
             var buffer = tbsw.getBuffer();
@@ -3510,7 +3574,7 @@ class IWImageWriter {
         bsw.rewriteSize('BG44Size');
     }
     createOnePageDocument(imageData) {
-        var bsw = new ByteStreamWriter(10 * 1024);
+        var bsw = new ByteStreamWriter$1(10 * 1024);
         bsw.writeStr('AT&T');
         this.writeImagePage(bsw, imageData);
         return new DjVuDocument(bsw.getBuffer());
@@ -3613,7 +3677,7 @@ function initWorker() {
         getPageText(obj) {
             return new Promise((resolve, reject) => {
                 var pagenum = +obj.pagenumber;
-                var text = djvuDocument.pages[pagenum].getText();
+                var text = djvuDocument.getPage(pagenum).getText();
                 postMessage({
                     command: 'getPageText',
                     id: obj.id,
@@ -3623,8 +3687,9 @@ function initWorker() {
         },
         getPageImageDataWithDpi(obj) {
             var pagenum = +obj.pagenumber;
-            var imageData = djvuDocument.pages[pagenum].getImageData();
-            var dpi = djvuDocument.pages[pagenum].getDpi();
+            var page = djvuDocument.getPage(pagenum);
+            var imageData = page.getImageData(obj.onlyFirstBgChunk);
+            var dpi = page.getDpi();
             postMessage({
                 command: 'getPageImageDataWithDpi',
                 id: obj.id,
@@ -3633,7 +3698,6 @@ function initWorker() {
                 height: imageData.height,
                 dpi: dpi
             }, [imageData.data.buffer]);
-            djvuDocument.pages[pagenum].reset();
         },
         getPageCount(obj) {
             postMessage({
@@ -3678,21 +3742,21 @@ function initWorker() {
             postMessage({ command: 'slice', id: obj.id, buffer: ndoc.buffer }, [ndoc.buffer]);
         },
         createDocument(obj) {
-            djvuDocument = new DjVuDocument(obj.buffer);
+            djvuDocument = new DjVuDocument$1(obj.buffer);
             postMessage({ command: 'createDocument', id: obj.id, pagenumber: djvuDocument.pages.length });
         },
         reloadDocument() {
-            djvuDocument = new DjVuDocument(djvuDocument.buffer);
+            djvuDocument = new DjVuDocument$1(djvuDocument.buffer);
         }
     };
 }
+
 if (!Function('return this;')().document) {
     initWorker();
 }
-
-var index = Object.assign({}, DjVu, {
+var index = Object.assign({}, DjVu$1, {
     Worker: DjVuWorker,
-    Document: DjVuDocument
+    Document: DjVuDocument$1
 });
 
 return index;
