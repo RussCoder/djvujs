@@ -13,7 +13,6 @@ class ImageBlock extends React.Component {
         imageHeight: PropTypes.number,
         imageData: PropTypes.object,
         imageDPI: PropTypes.number,
-        imageUrl: PropTypes.string,
         userScale: PropTypes.number
     };
 
@@ -21,29 +20,50 @@ class ImageBlock extends React.Component {
         super(props);
         this.tmpCanvas = document.createElement('canvas');
         this.tmpCanvasCtx = this.tmpCanvas.getContext('2d');
-        this.state = { isCanvasMode: true };
-        this.changeImageTimeout = null;
+        this.lastUserScale = null;
     }
 
     componentWillReceiveProps(nextProps) {
         if (this.props.imageData !== nextProps.imageData) {
-            this.setState({ isCanvasMode: true });
-            clearTimeout(this.changeImageTimeout);
+            this.lastUserScale = null;
+            clearTimeout(this.redrawImageTimeout);
+        }
+    }
+
+    componentWillUpdate() {
+        this.horizontalRatio = null;
+        if (this.wrapper.scrollWidth > this.wrapper.clientWidth) {
+            this.horizontalRatio = (this.wrapper.scrollLeft + this.wrapper.clientWidth / 2) / this.wrapper.scrollWidth;
+        }
+        this.verticalRatio = null;
+        if (this.wrapper.scrollHeight > this.wrapper.clientHeight && this.wrapper.scrollTop) {
+            this.verticalRatio = (this.wrapper.scrollTop + this.wrapper.clientHeight / 2) / this.wrapper.scrollHeight;
         }
     }
 
     componentDidUpdate() {
         this.updateImageIfRequired();
+        var widthDiff = this.wrapper.scrollWidth - this.wrapper.clientWidth;
+        if (widthDiff > 0) {
+            this.wrapper.scrollLeft = this.horizontalRatio ? (this.horizontalRatio * this.wrapper.scrollWidth - this.wrapper.clientWidth / 2) : (widthDiff / 2);
+        }
+        var heightDiff = this.wrapper.scrollHeight - this.wrapper.clientHeight;
+        if (heightDiff > 0 && this.wrapper.scrollTop) {
+            this.wrapper.scrollTop = this.verticalRatio ? (this.verticalRatio * this.wrapper.scrollHeight - this.wrapper.clientHeight / 2) : (heightDiff / 2);
+        }
     }
 
     componentDidMount() {
         this.updateImageIfRequired();
     }
 
+    getScaleFactor() {
+        return (this.props.imageDPI ? this.props.imageDPI / DEFAULT_DPI : 1) / this.props.userScale;
+    }
+
     getScaledImageWidth() {
         if (this.props.imageDPI) {
-            const stdScale = this.props.imageDPI ? this.props.imageDPI / DEFAULT_DPI : 1
-            return this.props.imageWidth / stdScale * this.props.userScale;
+            return this.props.imageWidth / this.getScaleFactor();
         } else {
             return null;
         }
@@ -51,8 +71,7 @@ class ImageBlock extends React.Component {
 
     getScaledImageHeight() {
         if (this.props.imageDPI) {
-            const stdScale = this.props.imageDPI ? this.props.imageDPI / DEFAULT_DPI : 1
-            return this.props.imageHeight / stdScale * this.props.userScale;
+            return this.props.imageHeight / this.getScaleFactor();
         } else {
             return null;
         }
@@ -62,53 +81,52 @@ class ImageBlock extends React.Component {
         if (!(this.canvas && this.props.imageData) && !(this.img && this.props.dataUrl)) {
             return;
         }
-        if (!this.props.dataUrl && this.props.imageData) {
-            this.drawImageOnCanvas();
-        } else if (this.state.isCanvasMode) {
-            this.changeImageTimeout = setTimeout(() => {
-                this.setState({ isCanvasMode: false });
-            }, 250);
-        } else {
-            this.canvas.height = this.canvas.width = 0;
+        if (this.props.imageData && this.lastUserScale !== this.props.userScale) {
+            if (this.lastUserScale === null) { // if there is no image at all
+                this.drawImageOnCanvas();
+            }
+            clearTimeout(this.redrawImageTimeout);
+            this.redrawImageTimeout = setTimeout(() => {
+                this.drawImageOnCanvas();
+            }, 200);
         }
     }
 
-    drawImageOnCanvas() {
+    logarithmicScale() {
         const { imageData, imageDPI, userScale } = this.props;
+        var tmpH, tmpW, tmpH2, tmpW2;
 
         var image = imageData.a;
         var scale = imageDPI ? imageDPI / DEFAULT_DPI : 1;
-        scale /= userScale
+        scale /= userScale; // current scale factor compared with the initial size of the image
 
-        this.stdWidth = image.width / scale * userScale;
-        this.stdHeight = image.height / scale * userScale;
-
-        this.tmpCanvas.width = image.width;
-        this.tmpCanvas.height = image.height;
+        this.tmpCanvas.width = tmpW = tmpW2 = image.width;
+        this.tmpCanvas.height = tmpH = tmpH2 = image.height;
         this.tmpCanvasCtx.putImageData(image, 0, 0);
-
-        var tmpH, tmpW, tmpH2, tmpW2;
-        tmpH = tmpH2 = this.tmpCanvas.height;
-        tmpW = tmpW2 = this.tmpCanvas.width;
-
-        if (scale > 4) {
-            tmpH = this.tmpCanvas.height / scale * 4;
-            tmpW = this.tmpCanvas.width / scale * 4;
-            //первое сжатие
-            this.tmpCanvasCtx.drawImage(this.tmpCanvas, 0, 0, tmpW, tmpH);
-        }
-        if (scale > 2) {
-            tmpH2 = this.tmpCanvas.height / scale * 2;
-            tmpW2 = this.tmpCanvas.width / scale * 2;
-            //второе сжатие
+        while (Math.abs(scale - 1) >= 0.001 && tmpW > 1 && tmpH > 1) {
+            var divisor = scale > 2 ? 2 : scale;
+            scale /= divisor;
+            tmpH2 /= divisor;
+            tmpW2 /= divisor;
             this.tmpCanvasCtx.drawImage(this.tmpCanvas, 0, 0, tmpW, tmpH, 0, 0, tmpW2, tmpH2);
+            tmpH = tmpH2;
+            tmpW = tmpW2;
         }
-        //итоговое сжатие
-        this.canvas.width = image.width / scale;
-        this.canvas.height = image.height / scale;
-        this.canvasCtx.drawImage(this.tmpCanvas, 0, 0, tmpW2, tmpH2,
-            0, 0, this.canvas.width, this.canvas.height);
+
+        const newImageData = this.tmpCanvasCtx.getImageData(0, 0, Math.max(tmpW, 1), Math.max(tmpH, 1));
         this.tmpCanvas.width = this.tmpCanvas.height = 0;
+        return newImageData;
+    }
+
+    drawImageOnCanvas() {
+        this.putImageData(this.logarithmicScale());
+        this.lastUserScale = this.props.userScale;
+    }
+
+    putImageData(imageData) {
+        this.canvas.width = imageData.width;
+        this.canvas.height = imageData.height;
+        this.canvasCtx.putImageData(imageData, 0, 0);
     }
 
     canvasRef = (node) => {
@@ -137,10 +155,10 @@ class ImageBlock extends React.Component {
 
     handleMoving = (e) => {
         e.preventDefault();
-        if (!this.state.initialGrabbingState) {
+        if (!this.initialGrabbingState) {
             return;
         }
-        const { clientX, clientY, scrollLeft, scrollTop } = this.state.initialGrabbingState;
+        const { clientX, clientY, scrollLeft, scrollTop } = this.initialGrabbingState
         const deltaX = clientX - e.clientX;
         const deltaY = clientY - e.clientY;
 
@@ -149,29 +167,26 @@ class ImageBlock extends React.Component {
     };
 
     startMoving = (e) => {
-        this.setState({
-            initialGrabbingState: {
-                clientX: e.clientX,
-                clientY: e.clientY,
-                scrollLeft: this.wrapper.scrollLeft,
-                scrollTop: this.wrapper.scrollTop
-            }
-        });
+        this.initialGrabbingState = {
+            clientX: e.clientX,
+            clientY: e.clientY,
+            scrollLeft: this.wrapper.scrollLeft,
+            scrollTop: this.wrapper.scrollTop
+        };
+        this.wrapper.classList.add('grabbing');
         this.wrapper.addEventListener('mousemove', this.handleMoving);
     };
 
     finishMoving = (e) => {
-        this.setState({ initialGrabbingState: null });
+        this.initialGrabbingState = null;
+        this.wrapper.classList.remove('grabbing');
         this.wrapper.removeEventListener('mousemove', this.handleMoving);
     };
 
     render() {
-        const isCanvasMode = this.state.isCanvasMode;
-        const grabbingStyle = this.state.initialGrabbingState ? " grabbing" : "";
-
         return (
             <div
-                className={"image_wrapper" + grabbingStyle}
+                className="image_wrapper"
                 onWheel={this.onWheel}
                 ref={this.wrapperRef}
                 onMouseDown={this.startMoving}
@@ -180,15 +195,8 @@ class ImageBlock extends React.Component {
             >
                 <div className="image">
                     <div style={{ opacity: 0, width: this.getScaledImageWidth(), height: this.getScaledImageHeight() }} />
-                    <img
-                        style={{ zIndex: isCanvasMode ? 1 : 2, display: this.props.dataUrl ? "inline" : "none" }}
-                        width={this.getScaledImageWidth()}
-                        ref={this.imageRef}
-                        src={this.props.dataUrl}
-                        alt='DjVu.js Viewer'
-                    />
                     <canvas
-                        style={isCanvasMode ? { zIndex: 2 } : { zIndex: 1 }}
+                        style={{ width: this.getScaledImageWidth(), height: this.getScaledImageHeight() }}
                         ref={this.canvasRef}
                     />
                 </div>
