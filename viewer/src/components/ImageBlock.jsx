@@ -147,8 +147,7 @@ class ImageBlock extends React.Component {
             return;
         }
         e.preventDefault();
-        const scaleCoef = 0.0005;
-        const scaleDelta = scaleCoef * (-e.deltaY);
+        const scaleDelta = 0.05 * (-Math.sign(e.deltaY));
         const newScale = this.props.userScale + scaleDelta;
         this.props.dispatch(Actions.setUserScaleAction(newScale));
     };

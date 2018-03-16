@@ -52,7 +52,7 @@ body.disable_scroll_djvujs {
                 font-style: italic;
                 font-size: 0.8em;
             }
-            
+
             div {
                 margin: 1em;
             }
@@ -121,14 +121,19 @@ body.disable_scroll_djvujs {
             justify-content: center;
         }
 
-        .scale_label {
-            display: inline-block;
-            min-width: 3em;
+        .scale_button {
+            cursor: pointer;
+            font-size: 1.2em;
+
+            &:hover {
+                transform: scale(1.1);
+            }
         }
 
         .scale {
             display: inline-block;
-            width: 10em;
+            width: 3em;
+            margin: 0.5em;
         }
 
         .full_page_view_but {
@@ -157,13 +162,13 @@ body.disable_scroll_djvujs {
         &.grabbing {
             cursor: grabbing;
         }
-        
+
         .image {
             position: relative;
             margin: auto;
             border: 1px solid lightgray;
 
-            img, canvas {
+            canvas {
                 position: absolute;
                 left: 0;
                 top: 0;
