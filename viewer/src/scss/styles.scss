@@ -163,17 +163,9 @@ body.disable_scroll_djvujs {
             cursor: grabbing;
         }
 
-        .image {
-            position: relative;
+        .canvas_image {
             margin: auto;
             border: 1px solid lightgray;
-
-            canvas {
-                position: absolute;
-                left: 0;
-                top: 0;
-                z-index: 2;
-            }
         }
     }
 

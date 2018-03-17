@@ -25,13 +25,12 @@ const rootReducer = (state = initialState, action) => {
                 ...state,
                 imageWidth: action.imageData.width,
                 imageHeight: action.imageData.height,
-                imageData: { a: action.imageData },
+                imageData: action.imageData,
                 dataUrl: null,
                 imageDPI: action.imageDPI
             };
 
         case Consts.DATA_URL_CREATED_ACTION:
-            state.imageData.a = null;
             return {
                 ...state,
                 dataUrl: action.dataUrl,
