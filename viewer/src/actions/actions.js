@@ -20,14 +20,10 @@ const Actions = {
         type: Consts.RENDER_CURRENT_PAGE_ACTION
     }),
 
-    setNewPageNumberAction: (pageNumber) => (dispatch, getState) => {
-        dispatch({
-            type: Consts.SET_NEW_PAGE_NUMBER_ACTION,
-            pageNumber: pageNumber
-        });
-
-        dispatch(Actions.renderCurrentPageAction());
-    },
+    setNewPageNumberAction: (pageNumber) => ({
+        type: Consts.SET_NEW_PAGE_NUMBER_ACTION,
+        pageNumber: pageNumber
+    }),
 
     setUserScaleAction: (scale) => ({
         type: Consts.SET_USER_SCALE_ACTION,
@@ -53,7 +49,12 @@ const Actions = {
             type: Consts.TOGGLE_FULL_PAGE_VIEW_ACTION,
             isFullPageView: isFullPageView
         });
-    }
+    },
+
+    toggleTextModeAction: (isTextMode) => ({
+        type: Consts.TOGGLE_TEXT_MODE_ACTION,
+        isTextMode: isTextMode
+    })
 };
 
 export default Actions;

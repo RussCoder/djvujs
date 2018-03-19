@@ -11,8 +11,10 @@ const initialState = {
     imageHeight: null,
     imageData: null,
     imageDPI: null,
+    pageText: null,
     userScale: 1,
     isLoading: false,
+    isTextMode: false,
     currentPageNumber: 1,
     pagesCount: null,
     isFullPageView: false,
@@ -48,6 +50,7 @@ const rootReducer = (state = initialState, action) => {
         case Consts.SET_NEW_PAGE_NUMBER_ACTION:
             return {
                 ...state,
+                pageText: null,
                 currentPageNumber: action.pageNumber
             };
 
@@ -61,6 +64,18 @@ const rootReducer = (state = initialState, action) => {
             return {
                 ...state,
                 isFullPageView: action.isFullPageView
+            }
+
+        case Consts.TOGGLE_TEXT_MODE_ACTION:
+            return {
+                ...state,
+                isTextMode: action.isTextMode
+            }
+
+        case Consts.PAGE_TEXT_FETCHED_ACTION:
+            return {
+                ...state,
+                pageText: action.pageText
             }
 
         default:

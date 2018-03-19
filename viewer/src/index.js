@@ -14,7 +14,7 @@ if (!DjVu) {
 const store = configureStore();
 
 DjVu.Viewer = {
-    VERSION: '0.0.3',
+    VERSION: '0.0.4',
     init(element) {
         //element.style.width = window.innerWidth * 0.9 + 'px';
         element.style.height = window.innerHeight * 0.95 + 'px';

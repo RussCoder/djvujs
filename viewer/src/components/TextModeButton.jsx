@@ -2,26 +2,26 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import FontAwesomeIcon from '@fortawesome/react-fontawesome';
-import { faExpand, faCompress } from '@fortawesome/fontawesome-free-solid';
+import { faFileAlt, faFileImage } from '@fortawesome/fontawesome-free-regular';
 
 import Actions from '../actions/actions';
 
-class FullPageViewButton extends React.Component {
+class TextModeButton extends React.Component {
 
     static propTypes = {
-        isFullPageView: PropTypes.bool.isRequired
+        isTextMode: PropTypes.bool.isRequired
     };
 
     onClick = () => {
-        this.props.toggleFullPageView(!this.props.isFullPageView);
+        this.props.toggleTextMode(!this.props.isTextMode);
     };
 
     render() {
         return (
-            <div title="Switch full page mode!">
+            <div title={this.props.isTextMode ? "Show image" : "Show pure text"}>
                 <FontAwesomeIcon
                     className="control_button"
-                    icon={this.props.isFullPageView ? faCompress : faExpand}
+                    icon={this.props.isTextMode ? faFileImage : faFileAlt}
                     onClick={this.onClick}
                 />
             </div>
@@ -30,7 +30,7 @@ class FullPageViewButton extends React.Component {
 }
 
 export default connect(state => ({
-    isFullPageView: state.isFullPageView
+    isTextMode: state.isTextMode
 }), {
-        toggleFullPageView: Actions.toggleFullPageViewAction
-    })(FullPageViewButton);
+        toggleTextMode: Actions.toggleTextModeAction
+    })(TextModeButton);

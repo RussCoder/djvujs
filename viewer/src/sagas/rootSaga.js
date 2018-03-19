@@ -14,7 +14,7 @@ import Consts from "../constants/consts";
 //     return dataUrl;
 // };
 
-function* createImageDataUrl(action) {
+function* getImageData() {
     const { currentPageNumber, djvuWorker } = yield select();
     const obj = yield djvuWorker.getPageImageDataWithDpi(currentPageNumber);
 
@@ -29,6 +29,43 @@ function* createImageDataUrl(action) {
     // yield put(Actions.dataUrlCreatedAction(dataUrl));
 }
 
+function* fetchPageData(action) {
+    const { isTextMode } = yield select();
+    const pageNumber = action.pageNumber;
+
+    if (isTextMode) {
+        yield* fetchPageText(pageNumber);
+    }
+
+    yield* getImageData();
+}
+
+function* fetchPageText(pageNumber) {
+    const { djvuWorker } = yield select();
+    const text = yield djvuWorker.getPageText(pageNumber);
+
+    yield put({
+        type: Consts.PAGE_TEXT_FETCHED_ACTION,
+        pageText: text
+    });
+}
+
+function* fetchPageTextIfRequired(action) {
+    if (!action.isTextMode) {
+        return;
+    }
+
+    const { currentPageNumber, pageText } = yield select();
+
+    if (pageText !== null) {
+        return; // already fetched
+    }
+
+    yield* fetchPageText(currentPageNumber);
+}
+
 export default function* rootSaga() {
-    yield takeLatest(Consts.RENDER_CURRENT_PAGE_ACTION, createImageDataUrl);
+    yield takeLatest(Consts.RENDER_CURRENT_PAGE_ACTION, getImageData);
+    yield takeLatest(Consts.TOGGLE_TEXT_MODE_ACTION, fetchPageTextIfRequired);
+    yield takeLatest(Consts.SET_NEW_PAGE_NUMBER_ACTION, fetchPageData)
 }

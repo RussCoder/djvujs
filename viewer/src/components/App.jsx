@@ -7,6 +7,12 @@ import DownPanel from "./DownPanel";
 import ImageBlock from "./ImageBlock";
 import InitialScreen from './InitialScreen';
 
+const TextBlock = ({ text }) => (
+    <pre className="text_block">
+        {text === null ? "Loading ..." : text}
+    </pre>
+);
+
 class App extends Component {
     static propTypes = {
         isFullPageView: PropTypes.bool.isRequired,
@@ -18,7 +24,9 @@ class App extends Component {
 
         return (
             <div className={"djvu_js_viewer" + fullPageViewClass}>
-                {this.props.isFileLoaded ? <ImageBlock /> : <InitialScreen />}
+                {!this.props.isFileLoaded ? <InitialScreen /> : (
+                    this.props.isTextMode ? <TextBlock text={this.props.pageText} /> : <ImageBlock />
+                )}
                 <DownPanel />
             </div>
         );
@@ -28,6 +36,8 @@ class App extends Component {
 export default connect(
     state => ({
         isFileLoaded: !!state.fileName,
-        isFullPageView: state.isFullPageView
+        isFullPageView: state.isFullPageView,
+        isTextMode: state.isTextMode,
+        pageText: state.pageText
     })
 )(App);

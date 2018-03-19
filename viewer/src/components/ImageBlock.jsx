@@ -38,6 +38,10 @@ class ImageBlock extends React.Component {
         }
     }
 
+    componentDidMount() {
+        this.componentDidUpdate();
+    }
+
     wrapperRef = (node) => this.wrapper = node;
 
     onWheel = (e) => {

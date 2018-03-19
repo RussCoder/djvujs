@@ -136,7 +136,7 @@ body.disable_scroll_djvujs {
             margin: 0.5em;
         }
 
-        .full_page_view_but {
+        .control_button {
             cursor: pointer;
             font-size: 2em;
             margin: 0 0.5em;
@@ -146,6 +146,15 @@ body.disable_scroll_djvujs {
             }
 
         }
+    }
+
+    .text_block {
+        border: 1px solid lightgray;
+        padding: 0.5em;
+        max-width: 100%;
+        box-sizing: border-box;
+        flex: 1 1 auto;
+        overflow: auto; 
     }
 
     .image_wrapper {

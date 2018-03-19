@@ -100,6 +100,9 @@ export default class CanvasImage extends React.Component {
     }
 
     putImageData(imageData) {
+        if (!this.canvas) {
+            return;
+        }
         this.canvas.width = imageData.width;
         this.canvas.height = imageData.height;
         this.canvasCtx.putImageData(imageData, 0, 0);
