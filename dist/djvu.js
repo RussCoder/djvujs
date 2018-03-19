@@ -2,7 +2,7 @@ var DjVu = (function () {
 'use strict';
 
 var DjVu$1 = {
-    VERSION: '0.1.0',
+    VERSION: '0.1.1',
     IS_DEBUG: false,
     setDebugMode: (flag) => DjVu$1.IS_DEBUG = flag
 };
@@ -23,6 +23,38 @@ DjVu$1.Utils = {
         });
     }
 };
+function utf8ToCodePoints(utf8array) {
+    var i, c;
+    var codePoints = [];
+    i = 0;
+    while (i < utf8array.length) {
+        c = utf8array[i++];
+        switch (c >> 4) {
+            case 0: case 1: case 2: case 3: case 4: case 5: case 6: case 7:
+                codePoints.push(c);
+                break;
+            case 12: case 13:
+                codePoints.push(((c & 0x1F) << 6) | (utf8array[i++] & 0x3F));
+                break;
+            case 14:
+                codePoints.push(
+                    ((c & 0x0F) << 12) |
+                    ((utf8array[i++] & 0x3F) << 6) |
+                    (utf8array[i++] & 0x3F)
+                );
+                break;
+            case 15:
+                codePoints.push(
+                    ((c & 0x07) << 18) |
+                    ((utf8array[i++] & 0x3F) << 12) |
+                    ((utf8array[i++] & 0x3F) << 6) |
+                    (utf8array[i++] & 0x3F)
+                );
+                break;
+        }
+    }
+    return codePoints;
+}
 
 class ZPEncoder {
     constructor(bsw) {
@@ -688,8 +720,9 @@ class ByteStream {
         return str;
     }
     readStrUTF(byteLength) {
-        var array = this.getUint8Array(byteLength);
-        return String.fromCodePoint ? String.fromCodePoint(...array) : String.fromCharCode(...array);
+        var utf8array = this.getUint8Array(byteLength);
+        var codePoints = utf8ToCodePoints(utf8array);
+        return String.fromCodePoint ? String.fromCodePoint(...codePoints) : String.fromCharCode(...codePoints);
     }
     fork(_length) {
         var length = _length || (this.length - this.offset);
