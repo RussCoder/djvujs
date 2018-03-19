@@ -1,5 +1,9 @@
 # DjVu.js Library Changelog
 
+## v.0.1.1 (19.03.2018)
+
+- UTF-8 strings are decoded correctly now.
+
 ## v.0.1.0 (14.03.2018)
 
 - IW44, BZZ and ZP codecs are fully implemented with some constraints in case of BZZ codec.

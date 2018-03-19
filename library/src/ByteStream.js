@@ -1,3 +1,5 @@
+import { utf8ToCodePoints } from './DjVu'
+
 /**
  * Объект байтового потока. Предоставляет API для чтения сырого ArrayBuffer как потока байт.
  * После вызова каждого метода чтения, внутренный указатель смещается автоматически.
@@ -108,10 +110,10 @@ export default class ByteStream {
     }
 
     readStrUTF(byteLength) {
-        var array = this.getUint8Array(byteLength);
-        return String.fromCodePoint ? String.fromCodePoint(...array) : String.fromCharCode(...array);
+        var utf8array = this.getUint8Array(byteLength);
+        var codePoints = utf8ToCodePoints(utf8array);
+        return String.fromCodePoint ? String.fromCodePoint(...codePoints) : String.fromCharCode(...codePoints);
     }
-
 
     fork(_length) {
         var length = _length || (this.length - this.offset);

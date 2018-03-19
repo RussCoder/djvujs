@@ -183,7 +183,7 @@ var Tests = {
                             result
                         ]
                     };
-                } else if(!hash) {
+                } else if (!hash) {
                     result += "... Hash is " + TestHelper.getHashOfArray(resultImageData.data);
                 }
                 return result;
@@ -208,15 +208,15 @@ var Tests = {
         return this._imageTest("happy_birthday.djvu", 0, "happy_birthday.png");
     },*/
 
-    testText() {
-        return DjVu.Utils.loadFile('/assets/DjVu3Spec.djvu')
+    _testText(djvuUrl, pageNumber, txtUrl) {
+        return DjVu.Utils.loadFile(djvuUrl)
             .then(buffer => {
                 return djvuWorker.createDocument(buffer);
             })
             .then(() => {
                 return Promise.all([
-                    djvuWorker.getPageText(1),
-                    DjVu.Utils.loadFile('/assets/DjVu3Spec_1.txt', 'text')
+                    djvuWorker.getPageText(pageNumber),
+                    DjVu.Utils.loadFile(txtUrl, 'text')
                 ]);
             })
             .then(data => {
@@ -226,6 +226,14 @@ var Tests = {
                     return "Text is incorrect!";
                 }
             });
+    },
+
+    testGetEnglishText() {
+        return this._testText('/assets/DjVu3Spec.djvu', 1, '/assets/DjVu3Spec_1.txt');
+    },
+
+    testGetCzechText() {
+        return this._testText('/assets/czech.djvu', 6, '/assets/czech_6.txt');
     },
 
     testCreateDocumentFromPictures() {
