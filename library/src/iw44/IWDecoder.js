@@ -1,5 +1,6 @@
 import IWCodecBaseClass from './IWCodecBaseClass';
 import { LinearBytemap, Block } from './IWStructures';
+import DjVu from '../DjVu';
 
 export default class IWDecoder extends IWCodecBaseClass {
 
@@ -10,7 +11,7 @@ export default class IWDecoder extends IWCodecBaseClass {
     init(imageinfo) {
         // инициализируем на первой порции данных
         this.info = imageinfo;
-        let blockCount = Math.ceil(this.info.width / 32) * Math.ceil(this.info.height / 32);
+        var blockCount = Math.ceil(this.info.width / 32) * Math.ceil(this.info.height / 32);
         this.blocks = Block.createBlockArray(blockCount);
     }
 
@@ -202,11 +203,11 @@ export default class IWDecoder extends IWCodecBaseClass {
                 var block = this.blocks[r * blockCols + c];
                 for (var i = 0; i < 1024; i++) {
                     /*var bits = [];
-                    for (let j = 0; j < 10; j++) {
+                    for (var j = 0; j < 10; j++) {
                         bits.push((i & Math.pow(2, j)) >> j);
                     }
-                    let row = 16 * bits[1] + 8 * bits[3] + 4 * bits[5] + 2 * bits[7] + bits[9];
-                    let col = 16 * bits[0] + 8 * bits[2] + 4 * bits[4] + 2 * bits[6] + bits[8];*/
+                    var row = 16 * bits[1] + 8 * bits[3] + 4 * bits[5] + 2 * bits[7] + bits[9];
+                    var col = 16 * bits[0] + 8 * bits[2] + 4 * bits[4] + 2 * bits[6] + bits[8];*/
                     // bitmap[this.zigzagRow[i] + 32 * r][this.zigzagCol[i] + 32 * c] = block.getCoef(i);
                     bm.set(this.zigzagRow[i] + 32 * r, this.zigzagCol[i] + 32 * c, block.getCoef(i));
                 }

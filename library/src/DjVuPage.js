@@ -5,6 +5,7 @@ import DjVuPalette from './chunks/DjVuPalette';
 import IWImage from './iw44/IWImage';
 import DjVuText from './chunks/DjVuText';
 import { ZPDecoder } from './ZPCodec';
+import DjVu from './DjVu';
 
 /**
  * Страница документа
@@ -273,7 +274,7 @@ export default class DjVuPage extends CompositeChunk {
     decodeForeground() {
         if (this.fg44) {
             this.fgimage = new IWImage();
-            let zp = new ZPDecoder(this.fg44.bs);
+            var zp = new ZPDecoder(this.fg44.bs);
             this.fgimage.decodeChunk(zp, this.fg44.header);
             var pixelMapTime = performance.now();
             this.fgimage.createPixelmap();
@@ -345,7 +346,7 @@ export default class DjVuPage extends CompositeChunk {
         this.decode();
         if (this.bg44arr.length) {
             this.bg44arr.forEach((chunk) => {
-                let zp = new ZPDecoder(chunk.bs);
+                var zp = new ZPDecoder(chunk.bs);
                 this.bgimage.decodeChunk(zp, chunk.header);
             }
             );
@@ -362,7 +363,7 @@ export default class DjVuPage extends CompositeChunk {
         this.decode();
         if (this.fg44) {
             this.fgimage = new IWImage();
-            let zp = new ZPDecoder(this.fg44.bs);
+            var zp = new ZPDecoder(this.fg44.bs);
             this.fgimage.decodeChunk(zp, this.fg44.header);
             return this.fgimage.getImage();
         } else {

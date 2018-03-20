@@ -1,13 +1,13 @@
 import JB2Codec from './JB2Codec';
 import { Baseline } from './JB2Structures';
+import DjVu from '../DjVu';
 
 export default class JB2Image extends JB2Codec {
     constructor(bs) {
         super(bs);
-        //словарь (может быть заменен диной словаря на некоторое время)
-        this.dict = [];
-        // "blit" = "block transfer"
-        this.blitList = [];
+        this.dict = []; // dict of bitmaps
+        this.initialDictLength = 0; // a number of bitmaps from a shared dict (if required)     
+        this.blitList = []; // "blit" = "block transfer"
         this.init();
     }
 
@@ -23,10 +23,10 @@ export default class JB2Image extends JB2Codec {
 
     //раскодируем первую запись в потоке
     init() {
-        let type = this.decodeNum(0, 11, this.recordTypeCtx);
+        var type = this.decodeNum(0, 11, this.recordTypeCtx);
         if (type == 9) {
             // длина словаря
-            this.dict = this.decodeNum(0, 262142, this.inheritDictSizeCtx);
+            this.initialDictLength = this.decodeNum(0, 262142, this.inheritDictSizeCtx);
             //тип следующей записи (должен быть 0)
             type = this.decodeNum(0, 11, this.recordTypeCtx);
             //console.log("Zero", type);
@@ -42,7 +42,7 @@ export default class JB2Image extends JB2Codec {
         this.firstLeft = -1; // получено экспериментально, чтобы не вычитать 1 каждый раз из x как это делается в javadjvu
         this.firstBottom = this.height - 1;
         // флаг всегда должен быть = 0 
-        let flag = this.zp.decode([0], 0);
+        var flag = this.zp.decode([0], 0);
         if (flag) {
             throw new Error("Bad flag!!!");
         }
@@ -51,23 +51,23 @@ export default class JB2Image extends JB2Codec {
     }
 
     toString() {
-        let str = super.toString();
+        var str = super.toString();
         str += "{width: " + this.width + ", height: " + this.height + '}\n';
         return str;
     }
 
     decode(djbz) {
         // если затребован словарь 
-        if (+this.dict) {
+        if (this.initialDictLength) {
             //декодируем словарь (он может быть уже декодирован)
             djbz.decode();
             //копируем затребованное число символов
-            this.dict = djbz.dict.slice(0, this.dict);
+            this.dict = djbz.dict.slice(0, this.initialDictLength);
         }
         var type = this.decodeNum(0, 11, this.recordTypeCtx);
-        let width, hoff, voff, flag;
-        let height, index;
-        let bm;
+        var width, hoff, voff, flag;
+        var height, index;
+        var bm;
         // var count = 0; // degug code
         //var maxInterationNumber = 2000;
         while (type !== 11 /*&& count < maxInterationNumber*/) { // 11 means "End of data"
@@ -156,7 +156,7 @@ export default class JB2Image extends JB2Codec {
                     break;
 
                 case 9: // Numcoder reset
-                    console.log("RESET NUM CONTEXTS");
+                    console.log("RESET NUM CONTEXTS"); // it hasn't been checked, may work incorrectly
                     this.resetNumContexts();
                     break;
 
@@ -302,7 +302,7 @@ export default class JB2Image extends JB2Codec {
         return new ImageData(pixelArray, this.width, this.height);
     }
 
-    getImageFromBitmap() {
+    getImageFromBitmap() { // debug function mostly
         this.getBitmap();
         var time = performance.now();
         var image = new ImageData(this.width, this.height);

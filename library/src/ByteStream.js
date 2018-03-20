@@ -51,17 +51,17 @@ export default class ByteStream {
         return this.viewer.getInt8(this.offset++);
     }
     getInt16() {
-        let tmp = this.viewer.getInt16(this.offset);
+        var tmp = this.viewer.getInt16(this.offset);
         this.offset += 2;
         return tmp;
     }
     getUint16() {
-        let tmp = this.viewer.getUint16(this.offset);
+        var tmp = this.viewer.getUint16(this.offset);
         this.offset += 2;
         return tmp;
     }
     getInt32() {
-        let tmp = this.viewer.getInt32(this.offset);
+        var tmp = this.viewer.getInt32(this.offset);
         this.offset += 4;
         return tmp;
     }
@@ -130,7 +130,7 @@ export default class ByteStream {
 
 
     /*bit() {
-        let bit = (this.curbyte & this.bitmask) >>> this.shift;
+        var bit = (this.curbyte & this.bitmask) >>> this.shift;
         this.shift--;
         this.bitmask >>= 1;
         if (this.shift < 0) {

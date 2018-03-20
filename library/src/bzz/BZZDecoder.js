@@ -1,4 +1,4 @@
-import {ZPDecoder} from '../ZPCodec';
+import { ZPDecoder } from '../ZPCodec';
 import ByteStreamWriter from '../ByteStreamWriter';
 import ByteStream from '../ByteStream';
 
@@ -10,7 +10,7 @@ export default class BZZDecoder {
         this.FREQMAX = 4;
         this.CTXIDS = 3;
         this.mtf = new Uint8Array(256);
-        for (let i = 0; i < 256; i++) {
+        for (var i = 0; i < 256; i++) {
             this.mtf[i] = i;
         }
         this.ctx = new Uint8Array(300);
@@ -20,22 +20,22 @@ export default class BZZDecoder {
     }
 
     decode_raw(bits) {
-        let n = 1;
-        let m = (1 << bits);
+        var n = 1;
+        var m = (1 << bits);
         while (n < m) {
-            let b = this.zp.decode();
+            var b = this.zp.decode();
             n = (n << 1) | b;
         }
         return n - m;
     }
 
     decode_binary(ctxoff, bits) {
-        let n = 1;
-        let m = (1 << bits);
+        var n = 1;
+        var m = (1 << bits);
         ctxoff--;
 
         while (n < m) {
-            let b = this.zp.decode(this.ctx, ctxoff + n);
+            var b = this.zp.decode(this.ctx, ctxoff + n);
             n = (n << 1) | b;
         }
 
@@ -60,7 +60,7 @@ export default class BZZDecoder {
         }
 
         // Decode Estimation Speed
-        let fshift = 0;
+        var fshift = 0;
 
         if (this.zp.decode()) {
             fshift++;
@@ -72,18 +72,18 @@ export default class BZZDecoder {
 
         // Prepare Quasi MTF ** уже есть
 
-        let freq = new Array(this.FREQMAX);
+        var freq = new Array(this.FREQMAX);
 
-        for (let i = 0; i < this.FREQMAX; freq[i++] = 0);
+        for (var i = 0; i < this.FREQMAX; freq[i++] = 0);
 
-        let fadd = 4;
+        var fadd = 4;
 
         // Decode
-        let mtfno = 3;
-        let markerpos = -1;
+        var mtfno = 3;
+        var markerpos = -1;
 
-        for (let i = 0; i < this.size; i++) {
-            let ctxid = this.CTXIDS - 1;
+        for (var i = 0; i < this.size; i++) {
+            var ctxid = this.CTXIDS - 1;
 
             if (ctxid > mtfno) {
                 ctxid = mtfno;
@@ -173,7 +173,7 @@ export default class BZZDecoder {
 
             // Rotate mtf according to empirical frequencies (new!)
             // Adjust frequencies for overflow
-            let k;
+            var k;
             fadd = fadd + (fadd >> fshift);
 
             if (fadd > 0x10000000) {
@@ -189,7 +189,7 @@ export default class BZZDecoder {
             }
 
             // Relocate new char according to new freq
-            let fc = fadd;
+            var fc = fadd;
 
             if (mtfno < this.FREQMAX) {
                 fc += freq[mtfno];
@@ -215,44 +215,44 @@ export default class BZZDecoder {
         }
 
         // Allocate poleters
-        let pos = new Uint32Array(this.size);
+        var pos = new Uint32Array(this.size);
 
-        for (let j = 0; j < this.size; pos[j++] = 0);
+        for (var j = 0; j < this.size; pos[j++] = 0);
 
         // Prepare count buffer
-        let count = new Array(256);
+        var count = new Array(256);
 
-        for (let i = 0; i < 256; count[i++] = 0);
+        for (var i = 0; i < 256; count[i++] = 0);
 
         // Fill count buffer
-        for (let i = 0; i < markerpos; i++) {
-            let c = this.data[i];
+        for (var i = 0; i < markerpos; i++) {
+            var c = this.data[i];
             pos[i] = (c << 24) | (count[0xff & c] & 0xffffff);
             count[0xff & c]++;
         }
 
-        for (let i = markerpos + 1; i < this.size; i++) {
-            let c = this.data[i];
+        for (var i = markerpos + 1; i < this.size; i++) {
+            var c = this.data[i];
             pos[i] = (c << 24) | (count[0xff & c] & 0xffffff);
             count[0xff & c]++;
         }
 
         // Compute sorted char positions
-        let last = 1;
+        var last = 1;
 
-        for (let i = 0; i < 256; i++) {
-            let tmp = count[i];
+        for (var i = 0; i < 256; i++) {
+            var tmp = count[i];
             count[i] = last;
             last += tmp;
         }
 
         // Undo the sort transform
-        let j = 0;
+        var j = 0;
         last = this.size - 1;
 
         while (last > 0) {
-            let n = pos[j];
-            let c = pos[j] >> 24;
+            var n = pos[j];
+            var c = pos[j] >> 24;
             this.data[--last] = 0xff & c;
             j = count[0xff & c] + (n & 0xffffff);
         }

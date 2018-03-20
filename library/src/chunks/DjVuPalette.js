@@ -1,5 +1,6 @@
 import { IFFChunk } from './IFFChunks';
 import BZZDecoder from '../bzz/BZZDecoder';
+import DjVu from '../DjVu';
 
 export default class DjVuPalette extends IFFChunk {
 

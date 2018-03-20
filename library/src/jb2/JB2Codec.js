@@ -78,14 +78,14 @@ export default class JB2Codec extends IFFChunk {
     }*/
 
     decodeNum(low, high, numctx) { // this implementation was copied from DjVuLibre
-        let negative = false;
-        let cutoff;
+        var negative = false;
+        var cutoff;
 
         // Start all phases
         cutoff = 0;
-        for (let phase = 1, range = 0xffffffff; range != 1;) {
+        for (var phase = 1, range = 0xffffffff; range != 1;) {
             // encode
-            let decision = (low >= cutoff) || ((high >= cutoff) && this.zp.decode(numctx.ctx, 0));
+            var decision = (low >= cutoff) || ((high >= cutoff) && this.zp.decode(numctx.ctx, 0));
             // context for new bit
             numctx = decision ? numctx.right : numctx.left;
             // phase dependent part
@@ -93,7 +93,7 @@ export default class JB2Codec extends IFFChunk {
                 case 1:
                     negative = !decision;
                     if (negative) {
-                        let temp = - low - 1;
+                        var temp = - low - 1;
                         low = - high - 1;
                         high = temp;
                     }
@@ -131,15 +131,10 @@ export default class JB2Codec extends IFFChunk {
         return (negative) ? (- cutoff - 1) : cutoff;
     }
 
-    toString() {
-        var str = super.toString();
-        return str;
-    }
-
     decodeBitmap(width, height) {
         var bitmap = new Bitmap(width, height);
-        for (let i = height - 1; i >= 0; i--) {
-            for (let j = 0; j < width; j++) {
+        for (var i = height - 1; i >= 0; i--) {
+            for (var j = 0; j < width; j++) {
                 var ind = this.getCtxIndex(bitmap, i, j);
                 this.zp.decode(this.directBitmapCtx, ind) ? bitmap.set(i, j) : 0;
             }
@@ -149,7 +144,7 @@ export default class JB2Codec extends IFFChunk {
 
     getCtxIndex(bm, i, j) {
         var index = 0;
-        let r = i + 2;
+        var r = i + 2;
         if (bm.hasRow(r)) {
             index = ((bm.get(r, j - 1) || 0) << 9) | (bm.get(r, j) << 8) | ((bm.get(r, j + 1) || 0) << 7);
         }
@@ -165,10 +160,10 @@ export default class JB2Codec extends IFFChunk {
     // don't forget to remove empty edges of the result bitmap before it is added to the dictionary
     decodeBitmapRef(width, height, mbm) {
         //current bitmap
-        let cbm = new Bitmap(width, height);
+        var cbm = new Bitmap(width, height);
         var alignInfo = this.alignBitmaps(cbm, mbm);
-        for (let i = height - 1; i >= 0; i--) {
-            for (let j = 0; j < width; j++) {
+        for (var i = height - 1; i >= 0; i--) {
+            for (var j = 0; j < width; j++) {
                 this.zp.decode(this.refinementBitmapCtx,
                     this.getCtxIndexRef(cbm, mbm, alignInfo, i, j)) ? cbm.set(i, j) : 0;
             }
@@ -178,14 +173,14 @@ export default class JB2Codec extends IFFChunk {
 
     getCtxIndexRef(cbm, mbm, alignInfo, i, j) {
         var index = 0;
-        let r = i + 1;
+        var r = i + 1;
         if (cbm.hasRow(r)) {
             index = ((cbm.get(r, j - 1) || 0) << 10) | (cbm.get(r, j) << 9) | ((cbm.get(r, j + 1) || 0) << 8);
         }
         index |= (cbm.get(i, j - 1) || 0) << 7;
 
         r = i + alignInfo.rowshift + 1;
-        let c = j + alignInfo.colshift;
+        var c = j + alignInfo.colshift;
         index |= mbm.hasRow(r) ? mbm.get(r, c) << 6 : 0;
         r--;
         if (mbm.hasRow(r)) {
@@ -199,9 +194,9 @@ export default class JB2Codec extends IFFChunk {
     }
 
     alignBitmaps(cbm, mbm) {
-        let cwidth = cbm.width - 1;
-        let cheight = cbm.height - 1;
-        let crow, ccol, mrow, mcol;
+        var cwidth = cbm.width - 1;
+        var cheight = cbm.height - 1;
+        var crow, ccol, mrow, mcol;
         crow = cheight >> 1;
         ccol = cwidth >> 1;
         mrow = (mbm.height - 1) >> 1;
@@ -227,10 +222,10 @@ export default class JB2Codec extends IFFChunk {
         var image = document.createElement('canvas')
             .getContext('2d')
             .createImageData(bm.width, bm.height);
-        for (let i = 0; i < bm.height; i++) {
-            for (let j = 0; j < bm.width; j++) {
-                let v = bm.get(i, j) ? 0 : 255;
-                let index = ((bm.height - i - 1) * bm.width + j) * 4;
+        for (var i = 0; i < bm.height; i++) {
+            for (var j = 0; j < bm.width; j++) {
+                var v = bm.get(i, j) ? 0 : 255;
+                var index = ((bm.height - i - 1) * bm.width + j) * 4;
                 image.data[index] = v;
                 image.data[index + 1] = v;
                 image.data[index + 2] = v;

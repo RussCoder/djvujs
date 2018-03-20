@@ -357,7 +357,7 @@ export class ZPDecoder {
             this.c += this.z;
             ctx[n] = this.dn[ctx[n]];
         }
-        let flag = 0;
+        var flag = 0;
         while (this.a > 0x8000) {
             flag = 1;
             this.a += this.a - 0x10000;

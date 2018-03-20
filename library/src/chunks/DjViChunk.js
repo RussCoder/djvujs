@@ -11,11 +11,11 @@ export default class DjViChunk extends CompositeChunk {
 
     init() {
         while (!this.bs.isEmpty()) {
-            let id = this.bs.readStr4();
-            let length = this.bs.getInt32();
+            var id = this.bs.readStr4();
+            var length = this.bs.getInt32();
             this.bs.jump(-8);
             // вернулись назад
-            let chunkBs = this.bs.fork(length + 8);
+            var chunkBs = this.bs.fork(length + 8);
             // перепрыгнули к следующей порции
             this.bs.jump(8 + length + (length & 1 ? 1 : 0));
             switch (id) {
