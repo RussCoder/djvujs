@@ -1,15 +1,5 @@
 import BZZDecoder from '../bzz/BZZDecoder';
 
-/**
- * Простейший класс ошибки, не содержит рекурсивных данных, чтобы иметь возможность копироваться
- * между потоками в сообщениях
- */
-export class DjVuError {
-    constructor(message) {
-        this.message = message;
-    }
-}
-
 // простейший шаблон порции данных
 export class IFFChunk {
     constructor(bs) {

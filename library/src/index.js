@@ -2,6 +2,7 @@ import DjVu from "./DjVu";
 import DjVuDocument from "./DjVuDocument";
 import DjVuWorker from "./DjVuWorker";
 import initWorker from './DjVuWorkerScript';
+import { DjVuErrorCodes } from './DjVuErrors';
 
 if (!Function('return this;')().document) { // if inside a Worker
     initWorker();
@@ -9,5 +10,6 @@ if (!Function('return this;')().document) { // if inside a Worker
 
 export default Object.assign({}, DjVu, {
     Worker: DjVuWorker,
-    Document: DjVuDocument
+    Document: DjVuDocument,
+    ErrorCodes: DjVuErrorCodes
 });

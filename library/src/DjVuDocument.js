@@ -1,10 +1,11 @@
 import DjViChunk from './chunks/DjViChunk';
 import DjVuPage from './DjVuPage';
-import { DjVuError, DIRMChunk, NAVMChunk } from './chunks/IFFChunks';
+import { DIRMChunk, NAVMChunk } from './chunks/IFFChunks';
 import DjVuWriter from './DjVuWriter';
 import DjVu from './DjVu';
 import ThumChunk from './chunks/ThumChunk';
 import ByteStream from './ByteStream';
+import { IncorrectFileFormatDjVuError } from './DjVuErrors';
 
 export default class DjVuDocument {
     constructor(arraybuffer) {
@@ -12,7 +13,7 @@ export default class DjVuDocument {
         this.bs = new ByteStream(arraybuffer);
         this.formatID = this.bs.readStr4();
         if (this.formatID !== 'AT&T') {
-            throw new DjVuError("Incorrect file format");
+            throw new IncorrectFileFormatDjVuError();
         }
         this.id = this.bs.readStr4();
         this.length = this.bs.getInt32();

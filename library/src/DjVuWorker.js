@@ -34,7 +34,7 @@ export default class DjVuWorker {
         var callback = this.callbacks.fetch(obj.id);
         switch (obj.command) {
             case 'Error':
-                callback.reject(obj);
+                callback.reject(obj.error);
                 break;
             case 'Process':
                 this.onprocess ? this.onprocess(obj.percent) : 0;

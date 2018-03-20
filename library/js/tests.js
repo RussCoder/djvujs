@@ -216,24 +216,42 @@ var Tests = {
             .then(() => {
                 return Promise.all([
                     djvuWorker.getPageText(pageNumber),
-                    DjVu.Utils.loadFile(txtUrl, 'text')
+                    DjVu.Utils.loadFile(txtUrl)
                 ]);
             })
             .then(data => {
-                if (data[0] === data[1]) {
+                var resultString = data[0];
+                var canonicCharCodesArray = new Uint16Array(data[1]);
+                for (var i = 0; i < canonicCharCodesArray.length; i++) {
+                    if (resultString.charCodeAt(i) !== canonicCharCodesArray[i]) {
+                        return "Text is incorrect!";
+                    }
+                }
+                return canonicCharCodesArray.length ? null : "No canonic text!";
+            });
+    },
+
+    testIncorrectFileFormatError() {
+        return DjVu.Utils.loadFile(`/assets/boy.png`)
+            .then(buffer => {
+                return djvuWorker.createDocument(buffer);
+            }).then(() => {
+                return "No error! But there must be one!";
+            }).catch(e => {
+                if (e.code === DjVu.ErrorCodes.INCORRECT_FILE_FORMAT) {
                     return null;
                 } else {
-                    return "Text is incorrect!";
+                    return e;
                 }
             });
     },
 
     testGetEnglishText() {
-        return this._testText('/assets/DjVu3Spec.djvu', 1, '/assets/DjVu3Spec_1.txt');
+        return this._testText('/assets/DjVu3Spec.djvu', 1, '/assets/DjVu3Spec_1_text.bin');
     },
 
     testGetCzechText() {
-        return this._testText('/assets/czech.djvu', 6, '/assets/czech_6.txt');
+        return this._testText('/assets/czech.djvu', 6, '/assets/czech_6_text.bin');
     },
 
     testCreateDocumentFromPictures() {

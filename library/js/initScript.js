@@ -16,7 +16,7 @@ var rerunButton = document.querySelector('#rerun');
 rerunButton.onclick = rerun;
 document.querySelector('#redraw').onclick = redrawPage;
 
-var pageNumber = 1;
+var pageNumber = 0;
 var djvuUrl = 'assets/DjVu3Spec.djvu';
 
 document.querySelector('#next').onclick = () => {
@@ -33,6 +33,18 @@ function saveStringAsFile(string) {
     var link = document.createElement('a');
     link.download = 'string.txt';
     var blob = new Blob([string], { type: 'text/plain' });
+    link.href = window.URL.createObjectURL(blob);
+    link.click();
+}
+
+function saveStringAsBinFile(string) {
+    var link = document.createElement('a');
+    link.download = 'string.bin';
+    var array = new Uint16Array(string.length);
+    for (var i = 0; i < string.length; i++) {
+        array[i] = string.charCodeAt(i);
+    }
+    var blob = new Blob([array], { type: 'application/octet-binary' });
     link.href = window.URL.createObjectURL(blob);
     link.click();
 }
@@ -117,9 +129,9 @@ function readDjvu(buf) {
 
     //writeln(djvuDocument.toString(true));
 
-    //writeln(djvuDocument.pages[pageNumber].getText());
-    redrawPage();
-    //saveStringAsFile(djvuDocument.pages[pageNumber].getText());
+    writeln(djvuDocument.pages[pageNumber].getText());
+    //redrawPage();
+    //saveStringAsBinFile(djvuDocument.pages[pageNumber].getText());
     // writeln(doc.toString(true));
     // doc.countFiles();
     //console.log(Globals.Timer.toString());
@@ -152,7 +164,7 @@ function redrawPage() {
         console.log("Refine time", time);
         console.log('**** ***** **** ****');
     }, 50);
-   
+
 }
 
 function splitDjvu(buf) {

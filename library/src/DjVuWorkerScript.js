@@ -1,5 +1,6 @@
 import DjVuDocument from './DjVuDocument';
 import IWImageWriter from './iw44/IWImageWriter';
+import { DjVuError, DjVuErrorCodes } from './DjVuErrors';
 
 /**
  * Это скрипт для выполнения в фоновом потоке. 
@@ -17,11 +18,17 @@ export default function initWorker() {
             var obj = oEvent.data;
             handlers[obj.command](obj);
         } catch (error) {
+            // we can't pass the native Error object between workers, so only several properties are copied
+            var errorObj = error instanceof DjVuError ? error : {
+                code: DjVuErrorCodes.UNEXPECTED_ERROR,
+                name: error.name,
+                message: error.message
+            };
+            errorObj.lastCommandObject = obj;
             postMessage({
                 command: 'Error',
                 id: obj.id,
-                message: error.message,
-                lastCommandObject: obj
+                error: errorObj
             });
         }
     };
