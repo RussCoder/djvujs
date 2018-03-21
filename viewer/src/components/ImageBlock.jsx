@@ -87,7 +87,7 @@ class ImageBlock extends React.Component {
     render() {
         return (
             <div
-                className="image_wrapper"
+                className="image_block"
                 onWheel={this.onWheel}
                 ref={this.wrapperRef}
                 onMouseDown={this.startMoving}

@@ -1,0 +1,19 @@
+.image_block {
+    flex: 1 1 auto;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    overflow: auto;
+    height: 95%;
+    text-align: center;
+    cursor: grab;
+
+    &.grabbing {
+        cursor: grabbing;
+    }
+
+    .canvas_image {
+        margin: auto;
+        border: 1px solid lightgray;
+    }
+}

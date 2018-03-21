@@ -1,0 +1,39 @@
+.initial_screen {
+    font-size: 2em;
+    text-align: center;
+    flex: 1 1 auto;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .content {
+        max-height: 100%;
+
+        .header {
+            text-align: center;
+            font-size: 2em;
+        }
+
+        .djvujs_version {
+            margin-top: -2em;
+            font-style: italic;
+            font-size: 0.8em;
+        }
+
+        div {
+            margin: 1em;
+        }
+
+        .file_block_wrapper {
+            display: inline-block;
+            border: 1px solid lightgray;
+
+            .file_block {
+                display: block;
+            }
+        }
+    }
+}

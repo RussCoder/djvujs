@@ -6,7 +6,6 @@ body.disable_scroll_djvujs {
 }
 
 .djvu_js_viewer {
-
     font-size: 14px;
     overflow: hidden;
     position: relative;
@@ -19,6 +18,12 @@ body.disable_scroll_djvujs {
     align-items: center;
     background: #FCFCFC;
 
+    @import "initial_screen";
+    @import "down_panel";
+    @import "page_number_block";
+    @import "file_block";
+    @import "image_block";
+
     &.full_page_view {
         top: 0;
         left: 0;
@@ -28,187 +33,12 @@ body.disable_scroll_djvujs {
         z-index: 100;
     }
 
-    .initial_screen {
-        font-size: 2em;
-        text-align: center;
-        flex: 1 1 auto;
-        width: 100%;
-        height: 100%;
-        overflow: auto;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        .content {
-            max-height: 100%;
-
-            .header {
-                text-align: center;
-                font-size: 2em;
-            }
-
-            .djvujs_version {
-                margin-top: -2em;
-                font-style: italic;
-                font-size: 0.8em;
-            }
-
-            div {
-                margin: 1em;
-            }
-
-            .file_block_wrapper {
-                display: inline-block;
-                border: 1px solid lightgray;
-
-                .file_block {
-                    display: block;
-                }
-            }
-        }
-    }
-
-    .file_block {
-        flex: 0 1 auto;
-        cursor: pointer;
-        display: flex;
-        flex-wrap: nowrap;
-        align-items: center;
-        justify-content: flex-start;
-        white-space: nowrap;
-        overflow: hidden;
-        padding: 0.15em;
-
-        .file_icon {
-            flex: 0 0 auto;
-            font-size: 1.5em;
-        }
-
-        .file_name {
-            overflow: hidden;
-            flex: 0 1 auto;
-            text-align: left;
-            text-overflow: ellipsis;
-            margin: 0 0.5em;
-        }
-
-        &:hover {
-            .file_icon {
-                transform: scale(1.1)
-            }
-        }
-    }
-
-    .down_panel {
-
-        flex: 0 0 auto;
-        border: 1px solid black;
-        padding: 0.5em;
-        display: flex;
-        flex-wrap: nowrap;
-        justify-content: space-between;
-        align-items: center;
-        margin: 1em;
-        width: 90%;
-        height: 1.5em;
-        text-align: center;
-        max-width: 60em;
-
-        .scale_gizmo {
-            display: flex;
-            flex-wrap: nowrap;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .scale_button {
-            cursor: pointer;
-            font-size: 1.2em;
-
-            &:hover {
-                transform: scale(1.1);
-            }
-        }
-
-        .scale {
-            display: inline-block;
-            width: 3em;
-            margin: 0.5em;
-        }
-
-        .control_button {
-            cursor: pointer;
-            font-size: 2em;
-            margin: 0 0.5em;
-
-            &:hover {
-                transform: scale(1.1)
-            }
-
-        }
-    }
-
     .text_block {
         border: 1px solid lightgray;
         padding: 0.5em;
         max-width: 100%;
         box-sizing: border-box;
         flex: 1 1 auto;
-        overflow: auto; 
-    }
-
-    .image_wrapper {
-
-        flex: 1 1 auto;
-        width: 100%;
-        height: 100%;
-        display: flex;
         overflow: auto;
-        height: 95%;
-        text-align: center;
-        cursor: grab;
-
-        &.grabbing {
-            cursor: grabbing;
-        }
-
-        .canvas_image {
-            margin: auto;
-            border: 1px solid lightgray;
-        }
-    }
-
-    .page_number_block {
-
-        margin: 0 0.5em;
-        flex: 0 0 auto;
-        display: flex;
-        flex-wrap: nowrap;
-        justify-content: center;
-        align-items: center;
-
-        .navbut {
-            font-size: 2em;
-            color: #555;
-            margin: 0 0.1em;
-            border-radius: 100%;
-            cursor: pointer;
-
-            &:hover {
-                transform: scale(1.1);
-                box-shadow: 0 0 1px gray;
-            }
-
-            &:active {
-                background: #555;
-                color: white;
-            }
-        }
-
-        .page_number {
-            flex: 1 1 auto;
-            min-width: 1em;
-            max-width: 4em;
-        }
     }
 }

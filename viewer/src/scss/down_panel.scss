@@ -1,0 +1,47 @@
+.down_panel {
+    flex: 0 0 auto;
+    border: 1px solid black;
+    padding: 0.5em;
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    align-items: center;
+    margin: 1em;
+    width: 90%;
+    height: 1.5em;
+    text-align: center;
+    max-width: 60em;
+
+    .scale_gizmo {
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .scale_button {
+        cursor: pointer;
+        font-size: 1.2em;
+
+        &:hover {
+            transform: scale(1.1);
+        }
+    }
+
+    .scale {
+        display: inline-block;
+        width: 3em;
+        margin: 0.5em;
+    }
+
+    .control_button {
+        cursor: pointer;
+        font-size: 2em;
+        margin: 0 0.5em;
+
+        &:hover {
+            transform: scale(1.1)
+        }
+
+    }
+}
