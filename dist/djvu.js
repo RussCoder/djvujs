@@ -1,12 +1,12 @@
 var DjVu = (function () {
 'use strict';
 
-var DjVu$1 = {
+var DjVu = {
     VERSION: '0.1.1',
     IS_DEBUG: false,
-    setDebugMode: (flag) => DjVu$1.IS_DEBUG = flag
+    setDebugMode: (flag) => DjVu.IS_DEBUG = flag
 };
-DjVu$1.Utils = {
+DjVu.Utils = {
     loadFile(url, responseType = 'arraybuffer') {
         return new Promise((resolve, reject) => {
             var xhr = new XMLHttpRequest();
@@ -16,7 +16,7 @@ DjVu$1.Utils = {
                 if (xhr.status !== 200) {
                     return reject({ message: "Something went wrong!", xhr: xhr })
                 }
-                DjVu$1.IS_DEBUG && console.log("File loaded: ", e.loaded);
+                DjVu.IS_DEBUG && console.log("File loaded: ", e.loaded);
                 resolve(xhr.response);
             };
             xhr.send();
@@ -669,17 +669,17 @@ class ByteStream {
         return this.viewer.getInt8(this.offset++);
     }
     getInt16() {
-        let tmp = this.viewer.getInt16(this.offset);
+        var tmp = this.viewer.getInt16(this.offset);
         this.offset += 2;
         return tmp;
     }
     getUint16() {
-        let tmp = this.viewer.getUint16(this.offset);
+        var tmp = this.viewer.getUint16(this.offset);
         this.offset += 2;
         return tmp;
     }
     getInt32() {
-        let tmp = this.viewer.getInt32(this.offset);
+        var tmp = this.viewer.getInt32(this.offset);
         this.offset += 4;
         return tmp;
     }
@@ -743,7 +743,7 @@ class BZZDecoder {
         this.FREQMAX = 4;
         this.CTXIDS = 3;
         this.mtf = new Uint8Array(256);
-        for (let i = 0; i < 256; i++) {
+        for (var i = 0; i < 256; i++) {
             this.mtf[i] = i;
         }
         this.ctx = new Uint8Array(300);
@@ -752,20 +752,20 @@ class BZZDecoder {
         this.data = null;
     }
     decode_raw(bits) {
-        let n = 1;
-        let m = (1 << bits);
+        var n = 1;
+        var m = (1 << bits);
         while (n < m) {
-            let b = this.zp.decode();
+            var b = this.zp.decode();
             n = (n << 1) | b;
         }
         return n - m;
     }
     decode_binary(ctxoff, bits) {
-        let n = 1;
-        let m = (1 << bits);
+        var n = 1;
+        var m = (1 << bits);
         ctxoff--;
         while (n < m) {
-            let b = this.zp.decode(this.ctx, ctxoff + n);
+            var b = this.zp.decode(this.ctx, ctxoff + n);
             n = (n << 1) | b;
         }
         return n - m;
@@ -784,20 +784,20 @@ class BZZDecoder {
         } else if (this.data == null) {
             this.data = new Uint8Array(this.blocksize);
         }
-        let fshift = 0;
+        var fshift = 0;
         if (this.zp.decode()) {
             fshift++;
             if (this.zp.decode()) {
                 fshift++;
             }
         }
-        let freq = new Array(this.FREQMAX);
-        for (let i = 0; i < this.FREQMAX; freq[i++] = 0);
-        let fadd = 4;
-        let mtfno = 3;
-        let markerpos = -1;
-        for (let i = 0; i < this.size; i++) {
-            let ctxid = this.CTXIDS - 1;
+        var freq = new Array(this.FREQMAX);
+        for (var i = 0; i < this.FREQMAX; freq[i++] = 0);
+        var fadd = 4;
+        var mtfno = 3;
+        var markerpos = -1;
+        for (var i = 0; i < this.size; i++) {
+            var ctxid = this.CTXIDS - 1;
             if (ctxid > mtfno) {
                 ctxid = mtfno;
             }
@@ -863,7 +863,7 @@ class BZZDecoder {
                     markerpos = i;
                     continue;
             }
-            let k;
+            var k;
             fadd = fadd + (fadd >> fshift);
             if (fadd > 0x10000000) {
                 fadd >>= 24;
@@ -875,7 +875,7 @@ class BZZDecoder {
                     freq[k] >>= 24;
                 }
             }
-            let fc = fadd;
+            var fc = fadd;
             if (mtfno < this.FREQMAX) {
                 fc += freq[mtfno];
             }
@@ -892,31 +892,31 @@ class BZZDecoder {
         if ((markerpos < 1) || (markerpos >= this.size)) {
             throw new Error("ByteStream.corrupt");
         }
-        let pos = new Uint32Array(this.size);
-        for (let j = 0; j < this.size; pos[j++] = 0);
-        let count = new Array(256);
-        for (let i = 0; i < 256; count[i++] = 0);
-        for (let i = 0; i < markerpos; i++) {
-            let c = this.data[i];
+        var pos = new Uint32Array(this.size);
+        for (var j = 0; j < this.size; pos[j++] = 0);
+        var count = new Array(256);
+        for (var i = 0; i < 256; count[i++] = 0);
+        for (var i = 0; i < markerpos; i++) {
+            var c = this.data[i];
             pos[i] = (c << 24) | (count[0xff & c] & 0xffffff);
             count[0xff & c]++;
         }
-        for (let i = markerpos + 1; i < this.size; i++) {
-            let c = this.data[i];
+        for (var i = markerpos + 1; i < this.size; i++) {
+            var c = this.data[i];
             pos[i] = (c << 24) | (count[0xff & c] & 0xffffff);
             count[0xff & c]++;
         }
-        let last = 1;
-        for (let i = 0; i < 256; i++) {
-            let tmp = count[i];
+        var last = 1;
+        for (var i = 0; i < 256; i++) {
+            var tmp = count[i];
             count[i] = last;
             last += tmp;
         }
-        let j = 0;
+        var j = 0;
         last = this.size - 1;
         while (last > 0) {
-            let n = pos[j];
-            let c = pos[j] >> 24;
+            var n = pos[j];
+            var c = pos[j] >> 24;
             this.data[--last] = 0xff & c;
             j = count[0xff & c] + (n & 0xffffff);
         }
@@ -942,11 +942,6 @@ class BZZDecoder {
     }
 }
 
-class DjVuError {
-    constructor(message) {
-        this.message = message;
-    }
-}
 class IFFChunk {
     constructor(bs) {
         this.id = bs.readStr4();
@@ -1109,17 +1104,17 @@ class JB2Codec extends IFFChunk {
         this.verticalAbsLocationCtx = new NumContext();
     }
     decodeNum(low, high, numctx) {
-        let negative = false;
-        let cutoff;
+        var negative = false;
+        var cutoff;
         cutoff = 0;
-        for (let phase = 1, range = 0xffffffff; range != 1;) {
-            let decision = (low >= cutoff) || ((high >= cutoff) && this.zp.decode(numctx.ctx, 0));
+        for (var phase = 1, range = 0xffffffff; range != 1;) {
+            var decision = (low >= cutoff) || ((high >= cutoff) && this.zp.decode(numctx.ctx, 0));
             numctx = decision ? numctx.right : numctx.left;
             switch (phase) {
                 case 1:
                     negative = !decision;
                     if (negative) {
-                        let temp = - low - 1;
+                        var temp = - low - 1;
                         low = - high - 1;
                         high = temp;
                     }
@@ -1154,14 +1149,10 @@ class JB2Codec extends IFFChunk {
         }
         return (negative) ? (- cutoff - 1) : cutoff;
     }
-    toString() {
-        var str = super.toString();
-        return str;
-    }
     decodeBitmap(width, height) {
         var bitmap = new Bitmap$1(width, height);
-        for (let i = height - 1; i >= 0; i--) {
-            for (let j = 0; j < width; j++) {
+        for (var i = height - 1; i >= 0; i--) {
+            for (var j = 0; j < width; j++) {
                 var ind = this.getCtxIndex(bitmap, i, j);
                 this.zp.decode(this.directBitmapCtx, ind) ? bitmap.set(i, j) : 0;
             }
@@ -1170,7 +1161,7 @@ class JB2Codec extends IFFChunk {
     }
     getCtxIndex(bm, i, j) {
         var index = 0;
-        let r = i + 2;
+        var r = i + 2;
         if (bm.hasRow(r)) {
             index = ((bm.get(r, j - 1) || 0) << 9) | (bm.get(r, j) << 8) | ((bm.get(r, j + 1) || 0) << 7);
         }
@@ -1183,10 +1174,10 @@ class JB2Codec extends IFFChunk {
         return index;
     }
     decodeBitmapRef(width, height, mbm) {
-        let cbm = new Bitmap$1(width, height);
+        var cbm = new Bitmap$1(width, height);
         var alignInfo = this.alignBitmaps(cbm, mbm);
-        for (let i = height - 1; i >= 0; i--) {
-            for (let j = 0; j < width; j++) {
+        for (var i = height - 1; i >= 0; i--) {
+            for (var j = 0; j < width; j++) {
                 this.zp.decode(this.refinementBitmapCtx,
                     this.getCtxIndexRef(cbm, mbm, alignInfo, i, j)) ? cbm.set(i, j) : 0;
             }
@@ -1195,13 +1186,13 @@ class JB2Codec extends IFFChunk {
     }
     getCtxIndexRef(cbm, mbm, alignInfo, i, j) {
         var index = 0;
-        let r = i + 1;
+        var r = i + 1;
         if (cbm.hasRow(r)) {
             index = ((cbm.get(r, j - 1) || 0) << 10) | (cbm.get(r, j) << 9) | ((cbm.get(r, j + 1) || 0) << 8);
         }
         index |= (cbm.get(i, j - 1) || 0) << 7;
         r = i + alignInfo.rowshift + 1;
-        let c = j + alignInfo.colshift;
+        var c = j + alignInfo.colshift;
         index |= mbm.hasRow(r) ? mbm.get(r, c) << 6 : 0;
         r--;
         if (mbm.hasRow(r)) {
@@ -1214,9 +1205,9 @@ class JB2Codec extends IFFChunk {
         return index;
     }
     alignBitmaps(cbm, mbm) {
-        let cwidth = cbm.width - 1;
-        let cheight = cbm.height - 1;
-        let crow, ccol, mrow, mcol;
+        var cwidth = cbm.width - 1;
+        var cheight = cbm.height - 1;
+        var crow, ccol, mrow, mcol;
         crow = cheight >> 1;
         ccol = cwidth >> 1;
         mrow = (mbm.height - 1) >> 1;
@@ -1236,10 +1227,10 @@ class JB2Codec extends IFFChunk {
         var image = document.createElement('canvas')
             .getContext('2d')
             .createImageData(bm.width, bm.height);
-        for (let i = 0; i < bm.height; i++) {
-            for (let j = 0; j < bm.width; j++) {
-                let v = bm.get(i, j) ? 0 : 255;
-                let index = ((bm.height - i - 1) * bm.width + j) * 4;
+        for (var i = 0; i < bm.height; i++) {
+            for (var j = 0; j < bm.width; j++) {
+                var v = bm.get(i, j) ? 0 : 255;
+                var index = ((bm.height - i - 1) * bm.width + j) * 4;
                 image.data[index] = v;
                 image.data[index + 1] = v;
                 image.data[index + 2] = v;
@@ -1323,10 +1314,10 @@ class DjViChunk extends CompositeChunk {
     }
     init() {
         while (!this.bs.isEmpty()) {
-            let id = this.bs.readStr4();
-            let length = this.bs.getInt32();
+            var id = this.bs.readStr4();
+            var length = this.bs.getInt32();
             this.bs.jump(-8);
-            let chunkBs = this.bs.fork(length + 8);
+            var chunkBs = this.bs.fork(length + 8);
             this.bs.jump(8 + length + (length & 1 ? 1 : 0));
             switch (id) {
                 case 'Djbz':
@@ -1352,6 +1343,7 @@ class JB2Image extends JB2Codec {
     constructor(bs) {
         super(bs);
         this.dict = [];
+        this.initialDictLength = 0;
         this.blitList = [];
         this.init();
     }
@@ -1359,9 +1351,9 @@ class JB2Image extends JB2Codec {
         this.blitList.push({ bitmap, x, y });
     }
     init() {
-        let type = this.decodeNum(0, 11, this.recordTypeCtx);
+        var type = this.decodeNum(0, 11, this.recordTypeCtx);
         if (type == 9) {
-            this.dict = this.decodeNum(0, 262142, this.inheritDictSizeCtx);
+            this.initialDictLength = this.decodeNum(0, 262142, this.inheritDictSizeCtx);
             type = this.decodeNum(0, 11, this.recordTypeCtx);
         }
         this.width = this.decodeNum(0, 262142, this.imageSizeCtx) || 200;
@@ -1371,26 +1363,26 @@ class JB2Image extends JB2Codec {
         this.lastBottom = this.height - 1;
         this.firstLeft = -1;
         this.firstBottom = this.height - 1;
-        let flag = this.zp.decode([0], 0);
+        var flag = this.zp.decode([0], 0);
         if (flag) {
             throw new Error("Bad flag!!!");
         }
         this.baseline = new Baseline();
     }
     toString() {
-        let str = super.toString();
+        var str = super.toString();
         str += "{width: " + this.width + ", height: " + this.height + '}\n';
         return str;
     }
     decode(djbz) {
-        if (+this.dict) {
+        if (this.initialDictLength) {
             djbz.decode();
-            this.dict = djbz.dict.slice(0, this.dict);
+            this.dict = djbz.dict.slice(0, this.initialDictLength);
         }
         var type = this.decodeNum(0, 11, this.recordTypeCtx);
-        let width;
-        let height, index;
-        let bm;
+        var width;
+        var height, index;
+        var bm;
         while (type !== 11                                   ) {
             switch (type) {
                 case 1:
@@ -1828,7 +1820,7 @@ class IWDecoder extends IWCodecBaseClass {
     }
     init(imageinfo) {
         this.info = imageinfo;
-        let blockCount = Math.ceil(this.info.width / 32) * Math.ceil(this.info.height / 32);
+        var blockCount = Math.ceil(this.info.width / 32) * Math.ceil(this.info.height / 32);
         this.blocks = Block.createBlockArray(blockCount);
     }
     decodeSlice(zp, imageinfo) {
@@ -2377,7 +2369,7 @@ class DjVuPage extends CompositeChunk {
     decodeForeground() {
         if (this.fg44) {
             this.fgimage = new IWImage();
-            let zp = new ZPDecoder(this.fg44.bs);
+            var zp = new ZPDecoder(this.fg44.bs);
             this.fgimage.decodeChunk(zp, this.fg44.header);
             var pixelMapTime = performance.now();
             this.fgimage.createPixelmap();
@@ -2431,7 +2423,7 @@ class DjVuPage extends CompositeChunk {
         this.decode();
         if (this.bg44arr.length) {
             this.bg44arr.forEach((chunk) => {
-                let zp = new ZPDecoder(chunk.bs);
+                var zp = new ZPDecoder(chunk.bs);
                 this.bgimage.decodeChunk(zp, chunk.header);
             }
             );
@@ -2444,7 +2436,7 @@ class DjVuPage extends CompositeChunk {
         this.decode();
         if (this.fg44) {
             this.fgimage = new IWImage();
-            let zp = new ZPDecoder(this.fg44.bs);
+            var zp = new ZPDecoder(this.fg44.bs);
             this.fgimage.decodeChunk(zp, this.fg44.header);
             return this.fgimage.getImage();
         } else {
@@ -2771,13 +2763,29 @@ class DjVuWriter {
 
 class ThumChunk extends CompositeChunk { }
 
+class DjVuError {
+    constructor(code, message) {
+        this.code = code;
+        this.message = message;
+    }
+}
+class IncorrectFileFormatDjVuError extends DjVuError {
+    constructor() {
+        super(DjVuErrorCodes.INCORRECT_FILE_FORMAT, "The provided file is not a .djvu file!");
+    }
+}
+const DjVuErrorCodes = Object.freeze({
+    INCORRECT_FILE_FORMAT: 'INCORRECT_FILE_FORMAT',
+    UNEXPECTED_ERROR: 'UNEXPECTED_ERROR'
+});
+
 let DjVuDocument$1 = class DjVuDocument {
     constructor(arraybuffer) {
         this.buffer = arraybuffer;
         this.bs = new ByteStream(arraybuffer);
         this.formatID = this.bs.readStr4();
         if (this.formatID !== 'AT&T') {
-            throw new DjVuError("Incorrect file format");
+            throw new IncorrectFileFormatDjVuError();
         }
         this.id = this.bs.readStr4();
         this.length = this.bs.getInt32();
@@ -2946,7 +2954,7 @@ let DjVuDocument$1 = class DjVuDocument {
             djvuWriter.writeFormChunkBS(chunkBS[i]);
         }
         var newbuffer = djvuWriter.getBuffer();
-        DjVu$1.IS_DEBUG && console.log("New Buffer size = ", newbuffer.byteLength);
+        DjVu.IS_DEBUG && console.log("New Buffer size = ", newbuffer.byteLength);
         var doc = new DjVuDocument$1(newbuffer);
         return doc;
     }
@@ -3040,7 +3048,7 @@ class DjVuWorker {
         var callback = this.callbacks.fetch(obj.id);
         switch (obj.command) {
             case 'Error':
-                callback.reject(obj);
+                callback.reject(obj.error);
                 break;
             case 'Process':
                 this.onprocess ? this.onprocess(obj.percent) : 0;
@@ -3698,11 +3706,16 @@ function initWorker() {
             var obj = oEvent.data;
             handlers[obj.command](obj);
         } catch (error) {
+            var errorObj = error instanceof DjVuError ? error : {
+                code: DjVuErrorCodes.UNEXPECTED_ERROR,
+                name: error.name,
+                message: error.message
+            };
+            errorObj.lastCommandObject = obj;
             postMessage({
                 command: 'Error',
                 id: obj.id,
-                message: error.message,
-                lastCommandObject: obj
+                error: errorObj
             });
         }
     };
@@ -3787,9 +3800,10 @@ function initWorker() {
 if (!Function('return this;')().document) {
     initWorker();
 }
-var index = Object.assign({}, DjVu$1, {
+var index = Object.assign({}, DjVu, {
     Worker: DjVuWorker,
-    Document: DjVuDocument$1
+    Document: DjVuDocument$1,
+    ErrorCodes: DjVuErrorCodes
 });
 
 return index;
