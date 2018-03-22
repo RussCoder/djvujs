@@ -23,6 +23,7 @@ body.disable_scroll_djvujs {
     @import "page_number_block";
     @import "file_block";
     @import "image_block";
+    @import "modal_window";
 
     &.full_page_view {
         top: 0;

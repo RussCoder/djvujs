@@ -2,7 +2,7 @@ import { put, select, takeLatest } from 'redux-saga/effects';
 // import { delay } from 'redux-saga';
 
 import Consts from "../constants/consts";
-// import Actions from "../actions/actions"
+import Actions from "../actions/actions";
 
 // const tmpCanvas = document.createElement('canvas');
 // const getImageDataURL = (imageData) => {
@@ -64,8 +64,25 @@ function* fetchPageTextIfRequired(action) {
     yield* fetchPageText(currentPageNumber);
 }
 
+function* createDocumentFromArrayBufferAction(action) {
+    const { djvuWorker } = yield select();
+    try {
+        yield djvuWorker.createDocument(action.arrayBuffer);
+        const pagesCount = yield djvuWorker.getPageCount();
+        yield put({
+            type: Consts.DOCUMENT_CREATED_ACTION,
+            pagesCount: pagesCount,
+            fileName: action.fileName
+        });
+        yield put(Actions.renderCurrentPageAction());
+    } catch (error) {
+        yield put(Actions.errorAction(error));
+    }
+}
+
 export default function* rootSaga() {
+    yield takeLatest(Consts.CREATE_DOCUMENT_FROM_ARRAY_BUFFER_ACTION, createDocumentFromArrayBufferAction);
     yield takeLatest(Consts.RENDER_CURRENT_PAGE_ACTION, getImageData);
     yield takeLatest(Consts.TOGGLE_TEXT_MODE_ACTION, fetchPageTextIfRequired);
-    yield takeLatest(Consts.SET_NEW_PAGE_NUMBER_ACTION, fetchPageData)
+    yield takeLatest(Consts.SET_NEW_PAGE_NUMBER_ACTION, fetchPageData);
 }

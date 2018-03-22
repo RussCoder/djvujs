@@ -28,6 +28,7 @@
     .page_number {
         flex: 1 1 auto;
         min-width: 1em;
-        max-width: 4em;
+        max-width: 8em;
+        white-space: nowrap;
     }
 }

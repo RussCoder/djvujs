@@ -6,6 +6,7 @@ import '../css/styles.css';
 import DownPanel from "./DownPanel";
 import ImageBlock from "./ImageBlock";
 import InitialScreen from './InitialScreen';
+import ModalWindow from './ModalWindow';
 
 const TextBlock = ({ text }) => (
     <pre className="text_block">
@@ -28,6 +29,7 @@ class App extends Component {
                     this.props.isTextMode ? <TextBlock text={this.props.pageText} /> : <ImageBlock />
                 )}
                 <DownPanel />
+                <ModalWindow header={this.props.errorHeader} message={this.props.errorMessage} type={"error"} />
             </div>
         );
     }
@@ -38,6 +40,8 @@ export default connect(
         isFileLoaded: !!state.fileName,
         isFullPageView: state.isFullPageView,
         isTextMode: state.isTextMode,
-        pageText: state.pageText
+        pageText: state.pageText,
+        errorHeader: state.errorHeader,
+        errorMessage: state.errorMessage
     })
 )(App);

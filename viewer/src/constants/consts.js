@@ -1,4 +1,7 @@
 const Consts = {
+    ERROR_ACTION: null,
+    CLOSE_MODAL_WINDOW_ACTION: null,
+    CREATE_DOCUMENT_FROM_ARRAY_BUFFER_ACTION: null,
     ARRAY_BUFFER_LOADED_ACTION: null,
     RENDER_CURRENT_PAGE_ACTION: null,
     IMAGE_DATA_RECEIVED_ACTION: null,
@@ -17,4 +20,4 @@ for (const key in Consts) {
     }
 }
 
-export default Consts;
+export default Object.freeze(Consts);

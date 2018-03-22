@@ -18,6 +18,8 @@ const initialState = {
     currentPageNumber: 1,
     pagesCount: null,
     isFullPageView: false,
+    errorHeader: null,
+    errorMessage: null,
 };
 
 const rootReducer = (state = initialState, action) => {
@@ -76,6 +78,20 @@ const rootReducer = (state = initialState, action) => {
             return {
                 ...state,
                 pageText: action.pageText
+            }
+
+        case Consts.ERROR_ACTION:
+            return {
+                ...state,
+                errorHeader: action.errorHeader,
+                errorMessage: action.errorMessage,
+            }
+
+        case Consts.CLOSE_MODAL_WINDOW_ACTION:
+            return {
+                ...state,
+                errorHeader: null,
+                errorMessage: null,
             }
 
         default:

@@ -18,11 +18,6 @@ class FileBlock extends React.Component {
             return;
         }
         const file = e.target.files[0];
-        if (file.name.substr(-5) !== '.djvu') {
-            alert("Non DjVu file was submitted!");
-            e.target.value = '';
-            return;
-        }
 
         var fr = new FileReader();
         fr.readAsArrayBuffer(file);

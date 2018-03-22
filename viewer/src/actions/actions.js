@@ -1,20 +1,37 @@
 import Consts from '../constants/consts.js';
+const DjVu = window.DjVu;
 
 const Actions = {
 
-    createDocumentFromArrayBufferAction: (arrayBuffer, fileName = "***") => (dispatch, getState) => {
-        const worker = getState().djvuWorker;
-        worker.createDocument(arrayBuffer)
-            .then(() => worker.getPageCount())
-            .then(pagesCount => {
-                dispatch({
-                    type: Consts.DOCUMENT_CREATED_ACTION,
-                    pagesCount: pagesCount,
-                    fileName: fileName
-                });
-                dispatch(Actions.renderCurrentPageAction());
-            });
+    errorAction: error => {
+        var header, message;
+
+        switch (error.code) {
+            case DjVu.ErrorCodes.INCORRECT_FILE_FORMAT:
+                header = "Incorrect file format!";
+                message = "The provided file isn't a .djvu file!";
+                break;
+            default:
+                header = "Unexpected error ocurred!";
+                message = JSON.stringify(error);
+        }
+
+        return {
+            type: Consts.ERROR_ACTION,
+            errorHeader: header,
+            errorMessage: message
+        }
     },
+
+    closeModalWindowAction() {
+        return { type: Consts.CLOSE_MODAL_WINDOW_ACTION };
+    },
+
+    createDocumentFromArrayBufferAction: (arrayBuffer, fileName = "***") => ({
+        type: Consts.CREATE_DOCUMENT_FROM_ARRAY_BUFFER_ACTION,
+        arrayBuffer: arrayBuffer,
+        fileName: fileName
+    }),
 
     renderCurrentPageAction: () => ({
         type: Consts.RENDER_CURRENT_PAGE_ACTION
