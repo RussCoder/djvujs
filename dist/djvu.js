@@ -2,7 +2,7 @@ var DjVu = (function () {
 'use strict';
 
 var DjVu = {
-    VERSION: '0.1.1',
+    VERSION: '0.1.2',
     IS_DEBUG: false,
     setDebugMode: (flag) => DjVu.IS_DEBUG = flag
 };
@@ -2774,8 +2774,15 @@ class IncorrectFileFormatDjVuError extends DjVuError {
         super(DjVuErrorCodes.INCORRECT_FILE_FORMAT, "The provided file is not a .djvu file!");
     }
 }
+class NoSuchPageDjVuError extends DjVuError {
+    constructor(pageNumber) {
+        super(DjVuErrorCodes.NO_SUCH_PAGE, "There is no page with the number " + pageNumber + " !");
+        this.pageNumber = pageNumber;
+    }
+}
 const DjVuErrorCodes = Object.freeze({
     INCORRECT_FILE_FORMAT: 'INCORRECT_FILE_FORMAT',
+    NO_SUCH_PAGE: 'NO_SUCH_PAGE',
     UNEXPECTED_ERROR: 'UNEXPECTED_ERROR'
 });
 
@@ -2833,7 +2840,7 @@ let DjVuDocument$1 = class DjVuDocument {
                         this.thumbs.push(this.dirmOrderedChunks[i] = new ThumChunk(this.bs.fork(length + 8)));
                         break;
                     default:
-                        console.error("Incorrectr chunk ID: ", id);
+                        console.error("Incorrect chunk ID: ", id);
                 }
             }
         }
@@ -2848,6 +2855,9 @@ let DjVuDocument$1 = class DjVuDocument {
             this.lastRequestedPage.reset();
         }
         this.lastRequestedPage = page;
+        if (!page) {
+            throw new NoSuchPageDjVuError(number);
+        }
         return this.lastRequestedPage;
     }
     getPageUnsafe(number) {
