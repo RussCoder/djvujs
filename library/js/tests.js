@@ -246,6 +246,22 @@ var Tests = {
             });
     },
 
+    async testNoSuchPageError() {
+        const buffer = await DjVu.Utils.loadFile(`/assets/boy.djvu`)
+        await djvuWorker.createDocument(buffer);
+        try {
+            var pageNumber = 100;
+            await djvuWorker.getPageImageDataWithDpi(pageNumber);
+        } catch (e) {
+            if (e.code === DjVu.ErrorCodes.NO_SUCH_PAGE && e.pageNumber === pageNumber) {
+                return null;
+            } else {
+                return e;
+            }
+        }
+        return "No error! But there must be one!";
+    },
+
     testGetEnglishText() {
         return this._testText('/assets/DjVu3Spec.djvu', 1, '/assets/DjVu3Spec_1_text.bin');
     },

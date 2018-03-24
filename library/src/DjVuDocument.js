@@ -5,7 +5,7 @@ import DjVuWriter from './DjVuWriter';
 import DjVu from './DjVu';
 import ThumChunk from './chunks/ThumChunk';
 import ByteStream from './ByteStream';
-import { IncorrectFileFormatDjVuError } from './DjVuErrors';
+import { IncorrectFileFormatDjVuError, NoSuchPageDjVuError } from './DjVuErrors';
 
 export default class DjVuDocument {
     constructor(arraybuffer) {
@@ -71,7 +71,7 @@ export default class DjVuDocument {
                         this.thumbs.push(this.dirmOrderedChunks[i] = new ThumChunk(this.bs.fork(length + 8)));
                         break;
                     default:
-                        console.error("Incorrectr chunk ID: ", id);
+                        console.error("Incorrect chunk ID: ", id);
                 }
             }
         }
@@ -88,6 +88,11 @@ export default class DjVuDocument {
             this.lastRequestedPage.reset();
         }
         this.lastRequestedPage = page;
+
+        if (!page) {
+            throw new NoSuchPageDjVuError(number);
+        }
+
         return this.lastRequestedPage;
     }
 
