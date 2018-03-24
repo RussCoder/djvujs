@@ -11,7 +11,6 @@ body.disable_scroll_djvujs {
     position: relative;
     box-shadow: 0 0 4px gray;
     box-sizing: border-box;
-    padding: 0.5em;
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -41,5 +40,19 @@ body.disable_scroll_djvujs {
         box-sizing: border-box;
         flex: 1 1 auto;
         overflow: auto;
+    }
+
+    .status_bar {
+        font-size: 1em;
+        padding-left: 0.5em;
+        padding-bottom: 0.2em;
+        margin-top: 0.5em;
+        text-align: left;
+        width: 100%;
+        font-style: italic;
+
+        .message {
+            margin-left: 0.5em;
+        }
     }
 }

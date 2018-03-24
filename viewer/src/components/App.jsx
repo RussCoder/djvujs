@@ -7,6 +7,7 @@ import DownPanel from "./DownPanel";
 import ImageBlock from "./ImageBlock";
 import InitialScreen from './InitialScreen';
 import ModalWindow from './ModalWindow';
+import StatusBar from './StatusBar';
 
 const TextBlock = ({ text }) => (
     <pre className="text_block">
@@ -29,6 +30,7 @@ class App extends Component {
                     this.props.isTextMode ? <TextBlock text={this.props.pageText} /> : <ImageBlock />
                 )}
                 <DownPanel />
+                <StatusBar />
                 <ModalWindow header={this.props.errorHeader} message={this.props.errorMessage} type={"error"} />
             </div>
         );

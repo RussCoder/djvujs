@@ -24,6 +24,13 @@ const initialState = {
 
 const rootReducer = (state = initialState, action) => {
     switch (action.type) {
+
+        case Consts.CREATE_DOCUMENT_FROM_ARRAY_BUFFER_ACTION:
+            return {
+                ...state,
+                isLoading: true
+            }
+
         case Consts.IMAGE_DATA_RECEIVED_ACTION:
             return {
                 ...state,
@@ -31,6 +38,7 @@ const rootReducer = (state = initialState, action) => {
                 imageHeight: action.imageData.height,
                 imageData: action.imageData,
                 dataUrl: null,
+                isLoading: false,
                 imageDPI: action.imageDPI
             };
 
@@ -44,6 +52,7 @@ const rootReducer = (state = initialState, action) => {
         case Consts.DOCUMENT_CREATED_ACTION:
             return {
                 ...initialState,
+                isLoading: false,
                 isFullPageView: state.isFullPageView,
                 pagesCount: action.pagesCount,
                 fileName: action.fileName
@@ -53,6 +62,7 @@ const rootReducer = (state = initialState, action) => {
             return {
                 ...state,
                 pageText: null,
+                isLoading: true,
                 currentPageNumber: action.pageNumber
             };
 

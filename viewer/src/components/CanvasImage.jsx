@@ -117,7 +117,7 @@ export default class CanvasImage extends React.Component {
 
     render() {
         return (
-            <div className="canvas_image">
+            <div className="canvas_image" style={{ width: this.getScaledImageWidth(), height: this.getScaledImageHeight() }}>
                 <canvas
                     style={{ width: this.getScaledImageWidth(), height: this.getScaledImageHeight() }}
                     ref={this.canvasRef}

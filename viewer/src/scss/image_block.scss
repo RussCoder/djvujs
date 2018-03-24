@@ -4,8 +4,9 @@
     height: 100%;
     display: flex;
     overflow: auto;
-    height: 95%;
     text-align: center;
+    box-sizing: border-box;
+    padding: 0.5em;
     cursor: grab;
 
     &.grabbing {
