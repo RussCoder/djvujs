@@ -262,6 +262,48 @@ var Tests = {
         return "No error! But there must be one!";
     },
 
+    async testCancelAllWorkerTasks() {
+        const buffer = await DjVu.Utils.loadFile(`/assets/boy.djvu`)
+        await djvuWorker.createDocument(buffer);
+        try {
+            var promises = [];
+            for (var i = 2; i < 4; i++) {
+                promises.push(djvuWorker.getPageImageDataWithDpi(i));
+            }
+            djvuWorker.cancelAllTasks();
+            promises.push(djvuWorker.getPageImageDataWithDpi(i));
+            await Promise.race(promises);
+        } catch (e) {
+            if (e.code === DjVu.ErrorCodes.NO_SUCH_PAGE && e.pageNumber === i) {
+                return null;
+            } else {
+                return e;
+            }
+        }
+        return "No error! But there must be one!";
+    },
+
+    async testCancelOneWorkerTask() {
+        const buffer = await DjVu.Utils.loadFile(`/assets/boy.djvu`)
+        await djvuWorker.createDocument(buffer);
+        try {
+            var promises = [];
+            for (var i = 2; i < 4; i++) {
+                promises.push(djvuWorker.getPageImageDataWithDpi(i));
+            }
+            djvuWorker.cancelTask(promises[0]);
+            promises.push(djvuWorker.getPageImageDataWithDpi(i));
+            await Promise.race(promises);
+        } catch (e) {
+            if (e.code === DjVu.ErrorCodes.NO_SUCH_PAGE && e.pageNumber === 3) {
+                return null;
+            } else {
+                return e;
+            }
+        }
+        return "No error! But there must be one!";
+    },
+
     testGetEnglishText() {
         return this._testText('/assets/DjVu3Spec.djvu', 1, '/assets/DjVu3Spec_1_text.bin');
     },

@@ -15,7 +15,7 @@ rerunButton.onclick = rerun;
 document.querySelector('#redraw').onclick = redrawPage;
 
 var pageNumber = 4;
-var djvuUrl = 'assets/boy.png';
+var djvuUrl = 'assets/colorbook.djvu';
 
 document.querySelector('#next').onclick = () => {
     pageNumber++;
