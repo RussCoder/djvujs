@@ -33,10 +33,6 @@ const Actions = {
         fileName: fileName
     }),
 
-    renderCurrentPageAction: () => ({
-        type: Consts.RENDER_CURRENT_PAGE_ACTION
-    }),
-
     setNewPageNumberAction: (pageNumber) => ({
         type: Consts.SET_NEW_PAGE_NUMBER_ACTION,
         pageNumber: pageNumber

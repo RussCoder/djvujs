@@ -52,7 +52,7 @@ const rootReducer = (state = initialState, action) => {
         case Consts.DOCUMENT_CREATED_ACTION:
             return {
                 ...initialState,
-                isLoading: false,
+                isLoading: true,
                 isFullPageView: state.isFullPageView,
                 pagesCount: action.pagesCount,
                 fileName: action.fileName
@@ -93,6 +93,7 @@ const rootReducer = (state = initialState, action) => {
         case Consts.ERROR_ACTION:
             return {
                 ...state,
+                isLoading: false,
                 errorHeader: action.errorHeader,
                 errorMessage: action.errorMessage,
             }

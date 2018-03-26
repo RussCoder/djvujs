@@ -30,7 +30,8 @@ function* getImageData() {
 }
 
 function* fetchPageData(action) {
-    const { isTextMode } = yield select();
+    const { isTextMode, djvuWorker } = yield select();
+    djvuWorker.cancelAllTasks();
     const pageNumber = action.pageNumber;
 
     if (isTextMode) {
@@ -74,7 +75,7 @@ function* createDocumentFromArrayBufferAction(action) {
             pagesCount: pagesCount,
             fileName: action.fileName
         });
-        yield put(Actions.renderCurrentPageAction());
+        yield* getImageData();
     } catch (error) {
         yield put(Actions.errorAction(error));
     }
@@ -82,7 +83,6 @@ function* createDocumentFromArrayBufferAction(action) {
 
 export default function* rootSaga() {
     yield takeLatest(Consts.CREATE_DOCUMENT_FROM_ARRAY_BUFFER_ACTION, createDocumentFromArrayBufferAction);
-    yield takeLatest(Consts.RENDER_CURRENT_PAGE_ACTION, getImageData);
     yield takeLatest(Consts.TOGGLE_TEXT_MODE_ACTION, fetchPageTextIfRequired);
     yield takeLatest(Consts.SET_NEW_PAGE_NUMBER_ACTION, fetchPageData);
 }

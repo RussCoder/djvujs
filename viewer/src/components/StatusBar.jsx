@@ -4,8 +4,6 @@ import { connect } from 'react-redux';
 import FontAwesomeIcon from '@fortawesome/react-fontawesome';
 import { faCheck, faSpinner } from '@fortawesome/fontawesome-free-solid';
 
-import Actions from '../actions/actions';
-
 class StatusBar extends React.Component {
 
     static propTypes = {
