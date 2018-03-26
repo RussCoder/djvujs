@@ -2,7 +2,7 @@ var DjVu = (function () {
 'use strict';
 
 var DjVu = {
-    VERSION: '0.1.2',
+    VERSION: '0.1.3',
     IS_DEBUG: false,
     setDebugMode: (flag) => DjVu.IS_DEBUG = flag
 };
@@ -3045,90 +3045,121 @@ class DjVuWorker {
         this.worker = new Worker(this.path);
         this.worker.onmessage = (e) => this.messageHandler(e);
         this.worker.onerror = (e) => this.errorHandler(e);
-        this.callbacks = new TempRepository();
-    }
-    _postMessage(message) {
-        this.worker.postMessage(message);
+        this.callbacks = null;
+        this.currentPromise = null;
+        this.promiseMap = new Map();
+        this.isTaskInProcess = false;
     }
     errorHandler(event) {
         console.error("DjVu.js Worker error!", event);
     }
+    cancelTask(promise) {
+        if (!this.promiseMap.delete(promise)) {
+            if (this.currentPromise === promise) {
+                this.currentPromise = null;
+                this.callbacks = null;
+            }
+        }
+    }
+    cancelAllTasks() {
+        this.promiseMap.clear();
+        this.currentPromise = null;
+        this.callbacks = null;
+    }
+    createNewPromise(commandObj, transferList) {
+        var callbacks;
+        var promise = new Promise((resolve, reject) => {
+            callbacks = { resolve, reject };
+        });
+        this.promiseMap.set(promise, { callbacks, commandObj, transferList });
+        this.runNextTask();
+        return promise;
+    }
+    runNextTask() {
+        if (this.isTaskInProcess) {
+            return;
+        }
+        var next = this.promiseMap.entries().next().value;
+        if (next) {
+            var obj = next[1];
+            var key = next[0];
+            this.callbacks = obj.callbacks;
+            this.currentPromise = key;
+            this.worker.postMessage(obj.commandObj, obj.transferList);
+            this.isTaskInProcess = true;
+            this.promiseMap.delete(key);
+        } else {
+            this.currentPromise = null;
+            this.callbacks = null;
+        }
+    }
     messageHandler(event) {
+        this.isTaskInProcess = false;
+        var callbacks = this.callbacks;
+        this.runNextTask();
+        if (!callbacks) {
+            return;
+        }
         var obj = event.data;
-        var callback = this.callbacks.fetch(obj.id);
         switch (obj.command) {
             case 'Error':
-                callback.reject(obj.error);
+                callbacks.reject(obj.error);
                 break;
             case 'Process':
                 this.onprocess ? this.onprocess(obj.percent) : 0;
                 break;
             case 'getPageImageDataWithDpi':
-                callback.resolve({
+                callbacks.resolve({
                     imageData: new ImageData(new Uint8ClampedArray(obj.buffer), obj.width, obj.height),
                     dpi: obj.dpi
                 });
                 break;
             case 'createDocument':
-                callback.resolve();
+                callbacks.resolve();
                 break;
             case 'slice':
-                callback.resolve(obj.buffer);
+                callbacks.resolve(obj.buffer);
                 break;
             case 'createDocumentFromPictures':
-                callback.resolve(obj.buffer);
+                callbacks.resolve(obj.buffer);
                 break;
             case 'startMultiPageDocument':
-                callback.resolve();
+                callbacks.resolve();
                 break;
             case 'addPageToDocument':
-                callback.resolve();
+                callbacks.resolve();
                 break;
             case 'endMultiPageDocument':
-                callback.resolve(obj.buffer);
+                callbacks.resolve(obj.buffer);
                 break;
             case 'getDocumentMetaData':
-                callback.resolve(obj.str);
+                callbacks.resolve(obj.str);
                 break;
             case 'getPageCount':
-                callback.resolve(obj.pageNumber);
+                callbacks.resolve(obj.pageNumber);
                 break;
             case 'getPageText':
-                callback.resolve(obj.text);
+                callbacks.resolve(obj.text);
                 break;
             default:
                 console.error("Unexpected message from DjVuWorker: ", obj);
         }
     }
     getPageCount() {
-        return new Promise((resolve, reject) => {
-            var id = this.callbacks.add({ resolve, reject });
-            this.worker.postMessage({
-                command: 'getPageCount',
-                id: id
-            });
-        });
+        return this.createNewPromise({ command: 'getPageCount' });
     }
     getDocumentMetaData(html) {
-        return new Promise((resolve, reject) => {
-            var id = this.callbacks.add({ resolve: resolve, reject: reject });
-            this.worker.postMessage({
-                command: 'getDocumentMetaData',
-                id: id,
-                html: html
-            });
+        return this.createNewPromise({
+            command: 'getDocumentMetaData',
+            html: html
         });
     }
     startMultiPageDocument(slicenumber, delayInit, grayscale) {
-        return new Promise((resolve, reject) => {
-            var id = this.callbacks.add({ resolve: resolve, reject: reject });
-            this.worker.postMessage({
-                command: 'startMultiPageDocument',
-                id: id,
-                slicenumber: slicenumber,
-                delayInit: delayInit,
-                grayscale: grayscale
-            });
+        return this.createNewPromise({
+            command: 'startMultiPageDocument',
+            slicenumber: slicenumber,
+            delayInit: delayInit,
+            grayscale: grayscale
         });
     }
     addPageToDocument(imageData) {
@@ -3137,52 +3168,29 @@ class DjVuWorker {
             width: imageData.width,
             height: imageData.height
         };
-        return new Promise((resolve, reject) => {
-            var id = this.callbacks.add({ resolve: resolve, reject: reject });
-            this.worker.postMessage({
-                command: 'addPageToDocument',
-                id: id,
-                simpleImage: simpleImage
-            }, [simpleImage.buffer]);
-        });
+        return this.createNewPromise({
+            command: 'addPageToDocument',
+            simpleImage: simpleImage
+        }, [simpleImage.buffer]);
     }
     endMultiPageDocument() {
-        return new Promise((resolve, reject) => {
-            var id = this.callbacks.add({ resolve: resolve, reject: reject });
-            this.worker.postMessage({
-                command: 'endMultiPageDocument',
-                id: id
-            });
-        });
+        return this.createNewPromise({ command: 'endMultiPageDocument' });
     }
     createDocument(buffer) {
-        return new Promise((resolve, reject) => {
-            var id = this.callbacks.add({ resolve: resolve, reject: reject });
-            this.worker.postMessage({ command: 'createDocument', id: id, buffer: buffer }, [buffer]);
-        });
+        return this.createNewPromise({ command: 'createDocument', buffer: buffer }, [buffer]);
     }
     getPageImageDataWithDpi(pagenumber, onlyFirstBgChunk = false) {
-        return new Promise((resolve, reject) => {
-            var id = this.callbacks.add({ resolve: resolve, reject: reject });
-            this.worker.postMessage({
-                command: 'getPageImageDataWithDpi',
-                id: id,
-                pagenumber: pagenumber,
-                onlyFirstBgChunk: onlyFirstBgChunk
-            });
+        return this.createNewPromise({
+            command: 'getPageImageDataWithDpi',
+            pagenumber: pagenumber,
+            onlyFirstBgChunk: onlyFirstBgChunk
         });
     }
     getPageText(pagenumber) {
-        return new Promise((resolve, reject) => {
-            var id = this.callbacks.add({ resolve: resolve, reject: reject });
-            this.worker.postMessage({ command: 'getPageText', id: id, pagenumber: pagenumber });
-        });
+        return this.createNewPromise({ command: 'getPageText', pagenumber: pagenumber });
     }
     slice(_from, _to) {
-        return new Promise((resolve, reject) => {
-            var id = this.callbacks.add({ resolve: resolve, reject: reject });
-            this.worker.postMessage({ command: 'slice', id: id, from: _from, to: _to });
-        });
+        return this.createNewPromise({ command: 'slice', from: _from, to: _to });
     }
     createDocumentFromPictures(imageArray, slicenumber, delayInit, grayscale) {
         var simpleImages = new Array(imageArray.length);
@@ -3195,45 +3203,18 @@ class DjVuWorker {
             };
             buffers[i] = imageArray[i].data.buffer;
         }
-        return new Promise((resolve, reject) => {
-            var id = this.callbacks.add({ resolve: resolve, reject: reject });
-            this.worker.postMessage({
-                command: 'createDocumentFromPictures',
-                id: id,
-                images: simpleImages,
-                slicenumber: slicenumber,
-                delayInit: delayInit,
-                grayscale: grayscale
-            }, buffers);
-        });
+        return this.createNewPromise({
+            command: 'createDocumentFromPictures',
+            images: simpleImages,
+            slicenumber: slicenumber,
+            delayInit: delayInit,
+            grayscale: grayscale
+        }, buffers);
     }
     static createArrayBufferURL(buffer) {
         var blob = new Blob([buffer]);
         var url = URL.createObjectURL(blob);
         return url;
-    }
-}
-class TempRepository {
-    constructor() {
-        this.data = {};
-        this.id = 0;
-    }
-    get lastID() {
-        return this.id - 1;
-    }
-    add(obj) {
-        var id = this.id++;
-        this.data[id] = obj;
-        return id;
-    }
-    fetch(id) {
-        if (id === undefined) {
-            return null;
-        }
-        id = +id;
-        var obj = this.data[id];
-        delete this.data[id];
-        return obj;
     }
 }
 
@@ -3724,21 +3705,17 @@ function initWorker() {
             errorObj.lastCommandObject = obj;
             postMessage({
                 command: 'Error',
-                id: obj.id,
                 error: errorObj
             });
         }
     };
     var handlers = {
         getPageText(obj) {
-            return new Promise((resolve, reject) => {
-                var pagenum = +obj.pagenumber;
-                var text = djvuDocument.getPage(pagenum).getText();
-                postMessage({
-                    command: 'getPageText',
-                    id: obj.id,
-                    text: text
-                });
+            var pagenum = +obj.pagenumber;
+            var text = djvuDocument.getPage(pagenum).getText();
+            postMessage({
+                command: 'getPageText',
+                text: text
             });
         },
         getPageImageDataWithDpi(obj) {
@@ -3748,7 +3725,6 @@ function initWorker() {
             var dpi = page.getDpi();
             postMessage({
                 command: 'getPageImageDataWithDpi',
-                id: obj.id,
                 buffer: imageData.data.buffer,
                 width: imageData.width,
                 height: imageData.height,
@@ -3758,27 +3734,26 @@ function initWorker() {
         getPageCount(obj) {
             postMessage({
                 command: 'getPageCount',
-                id: obj.id,
                 pageNumber: djvuDocument.pages.length
             });
         },
         getDocumentMetaData(obj) {
             var str = djvuDocument.toString(obj.html);
-            postMessage({ command: 'getDocumentMetaData', id: obj.id, str: str });
+            postMessage({ command: 'getDocumentMetaData', str: str });
         },
         startMultiPageDocument(obj) {
             iwiw = new IWImageWriter(obj.slicenumber, obj.delayInit, obj.grayscale);
             iwiw.startMultiPageDocument();
-            postMessage({ command: 'startMultiPageDocument', id: obj.id });
+            postMessage({ command: 'startMultiPageDocument' });
         },
         addPageToDocument(obj) {
             var imageData = new ImageData(new Uint8ClampedArray(obj.simpleImage.buffer), obj.simpleImage.width, obj.simpleImage.height);
             iwiw.addPageToDocument(imageData);
-            postMessage({ command: 'addPageToDocument', id: obj.id });
+            postMessage({ command: 'addPageToDocument' });
         },
         endMultiPageDocument(obj) {
             var buffer = iwiw.endMultiPageDocument();
-            postMessage({ command: 'endMultiPageDocument', id: obj.id, buffer: buffer }, [buffer]);
+            postMessage({ command: 'endMultiPageDocument', buffer: buffer }, [buffer]);
         },
         createDocumentFromPictures(obj) {
             var sims = obj.images;
@@ -3791,15 +3766,15 @@ function initWorker() {
                 postMessage({ command: 'Process', percent: percent });
             };
             var ndoc = iw.createMultyPageDocument(imageArray);
-            postMessage({ command: 'createDocumentFromPictures', id: obj.id, buffer: ndoc.buffer }, [ndoc.buffer]);
+            postMessage({ command: 'createDocumentFromPictures', buffer: ndoc.buffer }, [ndoc.buffer]);
         },
         slice(obj) {
             var ndoc = djvuDocument.slice(obj.from, obj.to);
-            postMessage({ command: 'slice', id: obj.id, buffer: ndoc.buffer }, [ndoc.buffer]);
+            postMessage({ command: 'slice', buffer: ndoc.buffer }, [ndoc.buffer]);
         },
         createDocument(obj) {
             djvuDocument = new DjVuDocument$1(obj.buffer);
-            postMessage({ command: 'createDocument', id: obj.id, pagenumber: djvuDocument.pages.length });
+            postMessage({ command: 'createDocument', pagenumber: djvuDocument.pages.length });
         },
         reloadDocument() {
             djvuDocument = new DjVuDocument$1(djvuDocument.buffer);
