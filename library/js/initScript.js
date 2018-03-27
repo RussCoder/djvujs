@@ -127,12 +127,11 @@ function readDjvu(buf) {
     djvuDocument = new DjVu.Document(buf);
     Globals.counter = 0;
 
-    //writeln(djvuDocument.toString(true));
+    writeln(djvuDocument.toString(true));
 
-    writeln(djvuDocument.pages[pageNumber].getText());
+    //writeln(djvuDocument.pages[pageNumber].getText());
     //redrawPage();
     //saveStringAsBinFile(djvuDocument.pages[pageNumber].getText());
-    // writeln(doc.toString(true));
     // doc.countFiles();
     //console.log(Globals.Timer.toString());
     console.log("Total execution time = ", performance.now() - time);

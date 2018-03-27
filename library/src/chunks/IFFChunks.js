@@ -111,19 +111,6 @@ export class INCLChunk extends IFFChunk {
 export class CIDaChunk extends INCLChunk { }
 
 /**
- * Оглавление человеко-читаемое
- */
-export class NAVMChunk extends IFFChunk {
-    constructor(bs) {
-        super(bs);
-    }
-    toString() {
-        return super.toString() + '\n';
-    }
-}
-
-
-/**
  * Порция данных машинного оглавления документа. 
  * Содержит сведения о структуре многостраничного документа
  */

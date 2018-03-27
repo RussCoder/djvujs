@@ -1,6 +1,7 @@
 import DjViChunk from './chunks/DjViChunk';
 import DjVuPage from './DjVuPage';
-import { DIRMChunk, NAVMChunk } from './chunks/IFFChunks';
+import { DIRMChunk } from './chunks/IFFChunks';
+import NAVMChunk from './chunks/NavmChunk';
 import DjVuWriter from './DjVuWriter';
 import DjVu from './DjVu';
 import ThumChunk from './chunks/ThumChunk';
@@ -135,6 +136,7 @@ export default class DjVuDocument {
         if (this.dirm) { // multi page document
             str += this.id + " " + this.length + '\n\n';
             str += this.dirm.toString();
+            str += this.navm ? this.navm.toString() : '';
             this.dirmOrderedChunks.forEach((chunk, i) => {
                 str += this.dirm.getMetadataStringByIndex(i) + chunk.toString();
             });
