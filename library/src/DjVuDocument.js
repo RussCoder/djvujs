@@ -39,6 +39,7 @@ export default class DjVuDocument {
         //разделяемые ресурсы
         this.djvi = {};
         this.navm = null; // человеческое оглавление 
+        this.idToPageNumberMap = {}; // used to get pages by their id (url)
 
         this.init();
     }
@@ -63,6 +64,7 @@ export default class DjVuDocument {
                             this.bs.fork(length + 8),
                             this.getINCLChunkCallback
                         ));
+                        this.idToPageNumberMap[this.dirm.ids[i]] = this.pages.length;
                         break;
                     case "FORMDJVI":
                         //через строчку id chunk INCL ссылается на нужный ресурс
@@ -81,6 +83,27 @@ export default class DjVuDocument {
             // 4 - так как есть 4 байта формата
             this.pages.push(new DjVuPage(this.bs.fork(this.length + 4)));
         }
+    }
+
+    getContents() {
+        return this.navm ? this.navm.getContents() : null;
+    }
+
+    getPageNumberByUrl(url) {
+        if (url[0] !== '#') {
+            return null;
+        }
+
+        var ref = url.slice(1);
+        var pageNumber = this.idToPageNumberMap[ref];
+        if (!pageNumber) {
+            var num = Math.round(Number(ref));
+            if (num.toString() === ref && num >= 1 && num <= this.pages.length) {
+                pageNumber = num;
+            }
+        }
+
+        return pageNumber || null;
     }
 
     getPage(number) {

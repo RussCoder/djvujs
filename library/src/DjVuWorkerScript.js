@@ -35,6 +35,20 @@ export default function initWorker() {
 
     var handlers = {
 
+        getContents() {
+            postMessage({
+                command: 'getContents',
+                contents: djvuDocument.getContents()
+            });
+        },
+
+        getPageNumberByUrl(obj) {
+            postMessage({
+                command: 'getPageNumberByUrl',
+                pageNumber: djvuDocument.getPageNumberByUrl(obj.url)
+            });
+        },
+
         getPageText(obj) {
             var pagenum = +obj.pagenumber;
             var text = djvuDocument.getPage(pagenum).getText();

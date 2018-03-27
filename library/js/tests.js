@@ -262,6 +262,39 @@ var Tests = {
         return "No error! But there must be one!";
     },
 
+    async testContents() {
+        const buffer = await DjVu.Utils.loadFile(`/assets/DjVu3Spec.djvu`)
+        await djvuWorker.createDocument(buffer);
+        const contents = await djvuWorker.getContents();
+        var res = await fetch('/assets/DjVu3Spec_contents.json');
+        var canonicContents = await res.json();
+
+        if (JSON.stringify(canonicContents) === JSON.stringify(contents)) {
+            return null;
+        } else {
+            console.log(canonicContents, contents);
+            return "Contents are different!";
+        }
+    },
+
+    async testGetPageNumberByUrl() {
+        const buffer = await DjVu.Utils.loadFile(`/assets/DjVu3Spec.djvu`)
+        await djvuWorker.createDocument(buffer);
+        var pageNum = await djvuWorker.getPageNumberByUrl('#p0069.djvu');
+        if (pageNum !== 69) {
+            return `The url #p0069.djvu is targeted at 69 page but we got ${pageNum} !`;
+        }
+        pageNum = await djvuWorker.getPageNumberByUrl('#57');
+        if (pageNum !== 57) {
+            return `The url #57 is targeted at 57 page but we got ${pageNum} !`;
+        }
+        pageNum = await djvuWorker.getPageNumberByUrl('#900');
+        if (pageNum !== null) {
+            return `There is no page with the url #900, but we got ${pageNum} !`;
+        }
+        return null;
+    },
+
     async testCancelAllWorkerTasks() {
         const buffer = await DjVu.Utils.loadFile(`/assets/boy.djvu`)
         await djvuWorker.createDocument(buffer);

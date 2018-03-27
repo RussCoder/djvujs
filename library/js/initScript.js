@@ -128,6 +128,8 @@ function readDjvu(buf) {
     Globals.counter = 0;
 
     writeln(djvuDocument.toString(true));
+    //return;
+    //saveStringAsFile(JSON.stringify(djvuDocument.getContents()));
 
     //writeln(djvuDocument.pages[pageNumber].getText());
     //redrawPage();

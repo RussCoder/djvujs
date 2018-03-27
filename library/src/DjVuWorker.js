@@ -123,6 +123,12 @@ export default class DjVuWorker {
             case 'getPageText':
                 callbacks.resolve(obj.text);
                 break;
+            case 'getContents':
+                callbacks.resolve(obj.contents);
+                break;
+            case 'getPageNumberByUrl':
+                callbacks.resolve(obj.pageNumber);
+                break;
             default:
                 console.error("Unexpected message from DjVuWorker: ", obj);
         }
@@ -130,6 +136,14 @@ export default class DjVuWorker {
 
     getPageCount() {
         return this.createNewPromise({ command: 'getPageCount' });
+    }
+
+    getContents() {
+        return this.createNewPromise({ command: 'getContents' });
+    }
+
+    getPageNumberByUrl(url) {
+        return this.createNewPromise({ command: 'getPageNumberByUrl', url: url });
     }
 
     getDocumentMetaData(html) {

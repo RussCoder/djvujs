@@ -12,6 +12,11 @@ export default class NAVMChunk extends IFFChunk {
         this.decodedBookmarkCounter = 0;
     }
 
+    getContents() {
+        this.decode();
+        return this.contents;
+    }
+
     decode() {
         if (this.isDecoded) {
             return;
