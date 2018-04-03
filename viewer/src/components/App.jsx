@@ -8,6 +8,7 @@ import ImageBlock from "./ImageBlock";
 import InitialScreen from './InitialScreen';
 import ModalWindow from './ModalWindow';
 import StatusBar from './StatusBar';
+import ContentsPanel from './ContentsPanel';
 
 const TextBlock = ({ text }) => (
     <pre className="text_block">
@@ -27,7 +28,10 @@ class App extends Component {
         return (
             <div className={"djvu_js_viewer" + fullPageViewClass}>
                 {!this.props.isFileLoaded ? <InitialScreen /> : (
-                    this.props.isTextMode ? <TextBlock text={this.props.pageText} /> : <ImageBlock />
+                    <div className="central_block">
+                        <ContentsPanel contents={this.props.contents} />
+                        {this.props.isTextMode ? <TextBlock text={this.props.pageText} /> : <ImageBlock />}
+                    </div>
                 )}
                 <DownPanel />
                 <StatusBar />
@@ -44,6 +48,7 @@ export default connect(
         isTextMode: state.isTextMode,
         pageText: state.pageText,
         errorHeader: state.errorHeader,
-        errorMessage: state.errorMessage
+        errorMessage: state.errorMessage,
+        contents: state.contents
     })
 )(App);

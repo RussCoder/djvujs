@@ -38,6 +38,13 @@ const Actions = {
         pageNumber: pageNumber
     }),
 
+    setPageByUrlAction(url) {
+        return {
+            type: Consts.SET_PAGE_BY_URL_ACTION,
+            url: url
+        };
+    },
+
     setUserScaleAction: (scale) => ({
         type: Consts.SET_USER_SCALE_ACTION,
         scale: scale

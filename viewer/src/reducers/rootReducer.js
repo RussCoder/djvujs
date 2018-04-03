@@ -19,6 +19,7 @@ const initialState = {
     pagesCount: null,
     isFullPageView: false,
     errorHeader: null,
+    contents: null,
     errorMessage: null,
 };
 
@@ -56,6 +57,12 @@ const rootReducer = (state = initialState, action) => {
                 isFullPageView: state.isFullPageView,
                 pagesCount: action.pagesCount,
                 fileName: action.fileName
+            };
+
+        case Consts.CONTENTS_IS_GOTTEN_ACTION:
+            return {
+                ...state,
+                contents: action.contents
             };
 
         case Consts.SET_NEW_PAGE_NUMBER_ACTION:

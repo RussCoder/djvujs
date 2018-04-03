@@ -21,8 +21,36 @@ body.disable_scroll_djvujs {
     @import "down_panel";
     @import "page_number_block";
     @import "file_block";
-    @import "image_block";
     @import "modal_window";
+
+    .tree_item {
+        .name {
+            cursor: pointer;
+            &:hover {
+                text-decoration: underline;
+            }
+        }
+
+        .children {
+            padding-left: 1em;
+        }
+    }
+
+    .central_block {
+        flex: 1 1 auto;
+        width: 100%;
+        height: 100%;
+        display: flex;
+
+        @import "image_block";
+
+        .contents_panel {
+            border: 1px solid black;
+            padding: 0.5em;
+            float: left;
+            overflow: auto;
+        }
+    }
 
     &.full_page_view {
         top: 0;

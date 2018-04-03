@@ -76,8 +76,22 @@ function* createDocumentFromArrayBufferAction(action) {
             fileName: action.fileName
         });
         yield* getImageData();
+
+        const contents = yield djvuWorker.getContents();
+        yield put({
+            type: Consts.CONTENTS_IS_GOTTEN_ACTION,
+            contents: contents
+        });
     } catch (error) {
         yield put(Actions.errorAction(error));
+    }
+}
+
+function* setPageByUrl(action) {
+    const { djvuWorker } = yield select();
+    const pageNumber = yield djvuWorker.getPageNumberByUrl(action.url);
+    if (pageNumber !== null) {
+        yield put(Actions.setNewPageNumberAction(pageNumber));
     }
 }
 
@@ -85,4 +99,5 @@ export default function* rootSaga() {
     yield takeLatest(Consts.CREATE_DOCUMENT_FROM_ARRAY_BUFFER_ACTION, createDocumentFromArrayBufferAction);
     yield takeLatest(Consts.TOGGLE_TEXT_MODE_ACTION, fetchPageTextIfRequired);
     yield takeLatest(Consts.SET_NEW_PAGE_NUMBER_ACTION, fetchPageData);
+    yield takeLatest(Consts.SET_PAGE_BY_URL_ACTION, setPageByUrl);
 }
