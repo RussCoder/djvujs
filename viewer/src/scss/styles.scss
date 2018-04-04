@@ -22,35 +22,7 @@ body.disable_scroll_djvujs {
     @import "page_number_block";
     @import "file_block";
     @import "modal_window";
-
-    .tree_item {
-        .name {
-            cursor: pointer;
-            &:hover {
-                text-decoration: underline;
-            }
-        }
-
-        .children {
-            padding-left: 1em;
-        }
-    }
-
-    .central_block {
-        flex: 1 1 auto;
-        width: 100%;
-        height: 100%;
-        display: flex;
-
-        @import "image_block";
-
-        .contents_panel {
-            border: 1px solid black;
-            padding: 0.5em;
-            float: left;
-            overflow: auto;
-        }
-    }
+    @import "central_block";
 
     &.full_page_view {
         top: 0;
@@ -59,16 +31,6 @@ body.disable_scroll_djvujs {
         width: 100%;
         height: 100%;
         z-index: 100;
-    }
-
-    .text_block {
-        border: 1px solid lightgray;
-        padding: 0.5em;
-        max-width: 100%;
-        box-sizing: border-box;
-        flex: 1 1 auto;
-        overflow: auto;
-        margin: 0;
     }
 
     .status_bar {

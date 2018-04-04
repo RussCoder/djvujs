@@ -1,7 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import FontAwesomeIcon from '@fortawesome/react-fontawesome';
-import { faCheck, faSpinner } from '@fortawesome/fontawesome-free-solid';
+import { faMinusSquare, faPlusSquare } from '@fortawesome/fontawesome-free-regular';
+import { faCircle } from '@fortawesome/fontawesome-free-solid';
 
 export default class TreeItem extends React.Component {
 
@@ -11,6 +12,11 @@ export default class TreeItem extends React.Component {
         callback: PropTypes.func,
         callbackData: PropTypes.any
     };
+
+    constructor(props) {
+        super(props);
+        this.state = { isCollapsed: true };
+    }
 
     onClick = () => {
         this.props.callback && this.props.callback(this.props.callbackData);
@@ -29,11 +35,23 @@ export default class TreeItem extends React.Component {
         );
     }
 
+    toggleItem = () => {
+        this.setState({ isCollapsed: !this.state.isCollapsed });
+    };
+
     render() {
         return (
             <div className="tree_item">
-                <div className="name" onClick={this.onClick}>{this.props.name}</div>
-                {this.renderChildren()}
+                <div className="content">
+                    {this.props.children ?
+                        <FontAwesomeIcon
+                            icon={this.state.isCollapsed ? faPlusSquare : faMinusSquare}
+                            onClick={this.toggleItem}
+                        /> : <FontAwesomeIcon icon={faCircle} transform="shrink-8" />
+                    }
+                    <span className="name" onClick={this.onClick}>{this.props.name}</span>
+                </div>
+                {this.state.isCollapsed ? null : this.renderChildren()}
             </div>
         );
     }

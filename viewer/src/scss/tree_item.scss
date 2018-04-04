@@ -1,0 +1,19 @@
+.tree_item {
+    .content {
+        white-space: nowrap;
+
+        .name {
+            cursor: pointer;
+            margin-left: 0.5em;
+            white-space: initial;
+
+            &:hover {
+                text-decoration: underline;
+            }
+        }
+    }
+
+    .children {
+        padding-left: 1em;
+    }
+}
