@@ -12,7 +12,7 @@ import LeftPanel from './LeftPanel';
 
 const TextBlock = ({ text }) => (
     <pre className="text_block">
-        {text === null ? "Loading ..." : text}
+        {text === null ? "Loading ..." : text || <em>No text provided</em>}
     </pre>
 );
 

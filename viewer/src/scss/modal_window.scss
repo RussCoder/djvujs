@@ -16,9 +16,8 @@
         top: 50%;
         left: 50%;
         transform: translateX(-50%) translateY(-50%);
-        max-width: 100%;
-        width: 20em;
-        height: 8em;
+        max-width: 90%;
+        max-height: 80%;
         z-index: 2;
 
         &.error {
@@ -38,6 +37,7 @@
 
         .body {
             padding: 0.5em;
+            overflow: auto;
         }
     }
 
