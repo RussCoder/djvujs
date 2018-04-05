@@ -1,4 +1,5 @@
 import BZZDecoder from '../bzz/BZZDecoder';
+import { CorruptedFileDjVuError } from '../DjVuErrors';
 
 // простейший шаблон порции данных
 export class IFFChunk {
@@ -17,7 +18,7 @@ export class CompositeChunk extends IFFChunk {
         super(bs);
         this.id += ':' + bs.readStr4(); // read secondary id
     }
-    
+
     toString(innerString = '') {
         return super.toString() + '    ' + innerString.replace(/\n/g, '\n    ') + '\n';
     }
@@ -26,7 +27,7 @@ export class CompositeChunk extends IFFChunk {
 export class ColorChunk extends IFFChunk {
     constructor(bs) {
         super(bs);
-        this.header = new СolorChunkDataHeader(bs);
+        this.header = new ColorChunkDataHeader(bs);
     }
     toString() {
         return this.id + " " + this.length + this.header.toString();
@@ -39,22 +40,42 @@ export class ColorChunk extends IFFChunk {
 export class INFOChunk extends IFFChunk {
     constructor(bs) {
         super(bs);
+        if (this.length < 5) {  // the cases when there are less than 10 bytes are not mentioned in the specification, but they are handled in DjVuLibre
+            throw new CorruptedFileDjVuError("The INFO chunk is shorter than 5 bytes!")
+        }
         this.width = bs.getInt16();
         this.height = bs.getInt16();
         this.minver = bs.getInt8();
-        this.majver = bs.getInt8();
-        this.dpi = bs.getUint8();
-        this.dpi |= bs.getUint8() << 8;
-        this.gamma = bs.getInt8();
-        this.flags = bs.getInt8();
+        this.majver = this.length > 5 ? bs.getInt8() : 0;
+
+        if (this.length > 7) {
+            this.dpi = bs.getUint8();
+            this.dpi |= bs.getUint8() << 8;
+        } else {
+            this.dpi = 300;
+        }
+        this.gamma = this.length > 8 ? bs.getInt8() : 22;
+        this.flags = this.length > 9 ? bs.getInt8() : 0; // todo: it defines rotations, should be used
+
+        // Fixup - copied from DjVuLibre
+        if (this.dpi < 25 || this.dpi > 6000) {
+            this.dpi = 300;
+        }
+        if (this.gamma < 3) {
+            this.gamma = 3;
+        }
+        if (this.gamma > 50) {
+            this.gamma = 50;
+        }
     }
+
     toString() {
         var str = super.toString();
         str += "{" + 'width:' + this.width + ', '
             + 'height:' + this.height + ', '
             + 'minver:' + this.minver + ', '
             + 'majver:' + this.majver + ', '
-            + 'dpi:' + this.dpi + ','
+            + 'dpi:' + this.dpi + ', '
             + 'gamma:' + this.gamma + ', '
             + 'flags:' + this.flags + '}\n';
         return str;
@@ -65,7 +86,7 @@ export class INFOChunk extends IFFChunk {
  * Заголовок порции цветовых порций данных. Содержит сведения о закодированном изображении.
  * Предоставляет основную информацию о порции данных.
  */
-class СolorChunkDataHeader {
+class ColorChunkDataHeader {
     constructor(bs) {
         this.serial = bs.getUint8(); // номер порции 
         this.slices = bs.getUint8(); // количество кусочков данных

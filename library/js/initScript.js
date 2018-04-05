@@ -16,8 +16,8 @@ var rerunButton = document.querySelector('#rerun');
 rerunButton.onclick = rerun;
 document.querySelector('#redraw').onclick = redrawPage;
 
-var pageNumber = 0;
-var djvuUrl = 'assets/DjVu3Spec.djvu';
+var pageNumber = 1;
+var djvuUrl = 'assets/carte.djvu';
 
 document.querySelector('#next').onclick = () => {
     pageNumber++;
@@ -144,7 +144,7 @@ function redrawPage() {
     var time = performance.now();
     var page = djvuDocument.getPage(pageNumber);
     Globals.drawImage(
-        page.getImageData(true),
+        page.getImageData(),
         page.getDpi() * 1.5
     );
     //console.log(doc.pages[pageNumber].getText());
@@ -154,17 +154,17 @@ function redrawPage() {
 
     renderTimeOutput.innerText = Math.round(time);
 
-    setTimeout(() => {
-        console.log('**** Refine Page ****');
-        var time = performance.now();
-        Globals.drawImage(
-            page.getImageData(),
-            page.getDpi() * 1.5
-        );
-        time = performance.now() - time;
-        console.log("Refine time", time);
-        console.log('**** ***** **** ****');
-    }, 50);
+    // setTimeout(() => {
+    //     console.log('**** Refine Page ****');
+    //     var time = performance.now();
+    //     Globals.drawImage(
+    //         page.getImageData(),
+    //         page.getDpi() * 1.5
+    //     );
+    //     time = performance.now() - time;
+    //     console.log("Refine time", time);
+    //     console.log('**** ***** **** ****');
+    // }, 50);
 
 }
 

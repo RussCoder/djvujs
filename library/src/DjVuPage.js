@@ -6,6 +6,7 @@ import IWImage from './iw44/IWImage';
 import DjVuText from './chunks/DjVuText';
 import { ZPDecoder } from './ZPCodec';
 import DjVu from './DjVu';
+import { CorruptedFileDjVuError } from './DjVuErrors';
 
 /**
  * Страница документа
@@ -107,9 +108,17 @@ export default class DjVuPage extends CompositeChunk {
             return this;
         }
         this.dependencies = [];
-        this.info = new INFOChunk(this.bs.fork(18));
-        this.bs.jump(18);
+
+        var id = this.bs.readStr4();
+        if (id !== 'INFO') {
+            throw new CorruptedFileDjVuError("The very first chunk must be INFO chunk, but we got " + id + '!')
+        }
+        var length = this.bs.getInt32();
+        this.bs.jump(-8);
+        this.info = new INFOChunk(this.bs.fork(length + 8));
+        this.bs.jump(8 + length + (this.info.length & 1));
         this.iffchunks.push(this.info);
+
         while (!this.bs.isEmpty()) {
             var chunk;
             var id = this.bs.readStr4();
@@ -117,7 +126,7 @@ export default class DjVuPage extends CompositeChunk {
 
             this.bs.jump(-8); // вернулись назад
             var chunkBs = this.bs.fork(length + 8); // создали поток включающий только 1 порцию
-            this.bs.jump(8 + length + (length & 1 ? 1 : 0)); // перепрыгнули к следующей порции
+            this.bs.jump(8 + length + (length & 1)); // перепрыгнули к следующей порции
 
             if (id == "FG44") {
                 chunk = this.fg44 = new ColorChunk(chunkBs);
@@ -163,7 +172,7 @@ export default class DjVuPage extends CompositeChunk {
             else if (this.fgimage) {
                 return this.fgimage.getImage();
             } else {
-                return null;
+                throw new CorruptedFileDjVuError("There is neither mask, nor background, nor foreground!");
             }
         }
         if (!this.bgimage && !this.fgimage) {
@@ -296,7 +305,7 @@ export default class DjVuPage extends CompositeChunk {
                 var zp = new ZPDecoder(chunk.bs);
                 var time = performance.now();
                 this.bgimage.decodeChunk(zp, chunk.header);
-                DjVu.IS_DEBUG && console.log("Background chuck decoding time = ", performance.now() - time);
+                DjVu.IS_DEBUG && console.log("Background chunk decoding time = ", performance.now() - time);
             }
 
             var pixelMapTime = performance.now();

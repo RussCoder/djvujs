@@ -22,7 +22,14 @@ export class NoSuchPageDjVuError extends DjVuError {
     }
 }
 
+export class CorruptedFileDjVuError extends DjVuError {
+    constructor(message = "") {
+        super(DjVuErrorCodes.FILE_IS_CORRUPTED, "The file is corrupted! " + message);
+    }
+}
+
 export const DjVuErrorCodes = Object.freeze({
+    FILE_IS_CORRUPTED: 'FILE_IS_CORRUPTED',
     INCORRECT_FILE_FORMAT: 'INCORRECT_FILE_FORMAT',
     NO_SUCH_PAGE: 'NO_SUCH_PAGE',
     UNEXPECTED_ERROR: 'UNEXPECTED_ERROR'

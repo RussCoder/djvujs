@@ -1,5 +1,25 @@
 # DjVu.js Library Changelog
 
+## v.0.1.5 (05.04.2018)
+
+- Old files with INFO chunks less than 10 bytes are supported.
+- A specific error for corrupted files. 
+
+## v.0.1.4 (27.03.2018)
+
+- A table of contents can be gotten.
+- A page number may be gotten by a url. 
+
+## v.0.1.3 (25.03.2018)
+
+- All worker tasks-promises can be cancelled now.
+- A task is posted to the worker only after the previous one is fulfilled.
+
+## v.0.1.2 (24.03.2018)
+
+- Unified style of DjVuErrors, which are errors that are thrown manually, when a file is corrupted, there is no requested page and so on. 
+- DjVuErrors are rather simple objects that may be copied between workers. 
+
 ## v.0.1.1 (19.03.2018)
 
 - UTF-8 strings are decoded correctly now.
