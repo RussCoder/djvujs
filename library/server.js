@@ -21,6 +21,11 @@ const mimeType = {
     '.djv': 'image/vnd.djvu'
 };
 
+const routes = {
+    './tests.html': './tests/tests.html',
+    './tests': './tests/tests.html',
+};
+
 http.createServer(function (req, res) {
     // console.log(`${req.method} ${req.url}`);
     // parse URL
@@ -28,6 +33,7 @@ http.createServer(function (req, res) {
     // extract URL path
     let pathname = `.${parsedUrl.pathname}`;
     // maps file extention to MIME types
+    pathname = routes[pathname] || pathname;
 
     fs.stat(pathname, function (err, stats) {
         if (err) {
@@ -69,6 +75,7 @@ wss.broadcast = function (data) {
 console.log(`WebSocket server is listening on port 8080 \n`);
 
 fs.watch('./js/', () => wss.broadcast('reload')); // watch debug .js files
+fs.watch('./tests/', () => wss.broadcast('reload')); // watch tests files
 
 const watcher = rollup.watch(rollupConfig);
 

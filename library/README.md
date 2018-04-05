@@ -14,6 +14,7 @@ There are the following directories:
 - `dist` - a directory where the final bundle file is saved to (the eventual `djvu.js` file).
 - `js` - a folder with different debug, test and old scripts which are not a part of the library, but used for debugging. 
 - `src` - a main directory, containing the source code of the library. Its inner structure is self-descriptive, at least I think so. 
+- `tests` - a directory containing tests, which are run in a browser. 
 
 There are the following npm commands that may be run: 
 

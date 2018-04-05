@@ -36,7 +36,7 @@ function runAllTests() {
                     TestHelper.writeLog(`${testName} failed!`, "red");
                 }
                 TestHelper.writeLog(`It has taken ${Math.round(testTime)} milliseconds`, "blue");
-                TestHelper.writeLine();
+                TestHelper.endTestBlock();
                 return runNextTest();
             });
         }
@@ -48,12 +48,19 @@ function runAllTests() {
 }
 
 var TestHelper = {
+
+    testBlock: null,
+
     writeLog(message, color = "black") {
-        outputBlock.append(`<div style="color:${color}">${message}</div>`);
+        if (!this.testBlock) {
+            this.testBlock = $('<div class="test_block"/>');
+            outputBlock.append(this.testBlock);
+        }
+        this.testBlock.append(`<div style="color:${color}">${message}</div>`);
     },
 
-    writeLine() {
-        outputBlock.append("<hr>");
+    endTestBlock() {
+        this.testBlock = null;
     },
 
     getHashOfArray(array) {
@@ -215,7 +222,7 @@ var Tests = {
             })
             .then(() => {
                 return Promise.all([
-                    djvuWorker.getPageText(pageNumber),
+                    pageNumber ? djvuWorker.getPageText(pageNumber) : djvuWorker.getDocumentMetaData(),
                     DjVu.Utils.loadFile(txtUrl)
                 ]);
             })
@@ -260,6 +267,10 @@ var Tests = {
             }
         }
         return "No error! But there must be one!";
+    },
+
+    async testMetaDataOfDocWithShortINFOChunk() {
+        return this._testText('/assets/carte.djvu', null, '/assets/carte_metadata.bin');
     },
 
     async testContents() {

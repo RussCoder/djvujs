@@ -1,0 +1,25 @@
+html,
+body {
+    height: 100%;
+}
+
+#test_results_wrapper {
+    font-family: monospace;
+    box-shadow: 0 0 1px lightgray;
+    padding: 1em;
+    margin: 1em;
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: column;
+    box-sizing: border-box;
+    max-height: 95%;
+}
+
+.test_block {
+    box-shadow: 0 0 1px gray;
+    padding: 0.5em;
+    flex: 1 1 auto;
+    width: 25em;
+    white-space: normal;
+    word-wrap: break-word;
+}

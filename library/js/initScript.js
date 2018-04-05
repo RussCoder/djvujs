@@ -133,7 +133,7 @@ function readDjvu(buf) {
 
     //writeln(djvuDocument.pages[pageNumber].getText());
     //redrawPage();
-    //saveStringAsBinFile(djvuDocument.pages[pageNumber].getText());
+    //saveStringAsBinFile(djvuDocument.toString());
     // doc.countFiles();
     //console.log(Globals.Timer.toString());
     console.log("Total execution time = ", performance.now() - time);
