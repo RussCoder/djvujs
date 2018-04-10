@@ -1,0 +1,17 @@
+doctype
+html
+  head
+    != partial("../_partials/head", {title: "DjVu.js - Открывайте файлы DjVu онлайн!"})
+  body
+    header 
+        != partial("../_partials/lang_block")
+        a(href='./'): div.site_name Библиотека DjVu.js
+    nav
+        a(href='./') Viewer
+        a(href='docs') Документация
+        a(href='downloads') Загрузки
+        a(href='about') О проекте
+    div.main 
+        != yield
+    footer
+        | DjVu.js 2018 | Возможно, все права защищены. 

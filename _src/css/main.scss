@@ -21,6 +21,23 @@ header {
         cursor: pointer;
         text-align: center;
     }
+
+    .lang_block {
+        display: flex;
+        justify-content: center;
+        a {
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 0 1px gray;
+            padding: 0.1em;
+            margin: 0 0.5em;
+            
+            img {
+                margin-right: 0.1em;
+            }
+        }
+    }
 }
 
 nav {

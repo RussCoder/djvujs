@@ -1,13 +1,3 @@
-# Downloads
-
-Here you can download the library and the viewer .js and .css files.
-
-<a href="/dist/djvu.js" download="djvu.js">Download DjVu.js library (version 0.1.5)</a>
-
-<a href="/dist/djvu_viewer.js" download="djvu_viewer.js">Download DjVu.js Viewer .js file (version 0.1.0)</a>
-
-<a href="/dist/djvu_viewer.css" download="djvu_viewer.css">Download DjVu.js Viewer .css file (version 0.1.0)</a>
-
 ## How to use it
 
 Create a folder with all 3 files, that you have downloaded here (`djvu.js`, `djvu_viewer.js` and `djvu_viewer.css`). Then in the same folder create an .html file (let's say `index.html`) with the following content.
@@ -60,5 +50,3 @@ serve -p 5000
 ```
 
 in order to start the local server (you may change the port as you wish). Then just open [http://localhost:5000/](http://localhost:5000/) and you will see the viewer. 
-
-
