@@ -2,7 +2,7 @@ var DjVu = (function () {
 'use strict';
 
 var DjVu = {
-    VERSION: '0.1.3',
+    VERSION: '0.1.5',
     IS_DEBUG: false,
     setDebugMode: (flag) => DjVu.IS_DEBUG = flag
 };
@@ -942,6 +942,35 @@ class BZZDecoder {
     }
 }
 
+class DjVuError {
+    constructor(code, message) {
+        this.code = code;
+        this.message = message;
+    }
+}
+class IncorrectFileFormatDjVuError extends DjVuError {
+    constructor() {
+        super(DjVuErrorCodes.INCORRECT_FILE_FORMAT, "The provided file is not a .djvu file!");
+    }
+}
+class NoSuchPageDjVuError extends DjVuError {
+    constructor(pageNumber) {
+        super(DjVuErrorCodes.NO_SUCH_PAGE, "There is no page with the number " + pageNumber + " !");
+        this.pageNumber = pageNumber;
+    }
+}
+class CorruptedFileDjVuError extends DjVuError {
+    constructor(message = "") {
+        super(DjVuErrorCodes.FILE_IS_CORRUPTED, "The file is corrupted! " + message);
+    }
+}
+const DjVuErrorCodes = Object.freeze({
+    FILE_IS_CORRUPTED: 'FILE_IS_CORRUPTED',
+    INCORRECT_FILE_FORMAT: 'INCORRECT_FILE_FORMAT',
+    NO_SUCH_PAGE: 'NO_SUCH_PAGE',
+    UNEXPECTED_ERROR: 'UNEXPECTED_ERROR'
+});
+
 class IFFChunk {
     constructor(bs) {
         this.id = bs.readStr4();
@@ -964,7 +993,7 @@ class CompositeChunk extends IFFChunk {
 class ColorChunk extends IFFChunk {
     constructor(bs) {
         super(bs);
-        this.header = new СolorChunkDataHeader(bs);
+        this.header = new ColorChunkDataHeader(bs);
     }
     toString() {
         return this.id + " " + this.length + this.header.toString();
@@ -973,14 +1002,30 @@ class ColorChunk extends IFFChunk {
 class INFOChunk extends IFFChunk {
     constructor(bs) {
         super(bs);
+        if (this.length < 5) {
+            throw new CorruptedFileDjVuError("The INFO chunk is shorter than 5 bytes!")
+        }
         this.width = bs.getInt16();
         this.height = bs.getInt16();
         this.minver = bs.getInt8();
-        this.majver = bs.getInt8();
-        this.dpi = bs.getUint8();
-        this.dpi |= bs.getUint8() << 8;
-        this.gamma = bs.getInt8();
-        this.flags = bs.getInt8();
+        this.majver = this.length > 5 ? bs.getInt8() : 0;
+        if (this.length > 7) {
+            this.dpi = bs.getUint8();
+            this.dpi |= bs.getUint8() << 8;
+        } else {
+            this.dpi = 300;
+        }
+        this.gamma = this.length > 8 ? bs.getInt8() : 22;
+        this.flags = this.length > 9 ? bs.getInt8() : 0;
+        if (this.dpi < 25 || this.dpi > 6000) {
+            this.dpi = 300;
+        }
+        if (this.gamma < 3) {
+            this.gamma = 3;
+        }
+        if (this.gamma > 50) {
+            this.gamma = 50;
+        }
     }
     toString() {
         var str = super.toString();
@@ -988,13 +1033,13 @@ class INFOChunk extends IFFChunk {
             + 'height:' + this.height + ', '
             + 'minver:' + this.minver + ', '
             + 'majver:' + this.majver + ', '
-            + 'dpi:' + this.dpi + ','
+            + 'dpi:' + this.dpi + ', '
             + 'gamma:' + this.gamma + ', '
             + 'flags:' + this.flags + '}\n';
         return str;
     }
 }
-class СolorChunkDataHeader {
+class ColorChunkDataHeader {
     constructor(bs) {
         this.serial = bs.getUint8();
         this.slices = bs.getUint8();
@@ -1027,14 +1072,6 @@ class INCLChunk extends IFFChunk {
     }
 }
 class CIDaChunk extends INCLChunk { }
-class NAVMChunk extends IFFChunk {
-    constructor(bs) {
-        super(bs);
-    }
-    toString() {
-        return super.toString() + '\n';
-    }
-}
 class DIRMChunk extends IFFChunk {
     constructor(bs) {
         super(bs);
@@ -2229,8 +2266,14 @@ class DjVuPage extends CompositeChunk {
             return this;
         }
         this.dependencies = [];
-        this.info = new INFOChunk(this.bs.fork(18));
-        this.bs.jump(18);
+        var id = this.bs.readStr4();
+        if (id !== 'INFO') {
+            throw new CorruptedFileDjVuError("The very first chunk must be INFO chunk, but we got " + id + '!')
+        }
+        var length = this.bs.getInt32();
+        this.bs.jump(-8);
+        this.info = new INFOChunk(this.bs.fork(length + 8));
+        this.bs.jump(8 + length + (this.info.length & 1));
         this.iffchunks.push(this.info);
         while (!this.bs.isEmpty()) {
             var chunk;
@@ -2238,7 +2281,7 @@ class DjVuPage extends CompositeChunk {
             var length = this.bs.getInt32();
             this.bs.jump(-8);
             var chunkBs = this.bs.fork(length + 8);
-            this.bs.jump(8 + length + (length & 1 ? 1 : 0));
+            this.bs.jump(8 + length + (length & 1));
             if (id == "FG44") {
                 chunk = this.fg44 = new ColorChunk(chunkBs);
             } else if (id == "BG44") {
@@ -2275,7 +2318,7 @@ class DjVuPage extends CompositeChunk {
             else if (this.fgimage) {
                 return this.fgimage.getImage();
             } else {
-                return null;
+                throw new CorruptedFileDjVuError("There is neither mask, nor background, nor foreground!");
             }
         }
         if (!this.bgimage && !this.fgimage) {
@@ -2389,7 +2432,7 @@ class DjVuPage extends CompositeChunk {
                 var zp = new ZPDecoder(chunk.bs);
                 var time = performance.now();
                 this.bgimage.decodeChunk(zp, chunk.header);
-                DjVu.IS_DEBUG && console.log("Background chuck decoding time = ", performance.now() - time);
+                DjVu.IS_DEBUG && console.log("Background chunk decoding time = ", performance.now() - time);
             }
             var pixelMapTime = performance.now();
             this.bgimage.createPixelmap();
@@ -2459,6 +2502,60 @@ class DjVuPage extends CompositeChunk {
         this.init();
         var str = this.iffchunks.reduce((str, chunk) => str + chunk.toString(), '');
         return super.toString(str);
+    }
+}
+
+class NAVMChunk extends IFFChunk {
+    constructor(bs) {
+        super(bs);
+        this.isDecoded = false;
+        this.contents = [];
+        this.decodedBookmarkCounter = 0;
+    }
+    getContents() {
+        this.decode();
+        return this.contents;
+    }
+    decode() {
+        if (this.isDecoded) {
+            return;
+        }
+        var dbs = BZZDecoder.decodeByteStream(this.bs);
+        var bookmarksCount = dbs.getUint16();
+        while (this.decodedBookmarkCounter < bookmarksCount) {
+            this.contents.push(this.decodeBookmark(dbs));
+        }
+        this.isDecoded = true;
+    }
+    decodeBookmark(bs) {
+        var childrenCount = bs.getUint8();
+        var descriptionLength = bs.getInt24();
+        var description = descriptionLength ? bs.readStrUTF(descriptionLength) : '';
+        var urlLength = bs.getInt24();
+        var url = urlLength ? bs.readStrUTF(urlLength) : '';
+        this.decodedBookmarkCounter++;
+        var bookmark = { description, url };
+        if (childrenCount) {
+            var children = new Array(childrenCount);
+            for (var i = 0; i < childrenCount; i++) {
+                children[i] = this.decodeBookmark(bs);
+            }
+            bookmark.children = children;
+        }
+        return bookmark;
+    }
+    toString() {
+        this.decode();
+        var indent = '    ';
+        function stringifyBookmark(bookmark, indentSize = 0) {
+            var str = indent.repeat(indentSize) + `${bookmark.description} (${bookmark.url})\n`;
+            if (bookmark.children) {
+                str = bookmark.children.reduce((str, bookmark) => str + stringifyBookmark(bookmark, indentSize + 1), str);
+            }
+            return str;
+        }
+        var str = this.contents.reduce((str, bookmark) => str + stringifyBookmark(bookmark), super.toString());
+        return str + '\n';
     }
 }
 
@@ -2763,29 +2860,6 @@ class DjVuWriter {
 
 class ThumChunk extends CompositeChunk { }
 
-class DjVuError {
-    constructor(code, message) {
-        this.code = code;
-        this.message = message;
-    }
-}
-class IncorrectFileFormatDjVuError extends DjVuError {
-    constructor() {
-        super(DjVuErrorCodes.INCORRECT_FILE_FORMAT, "The provided file is not a .djvu file!");
-    }
-}
-class NoSuchPageDjVuError extends DjVuError {
-    constructor(pageNumber) {
-        super(DjVuErrorCodes.NO_SUCH_PAGE, "There is no page with the number " + pageNumber + " !");
-        this.pageNumber = pageNumber;
-    }
-}
-const DjVuErrorCodes = Object.freeze({
-    INCORRECT_FILE_FORMAT: 'INCORRECT_FILE_FORMAT',
-    NO_SUCH_PAGE: 'NO_SUCH_PAGE',
-    UNEXPECTED_ERROR: 'UNEXPECTED_ERROR'
-});
-
 let DjVuDocument$1 = class DjVuDocument {
     constructor(arraybuffer) {
         this.buffer = arraybuffer;
@@ -2810,6 +2884,7 @@ let DjVuDocument$1 = class DjVuDocument {
         this.thumbs = [];
         this.djvi = {};
         this.navm = null;
+        this.idToPageNumberMap = {};
         this.init();
     }
     init() {
@@ -2832,6 +2907,7 @@ let DjVuDocument$1 = class DjVuDocument {
                             this.bs.fork(length + 8),
                             this.getINCLChunkCallback
                         ));
+                        this.idToPageNumberMap[this.dirm.ids[i]] = this.pages.length;
                         break;
                     case "FORMDJVI":
                         this.dirmOrderedChunks[i] = this.djvi[this.dirm.ids[i]] = new DjViChunk(this.bs.fork(length + 8));
@@ -2848,6 +2924,23 @@ let DjVuDocument$1 = class DjVuDocument {
             this.bs.jump(-12);
             this.pages.push(new DjVuPage(this.bs.fork(this.length + 4)));
         }
+    }
+    getContents() {
+        return this.navm ? this.navm.getContents() : null;
+    }
+    getPageNumberByUrl(url) {
+        if (url[0] !== '#') {
+            return null;
+        }
+        var ref = url.slice(1);
+        var pageNumber = this.idToPageNumberMap[ref];
+        if (!pageNumber) {
+            var num = Math.round(Number(ref));
+            if (num.toString() === ref && num >= 1 && num <= this.pages.length) {
+                pageNumber = num;
+            }
+        }
+        return pageNumber || null;
     }
     getPage(number) {
         var page = this.pages[number - 1];
@@ -2888,6 +2981,7 @@ let DjVuDocument$1 = class DjVuDocument {
         if (this.dirm) {
             str += this.id + " " + this.length + '\n\n';
             str += this.dirm.toString();
+            str += this.navm ? this.navm.toString() : '';
             this.dirmOrderedChunks.forEach((chunk, i) => {
                 str += this.dirm.getMetadataStringByIndex(i) + chunk.toString();
             });
@@ -3141,12 +3235,24 @@ class DjVuWorker {
             case 'getPageText':
                 callbacks.resolve(obj.text);
                 break;
+            case 'getContents':
+                callbacks.resolve(obj.contents);
+                break;
+            case 'getPageNumberByUrl':
+                callbacks.resolve(obj.pageNumber);
+                break;
             default:
                 console.error("Unexpected message from DjVuWorker: ", obj);
         }
     }
     getPageCount() {
         return this.createNewPromise({ command: 'getPageCount' });
+    }
+    getContents() {
+        return this.createNewPromise({ command: 'getContents' });
+    }
+    getPageNumberByUrl(url) {
+        return this.createNewPromise({ command: 'getPageNumberByUrl', url: url });
     }
     getDocumentMetaData(html) {
         return this.createNewPromise({
@@ -3710,6 +3816,18 @@ function initWorker() {
         }
     };
     var handlers = {
+        getContents() {
+            postMessage({
+                command: 'getContents',
+                contents: djvuDocument.getContents()
+            });
+        },
+        getPageNumberByUrl(obj) {
+            postMessage({
+                command: 'getPageNumberByUrl',
+                pageNumber: djvuDocument.getPageNumberByUrl(obj.url)
+            });
+        },
         getPageText(obj) {
             var pagenum = +obj.pagenumber;
             var text = djvuDocument.getPage(pagenum).getText();
