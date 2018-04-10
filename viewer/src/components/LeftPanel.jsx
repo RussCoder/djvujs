@@ -1,7 +1,9 @@
 import React from 'react';
+import { connect } from 'react-redux';
+
 import ContentsPanel from './ContentsPanel';
 
-export default class LeftPanel extends React.Component {
+class LeftPanel extends React.Component {
 
     onBeginResizing = (e) => {
         e.preventDefault();
@@ -31,17 +33,28 @@ export default class LeftPanel extends React.Component {
         this.initialState = null;
     };
 
+    ref = node => this.topNode = node;
+
     render() {
+        const contents = this.props.contents;
         return (
-            <div className="left_panel" ref={node => this.topNode = node}>
+            <div
+                className="left_panel"
+                ref={this.ref}
+                style={contents ? null : { width: "0.4em" }} // use the min-width from styles
+            >
                 <div
                     onMouseDown={this.onBeginResizing}
                     className="border"
                 />
                 <div className="content">
-                    <ContentsPanel />
+                    <ContentsPanel contents={contents} />
                 </div>
             </div>
         );
     }
 }
+
+export default connect(state => ({
+    contents: state.contents
+}))(LeftPanel);

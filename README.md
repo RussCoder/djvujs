@@ -32,3 +32,4 @@ If you have some problems, read the technical documentation or create an issue. 
 - You may **download the library** and the viewer on https://djvu.js.org/downloads
 - The **technical documentation** of the library is available [in the wiki](https://github.com/RussCoder/djvujs/wiki/DjVu.js-Documentation).
 - [CHANGELOG of the library](library/CHANGELOG.md)
+- [CHANGELOG of the viewer](viewer/CHANGELOG.md)

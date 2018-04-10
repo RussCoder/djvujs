@@ -75,13 +75,14 @@ function* createDocumentFromArrayBufferAction(action) {
             pagesCount: pagesCount,
             fileName: action.fileName
         });
-        yield* getImageData();
 
         const contents = yield djvuWorker.getContents();
         yield put({
             type: Consts.CONTENTS_IS_GOTTEN_ACTION,
             contents: contents
         });
+
+        yield* getImageData();
     } catch (error) {
         yield put(Actions.errorAction(error));
     }

@@ -30,13 +30,14 @@ class ContentsPanel extends React.Component {
     }
 
     render() {
+        const contents = this.props.contents;
         return (
             <div className="contents_panel">
                 <div className="header">Contents</div>
-                {this.props.contents && this.props.contents.map((bookmark, i) => {
+                {contents && contents.map((bookmark, i) => {
                     return <TreeItem key={i} {...this.makeTreeItemDataByBookmark(bookmark)} />
                 })}
-                {this.props.contents ? null :
+                {contents ? null :
                     <div className="no_contents_message">No contents provided</div>
                 }
             </div>
@@ -44,8 +45,6 @@ class ContentsPanel extends React.Component {
     }
 }
 
-export default connect(state => ({
-    contents: state.contents
-}), {
-        setPageByUrl: Actions.setPageByUrlAction
-    })(ContentsPanel);
+export default connect(null, {
+    setPageByUrl: Actions.setPageByUrlAction
+})(ContentsPanel);
