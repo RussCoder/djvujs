@@ -2,7 +2,7 @@ var DjVu = (function () {
 'use strict';
 
 var DjVu = {
-    VERSION: '0.1.5',
+    VERSION: '0.1.6',
     IS_DEBUG: false,
     setDebugMode: (flag) => DjVu.IS_DEBUG = flag
 };
@@ -394,6 +394,26 @@ let Bitmap$1 = class Bitmap {
         this.width = width;
         this.innerArray = new Uint8Array(length);
     }
+    getBits(i, j, bitNumber) {
+        if (!this.hasRow(i) || j >= this.width) {
+            return 0;
+        }
+        if (j < 0) {
+            bitNumber += j;
+            j = 0;
+        }
+        var tmp = i * this.width + j;
+        var index = tmp >> 3;
+        var bitIndex = tmp & 7;
+        var mask = 32768 >>> bitIndex;
+        var twoBytes = ((this.innerArray[index] << 8) | (this.innerArray[index + 1] || 0));
+        var existingBits = this.width - j;
+        var border = bitNumber < existingBits ? bitNumber : existingBits;
+        for (var k = 1; k < border; k++) {
+            mask |= 32768 >>> (bitIndex + k);
+        }
+        return (twoBytes & mask) >>> (16 - bitIndex - bitNumber);
+    }
     get(i, j) {
         if (!this.hasRow(i) || j < 0 || j >= this.width) {
             return 0;
@@ -402,8 +422,7 @@ let Bitmap$1 = class Bitmap {
         var index = tmp >> 3;
         var bitIndex = tmp & 7;
         var mask = 128 >> bitIndex;
-        var answ = (this.innerArray[index] & mask) ? 1 : 0;
-        return answ;
+        return (this.innerArray[index] & mask) ? 1 : 0;
     }
     set(i, j) {
         var tmp = i * this.width + j;
@@ -1191,8 +1210,7 @@ class JB2Codec extends IFFChunk {
         for (var i = height - 1; i >= 0; i--) {
             for (var j = 0; j < width; j++) {
                 var ind = this.getCtxIndex(bitmap, i, j);
-                this.zp.decode(this.directBitmapCtx, ind) ? bitmap.set(i, j) : 0;
-            }
+                if (this.zp.decode(this.directBitmapCtx, ind)) { bitmap.set(i, j); }            }
         }
         return bitmap;
     }
@@ -1200,14 +1218,13 @@ class JB2Codec extends IFFChunk {
         var index = 0;
         var r = i + 2;
         if (bm.hasRow(r)) {
-            index = ((bm.get(r, j - 1) || 0) << 9) | (bm.get(r, j) << 8) | ((bm.get(r, j + 1) || 0) << 7);
+            index = (bm.getBits(r, j - 1, 3)) << 7;
         }
         r--;
         if (bm.hasRow(r)) {
-            index |= ((bm.get(r, j - 2) || 0) << 6) | ((bm.get(r, j - 1) || 0) << 5) |
-                (bm.get(r, j) << 4) | ((bm.get(r, j + 1) || 0) << 3) | ((bm.get(r, j + 2) || 0) << 2);
+            index |= bm.getBits(r, j - 2, 5) << 2;
         }
-        index |= ((bm.get(i, j - 2) || 0) << 1) | (bm.get(i, j - 1) || 0);
+        index |= bm.getBits(i, j - 2, 2);
         return index;
     }
     decodeBitmapRef(width, height, mbm) {
@@ -1225,19 +1242,19 @@ class JB2Codec extends IFFChunk {
         var index = 0;
         var r = i + 1;
         if (cbm.hasRow(r)) {
-            index = ((cbm.get(r, j - 1) || 0) << 10) | (cbm.get(r, j) << 9) | ((cbm.get(r, j + 1) || 0) << 8);
+            index = cbm.getBits(r, j - 1, 3) << 8;
         }
-        index |= (cbm.get(i, j - 1) || 0) << 7;
+        index |= cbm.get(i, j - 1) << 7;
         r = i + alignInfo.rowshift + 1;
         var c = j + alignInfo.colshift;
         index |= mbm.hasRow(r) ? mbm.get(r, c) << 6 : 0;
         r--;
         if (mbm.hasRow(r)) {
-            index |= ((mbm.get(r, c - 1) || 0) << 5) | (mbm.get(r, c) << 4) | ((mbm.get(r, c + 1) || 0) << 3);
+            index |= mbm.getBits(r, c - 1, 3) << 3;
         }
         r--;
         if (mbm.hasRow(r)) {
-            index |= ((mbm.get(r, c - 1) || 0) << 2) | (mbm.get(r, c) << 1) | (mbm.get(r, c + 1) || 0);
+            index |= mbm.getBits(r, c - 1, 3);
         }
         return index;
     }
