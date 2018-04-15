@@ -1,9 +1,30 @@
 export class Bitmap {
     constructor(width, height) {
-        var length = Math.ceil(width * height / 8); // число байт необходимых для кодировки черно-белого изображенияы
+        var length = Math.ceil(width * height / 8); // число байт необходимых для кодировки черно-белого изображения
         this.height = height;
         this.width = width;
         this.innerArray = new Uint8Array(length);
+    }
+
+    getBits(i, j, bitNumber) {
+        if (!this.hasRow(i) || j >= this.width) {
+            return 0;
+        }
+        if (j < 0) {
+            bitNumber += j;
+            j = 0;
+        }
+        var tmp = i * this.width + j;
+        var index = tmp >> 3;
+        var bitIndex = tmp & 7;
+        var mask = 32768 >>> bitIndex;
+        var twoBytes = ((this.innerArray[index] << 8) | (this.innerArray[index + 1] || 0));
+        var existingBits = this.width - j;
+        var border = bitNumber < existingBits ? bitNumber : existingBits;
+        for (var k = 1; k < border; k++) {
+            mask |= 32768 >>> (bitIndex + k)
+        }
+        return (twoBytes & mask) >>> (16 - bitIndex - bitNumber);
     }
 
     get(i, j) {
@@ -14,8 +35,7 @@ export class Bitmap {
         var index = tmp >> 3;
         var bitIndex = tmp & 7;
         var mask = 128 >> bitIndex;
-        var answ = (this.innerArray[index] & mask) ? 1 : 0;
-        return answ;
+        return (this.innerArray[index] & mask) ? 1 : 0;
     }
 
     set(i, j) { // сделать "пиксель" черным

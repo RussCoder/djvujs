@@ -1,5 +1,9 @@
 # DjVu.js Library Changelog
 
+## v.0.1.6 (15.04.2018)
+
+- JB2 codec performance optimizations (more efficient memory access)
+
 ## v.0.1.5 (05.04.2018)
 
 - Old files with INFO chunks less than 10 bytes are supported.

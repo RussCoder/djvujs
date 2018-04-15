@@ -136,7 +136,7 @@ export default class JB2Codec extends IFFChunk {
         for (var i = height - 1; i >= 0; i--) {
             for (var j = 0; j < width; j++) {
                 var ind = this.getCtxIndex(bitmap, i, j);
-                this.zp.decode(this.directBitmapCtx, ind) ? bitmap.set(i, j) : 0;
+                if (this.zp.decode(this.directBitmapCtx, ind)) { bitmap.set(i, j) };
             }
         }
         return bitmap;
@@ -146,14 +146,18 @@ export default class JB2Codec extends IFFChunk {
         var index = 0;
         var r = i + 2;
         if (bm.hasRow(r)) {
-            index = ((bm.get(r, j - 1) || 0) << 9) | (bm.get(r, j) << 8) | ((bm.get(r, j + 1) || 0) << 7);
+            //index = ((bm.get(r, j - 1)) << 9) | (bm.get(r, j) << 8) | ((bm.get(r, j + 1)) << 7);
+            index = (bm.getBits(r, j - 1, 3)) << 7;
         }
         r--;
         if (bm.hasRow(r)) {
-            index |= ((bm.get(r, j - 2) || 0) << 6) | ((bm.get(r, j - 1) || 0) << 5) |
-                (bm.get(r, j) << 4) | ((bm.get(r, j + 1) || 0) << 3) | ((bm.get(r, j + 2) || 0) << 2);
+            // index |= ((bm.get(r, j - 2)) << 6) | ((bm.get(r, j - 1)) << 5) |
+            //     (bm.get(r, j) << 4) | ((bm.get(r, j + 1)) << 3) | ((bm.get(r, j + 2)) << 2);
+
+            index |= bm.getBits(r, j - 2, 5) << 2;
         }
-        index |= ((bm.get(i, j - 2) || 0) << 1) | (bm.get(i, j - 1) || 0);
+        //index |= ((bm.get(i, j - 2)) << 1) | (bm.get(i, j - 1));
+        index |= bm.getBits(i, j - 2, 2);
         return index;
     }
 
@@ -175,20 +179,23 @@ export default class JB2Codec extends IFFChunk {
         var index = 0;
         var r = i + 1;
         if (cbm.hasRow(r)) {
-            index = ((cbm.get(r, j - 1) || 0) << 10) | (cbm.get(r, j) << 9) | ((cbm.get(r, j + 1) || 0) << 8);
+            //index = ((cbm.get(r, j - 1) || 0) << 10) | (cbm.get(r, j) << 9) | ((cbm.get(r, j + 1) || 0) << 8);
+            index = cbm.getBits(r, j - 1, 3) << 8;
         }
-        index |= (cbm.get(i, j - 1) || 0) << 7;
+        index |= cbm.get(i, j - 1) << 7;
 
         r = i + alignInfo.rowshift + 1;
         var c = j + alignInfo.colshift;
         index |= mbm.hasRow(r) ? mbm.get(r, c) << 6 : 0;
         r--;
         if (mbm.hasRow(r)) {
-            index |= ((mbm.get(r, c - 1) || 0) << 5) | (mbm.get(r, c) << 4) | ((mbm.get(r, c + 1) || 0) << 3);
+            //index |= ((mbm.get(r, c - 1) || 0) << 5) | (mbm.get(r, c) << 4) | ((mbm.get(r, c + 1) || 0) << 3);
+            index |= mbm.getBits(r, c - 1, 3) << 3;
         }
         r--;
         if (mbm.hasRow(r)) {
-            index |= ((mbm.get(r, c - 1) || 0) << 2) | (mbm.get(r, c) << 1) | (mbm.get(r, c + 1) || 0);
+            //index |= ((mbm.get(r, c - 1) || 0) << 2) | (mbm.get(r, c) << 1) | (mbm.get(r, c + 1) || 0);
+            index |= mbm.getBits(r, c - 1, 3);
         }
         return index;
     }

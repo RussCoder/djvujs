@@ -16,8 +16,8 @@ var rerunButton = document.querySelector('#rerun');
 rerunButton.onclick = rerun;
 document.querySelector('#redraw').onclick = redrawPage;
 
-var pageNumber = 1;
-var djvuUrl = 'assets/carte.djvu';
+var pageNumber = 4;
+var djvuUrl = 'assets/colorbook.djvu';
 
 document.querySelector('#next').onclick = () => {
     pageNumber++;
@@ -127,12 +127,12 @@ function readDjvu(buf) {
     djvuDocument = new DjVu.Document(buf);
     Globals.counter = 0;
 
-    writeln(djvuDocument.toString(true));
+    //writeln(djvuDocument.toString(true));
     //return;
     //saveStringAsFile(JSON.stringify(djvuDocument.getContents()));
 
     //writeln(djvuDocument.pages[pageNumber].getText());
-    //redrawPage();
+    redrawPage();
     //saveStringAsBinFile(djvuDocument.toString());
     // doc.countFiles();
     //console.log(Globals.Timer.toString());
