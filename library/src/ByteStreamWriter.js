@@ -1,3 +1,5 @@
+import { stringToCodePoints, codePointsToUtf8 } from './DjVu';
+
 export default class ByteStreamWriter {
     constructor(length) {
         //размер шага роста используемой памяти
@@ -32,11 +34,7 @@ export default class ByteStreamWriter {
     }
 
     writeStr(str) {
-        var byte;
-        for (var i = 0; i < str.length; i++) {
-            byte = str.charCodeAt(i);
-            this.writeByte(byte);
-        }
+        this.writeArray(codePointsToUtf8(stringToCodePoints(str)));
         return this;
     }
 

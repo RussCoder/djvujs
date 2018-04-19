@@ -1,5 +1,5 @@
 var DjVu = {
-    VERSION: '0.1.6',
+    VERSION: '0.1.7',
     IS_DEBUG: false,
     setDebugMode: (flag) => DjVu.IS_DEBUG = flag
 };
@@ -65,5 +65,46 @@ export function utf8ToCodePoints(utf8array) {
     }
     return codePoints;
 }
+
+export function codePointsToUtf8(codePoints) {
+    var utf8array = [];
+    codePoints.forEach(codePoint => {
+        if (codePoint < 0x80) {
+            utf8array.push(codePoint);
+        } else if (codePoint < 0x800) {
+            utf8array.push(0xC0 | (codePoint >> 6));
+            utf8array.push(0x80 | (codePoint & 0x3F));
+        } else if (codePoint < 0x10000) {
+            utf8array.push(0xE0 | (codePoint >> 12));
+            utf8array.push(0x80 | ((codePoint >> 6) & 0x3F));
+            utf8array.push(0x80 | (codePoint & 0x3F));
+        } else {
+            utf8array.push(0xF0 | (codePoint >> 18));
+            utf8array.push(0x80 | ((codePoint >> 12) & 0x3F));
+            utf8array.push(0x80 | ((codePoint >> 6) & 0x3F));
+            utf8array.push(0x80 | (codePoint & 0x3F));
+        }
+    });
+
+    return new Uint8Array(utf8array);
+}
+
+export function stringToCodePoints(str) {
+    var codePoints = [];
+    for (var i = 0; i < str.length; i++) {
+        var code = str.codePointAt(i);
+        codePoints.push(code);
+        if (code > 65535) {
+            i++; // skip the second part of 4 byte symbol
+        }
+    }
+
+    return codePoints;
+}
+
+// unicode test: symbols of 1, 2, 4 and 3 bytes (in utf8 encoding) are encoded and decoded
+// var str = 'szвф' + String.fromCodePoint(0x1F702) + String.fromCodePoint(0x1F704) + String.fromCodePoint(0x2C00) + String.fromCodePoint(0x2C08);
+// var str2 = String.fromCodePoint(...utf8ToCodePoints(codePointsToUtf8(stringToCodePoints(str))));
+// console.log(str, str2, str === str2);
 
 export default DjVu;

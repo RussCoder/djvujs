@@ -1,5 +1,9 @@
 # DjVu.js Library Changelog
 
+## v.0.1.7 (19.04.2018)
+
+- UTF-8 ids of pages and dictionaries are supported.
+
 ## v.0.1.6 (15.04.2018)
 
 - JB2 codec performance optimizations (more efficient memory access)

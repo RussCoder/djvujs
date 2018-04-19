@@ -100,19 +100,22 @@ export default class ByteStream {
     }
 
     readStrNT() {
-        var str = "";
-        var byte = this.viewer.getUint8(this.offset++);
+        var array = [];
+        var byte = this.getUint8();
         while (byte) {
-            str += String.fromCharCode(byte);
-            byte = this.viewer.getUint8(this.offset++);
+            array.push(byte);
+            byte = this.getUint8();
         }
-        return str;
+        return this._createStringByUtf8Array(array);
+    }
+
+    _createStringByUtf8Array(utf8array) {
+        var codePoints = utf8ToCodePoints(utf8array);
+        return String.fromCodePoint ? String.fromCodePoint(...codePoints) : String.fromCharCode(...codePoints);
     }
 
     readStrUTF(byteLength) {
-        var utf8array = this.getUint8Array(byteLength);
-        var codePoints = utf8ToCodePoints(utf8array);
-        return String.fromCodePoint ? String.fromCodePoint(...codePoints) : String.fromCharCode(...codePoints);
+        return this._createStringByUtf8Array(this.getUint8Array(byteLength));
     }
 
     fork(_length) {

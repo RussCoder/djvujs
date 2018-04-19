@@ -169,32 +169,35 @@ var TestHelper = {
 
 var Tests = {
 
-    _imageTest(djvuName, pageNum, imageName, hash = null) {
-        return DjVu.Utils.loadFile(`/assets/${djvuName}`)
-            .then(buffer => {
-                return djvuWorker.createDocument(buffer);
-            })
-            .then(() => djvuWorker.getPageImageDataWithDpi(pageNum))
-            .then(obj => {
-                resultImageData = obj.imageData;
-                return TestHelper.getImageDataByImageURI(`/assets/${imageName}`);
-            })
-            .then(canonicImageData => {
-                var result = TestHelper.compareImageData(canonicImageData, resultImageData);
-                if (result !== null && hash) {
-                    var isHashTheSame = TestHelper.getHashOfArray(resultImageData.data) === hash;
-                    return {
-                        isSuccess: isHashTheSame,
-                        messages: [
-                            isHashTheSame ? "Hash is the same! Good" : "Hash is different!",
-                            result
-                        ]
-                    };
-                } else if (!hash) {
-                    result += "... Hash is " + TestHelper.getHashOfArray(resultImageData.data);
-                }
-                return result;
-            });
+    async _imageTest(djvuName, pageNum, imageName = null, hash = null) {
+
+        function checkByHash(data, message) {
+            var isHashTheSame = TestHelper.getHashOfArray(data) === hash;
+            return {
+                isSuccess: isHashTheSame,
+                messages: [
+                    isHashTheSame ? "Hash is the same! Good" : "Hash is different!",
+                    message
+                ]
+            };
+        }
+
+        var buffer = await DjVu.Utils.loadFile(`/assets/${djvuName}`)
+        await djvuWorker.createDocument(buffer);
+        var obj = await djvuWorker.getPageImageDataWithDpi(pageNum);
+        resultImageData = obj.imageData;
+        if (imageName === null) {
+            var result = checkByHash(resultImageData.data);
+            return result.isSuccess ? null : result.messages[0];
+        }
+        var canonicImageData = await TestHelper.getImageDataByImageURI(`/assets/${imageName}`);
+        var result = TestHelper.compareImageData(canonicImageData, resultImageData);
+        if (result !== null && hash) {
+            result = checkByHash(resultImageData.data, result);
+        } else if (!hash) {
+            result += "... Hash is " + TestHelper.getHashOfArray(resultImageData.data);
+        }
+        return result;
     },
 
     _sliceTest(source, from, to, result) {
@@ -381,6 +384,10 @@ var Tests = {
         return this._sliceTest(`/assets/czech.djvu`, 1, 3, `/assets/czech_1-3.djvu`);
     },
 
+    testSliceDocumentWithCyrillicIds() {
+        return this._sliceTest(`/assets/history.djvu`, 2, 2, `/assets/history_2.djvu`);
+    },
+
     testGrayscaleBG44() {
         return this._imageTest("boy.djvu", 1, "boy.png", -1560338846);
     },
@@ -403,7 +410,11 @@ var Tests = {
 
     testFGbzColoredMask() {
         return this._imageTest("navm_fgbz.djvu", 3, "navm_fgbz_3.png", 1017482741);
-    }
+    },
+
+    testPageWithCyrillicId() {
+        return this._imageTest("history.djvu", 2, null, 1203480221);
+    },
 
     /*test3LayerColorImage() { // отключен так как не ясен алгоритм масштабирования слоев
         return this._imageTest("colorbook.djvu", 3, "colorbook_4.png");
