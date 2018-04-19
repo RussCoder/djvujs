@@ -2,7 +2,7 @@ var DjVu = (function () {
 'use strict';
 
 var DjVu = {
-    VERSION: '0.1.6',
+    VERSION: '0.1.7',
     IS_DEBUG: false,
     setDebugMode: (flag) => DjVu.IS_DEBUG = flag
 };
@@ -51,6 +51,38 @@ function utf8ToCodePoints(utf8array) {
                     (utf8array[i++] & 0x3F)
                 );
                 break;
+        }
+    }
+    return codePoints;
+}
+function codePointsToUtf8(codePoints) {
+    var utf8array = [];
+    codePoints.forEach(codePoint => {
+        if (codePoint < 0x80) {
+            utf8array.push(codePoint);
+        } else if (codePoint < 0x800) {
+            utf8array.push(0xC0 | (codePoint >> 6));
+            utf8array.push(0x80 | (codePoint & 0x3F));
+        } else if (codePoint < 0x10000) {
+            utf8array.push(0xE0 | (codePoint >> 12));
+            utf8array.push(0x80 | ((codePoint >> 6) & 0x3F));
+            utf8array.push(0x80 | (codePoint & 0x3F));
+        } else {
+            utf8array.push(0xF0 | (codePoint >> 18));
+            utf8array.push(0x80 | ((codePoint >> 12) & 0x3F));
+            utf8array.push(0x80 | ((codePoint >> 6) & 0x3F));
+            utf8array.push(0x80 | (codePoint & 0x3F));
+        }
+    });
+    return new Uint8Array(utf8array);
+}
+function stringToCodePoints(str) {
+    var codePoints = [];
+    for (var i = 0; i < str.length; i++) {
+        var code = str.codePointAt(i);
+        codePoints.push(code);
+        if (code > 65535) {
+            i++;
         }
     }
     return codePoints;
@@ -560,11 +592,7 @@ let ByteStreamWriter$1 = class ByteStreamWriter {
         return this;
     }
     writeStr(str) {
-        var byte;
-        for (var i = 0; i < str.length; i++) {
-            byte = str.charCodeAt(i);
-            this.writeByte(byte);
-        }
+        this.writeArray(codePointsToUtf8(stringToCodePoints(str)));
         return this;
     }
     writeInt32(val) {
@@ -730,18 +758,20 @@ class ByteStream {
         return str;
     }
     readStrNT() {
-        var str = "";
-        var byte = this.viewer.getUint8(this.offset++);
+        var array = [];
+        var byte = this.getUint8();
         while (byte) {
-            str += String.fromCharCode(byte);
-            byte = this.viewer.getUint8(this.offset++);
+            array.push(byte);
+            byte = this.getUint8();
         }
-        return str;
+        return this._createStringByUtf8Array(array);
     }
-    readStrUTF(byteLength) {
-        var utf8array = this.getUint8Array(byteLength);
+    _createStringByUtf8Array(utf8array) {
         var codePoints = utf8ToCodePoints(utf8array);
         return String.fromCodePoint ? String.fromCodePoint(...codePoints) : String.fromCharCode(...codePoints);
+    }
+    readStrUTF(byteLength) {
+        return this._createStringByUtf8Array(this.getUint8Array(byteLength));
     }
     fork(_length) {
         var length = _length || (this.length - this.offset);
