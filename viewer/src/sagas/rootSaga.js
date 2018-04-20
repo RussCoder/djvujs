@@ -67,25 +67,21 @@ function* fetchPageTextIfRequired(action) {
 
 function* createDocumentFromArrayBufferAction(action) {
     const { djvuWorker } = yield select();
-    try {
-        yield djvuWorker.createDocument(action.arrayBuffer);
-        const pagesCount = yield djvuWorker.getPageCount();
-        yield put({
-            type: Consts.DOCUMENT_CREATED_ACTION,
-            pagesCount: pagesCount,
-            fileName: action.fileName
-        });
+    yield djvuWorker.createDocument(action.arrayBuffer);
+    const pagesCount = yield djvuWorker.getPageCount();
+    yield put({
+        type: Consts.DOCUMENT_CREATED_ACTION,
+        pagesCount: pagesCount,
+        fileName: action.fileName
+    });
 
-        const contents = yield djvuWorker.getContents();
-        yield put({
-            type: Consts.CONTENTS_IS_GOTTEN_ACTION,
-            contents: contents
-        });
+    const contents = yield djvuWorker.getContents();
+    yield put({
+        type: Consts.CONTENTS_IS_GOTTEN_ACTION,
+        contents: contents
+    });
 
-        yield* getImageData();
-    } catch (error) {
-        yield put(Actions.errorAction(error));
-    }
+    yield* getImageData();
 }
 
 function* setPageByUrl(action) {
@@ -96,9 +92,19 @@ function* setPageByUrl(action) {
     }
 }
 
+function withErrorHandler(func) {
+    return function* (action) {
+        try {
+            yield* func(action);
+        } catch (error) {
+            yield put(Actions.errorAction(error))
+        }
+    }
+}
+
 export default function* rootSaga() {
-    yield takeLatest(Consts.CREATE_DOCUMENT_FROM_ARRAY_BUFFER_ACTION, createDocumentFromArrayBufferAction);
-    yield takeLatest(Consts.TOGGLE_TEXT_MODE_ACTION, fetchPageTextIfRequired);
-    yield takeLatest(Consts.SET_NEW_PAGE_NUMBER_ACTION, fetchPageData);
-    yield takeLatest(Consts.SET_PAGE_BY_URL_ACTION, setPageByUrl);
+    yield takeLatest(Consts.CREATE_DOCUMENT_FROM_ARRAY_BUFFER_ACTION, withErrorHandler(createDocumentFromArrayBufferAction));
+    yield takeLatest(Consts.TOGGLE_TEXT_MODE_ACTION, withErrorHandler(fetchPageTextIfRequired));
+    yield takeLatest(Consts.SET_NEW_PAGE_NUMBER_ACTION, withErrorHandler(fetchPageData));
+    yield takeLatest(Consts.SET_PAGE_BY_URL_ACTION, withErrorHandler(setPageByUrl));
 }
