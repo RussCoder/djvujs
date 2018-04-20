@@ -42,16 +42,16 @@ export default class TreeItem extends React.Component {
     render() {
         return (
             <div className="tree_item">
+                {this.props.children ?
+                    <FontAwesomeIcon
+                        icon={this.state.isCollapsed ? faPlusSquare : faMinusSquare}
+                        onClick={this.toggleItem}
+                    /> : <FontAwesomeIcon icon={faCircle} transform="shrink-8" />
+                }
                 <div className="content">
-                    {this.props.children ?
-                        <FontAwesomeIcon
-                            icon={this.state.isCollapsed ? faPlusSquare : faMinusSquare}
-                            onClick={this.toggleItem}
-                        /> : <FontAwesomeIcon icon={faCircle} transform="shrink-8" />
-                    }
-                    <span className="name" onClick={this.onClick}>{this.props.name}</span>
+                    <div className="name" onClick={this.onClick}>{this.props.name}</div>
+                    {this.state.isCollapsed ? null : this.renderChildren()}
                 </div>
-                {this.state.isCollapsed ? null : this.renderChildren()}
             </div>
         );
     }

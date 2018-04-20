@@ -16,30 +16,37 @@ class ImageBlock extends React.Component {
         userScale: PropTypes.number
     };
 
-    componentWillUpdate() {
-        this.horizontalRatio = null;
+    getSnapshotBeforeUpdate() {
+        let horizontalRatio = null;
         if (this.wrapper.scrollWidth > this.wrapper.clientWidth) {
-            this.horizontalRatio = (this.wrapper.scrollLeft + this.wrapper.clientWidth / 2) / this.wrapper.scrollWidth;
+            horizontalRatio = (this.wrapper.scrollLeft + this.wrapper.clientWidth / 2) / this.wrapper.scrollWidth;
         }
-        this.verticalRatio = null;
+        let verticalRatio = null;
         if (this.wrapper.scrollHeight > this.wrapper.clientHeight && this.wrapper.scrollTop) {
-            this.verticalRatio = (this.wrapper.scrollTop + this.wrapper.clientHeight / 2) / this.wrapper.scrollHeight;
+            // the position of the central point of a scroll bar
+            verticalRatio = (this.wrapper.scrollTop + this.wrapper.clientHeight / 2) / this.wrapper.scrollHeight;
         }
+
+        return { horizontalRatio, verticalRatio };
     }
 
-    componentDidUpdate() {
+    componentDidUpdate(prevProps, prevState, snapshot) {
         var widthDiff = this.wrapper.scrollWidth - this.wrapper.clientWidth;
         if (widthDiff > 0) {
-            this.wrapper.scrollLeft = this.horizontalRatio ? (this.horizontalRatio * this.wrapper.scrollWidth - this.wrapper.clientWidth / 2) : (widthDiff / 2);
+            this.wrapper.scrollLeft = snapshot.horizontalRatio ? (snapshot.horizontalRatio * this.wrapper.scrollWidth - this.wrapper.clientWidth / 2) : (widthDiff / 2);
+        }
+        if (prevProps.imageData !== this.props.imageData) { // when a page was changed
+            this.wrapper.scrollTop = 0;
+            return;
         }
         var heightDiff = this.wrapper.scrollHeight - this.wrapper.clientHeight;
         if (heightDiff > 0 && this.wrapper.scrollTop) {
-            this.wrapper.scrollTop = this.verticalRatio ? (this.verticalRatio * this.wrapper.scrollHeight - this.wrapper.clientHeight / 2) : (heightDiff / 2);
+            this.wrapper.scrollTop = snapshot.verticalRatio ? (snapshot.verticalRatio * this.wrapper.scrollHeight - this.wrapper.clientHeight / 2) : (heightDiff / 2);
         }
     }
 
     componentDidMount() {
-        this.componentDidUpdate();
+        this.componentDidUpdate({}, {}, {});
     }
 
     wrapperRef = (node) => this.wrapper = node;

@@ -1,5 +1,11 @@
 # DjVu.js Viewer Changelog
 
+## v.0.1.1 (20.04.2018)
+
+- Better error handling.
+- Table of contents styles improvements.
+- Now the page vertical scroll bar returns to the top, when a page is changed.
+
 ## v.0.1.0 (10.04.2018)
 
 - Open single-page and multi-page .djvu documents.
