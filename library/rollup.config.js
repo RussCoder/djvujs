@@ -11,6 +11,10 @@ module.exports = {
         file: '../viewer/public/tmp/djvu.js',
         format: 'iife',
         name: 'DjVu'
+    }, {
+        file: '../extension/djvu.js',
+        format: 'iife',
+        name: 'DjVu'
     }],
     plugins: [
         replace({

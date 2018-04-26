@@ -26,6 +26,7 @@ function copyFile(source, target) {
 }
 
 const buildFolder = 'build/';
+const extensionFolder = 'extension/'
 if (!fs.existsSync(buildFolder)) {
     fs.mkdirSync(buildFolder);
 }
@@ -34,7 +35,8 @@ async function processFile(dir, destFile) {
     const files = fs.readdirSync(dir);
     for (const file of files) {
         if (path.extname(file) === path.extname(destFile)) {
-            return copyFile(dir + file, buildFolder + destFile);
+            await copyFile(dir + file, buildFolder + destFile);
+            await copyFile(dir + file, extensionFolder + destFile);
         }
     }
 }

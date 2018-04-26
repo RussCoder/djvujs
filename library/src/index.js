@@ -4,7 +4,7 @@ import DjVuWorker from "./DjVuWorker";
 import initWorker from './DjVuWorkerScript';
 import { DjVuErrorCodes } from './DjVuErrors';
 
-if (!Function('return this;')().document) { // if inside a Worker
+if (!self.document) { // if inside a Worker
     initWorker();
 }
 
