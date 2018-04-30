@@ -39,6 +39,7 @@ http.createServer(function (req, res) {
         if (err) {
             // if the file is not found, return 404
             res.statusCode = 404;
+            res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
             res.end(`File ${pathname} not found!`);
             return;
         }

@@ -76,5 +76,5 @@ DjVu.Viewer = {
 }
 
 if (process.env.NODE_ENV !== 'production') {
-    setTimeout(() => DjVu.Viewer.loadDocumentByUrl("/tmp/DjVu3Spec.djvu"), 0);
+    setTimeout(() => DjVu.Viewer.loadDocumentByUrl("/tmp/DjVu3Spec.djvu"), 10);
 }

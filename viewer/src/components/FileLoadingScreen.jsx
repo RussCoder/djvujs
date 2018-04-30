@@ -22,7 +22,7 @@ class FileLoadingScreen extends React.Component {
                     />
                     <span> Loading...</span>
                 </div>
-                <div className="bytes" style={loaded || total ? null : { visibility: "hidden" }}>
+                <div className="bytes" style={(loaded || total) ? null : { visibility: "hidden" }}>
                     {Math.round(loaded / 1024).toLocaleString('ru-RU')} KB {total ? `/ ${Math.round(total / 1024).toLocaleString('ru-RU')} KB` : ''}
                 </div>
                 <div className="progress_bar" style={total ? null : { visibility: "hidden" }}>
