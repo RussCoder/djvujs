@@ -6,6 +6,7 @@ import '../css/styles.css';
 import DownPanel from "./DownPanel";
 import ImageBlock from "./ImageBlock";
 import InitialScreen from './InitialScreen';
+import FileLoadingScreen from './FileLoadingScreen';
 import ModalWindow from './ModalWindow';
 import StatusBar from './StatusBar';
 import LeftPanel from './LeftPanel';
@@ -27,14 +28,19 @@ class App extends Component {
 
         return (
             <div className={"djvu_js_viewer" + fullPageViewClass}>
-                {!this.props.isFileLoaded ? <InitialScreen /> : (
-                    <div className="central_block">
-                        <LeftPanel />
-                        {this.props.isTextMode ? <TextBlock text={this.props.pageText} /> : <ImageBlock />}
-                    </div>
-                )}
-                <DownPanel />
-                <StatusBar />
+                {this.props.isFileLoading ?
+                    <FileLoadingScreen /> :
+
+                    !this.props.isFileLoaded ? <InitialScreen /> : (
+                        <div className="central_block">
+                            <LeftPanel />
+                            {this.props.isTextMode ? <TextBlock text={this.props.pageText} /> : <ImageBlock />}
+                        </div>
+                    )
+                }
+                {this.props.isFileLoading ? null : <DownPanel />}
+                {this.props.isFileLoading ? null : <StatusBar />}
+
                 <ModalWindow header={this.props.errorHeader} message={this.props.errorMessage} type={"error"} />
             </div>
         );
@@ -44,6 +50,7 @@ class App extends Component {
 export default connect(
     state => ({
         isFileLoaded: !!state.fileName,
+        isFileLoading: state.isFileLoading,
         isFullPageView: state.isFullPageView,
         isTextMode: state.isTextMode,
         pageText: state.pageText,

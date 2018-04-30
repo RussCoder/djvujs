@@ -17,6 +17,7 @@ body.disable_scroll_djvujs {
     align-items: center;
     background: #FCFCFC;
 
+    @import "file_loading_screen";
     @import "initial_screen";
     @import "down_panel";
     @import "page_number_block";

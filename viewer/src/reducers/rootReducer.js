@@ -13,6 +13,9 @@ const initialState = {
     imageDPI: null,
     pageText: null,
     userScale: 1,
+    isFileLoading: false,
+    loaded: 0,
+    total: 0,
     isLoading: false,
     isTextMode: false,
     currentPageNumber: 1,
@@ -25,6 +28,27 @@ const initialState = {
 
 const rootReducer = (state = initialState, action) => {
     switch (action.type) {
+
+        case Consts.START_FILE_LOADING_ACTION:
+            return {
+                ...state,
+                isFileLoading: true,
+            }
+
+        case Consts.FILE_LOADING_PROGRESS_ACTION:
+            return {
+                ...state,
+                loaded: action.loaded,
+                total: action.total
+            }
+
+        case Consts.END_FILE_LOADING_ACTION:
+            return {
+                ...state,
+                isFileLoading: false,
+                loaded: 0,
+                total: 0
+            }
 
         case Consts.CREATE_DOCUMENT_FROM_ARRAY_BUFFER_ACTION:
             return {

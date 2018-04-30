@@ -12,7 +12,10 @@ const Consts = {
     TOGGLE_FULL_PAGE_VIEW_ACTION: null,
     TOGGLE_TEXT_MODE_ACTION: null,
     PAGE_TEXT_FETCHED_ACTION: null,
-    SET_USER_SCALE_ACTION: null
+    SET_USER_SCALE_ACTION: null,
+    START_FILE_LOADING_ACTION: null,
+    END_FILE_LOADING_ACTION: null,
+    FILE_LOADING_PROGRESS_ACTION: null,
 };
 
 for (const key in Consts) {

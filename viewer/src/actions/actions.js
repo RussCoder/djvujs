@@ -3,17 +3,29 @@ const DjVu = window.DjVu;
 
 const Actions = {
 
-    errorAction: error => {
-        var header, message;
+    startFileLoadingAction: () => ({ type: Consts.START_FILE_LOADING_ACTION }),
 
-        switch (error.code) {
-            case DjVu.ErrorCodes.INCORRECT_FILE_FORMAT:
-                header = "Incorrect file format!";
-                message = "The provided file isn't a .djvu file!";
-                break;
-            default:
-                header = "Unexpected error ocurred!";
-                message = JSON.stringify(error);
+    endFileLoadingAction: () => ({ type: Consts.END_FILE_LOADING_ACTION }),
+
+    fileLoadingProgressAction: (loaded, total) => ({
+        type: Consts.FILE_LOADING_PROGRESS_ACTION,
+        loaded: loaded,
+        total: total
+    }),
+
+    errorAction: error => {
+        var { header, message } = error;
+
+        if (!header || !message) {
+            switch (error.code) {
+                case DjVu.ErrorCodes.INCORRECT_FILE_FORMAT:
+                    header = "Incorrect file format!";
+                    message = "The provided file isn't a .djvu file!";
+                    break;
+                default:
+                    header = "Unexpected error ocurred!";
+                    message = JSON.stringify(error);
+            }
         }
 
         return {
