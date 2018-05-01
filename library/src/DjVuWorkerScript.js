@@ -35,6 +35,13 @@ export default function initWorker() {
 
     var handlers = {
 
+        createDocumentUrl() {
+            postMessage({
+                command: 'createDocumentUrl',
+                url: djvuDocument.createObjectURL()
+            });
+        },
+
         getContents() {
             postMessage({
                 command: 'getContents',

@@ -129,9 +129,16 @@ export default class DjVuWorker {
             case 'getPageNumberByUrl':
                 callbacks.resolve(obj.pageNumber);
                 break;
+            case 'createDocumentUrl':
+                callbacks.resolve(obj.url);
+                break;
             default:
                 console.error("Unexpected message from DjVuWorker: ", obj);
         }
+    }
+
+    createDocumentUrl() {
+        return this.createNewPromise({ command: 'createDocumentUrl' });
     }
 
     getPageCount() {
