@@ -1,5 +1,11 @@
 # DjVu.js Viewer Changelog
 
+## v.0.1.2 (01.05.2018)
+
+- Program API: loadDocument and loadDocumentByUrl.
+- File loading screen with a progress bar.
+- Hotkeys: Ctrl+S to save the document, right/left arrows to go to next/previous pages. 
+
 ## v.0.1.1 (20.04.2018)
 
 - Better error handling.

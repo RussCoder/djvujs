@@ -5,7 +5,6 @@ const DjVu = window.DjVu;
 const initialState = {
     djvuWorker: new DjVu.Worker(),
     fileName: null,
-    arrayBuffer: null,
     dataUrl: null,
     imageWidth: null,
     imageHeight: null,

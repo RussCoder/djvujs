@@ -16,6 +16,7 @@ const Consts = {
     START_FILE_LOADING_ACTION: null,
     END_FILE_LOADING_ACTION: null,
     FILE_LOADING_PROGRESS_ACTION: null,
+    SAVE_DOCUMENT_ACTION: null,
 };
 
 for (const key in Consts) {

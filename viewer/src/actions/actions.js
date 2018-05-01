@@ -3,9 +3,25 @@ const DjVu = window.DjVu;
 
 const Actions = {
 
+    saveDocumentAction: () => ({ type: Consts.SAVE_DOCUMENT_ACTION }),
+
     startFileLoadingAction: () => ({ type: Consts.START_FILE_LOADING_ACTION }),
 
     endFileLoadingAction: () => ({ type: Consts.END_FILE_LOADING_ACTION }),
+
+    goToNextPageAction: () => (dispatch, getState) => {
+        const state = getState();
+        if (state.currentPageNumber < state.pagesCount) {
+            dispatch(Actions.setNewPageNumberAction(state.currentPageNumber + 1));
+        }
+    },
+
+    goToPreviousPageAction: () => (dispatch, getState) => {
+        const state = getState();
+        if (state.currentPageNumber > 1) {
+            dispatch(Actions.setNewPageNumberAction(state.currentPageNumber - 1));
+        }
+    },
 
     fileLoadingProgressAction: (loaded, total) => ({
         type: Consts.FILE_LOADING_PROGRESS_ACTION,

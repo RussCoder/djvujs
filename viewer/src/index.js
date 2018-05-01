@@ -11,7 +11,7 @@ if (!DjVu) {
     throw new Error("There is no DjVu object! You have to include the DjVu.js library first!");
 }
 
-let store;
+const store = configureStore();
 
 function loadFile(url, progressHandler) {
     return new Promise((resolve, reject) => {
@@ -42,11 +42,10 @@ function loadFile(url, progressHandler) {
 }
 
 DjVu.Viewer = {
-    VERSION: '0.1.1',
+    VERSION: '0.1.2',
     init(element) {
         //element.style.width = window.innerWidth * 0.9 + 'px';
         element.style.height = window.innerHeight * 0.95 + 'px';
-        store = configureStore();
         ReactDOM.render(
             <Provider store={store}>
                 <App />
@@ -76,5 +75,5 @@ DjVu.Viewer = {
 }
 
 if (process.env.NODE_ENV !== 'production') {
-    setTimeout(() => DjVu.Viewer.loadDocumentByUrl("/tmp/DjVu3Spec.djvu"), 10);
+    DjVu.Viewer.loadDocumentByUrl("/tmp/DjVu3Spec.djvu");
 }

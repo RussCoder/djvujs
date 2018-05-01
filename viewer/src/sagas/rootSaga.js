@@ -102,9 +102,21 @@ function withErrorHandler(func) {
     }
 }
 
+function* saveDocument() {
+    const { djvuWorker, fileName } = yield select();
+    if (fileName) {
+        const url = yield djvuWorker.createDocumentUrl();
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = /\.(djv|djvu)$/.test(fileName) ? fileName : (fileName + '.djvu');
+        a.dispatchEvent(new MouseEvent("click"));
+    }
+}
+
 export default function* rootSaga() {
     yield takeLatest(Consts.CREATE_DOCUMENT_FROM_ARRAY_BUFFER_ACTION, withErrorHandler(createDocumentFromArrayBufferAction));
     yield takeLatest(Consts.TOGGLE_TEXT_MODE_ACTION, withErrorHandler(fetchPageTextIfRequired));
     yield takeLatest(Consts.SET_NEW_PAGE_NUMBER_ACTION, withErrorHandler(fetchPageData));
     yield takeLatest(Consts.SET_PAGE_BY_URL_ACTION, withErrorHandler(setPageByUrl));
+    yield takeLatest(Consts.SAVE_DOCUMENT_ACTION, withErrorHandler(saveDocument));
 }
