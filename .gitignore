@@ -5,3 +5,4 @@ build
 extension/djvu.js
 extension/djvu_viewer.js
 extension/djvu_viewer.css
+extension/web-ext-artifacts

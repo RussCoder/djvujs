@@ -1,0 +1,25 @@
+{
+    "manifest_version": 2,
+    "name": "DjVu.js Viewer",
+    "version": "0.1.2.0",
+    "description": "Opens links to .djvu files in the browser (via context menu). Allows to open .djvu files from local storage.",
+    "background": {
+        "scripts": [
+            "background.js"
+        ]
+    },
+    "permissions": [
+        "<all_urls>",
+        "contextMenus"
+    ],
+    "browser_action": {
+        "default_icon": {
+            "64": "djvu.png",
+            "32": "djvu32.png"
+        }
+    },
+    "developer": {
+        "name": "RussCoder",
+        "url": "https://github.com/RussCoder/djvujs"
+    }
+}
