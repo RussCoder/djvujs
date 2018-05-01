@@ -3,5 +3,6 @@ node_modules
 library
 viewer
 build
+extension
 compile
 _src/dist

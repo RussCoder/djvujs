@@ -3288,9 +3288,15 @@ class DjVuWorker {
             case 'getPageNumberByUrl':
                 callbacks.resolve(obj.pageNumber);
                 break;
+            case 'createDocumentUrl':
+                callbacks.resolve(obj.url);
+                break;
             default:
                 console.error("Unexpected message from DjVuWorker: ", obj);
         }
+    }
+    createDocumentUrl() {
+        return this.createNewPromise({ command: 'createDocumentUrl' });
     }
     getPageCount() {
         return this.createNewPromise({ command: 'getPageCount' });
@@ -3863,6 +3869,12 @@ function initWorker() {
         }
     };
     var handlers = {
+        createDocumentUrl() {
+            postMessage({
+                command: 'createDocumentUrl',
+                url: djvuDocument.createObjectURL()
+            });
+        },
         getContents() {
             postMessage({
                 command: 'getContents',
@@ -3947,7 +3959,7 @@ function initWorker() {
     };
 }
 
-if (!Function('return this;')().document) {
+if (!self.document) {
     initWorker();
 }
 var index = Object.assign({}, DjVu, {
