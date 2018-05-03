@@ -1,30 +1,26 @@
-function openPage() {
-    browser.tabs.create({
-        url: "viewer.html"
-    });
-}
+chrome.browserAction.onClicked.addListener(() => chrome.tabs.create({ url: "viewer.html" }));
 
-browser.browserAction.onClicked.addListener(openPage);
-
-browser.contextMenus.create({
+chrome.contextMenus.create({
     id: "open_with",
     title: "Open with DjVu.js Viewer",
-    icons: {
-        "32": "djvu32.png"
-    },
     contexts: ["link"],
     targetUrlPatterns: ['*://*/*.djvu', '*://*/*.djv']
 });
 
-browser.contextMenus.onClicked.addListener(contextMenuHandler);
+const tabUrls = {};
 
-async function contextMenuHandler(info, tab) {
-    if (info.menuItemId !== "open_with") {
-        return;
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (sender.tab) {
+        var url = tabUrls[sender.tab.id];
+        delete tabUrls[sender.tab.id];
+        sendResponse(url);
     }
+})
 
-    var tab = await browser.tabs.create({ url: "viewer.html" });
-    await browser.tabs.executeScript(tab.id, { file: 'loader.js' });
-
-    browser.tabs.sendMessage(tab.id, info.linkUrl);
-}
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+    if (info.menuItemId === "open_with") {
+        chrome.tabs.create({ url: "viewer.html" }, tab => {
+            tabUrls[tab.id] = info.linkUrl;
+        });
+    }
+});
