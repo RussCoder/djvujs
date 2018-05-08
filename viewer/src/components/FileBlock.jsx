@@ -5,6 +5,7 @@ import FontAwesomeIcon from '@fortawesome/react-fontawesome';
 import { faUpload } from '@fortawesome/fontawesome-free-solid';
 
 import Actions from '../actions/actions';
+import { get } from '../reducers/rootReducer';
 
 class FileBlock extends React.Component {
 
@@ -56,7 +57,7 @@ class FileBlock extends React.Component {
 }
 
 export default connect(state => ({
-    fileName: state.fileName,
+    fileName: get.fileName(state),
 }),
     {
         createNewDocument: Actions.createDocumentFromArrayBufferAction,

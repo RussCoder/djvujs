@@ -2,6 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 
 import ContentsPanel from './ContentsPanel';
+import { get } from '../reducers/rootReducer';
 
 class LeftPanel extends React.Component {
 
@@ -56,5 +57,5 @@ class LeftPanel extends React.Component {
 }
 
 export default connect(state => ({
-    contents: state.contents
+    contents: get.contents(state)
 }))(LeftPanel);

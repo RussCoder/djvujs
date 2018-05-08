@@ -4,6 +4,7 @@ import { Provider } from 'react-redux'
 import App from './components/App.jsx';
 import configureStore from './store';
 import Actions from './actions/actions';
+import { loadFile } from './utils';
 
 const DjVu = window.DjVu;
 
@@ -12,34 +13,6 @@ if (!DjVu) {
 }
 
 const store = configureStore();
-
-function loadFile(url, progressHandler) {
-    return new Promise((resolve, reject) => {
-        var xhr = new XMLHttpRequest();
-        xhr.open("GET", url);
-        xhr.responseType = 'arraybuffer';
-        xhr.onload = (e) => {
-            if (xhr.status !== 200) {
-                return reject({
-                    header: `${xhr.status} code`,
-                    message: "Requested resource was not found"
-                });
-            }
-            DjVu.IS_DEBUG && console.log("File loaded: ", e.loaded);
-            resolve(xhr.response);
-        };
-
-        xhr.onerror = (e) => {
-            reject({
-                header: "Web request error",
-                message: "An error occurred, the file wasn't loaded. XHR status " + e.xhr.status
-            })
-        }
-
-        xhr.onprogress = progressHandler;
-        xhr.send();
-    });
-}
 
 DjVu.Viewer = {
     VERSION: '0.1.2',

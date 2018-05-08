@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import Actions from '../actions/actions';
 import FontAwesomeIcon from '@fortawesome/react-fontawesome';
 import { faPlus, faMinus } from '@fortawesome/fontawesome-free-solid';
+import { get } from '../reducers/rootReducer';
 
 class ScaleGizmo extends React.Component {
 
@@ -95,7 +96,7 @@ class ScaleGizmo extends React.Component {
 
 export default connect(state => {
     return {
-        scale: state.userScale,
+        scale: get.userScale(state),
     };
 },
     {

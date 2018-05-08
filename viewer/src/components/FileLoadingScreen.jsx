@@ -3,6 +3,8 @@ import { connect } from 'react-redux';
 import FontAwesomeIcon from '@fortawesome/react-fontawesome';
 import { faSpinner } from '@fortawesome/fontawesome-free-solid';
 
+import { get } from '../reducers/rootReducer';
+
 class FileLoadingScreen extends React.Component {
 
     render() {
@@ -34,6 +36,6 @@ class FileLoadingScreen extends React.Component {
 }
 
 export default connect(state => ({
-    loaded: state.loaded,
-    total: state.total
+    loaded: get.loadedBytes(state),
+    total: get.totalBytes(state)
 }))(FileLoadingScreen);

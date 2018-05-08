@@ -6,6 +6,7 @@ import { faArrowAltCircleRight, faArrowAltCircleLeft } from '@fortawesome/fontaw
 
 import Actions from '../actions/actions';
 import PageNumberElement from './PageNumber';
+import { get } from '../reducers/rootReducer';
 
 class PageNumberBlock extends React.Component {
 
@@ -58,8 +59,8 @@ class PageNumberBlock extends React.Component {
 
 export default connect(state => {
     return {
-        pageNumber: state.currentPageNumber,
-        pagesCount: state.pagesCount
+        pageNumber: get.currentPageNumber(state),
+        pagesCount: get.pagesCount(state)
     };
 },
     {

@@ -5,6 +5,7 @@ import FontAwesomeIcon from '@fortawesome/react-fontawesome';
 import { faExpand, faCompress } from '@fortawesome/fontawesome-free-solid';
 
 import Actions from '../actions/actions';
+import { get } from '../reducers/rootReducer';
 
 class FullPageViewButton extends React.Component {
 
@@ -30,7 +31,7 @@ class FullPageViewButton extends React.Component {
 }
 
 export default connect(state => ({
-    isFullPageView: state.isFullPageView
+    isFullPageView: get.isFullPageView(state)
 }), {
         toggleFullPageView: Actions.toggleFullPageViewAction
     })(FullPageViewButton);

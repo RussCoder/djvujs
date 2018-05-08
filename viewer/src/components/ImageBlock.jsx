@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 
 import Actions from '../actions/actions';
 import CanvasImage from './CanvasImage';
+import { get } from '../reducers/rootReducer';
 
 /**
  * CanvasImage wrapper. Handles user scaling of the image and grabbing.
@@ -109,8 +110,8 @@ class ImageBlock extends React.Component {
 
 export default connect(
     state => ({
-        imageData: state.imageData,
-        imageDPI: state.imageDPI,
-        userScale: state.userScale
+        imageData: get.imageData(state),
+        imageDPI: get.imageDPI(state),
+        userScale: get.userScale(state)
     })
 )(ImageBlock);

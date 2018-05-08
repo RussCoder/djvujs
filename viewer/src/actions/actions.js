@@ -78,10 +78,10 @@ const Actions = {
         scale: scale
     }),
 
-    dataUrlCreatedAction: (dataUrl) => ({
-        type: Consts.DATA_URL_CREATED_ACTION,
-        dataUrl: dataUrl
-    }),
+    // dataUrlCreatedAction: (dataUrl) => ({
+    //     type: Consts.DATA_URL_CREATED_ACTION,
+    //     dataUrl: dataUrl
+    // }),
 
     toggleFullPageViewAction: (isFullPageView) => (dispatch) => {
         const disableScrollClass = 'disable_scroll_djvujs';

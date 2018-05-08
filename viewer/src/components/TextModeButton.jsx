@@ -5,6 +5,7 @@ import FontAwesomeIcon from '@fortawesome/react-fontawesome';
 import { faFileAlt, faFileImage } from '@fortawesome/fontawesome-free-regular';
 
 import Actions from '../actions/actions';
+import { get } from '../reducers/rootReducer';
 
 class TextModeButton extends React.Component {
 
@@ -30,7 +31,7 @@ class TextModeButton extends React.Component {
 }
 
 export default connect(state => ({
-    isTextMode: state.isTextMode
+    isTextMode: get.isTextMode(state)
 }), {
         toggleTextMode: Actions.toggleTextModeAction
     })(TextModeButton);

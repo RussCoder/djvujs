@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import '../css/styles.css';
 
+import { get } from '../reducers/rootReducer';
 import DownPanel from "./DownPanel";
 import ImageBlock from "./ImageBlock";
 import InitialScreen from './InitialScreen';
@@ -49,12 +50,12 @@ class App extends Component {
 
 export default connect(
     state => ({
-        isFileLoaded: !!state.fileName,
-        isFileLoading: state.isFileLoading,
-        isFullPageView: state.isFullPageView,
-        isTextMode: state.isTextMode,
-        pageText: state.pageText,
-        errorHeader: state.errorHeader,
-        errorMessage: state.errorMessage
+        isFileLoaded: !!get.fileName(state),
+        isFileLoading: get.isFileLoading(state),
+        isFullPageView: get.isFullPageView(state),
+        isTextMode: get.isTextMode(state),
+        pageText: get.pageText(state),
+        errorHeader: get.errorHeader(state),
+        errorMessage: get.errorMessage(state)
     })
 )(App);

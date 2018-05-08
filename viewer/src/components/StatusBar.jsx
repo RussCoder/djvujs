@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import FontAwesomeIcon from '@fortawesome/react-fontawesome';
 import { faCheck, faSpinner } from '@fortawesome/fontawesome-free-solid';
+import { get } from '../reducers/rootReducer';
 
 class StatusBar extends React.Component {
 
@@ -30,5 +31,5 @@ class StatusBar extends React.Component {
 }
 
 export default connect(state => ({
-    isLoading: state.isLoading
+    isLoading: get.isLoading(state)
 }))(StatusBar);
