@@ -11,10 +11,6 @@ class StatusBar extends React.Component {
         isLoading: PropTypes.bool.isRequired
     };
 
-    onClick = () => {
-        this.props.toggleTextMode(!this.props.isTextMode);
-    };
-
     render() {
         return (
             <div className="status_bar">
@@ -22,7 +18,6 @@ class StatusBar extends React.Component {
                     className="control_button"
                     icon={this.props.isLoading ? faSpinner : faCheck}
                     pulse={this.props.isLoading ? true : false}
-                    onClick={this.onClick}
                 />
                 <span className="message">{this.props.isLoading ? "Loading..." : "Ready"}</span>
             </div>

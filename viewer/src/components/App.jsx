@@ -9,7 +9,7 @@ import ImageBlock from "./ImageBlock";
 import InitialScreen from './InitialScreen';
 import FileLoadingScreen from './FileLoadingScreen';
 import ModalWindow from './ModalWindow';
-import StatusBar from './StatusBar';
+import Footer from './Footer';
 import LeftPanel from './LeftPanel';
 
 const TextBlock = ({ text }) => (
@@ -40,7 +40,7 @@ class App extends Component {
                     )
                 }
                 {this.props.isFileLoading ? null : <DownPanel />}
-                {this.props.isFileLoading ? null : <StatusBar />}
+                {this.props.isFileLoading ? null : <Footer />}
 
                 <ModalWindow header={this.props.errorHeader} message={this.props.errorMessage} type={"error"} />
             </div>

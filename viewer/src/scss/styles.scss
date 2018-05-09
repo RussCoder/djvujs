@@ -24,6 +24,7 @@ body.disable_scroll_djvujs {
     @import "file_block";
     @import "modal_window";
     @import "central_block";
+    @import "footer";
 
     &.full_page_view {
         top: 0;
@@ -34,17 +35,19 @@ body.disable_scroll_djvujs {
         z-index: 100;
     }
 
-    .status_bar {
-        font-size: 1em;
-        padding-left: 0.5em;
-        padding-bottom: 0.2em;
-        margin-top: 0.5em;
-        text-align: left;
-        width: 100%;
-        font-style: italic;
+    .text_button {
+        background: inherit;
+        border: 1px solid black;
+        border-radius: 3px;
+        padding: 0.2em;
+        cursor: pointer;
 
-        .message {
-            margin-left: 0.5em;
+        &:hover {
+            box-shadow: 0 0 1px black;
+        }
+
+        &:focus {
+            outline: none;
         }
     }
 }
