@@ -1,7 +1,8 @@
 {
     "manifest_version": 2,
     "name": "DjVu.js Viewer",
-    "version": "0.1.2.1",
+    "short_name": "DV",
+    "version": "0.1.3.0",
     "description": "Opens links to .djvu files in the browser (via context menu). Allows to open .djvu files from local storage.",
     "background": {
         "scripts": [
@@ -16,14 +17,16 @@
         "16": "djvu16.png",
         "32": "djvu32.png",
         "48": "djvu48.png",
-        "64": "djvu64.png"
+        "64": "djvu64.png",
+        "96": "djvu96.png"
     },
     "browser_action": {
         "default_icon": {
             "16": "djvu16.png",
             "32": "djvu32.png",
             "48": "djvu48.png",
-            "64": "djvu64.png"
+            "64": "djvu64.png",
+            "96": "djvu96.png"
         }
     },
     "developer": {
