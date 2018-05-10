@@ -8,9 +8,10 @@ import DownPanel from "./DownPanel";
 import ImageBlock from "./ImageBlock";
 import InitialScreen from './InitialScreen';
 import FileLoadingScreen from './FileLoadingScreen';
-import ModalWindow from './ModalWindow';
 import Footer from './Footer';
 import LeftPanel from './LeftPanel';
+import NotificationWindow from './NotificationWindow';
+import HelpWindow from './HelpWindow';
 
 const TextBlock = ({ text }) => (
     <pre className="text_block">
@@ -42,7 +43,8 @@ class App extends Component {
                 {this.props.isFileLoading ? null : <DownPanel />}
                 {this.props.isFileLoading ? null : <Footer />}
 
-                <ModalWindow header={this.props.errorHeader} message={this.props.errorMessage} type={"error"} />
+                <NotificationWindow header={this.props.errorHeader} message={this.props.errorMessage} type={"error"} />
+                <HelpWindow />
             </div>
         );
     }

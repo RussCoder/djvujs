@@ -1,8 +1,7 @@
 import React from 'react';
-import FontAwesomeIcon from '@fortawesome/react-fontawesome';
-import { faExpand } from '@fortawesome/fontawesome-free-solid';
 
 import FileBlock from './FileBlock';
+import HelpButton from './HelpButton';
 const DjVu = window.DjVu;
 
 class InitialScreen extends React.Component {
@@ -15,7 +14,7 @@ class InitialScreen extends React.Component {
                     <div className="djvujs_version">{`(powered with DjVu.js v.${DjVu.VERSION})`}</div>
                     <div>Choose a .djvu file to view it! </div>
                     <div>
-                        Note that you can switch the viewer to the full page mode and back - just click on the <FontAwesomeIcon icon={faExpand} /> icon on the down panel.
+                        Click the <HelpButton /> button to know more about the app!
                     </div>
                     <div className="file_block_wrapper">
                         <FileBlock />

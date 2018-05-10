@@ -33,8 +33,6 @@
     }
 
     .control_button {
-        @extend .icon_button;
         font-size: 2em;
-        margin: 0 0.5em;
     }
 }

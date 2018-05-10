@@ -1,3 +1,5 @@
+@import "shared_styles";
+
 html.disable_scroll_djvujs,
 body.disable_scroll_djvujs {
     width: 100% !important;
@@ -49,5 +51,10 @@ body.disable_scroll_djvujs {
         &:focus {
             outline: none;
         }
+    }
+
+    .control_button {
+        @extend .icon_button;
+        margin: 0 0.5em;
     }
 }

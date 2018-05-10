@@ -17,7 +17,15 @@ class FilePanel extends React.Component {
         return (
             <div className="file_panel">
                 <FileBlock fileName={this.props.fileName} />
-                {this.props.fileName ? <button className="text_button" onClick={this.props.saveDocument}>Save</button> : null}
+                {this.props.fileName ? (
+                    <button
+                        className="text_button"
+                        onClick={this.props.saveDocument}
+                        title="Save document"
+                    >
+                        Save
+                    </button>
+                ) : null}
             </div>
         );
     }

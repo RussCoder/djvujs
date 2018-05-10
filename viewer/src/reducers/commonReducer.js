@@ -21,10 +21,23 @@ const initialState = {
     errorHeader: null,
     contents: null,
     errorMessage: null,
+    isHelpWindowShown: false,
 };
 
 export default (state = initialState, action) => {
     switch (action.type) {
+
+        case Consts.SHOW_HELP_WINDOW_ACTION:
+            return {
+                ...state,
+                isHelpWindowShown: true
+            }
+
+        case Consts.CLOSE_HELP_WINDOW_ACTION:
+            return {
+                ...state,
+                isHelpWindowShown: false
+            }
 
         case Consts.CREATE_DOCUMENT_FROM_ARRAY_BUFFER_ACTION:
             return {

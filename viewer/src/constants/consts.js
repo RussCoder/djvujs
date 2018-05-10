@@ -17,6 +17,8 @@ const Consts = {
     END_FILE_LOADING_ACTION: null,
     FILE_LOADING_PROGRESS_ACTION: null,
     SAVE_DOCUMENT_ACTION: null,
+    SHOW_HELP_WINDOW_ACTION: null,
+    CLOSE_HELP_WINDOW_ACTION: null,
 };
 
 for (const key in Consts) {

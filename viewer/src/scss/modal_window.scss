@@ -16,28 +16,55 @@
         top: 50%;
         left: 50%;
         transform: translateX(-50%) translateY(-50%);
-        max-width: 90%;
+        max-width: 80%;
         max-height: 80%;
         z-index: 2;
+        padding: 0;
+        overflow: hidden;
+
+        &.fixed_size {
+            height: 80%;
+            width: 80%;
+        }
 
         &.error {
             background: rgb(255, 209, 212)
         }
 
-        .header {
-            text-align: center;
-            padding: 0.5em;
-            border-bottom: 1px solid gray;
-
-            .close_button {
-                @extend .icon_button;
-                float: right;
-            }
+        .close_button {
+            @extend .icon_button;
+            float: right;
+            padding: 0.2em;
         }
 
-        .body {
-            padding: 0.5em;
+        .content {
             overflow: auto;
+
+            .notification_window {
+
+                .header {
+                    text-align: center;
+                    padding: 0.5em;
+                    border-bottom: 1px solid gray;
+                }
+
+                .body {
+                    padding: 0.5em;
+                    padding-right: 0;
+                }
+            }
+
+            .help_window {
+                padding: 0.5em;
+        
+                .header {
+                    font-size: 1.2em;
+                    width: 100%;
+                    font-weight: 600;
+                    border-bottom: 1px solid gray;
+                    margin: 0.5em 0;
+                }
+            }
         }
     }
 

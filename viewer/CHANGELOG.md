@@ -1,5 +1,12 @@
 # DjVu.js Viewer Changelog
 
+## v.0.1.3 (10.05.2018)
+
+- Help button and help window.
+- Layout update.
+- Save button near the file block.
+- Minor style improvements. 
+
 ## v.0.1.2 (01.05.2018)
 
 - Program API: loadDocument and loadDocumentByUrl.
