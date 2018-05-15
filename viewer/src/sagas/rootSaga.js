@@ -1,4 +1,5 @@
 import { put, select, takeLatest } from 'redux-saga/effects';
+import { get } from '../reducers/rootReducer';
 // import { delay } from 'redux-saga';
 
 import Consts from "../constants/consts";
@@ -15,7 +16,10 @@ import Actions from "../actions/actions";
 // };
 
 function* getImageData() {
-    const { currentPageNumber, djvuWorker } = yield select();
+    const state = yield select();
+    const currentPageNumber = get.currentPageNumber(state);
+    const djvuWorker = get.djvuWorker(state);
+
     const obj = yield djvuWorker.getPageImageDataWithDpi(currentPageNumber);
 
     yield put({
@@ -30,7 +34,10 @@ function* getImageData() {
 }
 
 function* fetchPageData(action) {
-    const { isTextMode, djvuWorker } = yield select();
+    const state = yield select();
+    const isTextMode = get.isTextMode(state);
+    const djvuWorker = get.djvuWorker(state);
+
     djvuWorker.cancelAllTasks();
     const pageNumber = action.pageNumber;
 
@@ -42,7 +49,9 @@ function* fetchPageData(action) {
 }
 
 function* fetchPageText(pageNumber) {
-    const { djvuWorker } = yield select();
+    const state = yield select();
+    const djvuWorker = get.djvuWorker(state);
+
     const text = yield djvuWorker.getPageText(pageNumber);
 
     yield put({
@@ -56,7 +65,9 @@ function* fetchPageTextIfRequired(action) {
         return;
     }
 
-    const { currentPageNumber, pageText } = yield select();
+    const state = yield select();
+    const currentPageNumber = get.currentPageNumber(state);
+    const pageText = get.pageText(state);
 
     if (pageText !== null) {
         return; // already fetched
@@ -66,7 +77,9 @@ function* fetchPageTextIfRequired(action) {
 }
 
 function* createDocumentFromArrayBufferAction(action) {
-    const { djvuWorker } = yield select();
+    const state = yield select();
+    const djvuWorker = get.djvuWorker(state);
+
     yield djvuWorker.createDocument(action.arrayBuffer);
     const pagesCount = yield djvuWorker.getPageCount();
     yield put({
@@ -85,7 +98,9 @@ function* createDocumentFromArrayBufferAction(action) {
 }
 
 function* setPageByUrl(action) {
-    const { djvuWorker } = yield select();
+    const state = yield select();
+    const djvuWorker = get.djvuWorker(state);
+
     const pageNumber = yield djvuWorker.getPageNumberByUrl(action.url);
     if (pageNumber !== null) {
         yield put(Actions.setNewPageNumberAction(pageNumber));
@@ -103,7 +118,10 @@ function withErrorHandler(func) {
 }
 
 function* saveDocument() {
-    const { djvuWorker, fileName } = yield select();
+    const state = yield select();
+    const djvuWorker = get.djvuWorker(state);
+    const fileName = get.fileName(state);
+
     if (fileName) {
         const url = yield djvuWorker.createDocumentUrl();
         const a = document.createElement('a');

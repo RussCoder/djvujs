@@ -6,16 +6,9 @@ const DjVu = window.DjVu;
 const initialState = {
     djvuWorker: new DjVu.Worker(),
     fileName: null,
-    //dataUrl: null,
-    imageWidth: null,
-    imageHeight: null,
-    imageData: null,
-    imageDPI: null,
-    pageText: null,
     userScale: 1,
     isLoading: false,
     isTextMode: false,
-    currentPageNumber: 1,
     pagesCount: null,
     isFullPageView: false,
     errorHeader: null,
@@ -39,6 +32,7 @@ export default (state = initialState, action) => {
                 isHelpWindowShown: false
             }
 
+        case Consts.SET_NEW_PAGE_NUMBER_ACTION:
         case Consts.CREATE_DOCUMENT_FROM_ARRAY_BUFFER_ACTION:
             return {
                 ...state,
@@ -48,20 +42,8 @@ export default (state = initialState, action) => {
         case Consts.IMAGE_DATA_RECEIVED_ACTION:
             return {
                 ...state,
-                imageWidth: action.imageData.width,
-                imageHeight: action.imageData.height,
-                imageData: action.imageData,
-                //dataUrl: null,
                 isLoading: false,
-                imageDPI: action.imageDPI
             };
-
-        // case Consts.DATA_URL_CREATED_ACTION:
-        //     return {
-        //         ...state,
-        //         dataUrl: action.dataUrl,
-        //         imageData: null
-        //     }
 
         case Consts.DOCUMENT_CREATED_ACTION:
             return {
@@ -76,14 +58,6 @@ export default (state = initialState, action) => {
             return {
                 ...state,
                 contents: action.contents
-            };
-
-        case Consts.SET_NEW_PAGE_NUMBER_ACTION:
-            return {
-                ...state,
-                pageText: null,
-                isLoading: true,
-                currentPageNumber: action.pageNumber
             };
 
         case Consts.SET_USER_SCALE_ACTION:
@@ -102,12 +76,6 @@ export default (state = initialState, action) => {
             return {
                 ...state,
                 isTextMode: action.isTextMode
-            }
-
-        case Consts.PAGE_TEXT_FETCHED_ACTION:
-            return {
-                ...state,
-                pageText: action.pageText
             }
 
         case Consts.ERROR_ACTION:

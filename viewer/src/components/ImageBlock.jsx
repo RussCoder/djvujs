@@ -111,7 +111,7 @@ class ImageBlock extends React.Component {
 export default connect(
     state => ({
         imageData: get.imageData(state),
-        imageDPI: get.imageDPI(state),
+        imageDPI: get.imageDpi(state),
         userScale: get.userScale(state)
     })
 )(ImageBlock);
