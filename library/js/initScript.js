@@ -17,7 +17,7 @@ rerunButton.onclick = rerun;
 document.querySelector('#redraw').onclick = redrawPage;
 
 var pageNumber = 2;
-var djvuUrl = 'assets/history.djvu';
+var djvuUrl = 'assets/boy.djvu';
 
 document.querySelector('#next').onclick = () => {
     pageNumber++;
@@ -142,7 +142,7 @@ function readDjvu(buf) {
 function redrawPage() {
     console.log('**** Render Page ****');
     var time = performance.now();
-    var page = djvuDocument.slice(2, 2).getPage(1);
+    var page = djvuDocument.getPage(1);
     Globals.drawImage(
         page.getImageData(),
         page.getDpi() * 1.5

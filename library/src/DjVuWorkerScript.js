@@ -1,6 +1,6 @@
 import DjVuDocument from './DjVuDocument';
 import IWImageWriter from './iw44/IWImageWriter';
-import { DjVuError, DjVuErrorCodes } from './DjVuErrors';
+import { DjVuError, DjVuErrorCodes, IncorrectTaskDjVuError, UnableToTransferDataDjVuError } from './DjVuErrors';
 
 /**
  * Это скрипт для выполнения в фоновом потоке. 
@@ -32,8 +32,57 @@ export default function initWorker() {
         }
     };
 
+    function processValueBeforeTransfer(value, transferList) {
+        if (value instanceof ArrayBuffer) {
+            transferList.push(value);
+            return value;
+        }
+        if (value instanceof ImageData) {
+            transferList.push(value.data.buffer);
+            return {
+                width: value.width,
+                height: value.height,
+                buffer: value.data.buffer
+            };
+        }
+        return value;
+    }
 
     var handlers = {
+
+        run(obj) {
+            //console.log("Got task request", Date.now() - obj.time);
+            const results = obj.data.map(task => {
+                try {
+                    return task.funcs.reduce((res, func, i) => {
+                        return res[func](...task.args[i]);
+                    }, djvuDocument);
+                } catch (e) {
+                    if (e instanceof TypeError) {
+                        throw new IncorrectTaskDjVuError(task);
+                    }
+                    throw e;
+                }
+            });
+
+            //var time = Date.now();
+            var transferList = [];
+            var processedResults = results.map(result => processValueBeforeTransfer(result, transferList));
+
+            try {
+                transferList.length ? postMessage({
+                    command: 'run',
+                    //time: time,
+                    result: processedResults.length === 1 ? processedResults[0] : processedResults
+                }, transferList) : postMessage({
+                    command: 'run',
+                    //time: time,
+                    result: processedResults.length === 1 ? processedResults[0] : processedResults
+                });
+            } catch (e) {
+                throw new UnableToTransferDataDjVuError(obj.data);
+            }
+        },
 
         createDocumentUrl() {
             postMessage({

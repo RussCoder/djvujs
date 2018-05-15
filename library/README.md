@@ -31,7 +31,7 @@ If you decide to create your own debug page I suggest you to add a `js/reloader.
 
 There are some automatic tests. In order to run them you should run `npm start` and then open `http://localhost:9000/tests.html`. 
 
-The tests are run automatically when the page loads. If everything is ok, you should see that all messages are green. If you see a green message with an orange message, it means that a test has passed, but your browser differs from mine. The thing is that different browsers differently renders `.png` files, which are used for tests. So I use Opera, and all tests pass well in my case. In case of other browsers there may be some problems. So, if you use Mozilla, you should write `about:config` in the address line and then find the parameter `gfx.color_management.mode` and set it to `0`. After it, all tests should be green, except for one, which has an orange message as well. 
+The tests are run automatically when the page loads. If everything is ok, you will see that all messages are green. If you see a green message with an orange message, it means that a test has passed, but your browser differs from mine. The thing is that different browsers differently render `.png` files, which are used for tests. So I use Opera, and all tests pass well in my case. In case of other browsers there may be some problems. So, if you use Mozilla, you should write `about:config` in the address line and then find the parameter `gfx.color_management.mode` and set it to `0`. After it, all tests should be green, except for one, which has an orange message as well. 
 
 When you change the source code of the library, you may open the tests page (which reloads automatically) and check whether your changes break the current functionality or not. 
 

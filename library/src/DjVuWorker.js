@@ -24,6 +24,10 @@ export default class DjVuWorker {
         this.isTaskInProcess = false;
     }
 
+    get doc() {
+        return DjVuWorkerTask.instance();
+    }
+
     errorHandler(event) {
         console.error("DjVu.js Worker error!", event);
     }
@@ -132,9 +136,34 @@ export default class DjVuWorker {
             case 'createDocumentUrl':
                 callbacks.resolve(obj.url);
                 break;
+            case 'run':
+                var restoredResult = obj.result instanceof Array ?
+                    obj.result.map(result => this.restoreValueAfterTransfer(result)) :
+                    this.restoreValueAfterTransfer(obj.result);
+                //console.log("Got task response", Date.now() - obj.time);
+                callbacks.resolve(restoredResult);
+                break;
             default:
                 console.error("Unexpected message from DjVuWorker: ", obj);
         }
+    }
+
+    restoreValueAfterTransfer(value) {
+        if (value instanceof Object) {
+            if (value.width && value.height && value.buffer) {
+                return new ImageData(new Uint8ClampedArray(value.buffer), value.width, value.height);
+            }
+        }
+        return value;
+    }
+
+    run(...tasks) {
+        const data = tasks.map(task => task._);
+        return this.createNewPromise({
+            command: 'run',
+            data: data,
+            //time: Date.now(),
+        });
     }
 
     createDocumentUrl() {
@@ -232,4 +261,24 @@ export default class DjVuWorker {
         var url = URL.createObjectURL(blob);
         return url;
     }
+}
+
+class DjVuWorkerTask {
+
+    static instance(funcs = [], args = []) {
+        return new Proxy(DjVuWorkerTask.emptyFunc, {
+            get: (target, key) => {
+                if (key !== '_') {
+                    return DjVuWorkerTask.instance([...funcs, key], args);
+                } else {
+                    return { funcs, args };
+                }
+            },
+            apply: (target, that, _args) => {
+                return DjVuWorkerTask.instance(funcs, [...args, _args]);
+            }
+        });
+    }
+
+    static emptyFunc() { }
 }

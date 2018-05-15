@@ -1,5 +1,9 @@
 # DjVu.js Library Changelog
 
+## v.0.1.8 (15.05.2018)
+
+- New universal Proxy-based DjVuWorker API, allowing to automatically use most of methods of DjVuDocument.
+
 ## v.0.1.7 (19.04.2018)
 
 - UTF-8 ids of pages and dictionaries are supported.
