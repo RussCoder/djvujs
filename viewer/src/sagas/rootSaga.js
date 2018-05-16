@@ -15,18 +15,76 @@ import Actions from "../actions/actions";
 //     return dataUrl;
 // };
 
+let pages = {};
+let imageDataPromise = null;
+let imageDataPromisePageNumber = null;
+
+function updatePagesCache(currentPageNumber, pagesCount) {
+    const newPages = {
+        [currentPageNumber]: pages[currentPageNumber]
+    };
+    let nextPageNumber = null, prevPageNumber = null;
+
+    if (currentPageNumber + 1 <= pagesCount) {
+        nextPageNumber = currentPageNumber + 1;
+        newPages[nextPageNumber] = pages[nextPageNumber];
+    } else if (currentPageNumber - 2 > 0) {
+        nextPageNumber = currentPageNumber - 2;
+        newPages[nextPageNumber] = pages[nextPageNumber];
+    }
+
+    if (currentPageNumber - 1 > 0) {
+        prevPageNumber = currentPageNumber - 1;
+        newPages[currentPageNumber - 1] = pages[currentPageNumber - 1];
+    } else if (currentPageNumber + 2 <= pagesCount) {
+        prevPageNumber = currentPageNumber + 2;
+        newPages[prevPageNumber] = pages[prevPageNumber];
+    }
+
+    pages = newPages;
+
+    return { prevPageNumber, nextPageNumber };
+}
+
+function* fetchImageDataByPageNumber(pageNumber, djvuWorker) {
+    if (pageNumber !== null & !pages[pageNumber]) {
+        if (imageDataPromisePageNumber !== pageNumber) {
+            if (imageDataPromise) {
+                djvuWorker.cancelAllTasks();
+            }
+
+            imageDataPromisePageNumber = pageNumber;
+            imageDataPromise = djvuWorker.run(
+                djvuWorker.doc.getPage(pageNumber).getImageData(),
+                djvuWorker.doc.getPage(pageNumber).getDpi(),
+            );
+        }
+
+        const [imageData, dpi] = yield imageDataPromise;
+        pages[pageNumber] = { imageData, dpi };
+        imageDataPromisePageNumber = null;
+        imageDataPromise = null;
+    }
+}
+
 function* getImageData() {
     const state = yield select();
     const currentPageNumber = get.currentPageNumber(state);
     const djvuWorker = get.djvuWorker(state);
+    const pagesCount = get.pagesCount(state);
 
-    const obj = yield djvuWorker.getPageImageDataWithDpi(currentPageNumber);
+    const { nextPageNumber, prevPageNumber } = updatePagesCache(currentPageNumber, pagesCount);
+
+    yield* fetchImageDataByPageNumber(currentPageNumber, djvuWorker);
 
     yield put({
         type: Consts.IMAGE_DATA_RECEIVED_ACTION,
-        imageData: obj.imageData,
-        imageDPI: obj.dpi
+        imageData: pages[currentPageNumber].imageData,
+        imageDpi: pages[currentPageNumber].dpi
     });
+
+    yield* fetchImageDataByPageNumber(nextPageNumber, djvuWorker);
+    yield* fetchImageDataByPageNumber(prevPageNumber, djvuWorker);
 
     // yield delay(1000);
     // const dataUrl = getImageDataURL(imageData);
@@ -38,10 +96,12 @@ function* fetchPageData(action) {
     const isTextMode = get.isTextMode(state);
     const djvuWorker = get.djvuWorker(state);
 
-    djvuWorker.cancelAllTasks();
     const pageNumber = action.pageNumber;
 
     if (isTextMode) {
+        djvuWorker.cancelAllTasks();
+        imageDataPromisePageNumber = null;
+        imageDataPromise = null;
         yield* fetchPageText(pageNumber);
     }
 

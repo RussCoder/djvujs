@@ -1,5 +1,9 @@
 # DjVu.js Viewer Changelog
 
+## v.0.1.4 (16.05.2018)
+
+- Pages are cached now, so better user experience is provided, since pages are switched faster. 
+
 ## v.0.1.3 (10.05.2018)
 
 - Help button and help window.

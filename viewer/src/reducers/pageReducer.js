@@ -18,7 +18,7 @@ export default function pageReducer(state = initialState, action) {
                 imageData: action.imageData,
                 //dataUrl: null,
                 isLoading: false,
-                imageDpi: action.imageDPI
+                imageDpi: action.imageDpi
             };
 
         // case Consts.DATA_URL_CREATED_ACTION:
