@@ -2,7 +2,7 @@ var DjVu = (function () {
 'use strict';
 
 var DjVu = {
-    VERSION: '0.1.7',
+    VERSION: '0.1.8',
     IS_DEBUG: false,
     setDebugMode: (flag) => DjVu.IS_DEBUG = flag
 };
@@ -1013,11 +1013,28 @@ class CorruptedFileDjVuError extends DjVuError {
         super(DjVuErrorCodes.FILE_IS_CORRUPTED, "The file is corrupted! " + message);
     }
 }
+class UnableToTransferDataDjVuError extends DjVuError {
+    constructor(tasks) {
+        super(DjVuErrorCodes.DATA_CANNOT_BE_TRANSFERRED,
+            "The data cannot be transferred from the worker to the main page! " +
+            "Perhaps, you requested a complex object like DjVuPage, but only simple objects can be transferred between workers."
+        );
+        this.tasks = tasks;
+    }
+}
+class IncorrectTaskDjVuError extends DjVuError {
+    constructor(task) {
+        super(DjVuErrorCodes.INCORRECT_TASK, "The task contains an incorrect sequence of functions!");
+        this.task = task;
+    }
+}
 const DjVuErrorCodes = Object.freeze({
     FILE_IS_CORRUPTED: 'FILE_IS_CORRUPTED',
     INCORRECT_FILE_FORMAT: 'INCORRECT_FILE_FORMAT',
     NO_SUCH_PAGE: 'NO_SUCH_PAGE',
-    UNEXPECTED_ERROR: 'UNEXPECTED_ERROR'
+    UNEXPECTED_ERROR: 'UNEXPECTED_ERROR',
+    DATA_CANNOT_BE_TRANSFERRED: 'DATA_CANNOT_BE_TRANSFERRED',
+    INCORRECT_TASK: 'INCORRECT_TASK',
 });
 
 class IFFChunk {
@@ -3191,6 +3208,9 @@ class DjVuWorker {
         this.promiseMap = new Map();
         this.isTaskInProcess = false;
     }
+    get doc() {
+        return DjVuWorkerTask.instance();
+    }
     errorHandler(event) {
         console.error("DjVu.js Worker error!", event);
     }
@@ -3291,9 +3311,30 @@ class DjVuWorker {
             case 'createDocumentUrl':
                 callbacks.resolve(obj.url);
                 break;
+            case 'run':
+                var restoredResult = obj.result instanceof Array ?
+                    obj.result.map(result => this.restoreValueAfterTransfer(result)) :
+                    this.restoreValueAfterTransfer(obj.result);
+                callbacks.resolve(restoredResult);
+                break;
             default:
                 console.error("Unexpected message from DjVuWorker: ", obj);
         }
+    }
+    restoreValueAfterTransfer(value) {
+        if (value instanceof Object) {
+            if (value.width && value.height && value.buffer) {
+                return new ImageData(new Uint8ClampedArray(value.buffer), value.width, value.height);
+            }
+        }
+        return value;
+    }
+    run(...tasks) {
+        const data = tasks.map(task => task._);
+        return this.createNewPromise({
+            command: 'run',
+            data: data,
+        });
     }
     createDocumentUrl() {
         return this.createNewPromise({ command: 'createDocumentUrl' });
@@ -3375,6 +3416,23 @@ class DjVuWorker {
         var url = URL.createObjectURL(blob);
         return url;
     }
+}
+class DjVuWorkerTask {
+    static instance(funcs = [], args = []) {
+        return new Proxy(DjVuWorkerTask.emptyFunc, {
+            get: (target, key) => {
+                if (key !== '_') {
+                    return DjVuWorkerTask.instance([...funcs, key], args);
+                } else {
+                    return { funcs, args };
+                }
+            },
+            apply: (target, that, _args) => {
+                return DjVuWorkerTask.instance(funcs, [...args, _args]);
+            }
+        });
+    }
+    static emptyFunc() { }
 }
 
 class IWEncoder extends IWCodecBaseClass {
@@ -3868,7 +3926,49 @@ function initWorker() {
             });
         }
     };
+    function processValueBeforeTransfer(value, transferList) {
+        if (value instanceof ArrayBuffer) {
+            transferList.push(value);
+            return value;
+        }
+        if (value instanceof ImageData) {
+            transferList.push(value.data.buffer);
+            return {
+                width: value.width,
+                height: value.height,
+                buffer: value.data.buffer
+            };
+        }
+        return value;
+    }
     var handlers = {
+        run(obj) {
+            const results = obj.data.map(task => {
+                try {
+                    return task.funcs.reduce((res, func, i) => {
+                        return res[func](...task.args[i]);
+                    }, djvuDocument);
+                } catch (e) {
+                    if (e instanceof TypeError) {
+                        throw new IncorrectTaskDjVuError(task);
+                    }
+                    throw e;
+                }
+            });
+            var transferList = [];
+            var processedResults = results.map(result => processValueBeforeTransfer(result, transferList));
+            try {
+                transferList.length ? postMessage({
+                    command: 'run',
+                    result: processedResults.length === 1 ? processedResults[0] : processedResults
+                }, transferList) : postMessage({
+                    command: 'run',
+                    result: processedResults.length === 1 ? processedResults[0] : processedResults
+                });
+            } catch (e) {
+                throw new UnableToTransferDataDjVuError(obj.data);
+            }
+        },
         createDocumentUrl() {
             postMessage({
                 command: 'createDocumentUrl',
