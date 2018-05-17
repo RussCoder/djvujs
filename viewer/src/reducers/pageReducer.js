@@ -17,7 +17,6 @@ export default function pageReducer(state = initialState, action) {
                 ...state,
                 imageData: action.imageData,
                 //dataUrl: null,
-                isLoading: false,
                 imageDpi: action.imageDpi
             };
 

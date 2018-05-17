@@ -42,11 +42,11 @@ export default class CanvasImage extends React.Component {
     }
 
     getScaledImageWidth() {
-        return Math.round(this.props.imageData.width / this.getScaleFactor());
+        return Math.floor(this.props.imageData.width / this.getScaleFactor());
     }
 
     getScaledImageHeight() {
-        return Math.round(this.props.imageData.height / this.getScaleFactor());
+        return Math.floor(this.props.imageData.height / this.getScaleFactor());
     }
 
     updateImageIfRequired() {
@@ -106,6 +106,11 @@ export default class CanvasImage extends React.Component {
         this.canvas.width = imageData.width;
         this.canvas.height = imageData.height;
         this.canvasCtx.putImageData(imageData, 0, 0);
+
+        if (this.getScaleFactor() >= 1) { // if it's not scaled only with css
+            this.canvas.style.width = imageData.width + 'px'; // just in case, since there may be a rounding error
+            this.canvas.style.height = imageData.height + 'px';      
+        }
     }
 
     canvasRef = (node) => {

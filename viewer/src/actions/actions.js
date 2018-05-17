@@ -1,10 +1,11 @@
 import Consts from '../constants/consts.js';
+import { get } from '../reducers/rootReducer';
 const DjVu = window.DjVu;
 
 const Actions = {
 
     closeHelpWindowAction: () => ({ type: Consts.CLOSE_HELP_WINDOW_ACTION }),
-    
+
     showHelpWindowAction: () => ({ type: Consts.SHOW_HELP_WINDOW_ACTION }),
 
     saveDocumentAction: () => ({ type: Consts.SAVE_DOCUMENT_ACTION }),
@@ -15,15 +16,15 @@ const Actions = {
 
     goToNextPageAction: () => (dispatch, getState) => {
         const state = getState();
-        if (state.currentPageNumber < state.pagesCount) {
-            dispatch(Actions.setNewPageNumberAction(state.currentPageNumber + 1));
+        if (get.currentPageNumber(state) < get.pagesCount(state)) {
+            dispatch(Actions.setNewPageNumberAction(get.currentPageNumber(state) + 1));
         }
     },
 
     goToPreviousPageAction: () => (dispatch, getState) => {
         const state = getState();
-        if (state.currentPageNumber > 1) {
-            dispatch(Actions.setNewPageNumberAction(state.currentPageNumber - 1));
+        if (get.currentPageNumber(state) > 1) {
+            dispatch(Actions.setNewPageNumberAction(get.currentPageNumber(state) - 1));
         }
     },
 
