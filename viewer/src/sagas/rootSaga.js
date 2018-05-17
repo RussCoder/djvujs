@@ -83,8 +83,13 @@ function* getImageData() {
         imageDpi: pages[currentPageNumber].dpi
     });
 
-    yield* fetchImageDataByPageNumber(nextPageNumber, djvuWorker);
-    yield* fetchImageDataByPageNumber(prevPageNumber, djvuWorker);
+    if (nextPageNumber > prevPageNumber) { // when the current page is the last one. 
+        yield* fetchImageDataByPageNumber(nextPageNumber, djvuWorker);
+        yield* fetchImageDataByPageNumber(prevPageNumber, djvuWorker);
+    } else {
+        yield* fetchImageDataByPageNumber(prevPageNumber, djvuWorker);
+        yield* fetchImageDataByPageNumber(nextPageNumber, djvuWorker);
+    }
 
     // yield delay(1000);
     // const dataUrl = getImageDataURL(imageData);
@@ -139,6 +144,11 @@ function* fetchPageTextIfRequired(action) {
 function* createDocumentFromArrayBufferAction(action) {
     const state = yield select();
     const djvuWorker = get.djvuWorker(state);
+
+    djvuWorker.cancelAllTasks();
+    pages = {};
+    imageDataPromise = null;
+    imageDataPromisePageNumber = null;
 
     yield djvuWorker.createDocument(action.arrayBuffer);
     const pagesCount = yield djvuWorker.getPageCount();
