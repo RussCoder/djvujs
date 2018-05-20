@@ -388,11 +388,12 @@ export default class DjVuPage extends CompositeChunk {
 
     getText() {
         this.init();
-        if (this.text) {
-            return this.text.getText();
-        } else {
-            return "";
-        }
+        return this.text ? this.text.getText() : "";
+    }
+
+    getTextZones() {
+        this.init();
+        return this.text ? this.text.getTextZones() : null;
     }
 
     toString() {

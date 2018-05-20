@@ -76,6 +76,14 @@ export default class DjVuWorker {
         }
     }
 
+    isTaskInProcess(promise) {
+        return this.currentPromise === promise;
+    }
+
+    isTaskInQueue(promise) {
+        return this.promiseMap.has(promise) || this.isTaskInProcess(promise);
+    }
+
     messageHandler(event) {
         this.isTaskInProcess = false;
         var callbacks = this.callbacks;
