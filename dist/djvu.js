@@ -2246,11 +2246,11 @@ class IWImage {
 class DjVuText extends IFFChunk {
     constructor(bs) {
         super(bs);
-        this.isParsed = false;
+        this.isDecoded = false;
         this.dbs = this.id === 'TXTz' ? null : this.bs;
     }
     decode() {
-        if (this.isParsed) {
+        if (this.isDecoded) {
             return;
         }
         if (!this.dbs) {
@@ -2262,11 +2262,52 @@ class DjVuText extends IFFChunk {
         if (this.version !== 1) {
             console.warn("The version in " + this.id + " isn't equal to 1!");
         }
-        this.isParsed = true;
+        this.pageZone = this.dbs.isEmpty() ? null : this.decodeZone();
+        this.isDecoded = true;
+    }
+    decodeZone(parent = null, prev = null) {
+        var type = this.dbs.getUint8();
+        var x = this.dbs.getUint16() - 0x8000;
+        var y = this.dbs.getUint16() - 0x8000;
+        var width = this.dbs.getUint16() - 0x8000;
+        var height = this.dbs.getUint16() - 0x8000;
+        var textStart = this.dbs.getUint16() - 0x8000;
+        var textLength = this.dbs.getInt24();
+        if (prev) {
+            if (type === 1          || type === 4               || type === 5         ) {
+                x = x + prev.x;
+                y = prev.y - (y + height);
+            } else
+            {
+                x = x + prev.x + prev.width;
+                y = y + prev.y;
+            }
+            textStart += prev.textStart + prev.textLength;
+        } else if (parent) {
+            x = x + parent.x;
+            y = parent.y + parent.height - (y + height);
+            textStart += parent.textStart;
+        }
+        var zone = { type, x, y, width, height, textStart, textLength };
+        var childrenCount = this.dbs.getInt24();
+        if (childrenCount) {
+            var children = new Array(childrenCount);
+            var childZone = null;
+            for (var i = 0; i < childrenCount; i++) {
+                childZone = this.decodeZone(zone, childZone);
+                children[i] = childZone;
+            }
+            zone.children = children;
+        }
+        return zone;
     }
     getText() {
         this.decode();
         return this.text;
+    }
+    getTextZones() {
+        this.decode();
+        return this.pageZone;
     }
     toString() {
         this.decode();
@@ -2556,11 +2597,11 @@ class DjVuPage extends CompositeChunk {
     }
     getText() {
         this.init();
-        if (this.text) {
-            return this.text.getText();
-        } else {
-            return "";
-        }
+        return this.text ? this.text.getText() : "";
+    }
+    getTextZones() {
+        this.init();
+        return this.text ? this.text.getTextZones() : null;
     }
     toString() {
         this.init();
@@ -3253,6 +3294,12 @@ class DjVuWorker {
             this.currentPromise = null;
             this.callbacks = null;
         }
+    }
+    isTaskInProcess(promise) {
+        return this.currentPromise === promise;
+    }
+    isTaskInQueue(promise) {
+        return this.promiseMap.has(promise) || this.isTaskInProcess(promise);
     }
     messageHandler(event) {
         this.isTaskInProcess = false;
