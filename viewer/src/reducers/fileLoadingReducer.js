@@ -1,11 +1,11 @@
 import Consts from '../constants/consts';
-import {createGetObjectByState} from '../utils';
+import { createGetObjectByState } from '../utils';
 
-const initialState = {
+const initialState = Object.freeze({
     isFileLoading: false,
     loadedBytes: 0,
     totalBytes: 0
-};
+});
 
 export default function fileLoadingReducer(state = initialState, action) {
     switch (action.type) {
@@ -23,12 +23,7 @@ export default function fileLoadingReducer(state = initialState, action) {
             }
 
         case Consts.END_FILE_LOADING_ACTION:
-            return {
-                ...state,
-                isFileLoading: false,
-                loadedBytes: 0,
-                totalBytes: 0
-            }
+            return initialState;
 
         default:
             return state;

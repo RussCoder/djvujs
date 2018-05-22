@@ -11,9 +11,10 @@ export const get = {
     })
 };
 
-const rootReducer = (state = commonReducer(undefined, {}), action) => {
+const rootReducer = (state, action) => {
+    state = commonReducer(state, action);
     return {
-        ...commonReducer(state, action),
+        ...state,
         fileLoadingState: fileLoadingReducer(state.fileLoadingState, action),
         pageState: pageReducer(state.pageState, action)
     }

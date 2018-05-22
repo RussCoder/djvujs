@@ -96,12 +96,11 @@ function* getImageData() {
     // yield put(Actions.dataUrlCreatedAction(dataUrl));
 }
 
-function* fetchPageData(action) {
+function* fetchPageData() {
     const state = yield select();
     const isTextMode = get.isTextMode(state);
     const djvuWorker = get.djvuWorker(state);
-
-    const pageNumber = action.pageNumber;
+    const pageNumber = get.currentPageNumber(state);
 
     if (isTextMode) {
         djvuWorker.cancelAllTasks();
@@ -111,17 +110,22 @@ function* fetchPageData(action) {
     }
 
     yield* getImageData();
+    yield* fetchPageText(pageNumber);
 }
 
 function* fetchPageText(pageNumber) {
     const state = yield select();
     const djvuWorker = get.djvuWorker(state);
 
-    const text = yield djvuWorker.getPageText(pageNumber);
+    const [text, textZones] = yield djvuWorker.run(
+        djvuWorker.doc.getPage(pageNumber).getText(),
+        djvuWorker.doc.getPage(pageNumber).getNormalizedTextZones(),
+    );
 
     yield put({
         type: Consts.PAGE_TEXT_FETCHED_ACTION,
-        pageText: text
+        pageText: text,
+        textZones: textZones
     });
 }
 
@@ -164,7 +168,7 @@ function* createDocumentFromArrayBufferAction(action) {
         contents: contents
     });
 
-    yield* getImageData();
+    yield* fetchPageData();
 }
 
 function* setPageByUrl(action) {

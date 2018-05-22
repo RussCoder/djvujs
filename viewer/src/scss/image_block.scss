@@ -13,8 +13,32 @@
         cursor: grabbing;
     }
 
-    .canvas_image {
+    .complex_image {
         margin: auto;
+        position: relative;
         border: 1px solid lightgray;
+
+        .text_layer_wrapper {
+            overflow: hidden;
+            position: absolute;
+            top: 0;
+            left: 0;
+
+            .text_layer {
+                top: 0;
+                left: 0;
+                position: absolute;
+
+                .text_zone {
+                    color: rgba(0, 0, 0, 0);
+                    white-space: nowrap;
+                    text-align-last: justify;
+                    text-align: justify;
+                    position: absolute;
+                    box-sizing: border-box;
+                    font-family: 'Times New Roman', Times, serif;
+                }
+            }
+        }
     }
 }

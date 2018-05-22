@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-const DEFAULT_DPI = 100;
+import Consts from '../constants/consts';
 
 /**
  * A component containing logic of rendering ImageData on canvas element.
@@ -38,7 +38,7 @@ export default class CanvasImage extends React.Component {
     }
 
     getScaleFactor() {
-        return (this.props.imageDPI ? this.props.imageDPI / DEFAULT_DPI : 1) / this.props.userScale;
+        return (this.props.imageDPI ? this.props.imageDPI / Consts.DEFAULT_DPI : 1) / this.props.userScale;
     }
 
     getScaledImageWidth() {
@@ -69,7 +69,7 @@ export default class CanvasImage extends React.Component {
         var tmpH, tmpW, tmpH2, tmpW2;
 
         var image = imageData;
-        var scale = imageDPI ? imageDPI / DEFAULT_DPI : 1;
+        var scale = imageDPI ? imageDPI / Consts.DEFAULT_DPI : 1;
         scale /= userScale; // current scale factor compared with the initial size of the image
 
         if (scale <= 1) {
@@ -109,7 +109,7 @@ export default class CanvasImage extends React.Component {
 
         if (this.getScaleFactor() >= 1) { // if it's not scaled only with css
             this.canvas.style.width = imageData.width + 'px'; // just in case, since there may be a rounding error
-            this.canvas.style.height = imageData.height + 'px';      
+            this.canvas.style.height = imageData.height + 'px';
         }
     }
 
@@ -122,12 +122,12 @@ export default class CanvasImage extends React.Component {
 
     render() {
         return (
-            <div className="canvas_image" style={{ width: this.getScaledImageWidth(), height: this.getScaledImageHeight() }}>
-                <canvas
-                    style={{ width: this.getScaledImageWidth(), height: this.getScaledImageHeight() }}
-                    ref={this.canvasRef}
-                />
-            </div>
+            // <div className="canvas_image" style={{ width: this.getScaledImageWidth(), height: this.getScaledImageHeight() }}>
+            <canvas
+                style={{ width: this.getScaledImageWidth(), height: this.getScaledImageHeight() }}
+                ref={this.canvasRef}
+            />
+            // </div>
         );
     }
 }

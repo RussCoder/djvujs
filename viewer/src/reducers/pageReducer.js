@@ -1,13 +1,14 @@
 import Consts from '../constants/consts';
 import { createGetObjectByState } from '../utils';
 
-const initialState = {
+const initialState = Object.freeze({
     //dataUrl: null,
     imageData: null,
     imageDpi: null,
     pageText: null,
+    textZones: null,
     currentPageNumber: 1,
-};
+});
 
 export default function pageReducer(state = initialState, action) {
     switch (action.type) {
@@ -36,7 +37,8 @@ export default function pageReducer(state = initialState, action) {
         case Consts.PAGE_TEXT_FETCHED_ACTION:
             return {
                 ...state,
-                pageText: action.pageText
+                pageText: action.pageText,
+                textZones: action.textZones
             }
 
         default:

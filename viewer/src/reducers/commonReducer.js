@@ -3,7 +3,7 @@ import Consts from '../constants/consts';
 
 const DjVu = window.DjVu;
 
-const initialState = {
+const initialState = Object.freeze({
     djvuWorker: new DjVu.Worker(),
     fileName: null,
     userScale: 1,
@@ -15,7 +15,7 @@ const initialState = {
     contents: null,
     errorMessage: null,
     isHelpWindowShown: false,
-};
+});
 
 export default (state = initialState, action) => {
     switch (action.type) {
