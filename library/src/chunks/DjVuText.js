@@ -1,5 +1,6 @@
 import { IFFChunk } from './IFFChunks';
 import BZZDecoder from '../bzz/BZZDecoder';
+import { createStringFromUtf8Array } from '../DjVu';
 
 /**
  * Класс для порций TXTa и TXTz.
@@ -21,7 +22,8 @@ export default class DjVuText extends IFFChunk {
         }
 
         this.textLength = this.dbs.getInt24();
-        this.text = this.dbs.readStrUTF(this.textLength);
+        this.utf8array = this.dbs.getUint8Array(this.textLength);
+
         this.version = this.dbs.getUint8();
         if (this.version !== 1) {
             console.warn("The version in " + this.id + " isn't equal to 1!");
@@ -76,12 +78,53 @@ export default class DjVuText extends IFFChunk {
 
     getText() {
         this.decode();
+        this.text = this.text || createStringFromUtf8Array(this.utf8array);
         return this.text;
     }
 
-    getTextZones() {
+    getPageZone() {
         this.decode();
         return this.pageZone;
+    }
+
+    getNormalizedZones() {
+        this.decode();
+
+        if (!this.pageZone) {
+            return null;
+        }
+
+        if (this.normalizedZones) {
+            return this.normalizedZones;
+        }
+
+        this.normalizedZones = [];
+        var registry = {};
+
+        const process = (zone) => {
+            if (zone.children) {
+                zone.children.forEach(zone => process(zone));
+            } else {
+                var key = zone.x.toString() + zone.y + zone.width + zone.height;
+                var zoneText = createStringFromUtf8Array(this.utf8array.slice(zone.textStart, zone.textStart + zone.textLength));
+                if (registry[key]) { // unite text of the same zone
+                    registry[key].text += zoneText
+                } else {
+                    registry[key] = {
+                        x: zone.x,
+                        y: zone.y,
+                        width: zone.width,
+                        height: zone.height,
+                        text: zoneText
+                    };
+                    this.normalizedZones.push(registry[key]);
+                }
+            }
+        }
+
+        process(this.pageZone);
+
+        return this.normalizedZones;
     }
 
     toString() {

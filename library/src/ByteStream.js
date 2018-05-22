@@ -1,4 +1,4 @@
-import { utf8ToCodePoints } from './DjVu'
+import { utf8ToCodePoints, createStringFromUtf8Array } from './DjVu'
 
 /**
  * Объект байтового потока. Предоставляет API для чтения сырого ArrayBuffer как потока байт.
@@ -106,16 +106,11 @@ export default class ByteStream {
             array.push(byte);
             byte = this.getUint8();
         }
-        return this._createStringByUtf8Array(array);
-    }
-
-    _createStringByUtf8Array(utf8array) {
-        var codePoints = utf8ToCodePoints(utf8array);
-        return String.fromCodePoint ? String.fromCodePoint(...codePoints) : String.fromCharCode(...codePoints);
+        return createStringFromUtf8Array(array);
     }
 
     readStrUTF(byteLength) {
-        return this._createStringByUtf8Array(this.getUint8Array(byteLength));
+        return createStringFromUtf8Array(this.getUint8Array(byteLength));
     }
 
     fork(_length) {

@@ -25,6 +25,11 @@ DjVu.Utils = {
     }
 };
 
+export function createStringFromUtf8Array(utf8array) {
+    var codePoints = utf8ToCodePoints(utf8array);
+    return String.fromCodePoint ? String.fromCodePoint(...codePoints) : String.fromCharCode(...codePoints);
+}
+
 /**
  * Creates an array of Unicode code points from an array, representing a utf8 encoded string
  */
