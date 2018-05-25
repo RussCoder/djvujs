@@ -7,7 +7,10 @@
     box-sizing: border-box;
     padding: 0.5em;
     padding-top: 0;
-    cursor: grab;
+
+    &.grab {
+        cursor: grab;
+    }
 
     &.grabbing {
         cursor: grabbing;

@@ -35,4 +35,21 @@
     .control_button {
         font-size: 2em;
     }
+
+    .button_group {
+        border-left: 1px solid gray;
+        border-right: 1px solid gray;
+        white-space: nowrap;
+        padding: 0 0.1em;
+
+        span {
+            opacity: 0.5;
+            display: inline-block;
+
+            &.active {
+                opacity: 1;
+            }
+        }
+
+    }
 }

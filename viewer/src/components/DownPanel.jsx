@@ -5,11 +5,13 @@ import ScaleGizmo from './ScaleGizmo';
 import FullPageViewButton from './FullPageViewButton';
 import TextModeButton from './TextModeButton';
 import HelpButton from './HelpButton';
+import CursorModeButtonGroup from './CursorModeButtonGroup';
 
 const DownPanel = () => (
     <div className="down_panel">
         <HelpButton />
         <TextModeButton />
+        <CursorModeButtonGroup />
         <PageNumberBlock />
         <ScaleGizmo />
         <FullPageViewButton />

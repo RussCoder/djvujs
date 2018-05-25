@@ -1,11 +1,13 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
+import cx from 'classnames';
 
 import Actions from '../actions/actions';
 import CanvasImage from './CanvasImage';
 import { get } from '../reducers/rootReducer';
 import TextLayer from './TextLayer';
+import Consts from '../constants/consts';
 
 /**
  * CanvasImage wrapper. Handles user scaling of the image and grabbing.
@@ -77,7 +79,7 @@ class ImageBlock extends React.Component {
     };
 
     startMoving = (e) => {
-       e.preventDefault();
+        e.preventDefault();
         this.initialGrabbingState = {
             clientX: e.clientX,
             clientY: e.clientY,
@@ -88,7 +90,7 @@ class ImageBlock extends React.Component {
         this.wrapper.addEventListener('mousemove', this.handleMoving);
     };
 
-    finishMoving = (e) => {     
+    finishMoving = (e) => {
         e.preventDefault();
         this.initialGrabbingState = null;
         this.wrapper.classList.remove('grabbing');
@@ -96,14 +98,19 @@ class ImageBlock extends React.Component {
     };
 
     render() {
+        const isGrabMode = this.props.cursorMode === Consts.GRAB_CURSOR_MODE;
+        const classes = {
+            image_block: true,
+            grab: isGrabMode
+        };
         return (
             <div
-                className="image_block"
+                className={cx(classes)}
                 onWheel={this.onWheel}
                 ref={this.wrapperRef}
-                onMouseDown={this.startMoving}
-                onMouseUp={this.finishMoving}
-                onMouseLeave={this.finishMoving}
+                onMouseDown={isGrabMode ? this.startMoving : null}
+                onMouseUp={isGrabMode ? this.finishMoving : null}
+                onMouseLeave={isGrabMode ? this.finishMoving : null}
             >
                 <div className="complex_image">
                     {this.props.imageData ? <CanvasImage {...this.props} /> : null}
@@ -126,5 +133,6 @@ export default connect(
         imageDPI: get.imageDpi(state),
         userScale: get.userScale(state),
         textZones: get.textZones(state),
+        cursorMode: get.cursorMode(state),
     })
 )(ImageBlock);

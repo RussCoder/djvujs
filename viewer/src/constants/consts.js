@@ -1,5 +1,9 @@
 const Consts = {
     DEFAULT_DPI: 100,
+    TEXT_CURSOR_MODE: null,
+    GRAB_CURSOR_MODE: null,
+
+    SET_CURSOR_MODE_ACTION: null,
     ERROR_ACTION: null,
     CLOSE_MODAL_WINDOW_ACTION: null,
     CREATE_DOCUMENT_FROM_ARRAY_BUFFER_ACTION: null,

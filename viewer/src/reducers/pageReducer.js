@@ -7,11 +7,18 @@ const initialState = Object.freeze({
     imageDpi: null,
     pageText: null,
     textZones: null,
+    cursorMode: Consts.GRAB_CURSOR_MODE,
     currentPageNumber: 1,
 });
 
 export default function pageReducer(state = initialState, action) {
     switch (action.type) {
+
+        case Consts.SET_CURSOR_MODE_ACTION:
+            return {
+                ...state,
+                cursorMode: action.cursorMode
+            };
 
         case Consts.IMAGE_DATA_RECEIVED_ACTION:
             return {

@@ -1,5 +1,9 @@
 # DjVu.js Viewer Changelog
 
+## v.0.1.5 (25.05.2018)
+
+- A page text layer and two cursor modes. 
+
 ## v.0.1.4 (16.05.2018)
 
 - Pages are cached now, so better user experience is provided, since pages are switched faster. 
