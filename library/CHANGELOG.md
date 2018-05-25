@@ -1,5 +1,10 @@
 # DjVu.js Library Changelog
 
+## v.0.1.9 (25.05.2018)
+
+- TXT* chunks are decoded completely - text zones are decoded.
+- Normalized text zones for the text layer of page. 
+
 ## v.0.1.8 (15.05.2018)
 
 - New universal Proxy-based DjVuWorker API, allowing to automatically use most of methods of DjVuDocument.
