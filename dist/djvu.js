@@ -2,7 +2,7 @@ var DjVu = (function () {
 'use strict';
 
 var DjVu = {
-    VERSION: '0.1.8',
+    VERSION: '0.1.9',
     IS_DEBUG: false,
     setDebugMode: (flag) => DjVu.IS_DEBUG = flag
 };
@@ -23,6 +23,10 @@ DjVu.Utils = {
         });
     }
 };
+function createStringFromUtf8Array(utf8array) {
+    var codePoints = utf8ToCodePoints(utf8array);
+    return String.fromCodePoint ? String.fromCodePoint(...codePoints) : String.fromCharCode(...codePoints);
+}
 function utf8ToCodePoints(utf8array) {
     var i, c;
     var codePoints = [];
@@ -764,14 +768,10 @@ class ByteStream {
             array.push(byte);
             byte = this.getUint8();
         }
-        return this._createStringByUtf8Array(array);
-    }
-    _createStringByUtf8Array(utf8array) {
-        var codePoints = utf8ToCodePoints(utf8array);
-        return String.fromCodePoint ? String.fromCodePoint(...codePoints) : String.fromCharCode(...codePoints);
+        return createStringFromUtf8Array(array);
     }
     readStrUTF(byteLength) {
-        return this._createStringByUtf8Array(this.getUint8Array(byteLength));
+        return createStringFromUtf8Array(this.getUint8Array(byteLength));
     }
     fork(_length) {
         var length = _length || (this.length - this.offset);
@@ -2257,7 +2257,7 @@ class DjVuText extends IFFChunk {
             this.dbs = BZZDecoder.decodeByteStream(this.bs);
         }
         this.textLength = this.dbs.getInt24();
-        this.text = this.dbs.readStrUTF(this.textLength);
+        this.utf8array = this.dbs.getUint8Array(this.textLength);
         this.version = this.dbs.getUint8();
         if (this.version !== 1) {
             console.warn("The version in " + this.id + " isn't equal to 1!");
@@ -2303,11 +2303,45 @@ class DjVuText extends IFFChunk {
     }
     getText() {
         this.decode();
+        this.text = this.text || createStringFromUtf8Array(this.utf8array);
         return this.text;
     }
-    getTextZones() {
+    getPageZone() {
         this.decode();
         return this.pageZone;
+    }
+    getNormalizedZones() {
+        this.decode();
+        if (!this.pageZone) {
+            return null;
+        }
+        if (this.normalizedZones) {
+            return this.normalizedZones;
+        }
+        this.normalizedZones = [];
+        var registry = {};
+        const process = (zone) => {
+            if (zone.children) {
+                zone.children.forEach(zone => process(zone));
+            } else {
+                var key = zone.x.toString() + zone.y + zone.width + zone.height;
+                var zoneText = createStringFromUtf8Array(this.utf8array.slice(zone.textStart, zone.textStart + zone.textLength));
+                if (registry[key]) {
+                    registry[key].text += zoneText;
+                } else {
+                    registry[key] = {
+                        x: zone.x,
+                        y: zone.y,
+                        width: zone.width,
+                        height: zone.height,
+                        text: zoneText
+                    };
+                    this.normalizedZones.push(registry[key]);
+                }
+            }
+        };
+        process(this.pageZone);
+        return this.normalizedZones;
     }
     toString() {
         this.decode();
@@ -2599,9 +2633,13 @@ class DjVuPage extends CompositeChunk {
         this.init();
         return this.text ? this.text.getText() : "";
     }
-    getTextZones() {
+    getPageTextZone() {
         this.init();
         return this.text ? this.text.getTextZones() : null;
+    }
+    getNormalizedTextZones() {
+        this.init();
+        return this.text ? this.text.getNormalizedZones() : null;
     }
     toString() {
         this.init();
