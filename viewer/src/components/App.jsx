@@ -33,14 +33,14 @@ class App extends Component {
                 {this.props.isFileLoading ?
                     <FileLoadingScreen /> :
 
-                    !this.props.isFileLoaded ? <InitialScreen /> : (
-                        <div className="central_block">
+                    !this.props.isFileLoaded ? <InitialScreen /> : [
+                        <div key="central_block" className="central_block">
                             <LeftPanel />
                             {this.props.isTextMode ? <TextBlock text={this.props.pageText} /> : <ImageBlock />}
-                        </div>
-                    )
+                        </div>,
+                        <DownPanel key="down_panel" />
+                    ]
                 }
-                {this.props.isFileLoading ? null : <DownPanel />}
                 {this.props.isFileLoading ? null : <Footer />}
 
                 <NotificationWindow header={this.props.errorHeader} message={this.props.errorMessage} type={"error"} />
@@ -52,7 +52,7 @@ class App extends Component {
 
 export default connect(
     state => ({
-        isFileLoaded: !!get.fileName(state),
+        isFileLoaded: get.isDocumentLoaded(state),
         isFileLoading: get.isFileLoading(state),
         isFullPageView: get.isFullPageView(state),
         isTextMode: get.isTextMode(state),

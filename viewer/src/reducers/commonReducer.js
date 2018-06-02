@@ -98,4 +98,7 @@ export default (state = initialState, action) => {
     }
 }
 
-export const get = createGetObjectByState(initialState);
+export const get = {
+    ...createGetObjectByState(initialState),
+    isDocumentLoaded: state => !!state.fileName
+};

@@ -15,7 +15,6 @@ class StatusBar extends React.Component {
         return (
             <div className="status_bar">
                 <FontAwesomeIcon
-                    className="control_button"
                     icon={this.props.isLoading ? faSpinner : faCheck}
                     pulse={this.props.isLoading ? true : false}
                 />
