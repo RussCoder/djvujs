@@ -1,6 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
+import FontAwesomeIcon from '@fortawesome/react-fontawesome';
+import { faTimesCircle } from '@fortawesome/fontawesome-free-regular';
 
 import Actions from '../actions/actions';
 import { get } from '../reducers/rootReducer';
@@ -16,6 +18,15 @@ class FilePanel extends React.Component {
     render() {
         return (
             <div className="file_panel">
+                {this.props.fileName ? (
+                    <span title="Close document">
+                        <FontAwesomeIcon
+                            className="control_button"
+                            onClick={this.props.closeDocument}
+                            icon={faTimesCircle}
+                        />
+                    </span>
+                ) : null}
                 <FileBlock fileName={this.props.fileName} />
                 {this.props.fileName ? (
                     <button
@@ -34,5 +45,6 @@ class FilePanel extends React.Component {
 export default connect(state => ({
     fileName: get.fileName(state),
 }), {
-        saveDocument: Actions.saveDocumentAction
+        saveDocument: Actions.saveDocumentAction,
+        closeDocument: Actions.closeDocumentAction
     })(FilePanel);

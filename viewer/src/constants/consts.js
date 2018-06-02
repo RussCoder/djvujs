@@ -24,6 +24,7 @@ const Consts = {
     SAVE_DOCUMENT_ACTION: null,
     SHOW_HELP_WINDOW_ACTION: null,
     CLOSE_HELP_WINDOW_ACTION: null,
+    CLOSE_DOCUMENT_ACTION: null,
 };
 
 for (const key in Consts) {

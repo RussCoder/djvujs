@@ -4,6 +4,8 @@ const DjVu = window.DjVu;
 
 const Actions = {
 
+    closeDocumentAction: () => ({ type: Consts.CLOSE_DOCUMENT_ACTION }),
+
     setCursorModeAction: cursorMode => ({ type: Consts.SET_CURSOR_MODE_ACTION, cursorMode: cursorMode }),
 
     closeHelpWindowAction: () => ({ type: Consts.CLOSE_HELP_WINDOW_ACTION }),

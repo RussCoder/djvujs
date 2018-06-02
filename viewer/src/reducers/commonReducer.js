@@ -54,6 +54,12 @@ export default (state = initialState, action) => {
                 fileName: action.fileName
             };
 
+        case Consts.CLOSE_DOCUMENT_ACTION:
+            return {
+                ...initialState,
+                isFullPageView: state.isFullPageView
+            };
+
         case Consts.CONTENTS_IS_GOTTEN_ACTION:
             return {
                 ...state,
