@@ -19,6 +19,12 @@ let pages = {};
 let imageDataPromise = null;
 let imageDataPromisePageNumber = null;
 
+function resetPagesCache() {
+    pages = {};
+    imageDataPromise = null;
+    imageDataPromisePageNumber = null;
+}
+
 function updatePagesCache(currentPageNumber, pagesCount) {
     const newPages = {
         [currentPageNumber]: pages[currentPageNumber]
@@ -150,9 +156,7 @@ function* createDocumentFromArrayBufferAction(action) {
     const djvuWorker = get.djvuWorker(state);
 
     djvuWorker.cancelAllTasks();
-    pages = {};
-    imageDataPromise = null;
-    imageDataPromisePageNumber = null;
+    resetPagesCache();
 
     yield djvuWorker.createDocument(action.arrayBuffer);
     const pagesCount = yield djvuWorker.getPageCount();
@@ -208,6 +212,7 @@ function* saveDocument() {
 function* resetWorker() {
     const state = yield select();
     const djvuWorker = get.djvuWorker(state);
+    resetPagesCache();
     djvuWorker.reset();
 }
 
