@@ -1,7 +1,7 @@
 import React from 'react';
 
-import FileBlock from './FileBlock';
 import HelpButton from './HelpButton';
+import FileZone from './FileZone';
 const DjVu = window.DjVu;
 
 class InitialScreen extends React.Component {
@@ -16,9 +16,7 @@ class InitialScreen extends React.Component {
                     <div>
                         Click the <HelpButton /> button to know more about the app!
                     </div>
-                    <div className="file_block_wrapper">
-                        <FileBlock />
-                    </div>
+                    <FileZone />
                 </div>
             </div>
         );

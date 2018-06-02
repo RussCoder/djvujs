@@ -1,47 +1,82 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
+import cx from 'classnames';
 import FontAwesomeIcon from '@fortawesome/react-fontawesome';
 import { faUpload } from '@fortawesome/fontawesome-free-solid';
 
 import Actions from '../actions/actions';
 
-class FileBlock extends React.Component {
+class FileZone extends React.Component {
 
     static propTypes = {
-        fileName: PropTypes.string,
         createNewDocument: PropTypes.func.isRequired
+    };
+
+    state = {
+        isDragOver: false
     };
 
     onChange = (e) => {
         if (!e.target.files.length) {
             return;
         }
-        const file = e.target.files[0];
+        this.processFile(e.target.files[0]);
+    };
 
+    processFile(file) {
         var fr = new FileReader();
         fr.readAsArrayBuffer(file);
         fr.onload = () => {
             this.props.createNewDocument(fr.result, file.name);
         }
-    };
+    }
 
     onClick = (e) => {
         this.input && this.input.click();
     };
 
+    checkDrag = (e) => {
+        if (e.dataTransfer.items.length === 1 && e.dataTransfer.items[0].kind === 'file') {
+            e.preventDefault();
+            this.setState({ isDragOver: true })
+        }
+    };
+
+    onDragLeave = (e) => {
+        this.setState({ isDragOver: false });
+    };
+
+    onDrop = (e) => {
+        this.setState({ isDragOver: false });
+        if (e.dataTransfer.items[0].kind === 'file') {
+            e.preventDefault();
+            this.processFile(e.dataTransfer.items[0].getAsFile());
+        }
+    };
+
     render() {
+
+        const classes = {
+            file_zone: true,
+            drag_over: this.state.isDragOver
+        };
+
         return (
             <div
-                className="file_block"
+                className={cx(classes)}
                 onClick={this.onClick}
                 title="Open another .djvu file!"
+                onDragEnter={this.checkDrag}
+                onDragOver={this.checkDrag}
+                onDragLeave={this.onDragLeave}
+                onDrop={this.onDrop}
             >
                 <FontAwesomeIcon
                     icon={faUpload}
                     className="file_icon"
                 />
-                <span className="file_name">{this.props.fileName || "Choose a file"}</span>
+                <span> Drag & Drop a file here or click to choose manually!</span>
                 <input
                     style={{ display: 'none' }}
                     type="file"
@@ -58,4 +93,4 @@ export default connect(null,
     {
         createNewDocument: Actions.createDocumentFromArrayBufferAction,
     }
-)(FileBlock);
+)(FileZone);

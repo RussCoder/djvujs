@@ -27,12 +27,34 @@
             margin: 1em;
         }
 
-        .file_block_wrapper {
-            display: inline-block;
-            border: 1px solid lightgray;
+        .file_zone {
+            border: 0.1em dashed black;
+            background: #DFDFDF;
+            padding: 0.5em;
+            max-width: 20em;
+            min-height: 5em;
+            margin: auto;
+            border-radius: 0.5em;
+            cursor: pointer;
 
-            .file_block {
-                display: block;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+
+            .file_icon {
+                font-size: 1.5em;
+            }
+
+            &:hover {
+                .file_icon {
+                    transform: scale(1.1);
+                }
+            }
+
+            &.drag_over {
+                background: #EEE;
+                box-shadow: 0 0 0.2em gray inset;
             }
         }
     }
