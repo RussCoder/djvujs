@@ -1,5 +1,11 @@
 # DjVu.js Viewer Changelog
 
+## v.0.1.6 (02.06.2018)
+
+- Layout update: no tools panel on the initial screen.
+- Drag&Drop file zone on the initial screen.
+- A possibility to close a document and return to the initial screen.
+
 ## v.0.1.5 (25.05.2018)
 
 - A page text layer and two cursor modes. 
