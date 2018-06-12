@@ -1,4 +1,3 @@
-const replace = require('rollup-plugin-re');
 const cleanup = require('rollup-plugin-cleanup');
 
 module.exports = {
@@ -17,14 +16,6 @@ module.exports = {
         name: 'DjVu'
     }],
     plugins: [
-        replace({
-            defines: {
-                FALSE_FLAG: false
-            },
-            replaces: {
-                "'use strict';": ''
-            }
-        }),
         cleanup()
     ]
 };

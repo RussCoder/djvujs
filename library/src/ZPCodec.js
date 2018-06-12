@@ -1,5 +1,3 @@
-'use strict';
-
 export class ZPEncoder {
     constructor(bsw) {
         //byteStreamWriter
