@@ -1,15 +1,16 @@
 /**
  * Объект создающий фоновый поток. Предоставляет интерфейс и инкапсулирует логику связи с 
  * объектом DjVuDocument в фоновом потоке выполнения.
+ * DjVuScript is a function which containing the whole build of the library. 
+ * It's an additional wrapper added in the build process. Look at the build config file.
  */
 export default class DjVuWorker {
-    constructor(path) {
-        if (!path) {
+    constructor(path = URL.createObjectURL(new Blob(["(" + DjVuScript.toString() + ")();"], { type: 'application/javascript' }))) {
+        if (typeof DjVuScript !== "function") { // just in case
             var script = document.querySelector('script#djvu_js_lib, script[src*="djvu."]');
-            this.path = script ? script.src : '/src/DjVuWorkerScript.js';
-        } else {
-            this.path = path;
+            path = script ? script.src : '/src/DjVuWorkerScript.js';
         }
+        this.path = path;
         this.reset();
     }
 
