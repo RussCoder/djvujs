@@ -1,5 +1,12 @@
 # DjVu.js Library Changelog
 
+## v.0.2.0 (16.06.2018)
+
+- DjVuWorker is created from the Data URL which is generated automatically, so there is no need in explicit script URL. 
+- Additional method run() for the DjVuWorkerTask (the proxy object which is return by the "doc" property of the worker).
+- Utils.loadFile() is deprecated now.
+- The whole script is available through the DjVu.DjVuScript() method, which is added as a wrapper in the build process. 
+
 ## v.0.1.9 (25.05.2018)
 
 - TXT* chunks are decoded completely - text zones are decoded.

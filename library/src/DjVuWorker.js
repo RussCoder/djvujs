@@ -7,6 +7,7 @@
 export default class DjVuWorker {
     constructor(path = URL.createObjectURL(new Blob(["(" + DjVuScript.toString() + ")();"], { type: 'application/javascript' }))) {
         if (typeof DjVuScript !== "function") { // just in case
+            console.warn("No DjVu Scripted detected!");
             var script = document.querySelector('script#djvu_js_lib, script[src*="djvu."]');
             path = script ? script.src : '/src/DjVuWorkerScript.js';
         }
@@ -26,7 +27,7 @@ export default class DjVuWorker {
     }
 
     get doc() {
-        return DjVuWorkerTask.instance();
+        return DjVuWorkerTask.instance(this);
     }
 
     errorHandler(event) {
@@ -274,19 +275,23 @@ export default class DjVuWorker {
 
 class DjVuWorkerTask {
 
-    static instance(funcs = [], args = []) {
-        return new Proxy(DjVuWorkerTask.emptyFunc, {
+    static instance(worker, funcs = [], args = []) {
+        var proxy = new Proxy(DjVuWorkerTask.emptyFunc, {
             get: (target, key) => {
-                if (key !== '_') {
-                    return DjVuWorkerTask.instance([...funcs, key], args);
-                } else {
-                    return { funcs, args };
+                switch (key) {
+                    case '_':
+                        return { funcs, args };
+                    case 'run':
+                        return () => worker.run(proxy);
+                    default:
+                        return DjVuWorkerTask.instance(worker, [...funcs, key], args);
                 }
             },
             apply: (target, that, _args) => {
-                return DjVuWorkerTask.instance(funcs, [...args, _args]);
+                return DjVuWorkerTask.instance(worker, funcs, [...args, _args]);
             }
         });
+        return proxy;
     }
 
     static emptyFunc() { }

@@ -1,5 +1,5 @@
 var DjVu = {
-    VERSION: '0.1.9',
+    VERSION: '0.2.0',
     IS_DEBUG: false,
     setDebugMode: (flag) => DjVu.IS_DEBUG = flag
 };
@@ -9,6 +9,7 @@ DjVu.Utils = {
      *  @returns {Promise<ArrayBuffer>}
      */
     loadFile(url, responseType = 'arraybuffer') {
+        console.warn("loadFile is a deprecated function!");
         return new Promise((resolve, reject) => {
             var xhr = new XMLHttpRequest();
             xhr.open("GET", url);

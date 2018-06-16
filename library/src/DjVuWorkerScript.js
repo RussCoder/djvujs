@@ -45,6 +45,10 @@ export default function initWorker() {
                 buffer: value.data.buffer
             };
         }
+        if (value instanceof DjVuDocument) {
+            transferList.push(value.buffer);
+            return value.buffer;
+        }
         return value;
     }
 

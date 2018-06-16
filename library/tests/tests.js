@@ -182,7 +182,7 @@ var Tests = {
             };
         }
 
-        var buffer = await DjVu.Utils.loadFile(`/assets/${djvuName}`)
+        var buffer = await (await fetch(`/assets/${djvuName}`)).arrayBuffer();
         await djvuWorker.createDocument(buffer);
         var obj = await djvuWorker.getPageImageDataWithDpi(pageNum);
         resultImageData = obj.imageData;
@@ -200,49 +200,38 @@ var Tests = {
         return result;
     },
 
-    _sliceTest(source, from, to, result) {
-        var resultBuffer;
-        return DjVu.Utils.loadFile(source)
-            .then(buffer => djvuWorker.createDocument(buffer))
-            .then(() => djvuWorker.slice(from, to))
-            .then(_resultBuffer => {
-                resultBuffer = _resultBuffer;
-                return DjVu.Utils.loadFile(result);
-            })
-            .then(canonicBuffer => {
-                return TestHelper.compareArrayBuffers(canonicBuffer, resultBuffer);
-            });
+    async _sliceTest(source, from, to, result) {
+        const buffer = await (await fetch(source)).arrayBuffer();
+        await djvuWorker.createDocument(buffer);
+        const resultBuffer = await djvuWorker.doc.slice(from, to).run();
+        const canonicBuffer = await (await fetch(result)).arrayBuffer();
+        return TestHelper.compareArrayBuffers(canonicBuffer, resultBuffer);
     },
 
     /*test3LayerSiglePageDocument() { // отключен так как не ясен алгоритм масштабирования слоев
         return this._imageTest("happy_birthday.djvu", 0, "happy_birthday.png");
     },*/
 
-    _testText(djvuUrl, pageNumber, txtUrl) {
-        return DjVu.Utils.loadFile(djvuUrl)
-            .then(buffer => {
-                return djvuWorker.createDocument(buffer);
-            })
-            .then(() => {
-                return Promise.all([
-                    pageNumber ? djvuWorker.getPageText(pageNumber) : djvuWorker.getDocumentMetaData(),
-                    DjVu.Utils.loadFile(txtUrl)
-                ]);
-            })
-            .then(data => {
-                var resultString = data[0];
-                var canonicCharCodesArray = new Uint16Array(data[1]);
-                for (var i = 0; i < canonicCharCodesArray.length; i++) {
-                    if (resultString.charCodeAt(i) !== canonicCharCodesArray[i]) {
-                        return "Text is incorrect!";
-                    }
-                }
-                return canonicCharCodesArray.length ? null : "No canonic text!";
-            });
+    async _testText(djvuUrl, pageNumber, txtUrl) {
+        const buffer = await (await fetch(djvuUrl)).arrayBuffer();
+        await djvuWorker.createDocument(buffer);
+
+        const [resultString, binText] = await Promise.all([
+            pageNumber ? djvuWorker.doc.getPage(pageNumber).getText().run() : djvuWorker.doc.toString().run(),
+            (await fetch(txtUrl)).arrayBuffer()
+        ]);
+
+        const canonicCharCodesArray = new Uint16Array(binText);
+        for (var i = 0; i < canonicCharCodesArray.length; i++) {
+            if (resultString.charCodeAt(i) !== canonicCharCodesArray[i]) {
+                return "Text is incorrect!";
+            }
+        }
+        return canonicCharCodesArray.length ? null : "No canonic text!";
     },
 
     testIncorrectFileFormatError() {
-        return DjVu.Utils.loadFile(`/assets/boy.png`)
+        return fetch(`/assets/boy.png`).then(res => res.arrayBuffer())
             .then(buffer => {
                 return djvuWorker.createDocument(buffer);
             }).then(() => {
@@ -257,7 +246,7 @@ var Tests = {
     },
 
     async testNoSuchPageError() {
-        const buffer = await DjVu.Utils.loadFile(`/assets/boy.djvu`)
+        const buffer = await (await fetch(`/assets/boy.djvu`)).arrayBuffer();
         await djvuWorker.createDocument(buffer);
         try {
             var pageNumber = 100;
@@ -277,7 +266,7 @@ var Tests = {
     },
 
     async testContents() {
-        const buffer = await DjVu.Utils.loadFile(`/assets/DjVu3Spec.djvu`)
+        const buffer = await (await fetch(`/assets/DjVu3Spec.djvu`)).arrayBuffer();
         await djvuWorker.createDocument(buffer);
         const contents = await djvuWorker.getContents();
         var res = await fetch('/assets/DjVu3Spec_contents.json');
@@ -292,7 +281,7 @@ var Tests = {
     },
 
     async testGetPageNumberByUrl() {
-        const buffer = await DjVu.Utils.loadFile(`/assets/DjVu3Spec.djvu`)
+        const buffer = await (await fetch(`/assets/DjVu3Spec.djvu`)).arrayBuffer();
         await djvuWorker.createDocument(buffer);
         var pageNum = await djvuWorker.getPageNumberByUrl('#p0069.djvu');
         if (pageNum !== 69) {
@@ -310,7 +299,7 @@ var Tests = {
     },
 
     async testCancelAllWorkerTasks() {
-        const buffer = await DjVu.Utils.loadFile(`/assets/boy.djvu`)
+        const buffer = await (await fetch(`/assets/boy.djvu`)).arrayBuffer();
         await djvuWorker.createDocument(buffer);
         try {
             var promises = [];
@@ -331,7 +320,7 @@ var Tests = {
     },
 
     async testCancelOneWorkerTask() {
-        const buffer = await DjVu.Utils.loadFile(`/assets/boy.djvu`)
+        const buffer = await (await fetch(`/assets/boy.djvu`)).arrayBuffer();
         await djvuWorker.createDocument(buffer);
         try {
             var promises = [];
@@ -368,7 +357,7 @@ var Tests = {
             return Promise.all(imageDatas.map(imageData => djvuWorker.addPageToDocument(imageData)));
         }).then(() => {
             return Promise.all([
-                DjVu.Utils.loadFile(`/assets/boy_and_chicken.djvu`),
+                fetch(`/assets/boy_and_chicken.djvu`).then(res => res.arrayBuffer()),
                 djvuWorker.endMultiPageDocument()
             ]);
         }).then(arrayBuffers => {
