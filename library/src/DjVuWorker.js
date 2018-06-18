@@ -147,7 +147,7 @@ export default class DjVuWorker {
                 callbacks.resolve(obj.url);
                 break;
             case 'run':
-                var restoredResult = obj.result instanceof Array ?
+                var restoredResult = obj.result.length && obj.result.map ?
                     obj.result.map(result => this.restoreValueAfterTransfer(result)) :
                     this.restoreValueAfterTransfer(obj.result);
                 //console.log("Got task response", Date.now() - obj.time);
@@ -159,7 +159,7 @@ export default class DjVuWorker {
     }
 
     restoreValueAfterTransfer(value) {
-        if (value instanceof Object) {
+        if (value) {
             if (value.width && value.height && value.buffer) {
                 return new ImageData(new Uint8ClampedArray(value.buffer), value.width, value.height);
             }
