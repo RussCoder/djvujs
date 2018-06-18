@@ -14,7 +14,7 @@ In order to demonstrate the abilities of the library, I decided to create the Dj
 The main idea is to create a plug-in that can be easily included to any web page.
 DjVu Viewer now is very simple and can't do much, but I hope to improve it a lot in the future. 
 
-If you have any questions, feel free to create an issue on [GitHub](https://github.com/RussCoder/djvujs/issues), or write me at the email: `djvujs@yandex.ru`
+If you have any questions, feel free to create an issue on [GitHub](https://github.com/RussCoder/djvujs/issues), or write me at the email: djvujs@yandex.ru
 
 If you have a djvu document that can't be rendered by the DjVu.js Viewer, please send it to me.
 It's very important, since the djvu format is quite complicated and I didn't tested all code of my library, 

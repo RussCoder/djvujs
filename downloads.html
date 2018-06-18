@@ -29,11 +29,11 @@
 
 Here you can download the library and the viewer .js and .css files.
 
-<p><a href="/dist/djvu.js" download="djvu.js">Download DjVu.js library (version 0.1.9)</a></p>
+<p><a href="/dist/djvu.js" download="djvu.js">Download DjVu.js library (version 0.2.0)</a></p>
 
-<p></p><a href="/dist/djvu_viewer.js" download="djvu_viewer.js">Download DjVu.js Viewer .js file (version 0.1.6)</a>
+<p></p><a href="/dist/djvu_viewer.js" download="djvu_viewer.js">Download DjVu.js Viewer .js file (version 0.1.7)</a>
 
-<p></p><a href="/dist/djvu_viewer.css" download="djvu_viewer.css">Download DjVu.js Viewer .css file (version 0.1.6)</a>
+<p></p><a href="/dist/djvu_viewer.css" download="djvu_viewer.css">Download DjVu.js Viewer .css file (version 0.1.7)</a>
 
 <h2>How to use it</h2><p>Create a folder with all 3 files, that you have downloaded here (<code>djvu.js</code>, <code>djvu_viewer.js</code> and <code>djvu_viewer.css</code>). Then in the same folder create an .html file (let&#39;s say <code>index.html</code>) with the following content.</p>
 <pre><code>&lt;!DOCTYPE html&gt;
@@ -68,7 +68,5 @@ as it does on the main page of this website. But if you use Google Chrome or Ope
 DjVu.js uses the Web Workers API of the web browsers and Chrome doesn&#39;t allow the script to create a Worker, when the file is loaded from the file system directly. In other words, you just need
 to start a local web server in order to make everything work as it works on the Internet. Any static web server will do. </p>
 <p>For example, if you have Node.js installed, you can just use the <code>serve</code> package to run a simple static web server. Run the following commands in your shell. </p>
-<pre><code>npm install -g serve
-</code></pre><p>to install the <code>serve</code> package globally and then head to the directory, where our files are kept, and run</p>
-<pre><code>serve -p 5000
-</code></pre><p>in order to start the local server (you may change the port as you wish). Then just open <a href="http://localhost:5000/">http://localhost:5000/</a> and you will see the viewer. </p></div><footer>DjVu.js 2018 | Perhaps, all rights reserved.  </footer></body></html>
+<pre><code>npm install -g serve</code></pre><p>to install the <code>serve</code> package globally and then head to the directory, where our files are kept, and run</p>
+<pre><code>serve -p 5000</code></pre><p>in order to start the local server (you may change the port as you wish). Then just open <a href="http://localhost:5000/">http://localhost:5000/</a> and you will see the viewer. </p></div><footer>DjVu.js 2018 | Perhaps, all rights reserved.  </footer></body></html>
