@@ -2,13 +2,24 @@
     "manifest_version": 2,
     "name": "DjVu.js Viewer",
     "short_name": "DV",
-    "version": "0.1.6.0",
-    "description": "Opens links to .djvu files in the browser (via context menu). Allows to open .djvu files from local storage.",
+    "version": "0.1.7.1",
+    "description": "Opens links to .djvu files in the browser (via context menu). Allows to open .djvu files from local storage. Processes djvu <embed> tags.",
     "background": {
         "scripts": [
             "background.js"
         ]
     },
+    "content_security_policy": "script-src 'self' blob:; object-src 'self';",
+    "content_scripts": [
+        {
+            "matches": [
+                "*://*/*"
+            ],
+            "js": [
+                "content.js"
+            ]
+        }
+    ],
     "permissions": [
         "<all_urls>",
         "contextMenus"
