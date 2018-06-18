@@ -11,14 +11,14 @@
         "@fortawesome/fontawesome-free-regular": "^5.0.13",
         "@fortawesome/fontawesome-free-solid": "^5.0.13",
         "@fortawesome/react-fontawesome": "0.0.20",
-        "classnames": "^2.2.5",
+        "classnames": "^2.2.6",
         "prop-types": "^15.6.1",
-        "react": "^16.4.0",
-        "react-dom": "^16.4.0",
+        "react": "^16.4.1",
+        "react-dom": "^16.4.1",
         "react-redux": "^5.0.7",
         "redux": "^4.0.0",
         "redux-saga": "^0.16.0",
-        "redux-thunk": "^2.2.0"
+        "redux-thunk": "^2.3.0"
     },
     "scripts": {
         "build-css": "node-sass-chokidar src/scss/styles.scss -o src/css",

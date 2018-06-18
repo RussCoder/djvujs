@@ -7,8 +7,7 @@ import { faExpand, faCompress } from '@fortawesome/fontawesome-free-solid';
 import ModalWindow from './ModalWindow';
 import Actions from '../actions/actions';
 import { get } from '../reducers/rootReducer';
-
-const DjVu = window.DjVu;
+import DjVu from '../DjVu';
 
 class HelpWindow extends React.Component {
 

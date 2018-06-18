@@ -1,5 +1,11 @@
 # DjVu.js Viewer Changelog
 
+## v.0.1.7 (18.06.2018)
+
+- The height of the containing element (which the viewer renders into) isn't changed anymore.
+- DjVu global variable is encapsulated in a separate module.
+- Minor styles update.
+
 ## v.0.1.6 (02.06.2018)
 
 - Layout update: no tools panel on the initial screen.

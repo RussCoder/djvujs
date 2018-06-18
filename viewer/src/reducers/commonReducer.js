@@ -1,7 +1,6 @@
 import { createGetObjectByState } from '../utils';
 import Consts from '../constants/consts';
-
-const DjVu = window.DjVu;
+import DjVu from '../DjVu';
 
 const initialState = Object.freeze({
     djvuWorker: new DjVu.Worker(),

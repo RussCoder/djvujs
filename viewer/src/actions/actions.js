@@ -1,6 +1,6 @@
 import Consts from '../constants/consts.js';
 import { get } from '../reducers/rootReducer';
-const DjVu = window.DjVu;
+import DjVu from '../DjVu';
 
 const Actions = {
 

@@ -2,7 +2,7 @@ import React from 'react';
 
 import HelpButton from './HelpButton';
 import FileZone from './FileZone';
-const DjVu = window.DjVu;
+import DjVu from '../DjVu';
 
 class InitialScreen extends React.Component {
 
