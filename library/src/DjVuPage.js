@@ -391,12 +391,12 @@ export default class DjVuPage extends CompositeChunk {
         return this.text ? this.text.getText() : "";
     }
 
-    getPageTextZone() {
+    getPageTextZone() { // returns the top text zone of the whole page (which contains nested zones)
         this.init();
-        return this.text ? this.text.getTextZones() : null;
+        return this.text ? this.text.getPageZone() : null;
     }
 
-    getNormalizedTextZones() {
+    getNormalizedTextZones() { // returns a flat array of zones without nested zones
         this.init();
         return this.text ? this.text.getNormalizedZones() : null;
     }

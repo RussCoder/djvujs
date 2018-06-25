@@ -230,6 +230,27 @@ var Tests = {
         return canonicCharCodesArray.length ? null : "No canonic text!";
     },
 
+    async _testTextZones(djvuUrl, pageNumber, txtUrl, isNormalized = false) {
+        const buffer = await (await fetch(djvuUrl)).arrayBuffer();
+        await djvuWorker.createDocument(buffer);
+
+        const page = djvuWorker.doc.getPage(pageNumber);
+        const [textZones, binText] = await Promise.all([
+            isNormalized ? page.getNormalizedTextZones().run() : page.getPageTextZone().run(),
+            (await fetch(txtUrl)).arrayBuffer()
+        ]);
+
+        const resultString = JSON.stringify(textZones);
+
+        const canonicCharCodesArray = new Uint16Array(binText);
+        for (var i = 0; i < canonicCharCodesArray.length; i++) {
+            if (resultString.charCodeAt(i) !== canonicCharCodesArray[i]) {
+                return "Text Zones are incorrect!";
+            }
+        }
+        return canonicCharCodesArray.length ? null : "No canonic text zones!";
+    },
+
     testIncorrectFileFormatError() {
         return fetch(`/assets/boy.png`).then(res => res.arrayBuffer())
             .then(buffer => {
@@ -263,6 +284,14 @@ var Tests = {
 
     async testMetaDataOfDocWithShortINFOChunk() {
         return this._testText('/assets/carte.djvu', null, '/assets/carte_metadata.bin');
+    },
+
+    testPageTextZone() {
+        return this._testTextZones('/assets/DjVu3Spec.djvu', 1, '/assets/DjVu3Spec_1_page_text_zone.bin');
+    },
+
+    testNormalizedTextZones() {
+        return this._testTextZones('/assets/DjVu3Spec.djvu', 1, '/assets/DjVu3Spec_1_normalized_text_zones.bin', true);
     },
 
     async testContents() {
