@@ -1,5 +1,5 @@
 import JB2Codec from './JB2Codec';
-import { Baseline } from './JB2Structures';
+import { Baseline, Bitmap } from './JB2Structures';
 import DjVu from '../DjVu';
 
 export default class JB2Image extends JB2Codec {

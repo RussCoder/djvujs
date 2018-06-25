@@ -1,3 +1,5 @@
+import ByteStreamWriter from './ByteStreamWriter';
+
 export class ZPEncoder {
     constructor(bsw) {
         //byteStreamWriter

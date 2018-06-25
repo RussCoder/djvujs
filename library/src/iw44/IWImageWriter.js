@@ -1,4 +1,5 @@
 import DjVuWriter from '../DjVuWriter';
+import DjVuDocument from '../DjVuDocument';
 import ByteStreamWriter from '../ByteStreamWriter';
 import IWEncoder from './IWEncoder';
 import { ZPEncoder } from '../ZPCodec';
