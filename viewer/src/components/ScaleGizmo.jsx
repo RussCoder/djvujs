@@ -2,8 +2,8 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import Actions from '../actions/actions';
-import FontAwesomeIcon from '@fortawesome/react-fontawesome';
-import { faPlus, faMinus } from '@fortawesome/fontawesome-free-solid';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlus, faMinus } from '@fortawesome/free-solid-svg-icons';
 import { get } from '../reducers/rootReducer';
 
 class ScaleGizmo extends React.Component {

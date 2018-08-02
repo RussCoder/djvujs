@@ -1,8 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import cx from 'classnames';
-import FontAwesomeIcon from '@fortawesome/react-fontawesome';
-import { faTimesCircle } from '@fortawesome/fontawesome-free-regular';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTimesCircle } from '@fortawesome/free-regular-svg-icons';
 
 export default class ModalWindow extends React.Component {
 

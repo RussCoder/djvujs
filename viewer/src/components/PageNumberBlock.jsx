@@ -1,8 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import FontAwesomeIcon from '@fortawesome/react-fontawesome';
-import { faArrowAltCircleRight, faArrowAltCircleLeft } from '@fortawesome/fontawesome-free-regular';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faArrowAltCircleRight, faArrowAltCircleLeft } from '@fortawesome/free-regular-svg-icons';
 
 import Actions from '../actions/actions';
 import PageNumberElement from './PageNumber';
