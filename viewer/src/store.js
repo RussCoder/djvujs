@@ -3,7 +3,7 @@ import thunkMiddleware from 'redux-thunk';
 import createSagaMiddleware from 'redux-saga';
 
 import rootReducer from './reducers/rootReducer';
-import rootSaga from './sagas/rootSaga';
+import createRootSaga from './sagas/rootSaga';
 import initHotkeys from './hotkeys';
 
 const sagaMiddleware = createSagaMiddleware();
@@ -12,7 +12,7 @@ const configureStore = () => {
         thunkMiddleware,
         sagaMiddleware
     ));
-    sagaMiddleware.run(rootSaga);
+    sagaMiddleware.run(createRootSaga());
     initHotkeys(store);
     return store;
 };

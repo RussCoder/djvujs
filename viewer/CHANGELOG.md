@@ -1,5 +1,10 @@
 # DjVu.js Viewer Changelog
 
+## v.0.2.0 (05.08.2018)
+
+- Now it's possible to create many instances of the viewer.
+- Ctrl+S works even when the keyboard layout isn't English.
+
 ## v.0.1.7 (18.06.2018)
 
 - The height of the containing element (which the viewer renders into) isn't changed anymore.

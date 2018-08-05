@@ -28,7 +28,7 @@
             font-family: sans-serif;
         }
 
-        #root {
+        #root, #root2 {
             box-sizing: border-box;
             width: 80%;
             padding: 1em;
@@ -40,7 +40,12 @@
     <script id="djvu_js_lib" src="%PUBLIC_URL%/tmp/djvu.js"></script>
     <script>
         window.onload = function () {
-            window.DjVu.Viewer.init(document.getElementById('root'));
+            window.DjVuViewerInstance = new window.DjVu.Viewer();
+            window.DjVuViewerInstance.render(document.getElementById('root'));
+
+            // window.DjVuViewerInstance2 = new window.DjVu.Viewer();
+            // window.DjVuViewerInstance2.render(document.getElementById('root2'));
+            // window.DjVuViewerInstance2.loadDocumentByUrl("/tmp/colorbook.djvu");
         };
     </script>
 </head>
@@ -50,6 +55,8 @@
         You need to enable JavaScript to run this app.
     </noscript>
     <div id="root"></div>
+
+    <!-- <div id="root2"></div> -->
     <!--
       This HTML file is a template.
       If you open it directly in the browser, you will see an empty page.

@@ -4,6 +4,7 @@ import { get } from '../reducers/rootReducer';
 
 import Consts from "../constants/consts";
 import Actions from "../actions/actions";
+import createSagaDataObject from "./sagaData";
 
 // const tmpCanvas = document.createElement('canvas');
 // const getImageDataURL = (imageData) => {
@@ -15,212 +16,181 @@ import Actions from "../actions/actions";
 //     return dataUrl;
 // };
 
-let pages = {};
-let imageDataPromise = null;
-let imageDataPromisePageNumber = null;
+const sagas = {
+    * fetchImageDataByPageNumber(pageNumber, djvuWorker) {
+        if (pageNumber !== null & !this.pages[pageNumber]) {
+            if (this.imageDataPromisePageNumber !== pageNumber) {
+                if (this.imageDataPromise) {
+                    djvuWorker.cancelAllTasks();
+                }
 
-function resetPagesCache() {
-    pages = {};
-    imageDataPromise = null;
-    imageDataPromisePageNumber = null;
-}
-
-function updatePagesCache(currentPageNumber, pagesCount) {
-    const newPages = {
-        [currentPageNumber]: pages[currentPageNumber]
-    };
-    let nextPageNumber = null, prevPageNumber = null;
-
-    if (currentPageNumber + 1 <= pagesCount) {
-        nextPageNumber = currentPageNumber + 1;
-        newPages[nextPageNumber] = pages[nextPageNumber];
-    } else if (currentPageNumber - 2 > 0) {
-        nextPageNumber = currentPageNumber - 2;
-        newPages[nextPageNumber] = pages[nextPageNumber];
-    }
-
-    if (currentPageNumber - 1 > 0) {
-        prevPageNumber = currentPageNumber - 1;
-        newPages[currentPageNumber - 1] = pages[currentPageNumber - 1];
-    } else if (currentPageNumber + 2 <= pagesCount) {
-        prevPageNumber = currentPageNumber + 2;
-        newPages[prevPageNumber] = pages[prevPageNumber];
-    }
-
-    pages = newPages;
-
-    return { prevPageNumber, nextPageNumber };
-}
-
-function* fetchImageDataByPageNumber(pageNumber, djvuWorker) {
-    if (pageNumber !== null & !pages[pageNumber]) {
-        if (imageDataPromisePageNumber !== pageNumber) {
-            if (imageDataPromise) {
-                djvuWorker.cancelAllTasks();
+                this.imageDataPromisePageNumber = pageNumber;
+                this.imageDataPromise = djvuWorker.run(
+                    djvuWorker.doc.getPage(pageNumber).getImageData(),
+                    djvuWorker.doc.getPage(pageNumber).getDpi(),
+                );
             }
 
-            imageDataPromisePageNumber = pageNumber;
-            imageDataPromise = djvuWorker.run(
-                djvuWorker.doc.getPage(pageNumber).getImageData(),
-                djvuWorker.doc.getPage(pageNumber).getDpi(),
-            );
+            const [imageData, dpi] = yield this.imageDataPromise;
+            this.pages[pageNumber] = { imageData, dpi };
+            this.imageDataPromisePageNumber = null;
+            this.imageDataPromise = null;
+        }
+    },
+
+    * getImageData() {
+        const state = yield select();
+        const currentPageNumber = get.currentPageNumber(state);
+        const djvuWorker = get.djvuWorker(state);
+        const pagesCount = get.pagesCount(state);
+
+        const { nextPageNumber, prevPageNumber } = this.updatePagesCache(currentPageNumber, pagesCount);
+
+        yield* this.fetchImageDataByPageNumber(currentPageNumber, djvuWorker);
+
+        yield put({
+            type: Consts.IMAGE_DATA_RECEIVED_ACTION,
+            imageData: this.pages[currentPageNumber].imageData,
+            imageDpi: this.pages[currentPageNumber].dpi
+        });
+
+        if (nextPageNumber > prevPageNumber) { // when the current page is the last one. 
+            yield* this.fetchImageDataByPageNumber(nextPageNumber, djvuWorker);
+            yield* this.fetchImageDataByPageNumber(prevPageNumber, djvuWorker);
+        } else {
+            yield* this.fetchImageDataByPageNumber(prevPageNumber, djvuWorker);
+            yield* this.fetchImageDataByPageNumber(nextPageNumber, djvuWorker);
         }
 
-        const [imageData, dpi] = yield imageDataPromise;
-        pages[pageNumber] = { imageData, dpi };
-        imageDataPromisePageNumber = null;
-        imageDataPromise = null;
-    }
-}
+        // yield delay(1000);
+        // const dataUrl = getImageDataURL(imageData);
+        // yield put(Actions.dataUrlCreatedAction(dataUrl));
+    },
 
-function* getImageData() {
-    const state = yield select();
-    const currentPageNumber = get.currentPageNumber(state);
-    const djvuWorker = get.djvuWorker(state);
-    const pagesCount = get.pagesCount(state);
+    * fetchPageData() {
+        const state = yield select();
+        const isTextMode = get.isTextMode(state);
+        const djvuWorker = get.djvuWorker(state);
+        const pageNumber = get.currentPageNumber(state);
 
-    const { nextPageNumber, prevPageNumber } = updatePagesCache(currentPageNumber, pagesCount);
+        if (isTextMode) {
+            djvuWorker.cancelAllTasks();
+            this.imageDataPromisePageNumber = null;
+            this.imageDataPromise = null;
+            yield* this.fetchPageText(pageNumber);
+        }
 
-    yield* fetchImageDataByPageNumber(currentPageNumber, djvuWorker);
+        yield* this.getImageData();
+        yield* this.fetchPageText(pageNumber);
+    },
 
-    yield put({
-        type: Consts.IMAGE_DATA_RECEIVED_ACTION,
-        imageData: pages[currentPageNumber].imageData,
-        imageDpi: pages[currentPageNumber].dpi
-    });
+    * fetchPageText(pageNumber) {
+        const state = yield select();
+        const djvuWorker = get.djvuWorker(state);
 
-    if (nextPageNumber > prevPageNumber) { // when the current page is the last one. 
-        yield* fetchImageDataByPageNumber(nextPageNumber, djvuWorker);
-        yield* fetchImageDataByPageNumber(prevPageNumber, djvuWorker);
-    } else {
-        yield* fetchImageDataByPageNumber(prevPageNumber, djvuWorker);
-        yield* fetchImageDataByPageNumber(nextPageNumber, djvuWorker);
-    }
+        const [text, textZones] = yield djvuWorker.run(
+            djvuWorker.doc.getPage(pageNumber).getText(),
+            djvuWorker.doc.getPage(pageNumber).getNormalizedTextZones(),
+        );
 
-    // yield delay(1000);
-    // const dataUrl = getImageDataURL(imageData);
-    // yield put(Actions.dataUrlCreatedAction(dataUrl));
-}
+        yield put({
+            type: Consts.PAGE_TEXT_FETCHED_ACTION,
+            pageText: text,
+            textZones: textZones
+        });
+    },
 
-function* fetchPageData() {
-    const state = yield select();
-    const isTextMode = get.isTextMode(state);
-    const djvuWorker = get.djvuWorker(state);
-    const pageNumber = get.currentPageNumber(state);
+    * fetchPageTextIfRequired(action) {
+        if (!action.isTextMode) {
+            return;
+        }
 
-    if (isTextMode) {
+        const state = yield select();
+        const currentPageNumber = get.currentPageNumber(state);
+        const pageText = get.pageText(state);
+
+        if (pageText !== null) {
+            return; // already fetched
+        }
+
+        yield* this.fetchPageText(currentPageNumber);
+    },
+
+    * createDocumentFromArrayBufferAction(action) {
+        const state = yield select();
+        const djvuWorker = get.djvuWorker(state);
+
         djvuWorker.cancelAllTasks();
-        imageDataPromisePageNumber = null;
-        imageDataPromise = null;
-        yield* fetchPageText(pageNumber);
-    }
+        this.resetPagesCache();
 
-    yield* getImageData();
-    yield* fetchPageText(pageNumber);
-}
+        yield djvuWorker.createDocument(action.arrayBuffer);
+        const pagesCount = yield djvuWorker.getPageCount();
+        yield put({
+            type: Consts.DOCUMENT_CREATED_ACTION,
+            pagesCount: pagesCount,
+            fileName: action.fileName
+        });
 
-function* fetchPageText(pageNumber) {
-    const state = yield select();
-    const djvuWorker = get.djvuWorker(state);
+        const contents = yield djvuWorker.getContents();
+        yield put({
+            type: Consts.CONTENTS_IS_GOTTEN_ACTION,
+            contents: contents
+        });
 
-    const [text, textZones] = yield djvuWorker.run(
-        djvuWorker.doc.getPage(pageNumber).getText(),
-        djvuWorker.doc.getPage(pageNumber).getNormalizedTextZones(),
-    );
+        yield* this.fetchPageData();
+    },
 
-    yield put({
-        type: Consts.PAGE_TEXT_FETCHED_ACTION,
-        pageText: text,
-        textZones: textZones
-    });
-}
+    * setPageByUrl(action) {
+        const state = yield select();
+        const djvuWorker = get.djvuWorker(state);
 
-function* fetchPageTextIfRequired(action) {
-    if (!action.isTextMode) {
-        return;
-    }
-
-    const state = yield select();
-    const currentPageNumber = get.currentPageNumber(state);
-    const pageText = get.pageText(state);
-
-    if (pageText !== null) {
-        return; // already fetched
-    }
-
-    yield* fetchPageText(currentPageNumber);
-}
-
-function* createDocumentFromArrayBufferAction(action) {
-    const state = yield select();
-    const djvuWorker = get.djvuWorker(state);
-
-    djvuWorker.cancelAllTasks();
-    resetPagesCache();
-
-    yield djvuWorker.createDocument(action.arrayBuffer);
-    const pagesCount = yield djvuWorker.getPageCount();
-    yield put({
-        type: Consts.DOCUMENT_CREATED_ACTION,
-        pagesCount: pagesCount,
-        fileName: action.fileName
-    });
-
-    const contents = yield djvuWorker.getContents();
-    yield put({
-        type: Consts.CONTENTS_IS_GOTTEN_ACTION,
-        contents: contents
-    });
-
-    yield* fetchPageData();
-}
-
-function* setPageByUrl(action) {
-    const state = yield select();
-    const djvuWorker = get.djvuWorker(state);
-
-    const pageNumber = yield djvuWorker.getPageNumberByUrl(action.url);
-    if (pageNumber !== null) {
-        yield put(Actions.setNewPageNumberAction(pageNumber));
-    }
-}
-
-function withErrorHandler(func) {
-    return function* (action) {
-        try {
-            yield* func(action);
-        } catch (error) {
-            yield put(Actions.errorAction(error))
+        const pageNumber = yield djvuWorker.getPageNumberByUrl(action.url);
+        if (pageNumber !== null) {
+            yield put(Actions.setNewPageNumberAction(pageNumber));
         }
+    },
+
+    withErrorHandler(func) {
+        func = func.bind(this);
+        return function* (action) {
+            try {
+                yield* func(action);
+            } catch (error) {
+                yield put(Actions.errorAction(error))
+            }
+        }
+    },
+
+    * saveDocument() {
+        const state = yield select();
+        const djvuWorker = get.djvuWorker(state);
+        const fileName = get.fileName(state);
+
+        if (fileName) {
+            const url = yield djvuWorker.createDocumentUrl();
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = /\.(djv|djvu)$/.test(fileName) ? fileName : (fileName + '.djvu');
+            a.dispatchEvent(new MouseEvent("click"));
+        }
+    },
+
+    * resetWorker() {
+        const state = yield select();
+        const djvuWorker = get.djvuWorker(state);
+        this.resetPagesCache();
+        djvuWorker.reset();
     }
+};
+
+function* rootSaga() {
+    yield takeLatest(Consts.CREATE_DOCUMENT_FROM_ARRAY_BUFFER_ACTION, this.withErrorHandler(this.createDocumentFromArrayBufferAction));
+    yield takeLatest(Consts.TOGGLE_TEXT_MODE_ACTION, this.withErrorHandler(this.fetchPageTextIfRequired));
+    yield takeLatest(Consts.SET_NEW_PAGE_NUMBER_ACTION, this.withErrorHandler(this.fetchPageData));
+    yield takeLatest(Consts.SET_PAGE_BY_URL_ACTION, this.withErrorHandler(this.setPageByUrl));
+    yield takeLatest(Consts.SAVE_DOCUMENT_ACTION, this.withErrorHandler(this.saveDocument));
+    yield takeLatest(Consts.CLOSE_DOCUMENT_ACTION, this.withErrorHandler(this.resetWorker));
 }
 
-function* saveDocument() {
-    const state = yield select();
-    const djvuWorker = get.djvuWorker(state);
-    const fileName = get.fileName(state);
-
-    if (fileName) {
-        const url = yield djvuWorker.createDocumentUrl();
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = /\.(djv|djvu)$/.test(fileName) ? fileName : (fileName + '.djvu');
-        a.dispatchEvent(new MouseEvent("click"));
-    }
-}
-
-function* resetWorker() {
-    const state = yield select();
-    const djvuWorker = get.djvuWorker(state);
-    resetPagesCache();
-    djvuWorker.reset();
-}
-
-export default function* rootSaga() {
-    yield takeLatest(Consts.CREATE_DOCUMENT_FROM_ARRAY_BUFFER_ACTION, withErrorHandler(createDocumentFromArrayBufferAction));
-    yield takeLatest(Consts.TOGGLE_TEXT_MODE_ACTION, withErrorHandler(fetchPageTextIfRequired));
-    yield takeLatest(Consts.SET_NEW_PAGE_NUMBER_ACTION, withErrorHandler(fetchPageData));
-    yield takeLatest(Consts.SET_PAGE_BY_URL_ACTION, withErrorHandler(setPageByUrl));
-    yield takeLatest(Consts.SAVE_DOCUMENT_ACTION, withErrorHandler(saveDocument));
-    yield takeLatest(Consts.CLOSE_DOCUMENT_ACTION, withErrorHandler(resetWorker));
-}
+// all sagas and data are packed into a single object in order to provide an ability to create many independent instances of the viewer
+export default () => rootSaga.bind({ ...createSagaDataObject(), ...sagas });

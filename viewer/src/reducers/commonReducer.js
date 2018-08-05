@@ -1,9 +1,7 @@
 import { createGetObjectByState } from '../utils';
 import Consts from '../constants/consts';
-import DjVu from '../DjVu';
 
 const initialState = Object.freeze({
-    djvuWorker: new DjVu.Worker(),
     fileName: null,
     userScale: 1,
     isLoading: false,
