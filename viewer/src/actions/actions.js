@@ -84,7 +84,7 @@ const Actions = {
 
     setUserScaleAction: (scale) => ({
         type: Consts.SET_USER_SCALE_ACTION,
-        scale: scale
+        scale: scale < 0.1 ? 0.1 : scale > 6 ? 6 : scale
     }),
 
     // dataUrlCreatedAction: (dataUrl) => ({

@@ -18,26 +18,16 @@ class ScaleGizmo extends React.Component {
         setUserScale: PropTypes.func.isRequired
     };
 
-    boundValue(value) {
-        if (value < 0.1) {
-            return 0.1;
-        }
-        if (value > 6) {
-            return 6;
-        }
-        return value;
-    }
-
     increaseScale = (e) => {
         e.preventDefault();
         var newScale = Math.floor((Math.round(this.props.scale * 100) + 10) / 10) / 10;
-        this.props.setUserScale(this.boundValue(newScale));
+        this.props.setUserScale(newScale);
     };
 
     decreaseScale = (e) => {
         e.preventDefault();
         var newScale = Math.floor((Math.round(this.props.scale * 100) - 10) / 10) / 10;
-        this.props.setUserScale(this.boundValue(newScale));
+        this.props.setUserScale(newScale);
     };
 
     startEditing = (e) => {
@@ -48,7 +38,7 @@ class ScaleGizmo extends React.Component {
         var res = /\d+/.exec(e.target.value);
         var number = res ? +res[0] : 1;
         var newScale = Math.round(number) / 100;
-        this.props.setUserScale(this.boundValue(newScale));
+        this.props.setUserScale(newScale);
         e.target.blur();
         this.setState({ tempValue: null });
     };
