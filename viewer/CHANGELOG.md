@@ -1,5 +1,10 @@
 # DjVu.js Viewer Changelog
 
+## v.0.2.1 (20.08.2018)
+
+- Turn over pages via scrolling.
+- Bug fixes. 
+
 ## v.0.2.0 (05.08.2018)
 
 - Now it's possible to create many instances of the viewer.

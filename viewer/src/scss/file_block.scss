@@ -17,6 +17,7 @@
     .file_name {
         overflow: hidden;
         flex: 0 1 auto;
+        max-width: 20em;
         text-align: left;
         text-overflow: ellipsis;
         margin: 0 0.5em;
