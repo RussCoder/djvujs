@@ -1,9 +1,17 @@
-<link rel="stylesheet" href="/dist/djvu_viewer.css"/>
+<link rel="stylesheet" href="<%= viewer_css_link %>"/>
 
-<script src="/dist/djvu.js"></script>
-<script src="/dist/djvu_viewer.js"></script>
+<script src="<%= library_link %>"></script>
+<script src="<%= viewer_js_link %>"></script>
 <script>
     window.onload = function() { 
-        DjVu.Viewer.init(document.querySelector("#for_viewer"));
+        var ViewerInstance = new DjVu.Viewer();
+        ViewerInstance.render(document.querySelector("#for_viewer"));
+
+        document.querySelectorAll('a.djvu_example').forEach(link => {
+            link.onclick = e => {
+                e.preventDefault();
+                ViewerInstance.loadDocumentByUrl(link.href);
+            };
+        })
     }
 </script>

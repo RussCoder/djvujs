@@ -11,6 +11,7 @@ body {
 
 #for_viewer {
     height: 90vh;
+    border: 1px solid gray;
 }
 
 header {
@@ -45,14 +46,16 @@ header {
 }
 
 nav {
-    font-size: 2em;
+    font-size: 21px;
     display: flex;
     margin: 1em;
     justify-content: space-around;
+    flex-wrap: wrap;
+
     a {
         font-size: inherit;
         cursor: pointer;
-        margin: 0 1em;
+        margin: 0.1em 0.1em;
         padding: 0.3em;
         text-decoration: none;
         color: inherit;
@@ -66,8 +69,16 @@ nav {
 }
 
 .main {
-    font-size: 1.5em;
-    padding: 0 4em;
+    font-size: 20px;
+    padding: 0 2em;
+
+    .djvu_examples {
+        margin: 1em;
+
+        a {
+            margin: 0 0.5em;
+        }
+    }
 }
 
 h1 {
@@ -102,18 +113,6 @@ a {
     &:hover {
         background: $lineColor;
     }
-}
-
-code {
-    border-radius: 0.2em;
-    padding: 0 0.2em;
-    background: #f4f4f7;
-}
-
-pre {
-    overflow: auto;
-    padding: 0.5em;
-    background: #f4f4f7;
 }
 
 blockquote {

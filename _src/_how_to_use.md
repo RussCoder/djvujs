@@ -2,7 +2,7 @@
 
 Create a folder with all 3 files, that you have downloaded here (`djvu.js`, `djvu_viewer.js` and `djvu_viewer.css`). Then in the same folder create an .html file (let's say `index.html`) with the following content.
 
-```
+```markup
 <!DOCTYPE html>
 <html>
 
@@ -14,7 +14,10 @@ Create a folder with all 3 files, that you have downloaded here (`djvu.js`, `djv
 
 	<script>
 		window.onload = function () {
-			DjVu.Viewer.init(
+            // save as a global value
+            window.ViewerInstance = new DjVu.Viewer(); 
+            // render into the element
+            window.ViewerInstance.render(
                 document.querySelector("#for_viewer")
             );
 		};

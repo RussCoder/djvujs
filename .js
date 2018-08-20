@@ -1,9 +1,9 @@
 const fs = require('fs-extra');
 
 if (fs.existsSync('build/')) {
-    fs.removeSync('dist/');
-    fs.copySync('build/', 'dist/');
-    fs.copySync('build/', '_src/dist');
+    fs.removeSync('assets/dist/');
+    fs.copySync('build/', 'assets/dist/');
+    fs.copySync('assets/', '_src/assets/');
 }
 
 if (fs.existsSync('compile/')) {

@@ -2,10 +2,12 @@
 
 Here you can download the library and the viewer .js and .css files.
 
-<p><a href="/dist/djvu.js" download="djvu.js">Download DjVu.js library (version <%= library_version %>)</a></p>
+<p><a href="<%= library_link %>" download="djvu.js">Download DjVu.js library (version <%= library_version %>)</a></p>
 
-<p></p><a href="/dist/djvu_viewer.js" download="djvu_viewer.js">Download DjVu.js Viewer .js file (version <%= viewer_version %>)</a></p>
+<p></p><a href="<%= viewer_js_link %>" download="djvu_viewer.js">Download DjVu.js Viewer .js file (version <%= viewer_version %>)</a></p>
 
-<p></p><a href="/dist/djvu_viewer.css" download="djvu_viewer.css">Download DjVu.js Viewer .css file (version <%= viewer_version %>)</a></p>
+<p></p><a href="<%= viewer_css_link %>" download="djvu_viewer.css">Download DjVu.js Viewer .css file (version <%= viewer_version %>)</a></p>
+
+<p>You can download <em>the previous versions</em> <a href="https://github.com/RussCoder/djvujs/releases">here</a>.</p>
 
 <%- partial("_how_to_use") %>

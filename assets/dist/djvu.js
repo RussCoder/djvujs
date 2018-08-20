@@ -5,7 +5,7 @@ var DjVu = (function () {
     'use strict;'
 
     var DjVu = {
-        VERSION: '0.2.0',
+        VERSION: '0.2.1',
         IS_DEBUG: false,
         setDebugMode: (flag) => DjVu.IS_DEBUG = flag
     };
@@ -94,6 +94,117 @@ var DjVu = (function () {
             }
         }
         return codePoints;
+    }
+
+    class ByteStreamWriter {
+        constructor(length) {
+            this.growStep = length || 4096;
+            this.buffer = new ArrayBuffer(this.growStep);
+            this.viewer = new DataView(this.buffer);
+            this.offset = 0;
+            this.offsetMarks = {};
+        }
+        reset() {
+            this.offset = 0;
+            this.offsetMarks = {};
+        }
+        saveOffsetMark(mark) {
+            this.offsetMarks[mark] = this.offset;
+            return this;
+        }
+        get bufferLength() {
+            return this.buffer.byteLength;
+        }
+        writeByte(byte) {
+            this.checkOffset();
+            this.viewer.setUint8(this.offset++, byte);
+            return this;
+        }
+        writeStr(str) {
+            this.writeArray(codePointsToUtf8(stringToCodePoints(str)));
+            return this;
+        }
+        writeInt32(val) {
+            this.checkOffset(3);
+            this.viewer.setInt32(this.offset, val);
+            this.offset += 4;
+            return this;
+        }
+        rewriteInt32(off, val) {
+            var xoff = off;
+            if (typeof (xoff) === 'string') {
+                xoff = this.offsetMarks[off];
+                this.offsetMarks[off] += 4;
+            }
+            this.viewer.setInt32(xoff, val);
+        }
+        rewriteSize(offmark) {
+            if (!this.offsetMarks[offmark]) throw new Error('Unexisting offset mark');
+            var xoff = this.offsetMarks[offmark];
+            this.viewer.setInt32(xoff, this.offset - xoff - 4);
+        }
+        getBuffer() {
+            if (this.offset === this.buffer.byteLength) {
+                return this.buffer;
+            }
+            return this.buffer.slice(0, this.offset);
+        }
+        checkOffset(bytes) {
+            bytes = bytes || 0;
+            var bool = this.offset + bytes >= this.bufferLength;
+            if (bool) {
+                this.extense();
+            }
+            return bool;
+        }
+        extense() {
+            var newlength = this.bufferLength + this.buffer.byteLength;
+            var nb = new ArrayBuffer(newlength);
+            new Uint8Array(nb).set(new Uint8Array(this.buffer));
+            this.buffer = nb;
+            this.viewer = new DataView(this.buffer);
+        }
+        jump(length) {
+            length = +length;
+            if (length > 0) {
+                this.checkOffset(length - 1);
+            }
+            this.offset += length;
+            return this;
+        }
+        writeByteStream(bs) {
+            this.writeArray(bs.toUint8Array());
+        }
+        writeArray(arr) {
+            while (this.checkOffset(arr.length - 1)) { }
+            new Uint8Array(this.buffer).set(arr, this.offset);
+            this.offset += arr.length;
+        }
+        writeBuffer(buffer) {
+            this.writeArray(new Uint8Array(buffer));
+        }
+        writeStrNT(str) {
+            this.writeStr(str);
+            this.writeByte(0);
+        }
+        writeInt16(val) {
+            this.checkOffset(1);
+            this.viewer.setInt16(this.offset, val);
+            this.offset += 2;
+            return this;
+        }
+        writeUint16(val) {
+            this.checkOffset(1);
+            this.viewer.setUint16(this.offset, val);
+            this.offset += 2;
+            return this;
+        }
+        writeInt24(val) {
+            this.writeByte((val >> 16) & 0xff)
+                .writeByte((val >> 8) & 0xff)
+                .writeByte(val & 0xff);
+            return this;
+        }
     }
 
     class ZPEncoder {
@@ -427,7 +538,7 @@ var DjVu = (function () {
         242, 7, 10, 245, 2, 1, 83, 250, 2, 143, 246
     );
 
-    class Bitmap$1 {
+    class Bitmap {
         constructor(width, height) {
             var length = Math.ceil(width * height / 8);
             this.height = height;
@@ -515,7 +626,7 @@ var DjVu = (function () {
             if (topShift || bottomShift || leftShift || rightShift) {
                 var newWidth = this.width - leftShift - rightShift;
                 var newHeight = this.height - topShift - bottomShift;
-                var newBitMap = new Bitmap$1(newWidth, newHeight);
+                var newBitMap = new Bitmap(newWidth, newHeight);
                 for (var i = bottomShift, p = 0; p < newHeight; p++ , i++) {
                     for (var j = leftShift, q = 0; q < newWidth; q++ , j++) {
                         if (this.get(i, j)) {
@@ -572,117 +683,6 @@ var DjVu = (function () {
         }
         reinit() {
             this.arr[0] = this.arr[1] = this.arr[2] = 0;
-        }
-    }
-
-    class ByteStreamWriter$1 {
-        constructor(length) {
-            this.growStep = length || 4096;
-            this.buffer = new ArrayBuffer(this.growStep);
-            this.viewer = new DataView(this.buffer);
-            this.offset = 0;
-            this.offsetMarks = {};
-        }
-        reset() {
-            this.offset = 0;
-            this.offsetMarks = {};
-        }
-        saveOffsetMark(mark) {
-            this.offsetMarks[mark] = this.offset;
-            return this;
-        }
-        get bufferLength() {
-            return this.buffer.byteLength;
-        }
-        writeByte(byte) {
-            this.checkOffset();
-            this.viewer.setUint8(this.offset++, byte);
-            return this;
-        }
-        writeStr(str) {
-            this.writeArray(codePointsToUtf8(stringToCodePoints(str)));
-            return this;
-        }
-        writeInt32(val) {
-            this.checkOffset(3);
-            this.viewer.setInt32(this.offset, val);
-            this.offset += 4;
-            return this;
-        }
-        rewriteInt32(off, val) {
-            var xoff = off;
-            if (typeof (xoff) === 'string') {
-                xoff = this.offsetMarks[off];
-                this.offsetMarks[off] += 4;
-            }
-            this.viewer.setInt32(xoff, val);
-        }
-        rewriteSize(offmark) {
-            if (!this.offsetMarks[offmark]) throw new Error('Unexisting offset mark');
-            var xoff = this.offsetMarks[offmark];
-            this.viewer.setInt32(xoff, this.offset - xoff - 4);
-        }
-        getBuffer() {
-            if (this.offset === this.buffer.byteLength) {
-                return this.buffer;
-            }
-            return this.buffer.slice(0, this.offset);
-        }
-        checkOffset(bytes) {
-            bytes = bytes || 0;
-            var bool = this.offset + bytes >= this.bufferLength;
-            if (bool) {
-                this.extense();
-            }
-            return bool;
-        }
-        extense() {
-            var newlength = this.bufferLength + this.buffer.byteLength;
-            var nb = new ArrayBuffer(newlength);
-            new Uint8Array(nb).set(new Uint8Array(this.buffer));
-            this.buffer = nb;
-            this.viewer = new DataView(this.buffer);
-        }
-        jump(length) {
-            length = +length;
-            if (length > 0) {
-                this.checkOffset(length - 1);
-            }
-            this.offset += length;
-            return this;
-        }
-        writeByteStream(bs) {
-            this.writeArray(bs.toUint8Array());
-        }
-        writeArray(arr) {
-            while (this.checkOffset(arr.length - 1)) { }
-            new Uint8Array(this.buffer).set(arr, this.offset);
-            this.offset += arr.length;
-        }
-        writeBuffer(buffer) {
-            this.writeArray(new Uint8Array(buffer));
-        }
-        writeStrNT(str) {
-            this.writeStr(str);
-            this.writeByte(0);
-        }
-        writeInt16(val) {
-            this.checkOffset(1);
-            this.viewer.setInt16(this.offset, val);
-            this.offset += 2;
-            return this;
-        }
-        writeUint16(val) {
-            this.checkOffset(1);
-            this.viewer.setUint16(this.offset, val);
-            this.offset += 2;
-            return this;
-        }
-        writeInt24(val) {
-            this.writeByte((val >> 16) & 0xff)
-                .writeByte((val >> 8) & 0xff)
-                .writeByte(val & 0xff);
-            return this;
         }
     }
 
@@ -982,7 +982,7 @@ var DjVu = (function () {
             var bsw, size;
             while (size = this._decode()) {
                 if (!bsw) {
-                    bsw = new ByteStreamWriter$1(size - 1);
+                    bsw = new ByteStreamWriter(size - 1);
                     var arr = new Uint8Array(this.data.buffer, 0, this.data.length - 1);
                     bsw.writeArray(arr);
                 }
@@ -1257,7 +1257,7 @@ var DjVu = (function () {
             return (negative) ? (- cutoff - 1) : cutoff;
         }
         decodeBitmap(width, height) {
-            var bitmap = new Bitmap$1(width, height);
+            var bitmap = new Bitmap(width, height);
             for (var i = height - 1; i >= 0; i--) {
                 for (var j = 0; j < width; j++) {
                     var ind = this.getCtxIndex(bitmap, i, j);
@@ -1279,7 +1279,7 @@ var DjVu = (function () {
             return index;
         }
         decodeBitmapRef(width, height, mbm) {
-            var cbm = new Bitmap$1(width, height);
+            var cbm = new Bitmap(width, height);
             var alignInfo = this.alignBitmaps(cbm, mbm);
             for (var i = height - 1; i >= 0; i--) {
                 for (var j = 0; j < width; j++) {
@@ -2461,7 +2461,9 @@ var DjVu = (function () {
                 else if (this.fgimage) {
                     return this.fgimage.getImage();
                 } else {
-                    throw new CorruptedFileDjVuError("There is neither mask, nor background, nor foreground!");
+                    var emptyImage = new ImageData(this.info.width, this.info.height);
+                    emptyImage.data.fill(255);
+                    return emptyImage;
                 }
             }
             if (!this.bgimage && !this.fgimage) {
@@ -2639,7 +2641,7 @@ var DjVu = (function () {
         }
         getPageTextZone() {
             this.init();
-            return this.text ? this.text.getTextZones() : null;
+            return this.text ? this.text.getPageZone() : null;
         }
         getNormalizedTextZones() {
             this.init();
@@ -2916,7 +2918,7 @@ var DjVu = (function () {
 
     class DjVuWriter {
         constructor(length) {
-            this.bsw = new ByteStreamWriter$1(length || 1024 * 1024);
+            this.bsw = new ByteStreamWriter(length || 1024 * 1024);
         }
         startDJVM() {
             this.bsw.writeStr('AT&T').writeStr('FORM').saveOffsetMark('fileSize')
@@ -2930,7 +2932,7 @@ var DjVu = (function () {
                 .writeInt16(dirm.flags.length)
                 .saveOffsetMark('DIRMoffsets')
                 .jump(4 * dirm.flags.length);
-            var tmpBS = new ByteStreamWriter$1();
+            var tmpBS = new ByteStreamWriter();
             for (var i = 0; i < dirm.sizes.length; i++) {
                 tmpBS.writeInt24(dirm.sizes[i]);
             }
@@ -2948,7 +2950,7 @@ var DjVu = (function () {
             }
             tmpBS.writeByte(0);
             var tmpBuffer = tmpBS.getBuffer();
-            var bzzBS = new ByteStreamWriter$1();
+            var bzzBS = new ByteStreamWriter();
             var zp = new ZPEncoder(bzzBS);
             var bzz = new BZZEncoder(zp);
             bzz.encode(tmpBuffer);
@@ -3007,7 +3009,7 @@ var DjVu = (function () {
 
     class ThumChunk extends CompositeChunk { }
 
-    class DjVuDocument$1 {
+    class DjVuDocument {
         constructor(arraybuffer) {
             this.buffer = arraybuffer;
             this.bs = new ByteStream(arraybuffer);
@@ -3206,7 +3208,7 @@ var DjVu = (function () {
             }
             var newbuffer = djvuWriter.getBuffer();
             DjVu.IS_DEBUG && console.log("New Buffer size = ", newbuffer.byteLength);
-            var doc = new DjVuDocument$1(newbuffer);
+            var doc = new DjVuDocument(newbuffer);
             return doc;
         }
         static concat(doc1, doc2) {
@@ -3267,7 +3269,7 @@ var DjVu = (function () {
             for (var i = 0; i < length; i++) {
                 dw.writeFormChunkBS(pages[i].bs);
             }
-            return new DjVuDocument$1(dw.getBuffer());
+            return new DjVuDocument(dw.getBuffer());
         }
     }
 
@@ -3833,7 +3835,7 @@ var DjVu = (function () {
             dirm.sizes = [];
         }
         addPageToDocument(imageData) {
-            var tbsw = new ByteStreamWriter$1();
+            var tbsw = new ByteStreamWriter();
             this.writeImagePage(tbsw, imageData);
             var buffer = tbsw.getBuffer();
             this.pageBuffers.push(buffer);
@@ -3865,7 +3867,7 @@ var DjVu = (function () {
             dirm.flags = new Array(imageArray.length);
             dirm.ids = new Array(imageArray.length);
             dirm.sizes = new Array(imageArray.length);
-            var tbsw = new ByteStreamWriter$1();
+            var tbsw = new ByteStreamWriter();
             for (var i = 0; i < imageArray.length; i++) {
                 this.writeImagePage(tbsw, imageArray[i]);
                 var buffer = tbsw.getBuffer();
@@ -3919,7 +3921,7 @@ var DjVu = (function () {
             bsw.rewriteSize('BG44Size');
         }
         createOnePageDocument(imageData) {
-            var bsw = new ByteStreamWriter$1(10 * 1024);
+            var bsw = new ByteStreamWriter(10 * 1024);
             bsw.writeStr('AT&T');
             this.writeImagePage(bsw, imageData);
             return new DjVuDocument(bsw.getBuffer());
@@ -4035,7 +4037,7 @@ var DjVu = (function () {
                     buffer: value.data.buffer
                 };
             }
-            if (value instanceof DjVuDocument$1) {
+            if (value instanceof DjVuDocument) {
                 transferList.push(value.buffer);
                 return value.buffer;
             }
@@ -4150,11 +4152,11 @@ var DjVu = (function () {
                 postMessage({ command: 'slice', buffer: ndoc.buffer }, [ndoc.buffer]);
             },
             createDocument(obj) {
-                djvuDocument = new DjVuDocument$1(obj.buffer);
+                djvuDocument = new DjVuDocument(obj.buffer);
                 postMessage({ command: 'createDocument', pagenumber: djvuDocument.pages.length });
             },
             reloadDocument() {
-                djvuDocument = new DjVuDocument$1(djvuDocument.buffer);
+                djvuDocument = new DjVuDocument(djvuDocument.buffer);
             }
         };
     }
@@ -4164,7 +4166,7 @@ var DjVu = (function () {
     }
     var index = Object.assign({}, DjVu, {
         Worker: DjVuWorker,
-        Document: DjVuDocument$1,
+        Document: DjVuDocument,
         ErrorCodes: DjVuErrorCodes
     });
 
