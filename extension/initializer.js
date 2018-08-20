@@ -1,13 +1,6 @@
 window.onload = function () {
-    window.DjVu.Viewer.init(document.getElementById('root'));
-
-    // chrome.tabs.getCurrent(tab => {
-    //     chrome.runtime.sendMessage(tab.id, url => {
-    //         if (url) {
-    //             DjVu.Viewer.loadDocumentByUrl(url);
-    //         }
-    //     });
-    // });
+    window.ViewerInstance = new window.DjVu.Viewer();
+    window.ViewerInstance.render(document.getElementById('root'));
 
     hashChangeHandler();
     window.onhashchange = hashChangeHandler;
@@ -16,7 +9,7 @@ window.onload = function () {
 function hashChangeHandler() {
     if (location.hash) {
         var url = location.hash.substr(1);
-        DjVu.Viewer.loadDocumentByUrl(url);
+        window.ViewerInstance.loadDocumentByUrl(url);
         var res = /[^/]*$/.exec(url.trim());
         if (res) {
             document.title = res[0];
