@@ -8,7 +8,7 @@ Create a folder with all 3 files, that you have downloaded here (`djvu.js`, `djv
 
 <header>
 	<meta charset="utf-8">
-	<script id="djvu_js_lib" src="djvu.js"></script>
+	<script src="djvu.js"></script>
 	<script src="djvu_viewer.js"></script>
 	<link href="djvu_viewer.css" rel="stylesheet">
 
@@ -33,8 +33,6 @@ Create a folder with all 3 files, that you have downloaded here (`djvu.js`, `djv
 
 ```
 
->Note that it's important to add `id` attribute `djvu_js_lib` to the script with `djvu.js`. Otherwise, the DjVuWorker may not be able to find the script url and create a Web Worker object.  
-
 If you use Mozilla Firefox web browser, then you can just open the `index.html` and you will see the DjVu.js viewer, which will work absolutely the same way
 as it does on the main page of this website. But if you use Google Chrome or Opera, you won't see anything except for some errors in the console. It's concerned with that the 
 DjVu.js uses the Web Workers API of the web browsers and Chrome doesn't allow the script to create a Worker, when the file is loaded from the file system directly. In other words, you just need
@@ -52,4 +50,96 @@ to install the `serve` package globally and then head to the directory, where ou
 serve -p 5000
 ```
 
-in order to start the local server (you may change the port as you wish). Then just open [http://localhost:5000/](http://localhost:5000/) and you will see the viewer. 
+in order to start the local server (you may change the port as you wish). Then just open [http://localhost:5000/](http://localhost:5000/) and you will see the viewer.
+
+Furthermore, the viewer has a program API, which allows to open djvu files programmatically:
+
+- `loadDocument(buffer, name)` - which accepts the `ArrayBuffer` and a name of a document which should be shown at footer(it's optional).
+- `async loadDocumentByUrl(url)` - which loads the documents as an `ArrayBuffer` and then invokes the previous method.
+
+Thus, to load a document programmatically you can do the following:
+
+```
+var viewer = new DjVu.Viewer();
+viewer = render(document.getElementById('for_viewer'));
+viewer.loadDocumentByUrl('assets/my-djvu-file.djvu');
+```
+
+Also you can load the file by your own and then use the `loadDocument` method. However, in case of the `loadDocumentByUrl` you will see a progress bar of loading, if your file is rather big.
+
+You can create several links to djvu files and open them in the viewer, when a user clicks on them. Here is the complete example:
+
+```markup
+<!DOCTYPE html>
+<html>
+
+<header>
+    <meta charset="utf-8">
+    <script id="djvu_js_lib" src="djvu.js"></script>
+    <script src="djvu_viewer.js"></script>
+    <link href="djvu_viewer.css" rel="stylesheet">
+    <script src="reloader.js"></script>
+
+    <script>
+        window.onload = function() {
+            // save as a global value
+            window.ViewerInstance = new DjVu.Viewer();
+            // render into the element
+            window.ViewerInstance.render(
+                document.querySelector("#for_viewer")
+            );
+
+            // get all special links
+            document.querySelectorAll('a.djvu').forEach(link => {
+                link.addEventListener('click', e => {
+                    // we don't want to download the file
+                    e.preventDefault();
+                    // open the file in the viewer by its url
+                    ViewerInstance.loadDocumentByUrl(link.href);
+                });
+            });
+        };
+    </script>
+
+    <style>
+        /* make it pretty-looking */
+
+        body {
+            height: 100vh;
+            margin: 0;
+        }
+
+        #for_viewer {
+            height: 80vh;
+            width: 90vw;
+            margin: 5vh auto;
+            border: 1px solid black;
+        }
+
+        a.djvu {
+            display: inline-block;
+            margin: 2vh 2vw;
+            border: 1px solid gray;
+            text-decoration: none;
+            color: inherit;
+            padding: 1vh 1vw;
+            border-radius: 0.5em;
+        }
+
+        a.djvu:hover {
+            background: lightgray;
+        }
+    </style>
+
+</header>
+
+<body>
+    <a href="DjVu3Spec.djvu" class="djvu">Open DjVu3Spec.djvu</a>
+    <a href="colorbook.djvu" class="djvu">Open colorbook.djvu</a>
+    <div id="for_viewer"></div>
+</body>
+
+</html>
+```
+
+The same technique is used on the main page of this website. You can open both `DjVu3Spec.djvu` and `colorbook.djvu` in the viewer on the main page, then save them through the viewer (Ctrl+S) and run the example posted above. Note that you have to run a local server to make everything work. 
