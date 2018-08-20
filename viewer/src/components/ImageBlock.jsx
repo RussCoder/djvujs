@@ -39,30 +39,56 @@ class ImageBlock extends React.Component {
         if (widthDiff > 0) {
             this.wrapper.scrollLeft = snapshot.horizontalRatio ? (snapshot.horizontalRatio * this.wrapper.scrollWidth - this.wrapper.clientWidth / 2) : (widthDiff / 2);
         }
-        if (prevProps.imageData !== this.props.imageData) { // when a page was changed
-            this.wrapper.scrollTop = 0;
-            return;
+        if (prevProps.imageData !== this.props.imageData) { // when a page was changed     
+            if (this.scrollToBottomOnUpdate) {
+                this.wrapper.scrollTop = this.wrapper.scrollHeight;
+                this.scrollToBottomOnUpdate = false;
+            } else {
+                this.wrapper.scrollTop = 0;
+            }
+        } else {
+            var heightDiff = this.wrapper.scrollHeight - this.wrapper.clientHeight;
+            if (heightDiff > 0 && this.wrapper.scrollTop) {
+                this.wrapper.scrollTop = snapshot.verticalRatio ? (snapshot.verticalRatio * this.wrapper.scrollHeight - this.wrapper.clientHeight / 2) : (heightDiff / 2);
+            }
         }
-        var heightDiff = this.wrapper.scrollHeight - this.wrapper.clientHeight;
-        if (heightDiff > 0 && this.wrapper.scrollTop) {
-            this.wrapper.scrollTop = snapshot.verticalRatio ? (snapshot.verticalRatio * this.wrapper.scrollHeight - this.wrapper.clientHeight / 2) : (heightDiff / 2);
-        }
+        this.complexImage.style.opacity = 1; // show the content after the scroll bars were adjusted
     }
 
     componentDidMount() {
         this.componentDidUpdate({}, {}, {});
     }
 
-    wrapperRef = (node) => this.wrapper = node;
-
     onWheel = (e) => {
-        if (!e.ctrlKey) {
+        if (this.scrollTimeStamp) {
+            if (e.nativeEvent.timeStamp - this.scrollTimeStamp < 100) {
+                e.nativeEvent.preventDefault();
+                this.scrollTimeStamp = e.nativeEvent.timeStamp;
+                return;
+            } else {
+                this.wrapper.style.overflow = null;
+                this.scrollTimeStamp = null;
+            }
+        }
+        if (!e.ctrlKey && e.nativeEvent.cancelable) {
+            if ((this.wrapper.scrollHeight === this.wrapper.scrollTop + this.wrapper.clientHeight) && e.deltaY > 0) {
+                e.preventDefault();
+                this.scrollTimeStamp = e.nativeEvent.timeStamp;
+                this.props.dispatch(Actions.goToNextPageAction());
+            } else if (this.wrapper.scrollTop === 0 && e.deltaY < 0) {
+                e.preventDefault();
+                this.scrollTimeStamp = e.nativeEvent.timeStamp;
+                this.scrollToBottomOnUpdate = true;
+                this.props.dispatch(Actions.goToPreviousPageAction());
+            }
             return;
         }
-        e.preventDefault();
-        const scaleDelta = 0.05 * (-Math.sign(e.deltaY));
-        const newScale = this.props.userScale + scaleDelta;
-        this.props.dispatch(Actions.setUserScaleAction(newScale));
+        if (e.ctrlKey) {
+            e.preventDefault();
+            const scaleDelta = 0.05 * (-Math.sign(e.deltaY));
+            const newScale = this.props.userScale + scaleDelta;
+            this.props.dispatch(Actions.setUserScaleAction(newScale));
+        }
     };
 
     handleMoving = (e) => {
@@ -97,6 +123,10 @@ class ImageBlock extends React.Component {
         this.wrapper.removeEventListener('mousemove', this.handleMoving);
     };
 
+    wrapperRef = (node) => this.wrapper = node;
+
+    complexImageRef = node => this.complexImage = node;
+
     render() {
         const isGrabMode = this.props.cursorMode === Consts.GRAB_CURSOR_MODE;
         const classes = {
@@ -112,7 +142,12 @@ class ImageBlock extends React.Component {
                 onMouseUp={isGrabMode ? this.finishMoving : null}
                 onMouseLeave={isGrabMode ? this.finishMoving : null}
             >
-                <div className="complex_image">
+                <div className="padding">&nbsp;</div>
+                <div
+                    className="complex_image"
+                    style={{ opacity: 0 }} // is changed each time in componentDidUpdate
+                    ref={this.complexImageRef}
+                >
                     {this.props.imageData ? <CanvasImage {...this.props} /> : null}
                     {this.props.textZones ? <TextLayer
                         textZones={this.props.textZones}
@@ -122,6 +157,7 @@ class ImageBlock extends React.Component {
                         userScale={this.props.userScale}
                     /> : null}
                 </div>
+                <div className="padding">&nbsp;</div>
             </div>
         );
     }
