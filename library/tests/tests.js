@@ -434,6 +434,15 @@ var Tests = {
         return this._imageTest("history.djvu", 2, null, 1203480221);
     },
 
+    async testEmptyPage() {
+        var buffer = await (await fetch(`/assets/malliavin.djvu`)).arrayBuffer();
+        await djvuWorker.createDocument(buffer);
+        var obj = await djvuWorker.getPageImageDataWithDpi(6);
+        if (!obj.imageData.data.every(byte => byte === 255)) {
+            return "The page must be empty, but it isn't!";
+        }
+    },
+
     /*test3LayerColorImage() { // отключен так как не ясен алгоритм масштабирования слоев
         return this._imageTest("colorbook.djvu", 3, "colorbook_4.png");
     }*/

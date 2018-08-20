@@ -1,5 +1,9 @@
 # DjVu.js Library Changelog
 
+## v.0.2.1 (20.08.2018)
+
+- Empty pages are processed correctly.
+
 ## v.0.2.0 (16.06.2018)
 
 - DjVuWorker is created from the Data URL which is generated automatically, so there is no need in explicit script URL. 

@@ -172,7 +172,9 @@ export default class DjVuPage extends CompositeChunk {
             else if (this.fgimage) {
                 return this.fgimage.getImage();
             } else {
-                throw new CorruptedFileDjVuError("There is neither mask, nor background, nor foreground!");
+                var emptyImage = new ImageData(this.info.width, this.info.height);
+                emptyImage.data.fill(255);
+                return emptyImage;
             }
         }
         if (!this.bgimage && !this.fgimage) {
