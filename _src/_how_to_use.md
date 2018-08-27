@@ -54,8 +54,11 @@ in order to start the local server (you may change the port as you wish). Then j
 
 Furthermore, the viewer has a program API, which allows to open djvu files programmatically:
 
-- `loadDocument(buffer, name)` - which accepts the `ArrayBuffer` and a name of a document which should be shown at footer(it's optional).
-- `async loadDocumentByUrl(url)` - which loads the documents as an `ArrayBuffer` and then invokes the previous method.
+- `loadDocument(buffer, name = "***", config = null)` - accepts the `ArrayBuffer` and a name of a document which should be shown at footer (it's optional).
+- `async loadDocumentByUrl(url, config = null)` - loads the documents as an `ArrayBuffer` and then invokes the previous method.
+- `configure(config)` - just sets the options. Note, that when a document is loaded some option are reset to the initial ones, so you have to call the method again or use the last parameter of the two previous methods.
+
+The `config` is an object containing options for the viewer. Right now,the only one option is available, namely the rotation of a page: `{pageRotation: 90}`. There are 4 valid values: 0, 90, 180 and 270.
 
 Thus, to load a document programmatically you can do the following:
 
