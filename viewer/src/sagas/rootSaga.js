@@ -131,6 +131,11 @@ const sagas = {
             fileName: action.fileName
         });
 
+        if (this.callbacks['document_created']) {
+            this.callbacks['document_created']();
+            delete this.callbacks['document_created'];
+        }
+
         const contents = yield djvuWorker.getContents();
         yield put({
             type: Consts.CONTENTS_IS_GOTTEN_ACTION,
@@ -180,7 +185,11 @@ const sagas = {
         const djvuWorker = get.djvuWorker(state);
         this.resetPagesCache();
         djvuWorker.reset();
-    }
+    },
+
+    setCallback(action) {
+        this.callbacks[action.callbackName] = action.callback;
+    },
 };
 
 function* rootSaga() {
@@ -190,6 +199,7 @@ function* rootSaga() {
     yield takeLatest(Consts.SET_PAGE_BY_URL_ACTION, this.withErrorHandler(this.setPageByUrl));
     yield takeLatest(Consts.SAVE_DOCUMENT_ACTION, this.withErrorHandler(this.saveDocument));
     yield takeLatest(Consts.CLOSE_DOCUMENT_ACTION, this.withErrorHandler(this.resetWorker));
+    yield takeLatest(Consts.SET_API_CALLBACK_ACTION, this.withErrorHandler(this.setCallback));
 }
 
 // all sagas and data are packed into a single object in order to provide an ability to create many independent instances of the viewer

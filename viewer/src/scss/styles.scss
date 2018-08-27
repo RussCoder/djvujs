@@ -27,6 +27,7 @@ body.disable_scroll_djvujs {
     @import "modal_window";
     @import "central_block";
     @import "footer";
+    @import "rotation_control";
 
     &.full_page_view {
         top: 0;

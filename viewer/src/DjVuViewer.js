@@ -8,7 +8,7 @@ import { loadFile } from './utils';
 
 export default class DjVuViewer {
 
-    static VERSION = '0.2.1';
+    static VERSION = '0.2.2';
 
     constructor() {
         this.store = configureStore();
@@ -23,18 +23,31 @@ export default class DjVuViewer {
         );
     }
 
-    loadDocument(buffer, name) {
-        this.store.dispatch(Actions.createDocumentFromArrayBufferAction(buffer, name));
+    configure(config = {}) {
+        if (config.pageRotation) {
+            this.store.dispatch(Actions.setPageRotationAction(config.pageRotation));
+        }
+        return this;
     }
 
-    async loadDocumentByUrl(url) {
+    loadDocument(buffer, name = "***", config = null) {
+        return new Promise(resolve => {
+            this.store.dispatch(Actions.setApiCallbackAction('document_created', () => {
+                config && this.configure(config);
+                resolve();
+            }));
+            this.store.dispatch(Actions.createDocumentFromArrayBufferAction(buffer, name));
+        });
+    }
+
+    async loadDocumentByUrl(url, config = null) {
         try {
             this.store.dispatch(Actions.startFileLoadingAction());
             var buffer = await loadFile(url, (e) => {
                 this.store.dispatch(Actions.fileLoadingProgressAction(e.loaded, e.total));
             });
             var res = /[^/]*$/.exec(url.trim());
-            this.loadDocument(buffer, res ? res[0] : '***');
+            await this.loadDocument(buffer, res ? res[0] : '***', config);
         } catch (e) {
             this.store.dispatch(Actions.errorAction(e));
         } finally {

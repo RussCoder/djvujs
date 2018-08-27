@@ -4,10 +4,9 @@ import { connect } from 'react-redux';
 import cx from 'classnames';
 
 import Actions from '../actions/actions';
-import CanvasImage from './CanvasImage';
 import { get } from '../reducers/rootReducer';
-import TextLayer from './TextLayer';
 import Consts from '../constants/consts';
+import ComplexImage from './ComplexImage';
 
 /**
  * CanvasImage wrapper. Handles user scaling of the image and grabbing.
@@ -16,7 +15,7 @@ class ImageBlock extends React.Component {
 
     static propTypes = {
         imageData: PropTypes.object,
-        imageDPI: PropTypes.number,
+        imageDpi: PropTypes.number,
         userScale: PropTypes.number
     };
 
@@ -52,7 +51,7 @@ class ImageBlock extends React.Component {
                 this.wrapper.scrollTop = snapshot.verticalRatio ? (snapshot.verticalRatio * this.wrapper.scrollHeight - this.wrapper.clientHeight / 2) : (heightDiff / 2);
             }
         }
-        this.complexImage.style.opacity = 1; // show the content after the scroll bars were adjusted
+        this.complexImage && (this.complexImage.style.opacity = 1); // show the content after the scroll bars were adjusted
     }
 
     componentDidMount() {
@@ -142,22 +141,14 @@ class ImageBlock extends React.Component {
                 onMouseUp={isGrabMode ? this.finishMoving : null}
                 onMouseLeave={isGrabMode ? this.finishMoving : null}
             >
-                <div className="padding">&nbsp;</div>
-                <div
-                    className="complex_image"
-                    style={{ opacity: 0 }} // is changed each time in componentDidUpdate
-                    ref={this.complexImageRef}
-                >
-                    {this.props.imageData ? <CanvasImage {...this.props} /> : null}
-                    {this.props.textZones ? <TextLayer
-                        textZones={this.props.textZones}
-                        imageHeight={this.props.imageData.height}
-                        imageWidth={this.props.imageData.width}
-                        imageDpi={this.props.imageDPI}
-                        userScale={this.props.userScale}
-                    /> : null}
-                </div>
-                <div className="padding">&nbsp;</div>
+                {this.props.imageData ?
+                    <div
+                        className="complex_image_wrapper"
+                        ref={this.complexImageRef}
+                        style={{ opacity: 0 }} // is changed in the ComponentDidUpdate
+                    >
+                        <ComplexImage {...this.props} />
+                    </div> : null}
             </div>
         );
     }
@@ -166,9 +157,10 @@ class ImageBlock extends React.Component {
 export default connect(
     state => ({
         imageData: get.imageData(state),
-        imageDPI: get.imageDpi(state),
+        imageDpi: get.imageDpi(state),
         userScale: get.userScale(state),
         textZones: get.textZones(state),
         cursorMode: get.cursorMode(state),
+        rotation: get.pageRotation(state),
     })
 )(ImageBlock);

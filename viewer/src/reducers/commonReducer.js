@@ -4,6 +4,7 @@ import Consts from '../constants/consts';
 const initialState = Object.freeze({
     fileName: null,
     userScale: 1,
+    pageRotation: 0,
     isLoading: false,
     isTextMode: false,
     pagesCount: null,
@@ -16,6 +17,12 @@ const initialState = Object.freeze({
 
 export default (state = initialState, action) => {
     switch (action.type) {
+
+        case Consts.SET_PAGE_ROTATION_ACTION:
+            return {
+                ...state,
+                pageRotation: action.pageRotation
+            };
 
         case Consts.SHOW_HELP_WINDOW_ACTION:
             return {

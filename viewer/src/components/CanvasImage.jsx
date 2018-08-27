@@ -11,7 +11,7 @@ export default class CanvasImage extends React.Component {
 
     static propTypes = {
         imageData: PropTypes.object.isRequired,
-        imageDPI: PropTypes.number.isRequired,
+        imageDpi: PropTypes.number.isRequired,
         userScale: PropTypes.number.isRequired
     };
 
@@ -38,7 +38,7 @@ export default class CanvasImage extends React.Component {
     }
 
     getScaleFactor() {
-        return (this.props.imageDPI ? this.props.imageDPI / Consts.DEFAULT_DPI : 1) / this.props.userScale;
+        return (this.props.imageDpi ? this.props.imageDpi / Consts.DEFAULT_DPI : 1) / this.props.userScale;
     }
 
     getScaledImageWidth() {
@@ -65,11 +65,11 @@ export default class CanvasImage extends React.Component {
     }
 
     logarithmicScale() {
-        const { imageData, imageDPI, userScale } = this.props;
+        const { imageData, imageDpi, userScale } = this.props;
         var tmpH, tmpW, tmpH2, tmpW2;
 
         var image = imageData;
-        var scale = imageDPI ? imageDPI / Consts.DEFAULT_DPI : 1;
+        var scale = imageDpi ? imageDpi / Consts.DEFAULT_DPI : 1;
         scale /= userScale; // current scale factor compared with the initial size of the image
 
         if (scale <= 1) {

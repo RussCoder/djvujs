@@ -1,5 +1,11 @@
 # DjVu.js Viewer Changelog
 
+## v.0.2.2 (27.08.2018)
+
+- Rotate pages 0, 90, 180, 270 degrees clockwise.
+- New API allowing to set the initial page rotation programmatically. 
+- Page positioning improvement.
+
 ## v.0.2.1 (20.08.2018)
 
 - Turn over pages via scrolling.

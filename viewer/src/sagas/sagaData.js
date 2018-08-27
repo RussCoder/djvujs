@@ -6,6 +6,8 @@ export default () => ({
     imageDataPromise: null,
     imageDataPromisePageNumber: null,
 
+    callbacks: {},
+
     resetPagesCache() {
         this.pages = {};
         this.imageDataPromise = null;

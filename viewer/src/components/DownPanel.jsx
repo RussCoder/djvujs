@@ -4,6 +4,7 @@ import PageNumberBlock from './PageNumberBlock'
 import ScaleGizmo from './ScaleGizmo';
 import TextModeButton from './TextModeButton';
 import CursorModeButtonGroup from './CursorModeButtonGroup';
+import RotationControl from './RotationControl';
 
 const DownPanel = () => (
     <div className="down_panel">
@@ -11,6 +12,7 @@ const DownPanel = () => (
         <CursorModeButtonGroup />
         <PageNumberBlock />
         <ScaleGizmo />
+        <RotationControl />
     </div>
 );
 

@@ -7,7 +7,8 @@ class TextLayer extends React.Component {
 
     static propTypes = {
         zone: PropTypes.object,
-        imageHeight: PropTypes.number
+        imageHeight: PropTypes.number,
+        imageWidth: PropTypes.number
     };
 
     render() {

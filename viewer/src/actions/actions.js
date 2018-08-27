@@ -4,6 +4,21 @@ import DjVu from '../DjVu';
 
 const Actions = {
 
+    setApiCallbackAction: (callbackName, callback) => ({
+        type: Consts.SET_API_CALLBACK_ACTION,
+        callbackName: callbackName,
+        callback: callback
+    }),
+
+    setPageRotationAction: rotation => dispatch => {
+        if (rotation === 0 || rotation === 90 || rotation === 180 || rotation === 270) {
+            dispatch({
+                type: Consts.SET_PAGE_ROTATION_ACTION,
+                pageRotation: rotation
+            });
+        }
+    },
+
     closeDocumentAction: () => ({ type: Consts.CLOSE_DOCUMENT_ACTION }),
 
     setCursorModeAction: cursorMode => ({ type: Consts.SET_CURSOR_MODE_ACTION, cursorMode: cursorMode }),
