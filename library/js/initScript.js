@@ -16,8 +16,8 @@ var rerunButton = document.querySelector('#rerun');
 rerunButton.onclick = rerun;
 document.querySelector('#redraw').onclick = redrawPage;
 
-var pageNumber = 6;
-var djvuUrl = 'assets/malliavin.djvu';
+var pageNumber = 1;
+var djvuUrl = 'assets/boy_jb2_rotate90.djvu';
 
 document.querySelector('#next').onclick = () => {
     pageNumber++;
@@ -143,9 +143,10 @@ function redrawPage() {
     console.log('**** Render Page ****');
     var time = performance.now();
     var page = djvuDocument.getPage(pageNumber);
+    console.log(page._getImageData());
     Globals.drawImage(
         page.getImageData(),
-        page.getDpi() * 1.5
+        page.getDpi() * 1
     );
     //console.log(doc.pages[pageNumber].getText());
     time = performance.now() - time;

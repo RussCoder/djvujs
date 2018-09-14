@@ -85,9 +85,14 @@ var Globals = {
             octx.drawImage(oc, 0, 0, tmpW, tmpH, 0, 0, tmpW2, tmpH2);
         }
         //итоговое сжатие
+        //this.canvasCtx.translate(- this.canvas.width / 2, - this.canvas.height / 2);
+        // this.canvasCtx.translate(this.canvas.width / 2, this.canvas.height / 2);
+        // this.canvasCtx.rotate(180* Math.PI / 180);
+        // this.canvasCtx.translate(-this.canvas.width / 2, -this.canvas.height / 2);
         this.canvasCtx.drawImage(oc, 0, 0, tmpW2, tmpH2,
             0, 0, canvas.width, canvas.height);
-        DjVu.IS_DEBUG && console.log("Canvas resizing time = ", performance.now() - time);
+        DjVu.IS_DEBUG && console.log("Canvas resizing time = ", performance.now() - time); 
+        //this.canvasCtx.setTransform(1, 0, 0, 1, 0, 0);
     },
 
     drawImageNS(image, dpi) {

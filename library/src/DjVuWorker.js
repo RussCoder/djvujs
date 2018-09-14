@@ -228,11 +228,10 @@ export default class DjVuWorker {
         return this.createNewPromise({ command: 'createDocument', buffer: buffer }, [buffer]);
     }
 
-    getPageImageDataWithDpi(pagenumber, onlyFirstBgChunk = false) {
+    getPageImageDataWithDpi(pagenumber) {
         return this.createNewPromise({
             command: 'getPageImageDataWithDpi',
-            pagenumber: pagenumber,
-            onlyFirstBgChunk: onlyFirstBgChunk
+            pagenumber: pagenumber
         });
     }
 

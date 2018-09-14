@@ -121,7 +121,7 @@ export default function initWorker() {
         getPageImageDataWithDpi(obj) {
             var pagenum = +obj.pagenumber;
             var page = djvuDocument.getPage(pagenum);
-            var imageData = page.getImageData(obj.onlyFirstBgChunk);
+            var imageData = page.getImageData();
             var dpi = page.getDpi();
             postMessage({
                 command: 'getPageImageDataWithDpi',

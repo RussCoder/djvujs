@@ -1,5 +1,9 @@
 # DjVu.js Library Changelog
 
+## v.0.2.2 (14.09.2018)
+
+- Rotation flags are processed now. A image of page is rotated by default if required.
+
 ## v.0.2.1 (20.08.2018)
 
 - Empty pages are processed correctly.

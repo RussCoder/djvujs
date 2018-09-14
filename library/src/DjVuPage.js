@@ -156,12 +156,63 @@ export default class DjVuPage extends CompositeChunk {
         return this;
     }
 
+    getRotation() {
+        switch (this.info.flags) {
+            case 5: return 90;
+            case 2: return 180;
+            case 6: return 270;
+            default: return 0;
+        }
+    }
+
+    rotateIfRequired(imageData) {
+        if (this.info.flags === 5 || this.info.flags === 6) {
+            var newImageData = new ImageData(this.info.height, this.info.width);
+            var newPixelArray = new Uint32Array(newImageData.data.buffer);
+            var oldPixelArray = new Uint32Array(imageData.data.buffer);
+            var height = this.info.height;
+            var width = this.info.width;
+
+            if (this.info.flags === 6) { // 270
+                for (var i = 0; i < width; i++) {
+                    var rowOffset = (width - i - 1) * height;
+                    var to = height + rowOffset;
+                    for (var newIndex = rowOffset, oldIndex = i; newIndex < to; newIndex++ , oldIndex += width) {
+                        newPixelArray[newIndex] = oldPixelArray[oldIndex];
+                    }
+                }
+            } else { // 90
+                for (var i = 0; i < width; i++) {
+                    var rowOffset = i * height;
+                    var from = height + rowOffset - 1;
+                    for (var newIndex = from, oldIndex = i; newIndex >= rowOffset; newIndex-- , oldIndex += width) {
+                        newPixelArray[newIndex] = oldPixelArray[oldIndex];
+                    }
+                }
+            }
+
+            return newImageData;
+        }
+
+        if (this.info.flags === 2) { // 180
+            new Uint32Array(imageData.data.buffer).reverse();
+            return imageData;
+        }
+
+        return imageData;
+    }
+
+    getImageData(rotate = true) {
+        var image = this._getImageData();
+        return rotate ? this.rotateIfRequired(image) : image;
+    }
+
     /**
-     * Метод генерации изображения для общего случая (все 3 слоя)
+     * Метод генерации изображения для общего случая (все 3 слоя) без разворота
      * @returns {ImageData}
      */
-    getImageData(isOnlyFirstBgChunk = false) {
-        this.decode(isOnlyFirstBgChunk);
+    _getImageData() {
+        this.decode();
         var time = performance.now();
         //достаем маску
         if (!this.sjbz) {
@@ -326,9 +377,9 @@ export default class DjVuPage extends CompositeChunk {
      * Раскодирование всех 3 слоев изображения страницы, вызыват init()
      * @returns {DjVuPage}
      */
-    decode(onlyFirstChunk = false) {
+    decode() {
         if (this.decoded) {
-            this.decodeBackground(onlyFirstChunk);
+            this.decodeBackground();
             return this;
         }
         this.init();
@@ -342,7 +393,7 @@ export default class DjVuPage extends CompositeChunk {
         DjVu.IS_DEBUG && console.log("Foreground decoding time = ", performance.now() - time);
 
         time = performance.now();
-        this.decodeBackground(onlyFirstChunk);
+        this.decodeBackground();
         DjVu.IS_DEBUG && console.log("Background decoding time = ", performance.now() - time);
 
         this.decoded = true;

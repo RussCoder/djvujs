@@ -55,7 +55,7 @@ export class INFOChunk extends IFFChunk {
             this.dpi = 300;
         }
         this.gamma = this.length > 8 ? bs.getInt8() : 22;
-        this.flags = this.length > 9 ? bs.getInt8() : 0; // todo: it defines rotations, should be used
+        this.flags = this.length > 9 ? bs.getInt8() : 0;
 
         // Fixup - copied from DjVuLibre
         if (this.dpi < 25 || this.dpi > 6000) {

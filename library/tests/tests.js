@@ -74,17 +74,30 @@ var TestHelper = {
         return hash;
     },
 
-    getImageDataByImageURI(imageURI) {
+    getImageDataByImageURI(imageURI, rotate = 0) {
         var image = new Image();
         image.src = imageURI;
         return new Promise(resolve => {
             image.onload = () => {
                 var canvas = document.createElement('canvas');
-                canvas.width = image.width;
-                canvas.height = image.height;
+                if (rotate === 0 || rotate === 180) {
+                    canvas.width = image.width;
+                    canvas.height = image.height;
+                } else {
+                    canvas.width = image.height;
+                    canvas.height = image.width;
+                }
                 var ctx = canvas.getContext('2d');
-                ctx.drawImage(image, 0, 0);
-                var imageData = ctx.getImageData(0, 0, image.width, image.height);
+                if (rotate) {
+                    ctx.translate(canvas.width / 2, canvas.height / 2)
+                    ctx.rotate(rotate * Math.PI / 180);
+                    ctx.translate(-canvas.width / 2, -canvas.height / 2);
+
+                    // canvas.style.border = "1px solid black";
+                    // document.body.appendChild(canvas);
+                }
+                ctx.drawImage(image, (canvas.width - image.width) / 2, (canvas.height - image.height) / 2);
+                var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                 resolve(imageData);
             };
         });
@@ -169,7 +182,7 @@ var TestHelper = {
 
 var Tests = {
 
-    async _imageTest(djvuName, pageNum, imageName = null, hash = null) {
+    async _imageTest(djvuName, pageNum, imageName = null, hash = null, rotate = 0) {
 
         function checkByHash(data, message) {
             var isHashTheSame = TestHelper.getHashOfArray(data) === hash;
@@ -190,7 +203,7 @@ var Tests = {
             var result = checkByHash(resultImageData.data);
             return result.isSuccess ? null : result.messages[0];
         }
-        var canonicImageData = await TestHelper.getImageDataByImageURI(`/assets/${imageName}`);
+        var canonicImageData = await TestHelper.getImageDataByImageURI(`/assets/${imageName}`, rotate);
         var result = TestHelper.compareImageData(canonicImageData, resultImageData);
         if (result !== null && hash) {
             result = checkByHash(resultImageData.data, result);
@@ -416,6 +429,18 @@ var Tests = {
 
     testJB2Pure() {
         return this._imageTest("boy_jb2.djvu", 1, "boy_jb2.png", -650210314);
+    },
+
+    testRotate90() {
+        return this._imageTest("boy_jb2_rotate90.djvu", 1, "boy_jb2.png", -76276490, 90);
+    },
+
+    testRotate180() {
+        return this._imageTest("boy_jb2_rotate180.djvu", 1, "boy_jb2.png", -76276490, 180);
+    },
+
+    testRotate270() {
+        return this._imageTest("boy_jb2_rotate270.djvu", 1, "boy_jb2.png", -80336394, 270);
     },
 
     testJB2WithBitOfBackground() {
