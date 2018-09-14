@@ -1,9 +1,9 @@
 {
     "globals": {
-        "library_version": "0.2.1",
+        "library_version": "0.2.2",
         "viewer_version": "0.2.2",
-        "viewer_js_link": "/assets/dist/djvu_viewer.js?v=2",
-        "viewer_css_link": "/assets/dist/djvu_viewer.css?v=2",
-        "library_link": "/assets/dist/djvu.js?v=1"
+        "viewer_js_link": "/assets/dist/djvu_viewer.js?v=3",
+        "viewer_css_link": "/assets/dist/djvu_viewer.css?v=3",
+        "library_link": "/assets/dist/djvu.js?v=3"
     }
 }

@@ -5,7 +5,7 @@ var DjVu = (function () {
     'use strict;'
 
     var DjVu = {
-        VERSION: '0.2.1',
+        VERSION: '0.2.2',
         IS_DEBUG: false,
         setDebugMode: (flag) => DjVu.IS_DEBUG = flag
     };
@@ -2451,8 +2451,52 @@ var DjVu = (function () {
             }
             return this;
         }
-        getImageData(isOnlyFirstBgChunk = false) {
-            this.decode(isOnlyFirstBgChunk);
+        getRotation() {
+            switch (this.info.flags) {
+                case 5: return 90;
+                case 2: return 180;
+                case 6: return 270;
+                default: return 0;
+            }
+        }
+        rotateIfRequired(imageData) {
+            if (this.info.flags === 5 || this.info.flags === 6) {
+                var newImageData = new ImageData(this.info.height, this.info.width);
+                var newPixelArray = new Uint32Array(newImageData.data.buffer);
+                var oldPixelArray = new Uint32Array(imageData.data.buffer);
+                var height = this.info.height;
+                var width = this.info.width;
+                if (this.info.flags === 6) {
+                    for (var i = 0; i < width; i++) {
+                        var rowOffset = (width - i - 1) * height;
+                        var to = height + rowOffset;
+                        for (var newIndex = rowOffset, oldIndex = i; newIndex < to; newIndex++ , oldIndex += width) {
+                            newPixelArray[newIndex] = oldPixelArray[oldIndex];
+                        }
+                    }
+                } else {
+                    for (var i = 0; i < width; i++) {
+                        var rowOffset = i * height;
+                        var from = height + rowOffset - 1;
+                        for (var newIndex = from, oldIndex = i; newIndex >= rowOffset; newIndex-- , oldIndex += width) {
+                            newPixelArray[newIndex] = oldPixelArray[oldIndex];
+                        }
+                    }
+                }
+                return newImageData;
+            }
+            if (this.info.flags === 2) {
+                new Uint32Array(imageData.data.buffer).reverse();
+                return imageData;
+            }
+            return imageData;
+        }
+        getImageData(rotate = true) {
+            var image = this._getImageData();
+            return rotate ? this.rotateIfRequired(image) : image;
+        }
+        _getImageData() {
+            this.decode();
             var time = performance.now();
             if (!this.sjbz) {
                 if (this.bgimage) {
@@ -2589,9 +2633,9 @@ var DjVu = (function () {
                 }
             }
         }
-        decode(onlyFirstChunk = false) {
+        decode() {
             if (this.decoded) {
-                this.decodeBackground(onlyFirstChunk);
+                this.decodeBackground();
                 return this;
             }
             this.init();
@@ -2602,7 +2646,7 @@ var DjVu = (function () {
             this.decodeForeground();
             DjVu.IS_DEBUG && console.log("Foreground decoding time = ", performance.now() - time);
             time = performance.now();
-            this.decodeBackground(onlyFirstChunk);
+            this.decodeBackground();
             DjVu.IS_DEBUG && console.log("Background decoding time = ", performance.now() - time);
             this.decoded = true;
             return this;
@@ -3470,11 +3514,10 @@ var DjVu = (function () {
         createDocument(buffer) {
             return this.createNewPromise({ command: 'createDocument', buffer: buffer }, [buffer]);
         }
-        getPageImageDataWithDpi(pagenumber, onlyFirstBgChunk = false) {
+        getPageImageDataWithDpi(pagenumber) {
             return this.createNewPromise({
                 command: 'getPageImageDataWithDpi',
-                pagenumber: pagenumber,
-                onlyFirstBgChunk: onlyFirstBgChunk
+                pagenumber: pagenumber
             });
         }
         getPageText(pagenumber) {
@@ -4100,7 +4143,7 @@ var DjVu = (function () {
             getPageImageDataWithDpi(obj) {
                 var pagenum = +obj.pagenumber;
                 var page = djvuDocument.getPage(pagenum);
-                var imageData = page.getImageData(obj.onlyFirstBgChunk);
+                var imageData = page.getImageData();
                 var dpi = page.getDpi();
                 postMessage({
                     command: 'getPageImageDataWithDpi',
