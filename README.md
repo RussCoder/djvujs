@@ -22,11 +22,37 @@ The library is only being developed and may be noticeably changed in the future.
 
 ## How to build it
 
-If you have Node.js (v.8.7.0) installed, after you clone the repository, run 
+If you have Node.js (v.8.x or higher) installed, after you cloned the repository, run 
 ```
-npm run make
+npm run install
+npm run build
 ```` 
 in the root folder of the repository. The command will install all dependencies and create bundles of the library and of the viewer (the build folder should appear). 
+
+Also there is another way to do the same operations: 
+
+```
+npm run make
+```
+
+The command will clean all git-ignored files, install all the dependencies and build the library and the viewer. However, you should have `git` installed of course and the repository should have the `.git` folder (there is no one in the source code uploaded to the browser extensions websites).
+
+### How to pack the extension
+
+After the two commands above are executed (`install` and `build`), the extension folder will contain all the necessary files, that is to say, the folder is an unpacked extension. If you want to pack the extension, you should have the `web-ext` module installed globally, to wit, `npm install web-ext -g`, and then just change the directory:
+
+```
+cd extension
+```
+and run
+
+```
+web-ext build
+```
+
+and the packed version of the extension will appear in the extension folder. 
+
+
 
 If you have some problems, read the technical documentation or create an issue. Also you can download the library from the official website. (All links are below).
 

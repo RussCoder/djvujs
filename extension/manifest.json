@@ -2,7 +2,7 @@
     "manifest_version": 2,
     "name": "DjVu.js Viewer",
     "short_name": "DV",
-    "version": "0.2.1.2",
+    "version": "0.2.2.0",
     "description": "Opens links to .djvu files in the browser. Allows to open .djvu files from local storage. Processes djvu <embed> tags.",
     "background": {
         "scripts": [
