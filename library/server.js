@@ -1,81 +1,37 @@
+/**
+ * A server used for debugging.
+ */
+
 const http = require('http');
-const url = require('url');
 const fs = require('fs');
-const path = require('path');
 const WebSocket = require('ws');
 const colors = require('colors');
 const rollup = require('rollup');
+const express = require('express');
 const rollupConfig = require('./rollup.config.js');
 
 // you can pass the parameter in the command line. e.g. node server.js 3000
 const port = process.argv[2] || 9000;
 
-const mimeType = {
-    '.html': 'text/html',
-    '.js': 'text/javascript',
-    '.json': 'application/json',
-    '.css': 'text/css',
-    '.png': 'image/png',
-    '.jpg': 'image/jpeg',
-    '.djvu': 'image/vnd.djvu',
-    '.djv': 'image/vnd.djvu'
-};
+const app = express();
 
-const routes = {
-    './tests.html': './tests/tests.html',
-    './tests': './tests/tests.html',
-};
+app.use(express.static(__dirname));
+app.use(express.static(__dirname + '/debug'));
+app.use('/tests', express.static('./tests', { index: 'tests.html' }));
+app.use((req, res) => {
+    res.status(404).end('No such a page! 404 error!');
+});
 
-http.createServer(function (req, res) {
-    // console.log(`${req.method} ${req.url}`);
-    // parse URL
-    const parsedUrl = url.parse(req.url);
-    // extract URL path
-    let pathname = `.${parsedUrl.pathname}`;
-    // maps file extention to MIME types
-    pathname = routes[pathname] || pathname;
+const server = http.createServer(app);
 
-    fs.stat(pathname, function (err, stats) {
-        if (err) {
-            // if the file is not found, return 404
-            res.statusCode = 404;
-            res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
-            res.end(`File ${pathname} not found!`);
-            return;
-        }
-        // if is a directory, then look for index.html
-        if (stats.isDirectory()) {
-            pathname += '/index.html';
-        }
-        // read file from file system
-        fs.readFile(pathname, function (err, data) {
-            if (err) {
-                res.statusCode = 500;
-                res.end(`Error getting the file: ${err}.`);
-            } else {
-                // based on the URL path, extract the file extention. e.g. .js, .djvu, ...
-                const ext = path.parse(pathname).ext;
-                // if the file is found, set Content-type and send data
-                res.setHeader('Content-type', mimeType[ext] || 'text/plain');
-                res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
-                res.end(data);
-            }
-        });
-    });
-}).listen(parseInt(port));
-
-console.log(`Http server is listening on port ${port}`);
-
-const wss = new WebSocket.Server({ port: 8080 });
+const wss = new WebSocket.Server({ server: server });
 wss.broadcast = function (data) {
     this.clients.forEach(client => {
         client.send(data);
     });
 }
 
-console.log(`WebSocket server is listening on port 8080 \n`);
-
-fs.watch('./js/', () => wss.broadcast('reload')); // watch debug .js files
+fs.watch('./debug/', { recursive: true }, () => wss.broadcast('reload')); // watch debug .js files
 fs.watch('./tests/', () => wss.broadcast('reload')); // watch tests files
 
 const watcher = rollup.watch(rollupConfig);
@@ -101,3 +57,6 @@ watcher.on('event', event => {
             break;
     }
 });
+
+server.listen(parseInt(port));
+console.log(`Http and WebSocket servers are listening on port ${port}`);

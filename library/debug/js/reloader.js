@@ -4,7 +4,7 @@
 (function () {
     'use strict';
     function setConnection() {
-        var address = 'ws://localhost:8080/';
+        var address = 'ws://' + location.host;
 
         console.log(`%cTrying to open a connention with ${address} ...`, "color: blue");
         var ws = new WebSocket(address);
