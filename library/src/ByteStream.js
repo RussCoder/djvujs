@@ -1,8 +1,8 @@
-import { utf8ToCodePoints, createStringFromUtf8Array } from './DjVu'
+import { createStringFromUtf8Array } from './DjVu'
 
 /**
  * Объект байтового потока. Предоставляет API для чтения сырого ArrayBuffer как потока байт.
- * После вызова каждого метода чтения, внутренный указатель смещается автоматически.
+ * После вызова каждого метода чтения, внутренний указатель смещается автоматически.
  * Можно читать числа, строки, массив байт разной длины. 
  */
 export default class ByteStream {
@@ -39,7 +39,7 @@ export default class ByteStream {
         this.offset = 0;
     }
 
-    byte() {
+    byte() { // the function is used inside other codecs (look at ZPCodec)
         if (this.offset >= this.length) {
             this.offset++;
             return 0xff;
@@ -125,24 +125,4 @@ export default class ByteStream {
     isEmpty() {
         return this.offset >= this.length;
     }
-
-
-    /*bit() {
-        var bit = (this.curbyte & this.bitmask) >>> this.shift;
-        this.shift--;
-        this.bitmask >>= 1;
-        if (this.shift < 0) {
-            this.bitmask = 128;
-            this.shift = 7;
-            this.offset++;
-            if (this.offset >= this.length) {
-                this.curbyte = 255;
-            } 
-            else {
-                this.curbyte = this.viewer.getUint8(this.offset);
-            }
-        
-        }
-        return bit;
-    }*/
 }

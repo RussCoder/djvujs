@@ -128,7 +128,9 @@ export default class DjVuPage extends CompositeChunk {
             var chunkBs = this.bs.fork(length + 8); // создали поток включающий только 1 порцию
             this.bs.jump(8 + length + (length & 1)); // перепрыгнули к следующей порции
 
-            if (id == "FG44") {
+            if (!length) { // empty chunk
+                chunk = new IFFChunk(chunkBs); // save it for metadata
+            } else if (id == "FG44") {
                 chunk = this.fg44 = new ColorChunk(chunkBs);
             } else if (id == "BG44") {
                 this.bg44arr.push(chunk = new ColorChunk(chunkBs));

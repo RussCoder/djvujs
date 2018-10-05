@@ -1,6 +1,6 @@
 # DjVu.js Library
 
-The file contains some information about inner structure of the project. It may be useful for you, if you want to play with code or contribute to the project. 
+The file contains some information about the inner structure of the project. It may be useful for you, if you want to play with code or contribute to the project. 
 
 It's implied that you have run `npm install` and all dependencies are installed correctly.
 
@@ -10,9 +10,8 @@ There are the following directories:
 
 - `app`  - contains an old application, which is poorly maintained now. It can split a djvu file, convert images to a document, and show metadata of a document. 
 - `assets` - contains test .djvu files and images. They are used in the automatic tests. 
-- `css` - contains .css files for debug and test pages.
+- `debug` - contains css and js files for debugging, which are not the part of the source code of the library.
 - `dist` - a directory where the final bundle file is saved to (the eventual `djvu.js` file).
-- `js` - a folder with different debug, test and old scripts which are not a part of the library, but used for debugging. 
 - `src` - a main directory, containing the source code of the library. Its inner structure is self-descriptive, at least I think so. 
 - `tests` - a directory containing tests, which are run in a browser. 
 
@@ -25,11 +24,11 @@ There are the following npm commands that may be run:
 So if you don't know what to start with, run `npm start` and head to `http://localhost:9000/` - you will see the old app.  
 `http://localhost:9000/sync.html` - is a debug page, which I use most often. 
 
-If you decide to create your own debug page I suggest you to add a `js/reloader.js` script to your page, as it's done in case of `tests.html` and other pages, and your page will be reloaded on each change of the library source code. 
+If you decide to create your own debug page I suggest you to add a `/debug/js/reloader.js` script to your page, as it's done in case of `/tests/tests.html` and other pages, and your page will be reloaded on each change of the library source code. 
 
 ## Tests
 
-There are some automatic tests. In order to run them you should run `npm start` and then open `http://localhost:9000/tests.html`. 
+There are some automatic tests. In order to run them you should run `npm start` and then open `http://localhost:9000/tests`. 
 
 The tests are run automatically when the page loads. If everything is ok, you will see that all messages are green. If you see a green message with an orange message, it means that a test has passed, but your browser differs from mine. The thing is that different browsers differently render `.png` files, which are used for tests. So I use Opera, and all tests pass well in my case. In case of other browsers there may be some problems. So, if you use Mozilla, you should write `about:config` in the address line and then find the parameter `gfx.color_management.mode` and set it to `0`. After it, all tests should be green, except for one, which has an orange message as well. 
 

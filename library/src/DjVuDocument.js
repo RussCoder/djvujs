@@ -80,8 +80,7 @@ export default class DjVuDocument {
         }
         else {
             this.bs.jump(-12);
-            // 4 - так как есть 4 байта формата
-            this.pages.push(new DjVuPage(this.bs.fork(this.length + 4)));
+            this.pages.push(new DjVuPage(this.bs.fork(this.length + 8)));
         }
     }
 
