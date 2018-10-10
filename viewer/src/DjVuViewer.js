@@ -30,23 +30,29 @@ export default class DjVuViewer {
         return this;
     }
 
-    loadDocument(buffer, name = "***", config = null) {
+    loadDocument(buffer, name = "***", config = {}) {
         return new Promise(resolve => {
             this.store.dispatch(Actions.setApiCallbackAction('document_created', () => {
                 config && this.configure(config);
                 resolve();
             }));
-            this.store.dispatch(Actions.createDocumentFromArrayBufferAction(buffer, name));
+            this.store.dispatch(Actions.createDocumentFromArrayBufferAction(buffer, config.djvuOptions, name));
         });
     }
 
     async loadDocumentByUrl(url, config = null) {
+        config = config || {};
         try {
+            var a = document.createElement('a');
+            a.href = url;
+            url = a.href; // converting of a relative url to an absolute one
             this.store.dispatch(Actions.startFileLoadingAction());
             var buffer = await loadFile(url, (e) => {
                 this.store.dispatch(Actions.fileLoadingProgressAction(e.loaded, e.total));
             });
             var res = /[^/]*$/.exec(url.trim());
+            var baseUrl = new URL('./', url).href;
+            config.djvuOptions = { baseUrl: baseUrl };
             await this.loadDocument(buffer, res ? res[0] : '***', config);
         } catch (e) {
             this.store.dispatch(Actions.errorAction(e));

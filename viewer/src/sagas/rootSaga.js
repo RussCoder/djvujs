@@ -123,7 +123,7 @@ const sagas = {
         djvuWorker.cancelAllTasks();
         this.resetPagesCache();
 
-        yield djvuWorker.createDocument(action.arrayBuffer);
+        yield djvuWorker.createDocument(action.arrayBuffer, action.options);
         const pagesCount = yield djvuWorker.getPageCount();
         yield put({
             type: Consts.DOCUMENT_CREATED_ACTION,
