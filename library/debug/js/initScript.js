@@ -5,7 +5,7 @@
  */
 
 DjVu.setDebugMode(true);
-
+ 
 var fileSize = 0;
 var output;
 var djvuArrayBuffer;
@@ -17,7 +17,8 @@ rerunButton.onclick = rerun;
 document.querySelector('#redraw').onclick = redrawPage;
 
 var pageNumber = 1;
-var djvuUrl = 'assets/boy_jb2_rotate90.djvu';
+var djvuUrl = 'assets/tech_primer/index.djvu';
+var baseUrl = 'assets/tech_primer/';
 
 document.querySelector('#next').onclick = () => {
     pageNumber++;
@@ -120,11 +121,11 @@ function readPicture(buffer) {
     });
 }
 
-function readDjvu(buf) {
+async function readDjvu(buf) {
     var link = document.querySelector('#dochref');
     var time = performance.now();
     console.log("Buffer length = " + buf.byteLength);
-    djvuDocument = new DjVu.Document(buf);
+    djvuDocument = new DjVu.Document(buf, {baseUrl: baseUrl});
     Globals.counter = 0;
 
     //writeln(djvuDocument.toString(true));
@@ -132,18 +133,17 @@ function readDjvu(buf) {
     //saveStringAsFile(JSON.stringify(djvuDocument.getContents()));
 
     //writeln(djvuDocument.pages[pageNumber].getText());
-    redrawPage();
+    await redrawPage();
     //saveStringAsBinFile(djvuDocument.toString());
     // doc.countFiles();
     //console.log(Globals.Timer.toString());
     console.log("Total execution time = ", performance.now() - time);
 }
 
-function redrawPage() {
+async function redrawPage() {
     console.log('**** Render Page ****');
     var time = performance.now();
-    var page = djvuDocument.getPage(pageNumber);
-    console.log(page._getImageData());
+    var page = await djvuDocument.getPage(pageNumber);
     Globals.drawImage(
         page.getImageData(),
         page.getDpi() * 1

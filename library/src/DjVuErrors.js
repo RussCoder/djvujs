@@ -45,6 +45,15 @@ export class IncorrectTaskDjVuError extends DjVuError {
     }
 }
 
+export class NoBaseUrlDjVuError extends DjVuError {
+    constructor() {
+        super(DjVuErrorCodes.NO_BASE_URL,
+            "The base URL is required for the indirect djvu to load components," +
+            " but no base URL was provided to the document constructor!"
+        );
+    }
+}
+
 export const DjVuErrorCodes = Object.freeze({
     FILE_IS_CORRUPTED: 'FILE_IS_CORRUPTED',
     INCORRECT_FILE_FORMAT: 'INCORRECT_FILE_FORMAT',
@@ -52,4 +61,5 @@ export const DjVuErrorCodes = Object.freeze({
     UNEXPECTED_ERROR: 'UNEXPECTED_ERROR',
     DATA_CANNOT_BE_TRANSFERRED: 'DATA_CANNOT_BE_TRANSFERRED',
     INCORRECT_TASK: 'INCORRECT_TASK',
+    NO_BASE_URL: 'NO_BASE_URL',
 });

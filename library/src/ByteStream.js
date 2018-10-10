@@ -19,8 +19,7 @@ export default class ByteStream {
     }
 
     // "читает" следующие length байт в массив, возвращает массив основанный на том же ArrayBuffer
-    getUint8Array(length) {
-        length = length || this.restLength();
+    getUint8Array(length = this.remainingLength()) {
         var off = this.offset;
         this.offset += length;
         return new Uint8Array(this.buffer, this.offsetx + off, length);
@@ -31,7 +30,7 @@ export default class ByteStream {
         return new Uint8Array(this.buffer, this.offsetx, this.length);
     }
 
-    restLength() {
+    remainingLength() {
         return this.length - this.offset;
     }
 
@@ -80,6 +79,7 @@ export default class ByteStream {
 
     jump(length) {
         this.offset += length;
+        return this;
     }
 
     setOffset(offset) {
@@ -113,8 +113,7 @@ export default class ByteStream {
         return createStringFromUtf8Array(this.getUint8Array(byteLength));
     }
 
-    fork(_length) {
-        var length = _length || (this.length - this.offset);
+    fork(length = this.remainingLength()) {
         return new ByteStream(this.buffer, this.offsetx + this.offset, length);
     }
 

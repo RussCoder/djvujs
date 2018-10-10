@@ -1,4 +1,4 @@
-import { INCLChunk, DIRMChunk, ColorChunk, CIDaChunk, IFFChunk, INFOChunk, CompositeChunk } from './chunks/IFFChunks';
+import { INCLChunk, ColorChunk, CIDaChunk, IFFChunk, INFOChunk, CompositeChunk } from './chunks/IFFChunks';
 import JB2Dict from './jb2/JB2Dict';
 import JB2Image from './jb2/JB2Image';
 import DjVuPalette from './chunks/DjVuPalette';

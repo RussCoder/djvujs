@@ -13,10 +13,10 @@ export default function initWorker() {
     var iwiw; // объект записи документов
 
     // обрабочик приема событий
-    onmessage = function (oEvent) {
+    onmessage = async function (oEvent) {
         try { // отлавливаем все исключения
             var obj = oEvent.data;
-            handlers[obj.command](obj);
+            await handlers[obj.command](obj);
         } catch (error) {
             // we can't pass the native Error object between workers, so only several properties are copied
             var errorObj = error instanceof DjVuError ? error : {
@@ -54,20 +54,22 @@ export default function initWorker() {
 
     var handlers = {
 
-        run(obj) {
+        async run(obj) {
             //console.log("Got task request", Date.now() - obj.time);
-            const results = obj.data.map(task => {
+            const results = await Promise.all(obj.data.map(async task => {
                 try {
-                    return task.funcs.reduce((res, func, i) => {
-                        return res[func](...task.args[i]);
-                    }, djvuDocument);
+                    var res = djvuDocument;
+                    for(var i = 0; i < task.funcs.length; i++) {
+                        res = await res[task.funcs[i]](...task.args[i]);
+                    }
+                    return res;
                 } catch (e) {
                     if (e instanceof TypeError) {
                         throw new IncorrectTaskDjVuError(task);
                     }
                     throw e;
                 }
-            });
+            }));
 
             //var time = Date.now();
             var transferList = [];
@@ -109,18 +111,18 @@ export default function initWorker() {
             });
         },
 
-        getPageText(obj) {
+        async getPageText(obj) {
             var pagenum = +obj.pagenumber;
-            var text = djvuDocument.getPage(pagenum).getText();
+            var text = await djvuDocument.getPage(pagenum).getText();
             postMessage({
                 command: 'getPageText',
                 text: text
             });
         },
 
-        getPageImageDataWithDpi(obj) {
+        async getPageImageDataWithDpi(obj) {
             var pagenum = +obj.pagenumber;
-            var page = djvuDocument.getPage(pagenum);
+            var page = await djvuDocument.getPage(pagenum);
             var imageData = page.getImageData();
             var dpi = page.getDpi();
             postMessage({
@@ -182,7 +184,7 @@ export default function initWorker() {
         },
 
         createDocument(obj) {
-            djvuDocument = new DjVuDocument(obj.buffer);
+            djvuDocument = new DjVuDocument(obj.buffer, obj.options);
             postMessage({ command: 'createDocument', pagenumber: djvuDocument.pages.length });
         },
 

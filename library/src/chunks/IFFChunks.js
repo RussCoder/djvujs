@@ -1,4 +1,3 @@
-import BZZDecoder from '../bzz/BZZDecoder';
 import { CorruptedFileDjVuError } from '../DjVuErrors';
 
 // простейший шаблон порции данных
@@ -130,53 +129,3 @@ export class INCLChunk extends IFFChunk {
  * Обычно содержит в себе информацию о программе-кодировщике
  */
 export class CIDaChunk extends INCLChunk { }
-
-/**
- * Порция данных машинного оглавления документа. 
- * Содержит сведения о структуре многостраничного документа
- */
-export class DIRMChunk extends IFFChunk {
-    constructor(bs) {
-        super(bs);
-        this.dflags = bs.byte();
-        this.nfiles = bs.getInt16();
-        this.offsets = new Int32Array(this.nfiles);
-        this.sizes = new Uint32Array(this.nfiles);
-        this.flags = new Uint8Array(this.nfiles);
-        this.ids = new Array(this.nfiles);
-        this.names = new Array(this.nfiles);
-        this.titles = new Array(this.nfiles);
-        for (var i = 0; i < this.nfiles; i++) {
-            this.offsets[i] = bs.getInt32();
-        }
-
-        var bsbs = bs.fork(this.length - 3 - 4 * this.nfiles);
-        var bsz = BZZDecoder.decodeByteStream(bsbs);
-
-        for (var i = 0; i < this.nfiles; i++) {
-            this.sizes[i] = bsz.getUint24();
-        }
-        for (var i = 0; i < this.nfiles; i++) {
-            this.flags[i] = bsz.byte();
-        }
-        for (var i = 0; i < this.nfiles && !bsz.isEmpty(); i++) {
-            this.ids[i] = bsz.readStrNT();
-            this.names[i] = this.flags[i] & 128 ? bsz.readStrNT() : this.ids[i]; // check hasname flag
-            this.titles[i] = this.flags[i] & 64 ? bsz.readStrNT() : this.ids[i]; // check hastitle flag
-        }
-    }
-
-    getFilesCount() {
-        return this.nfiles;
-    }
-
-    getMetadataStringByIndex(i) {
-        return `[id: "${this.ids[i]}", flag: ${this.flags[i]}, offset: ${this.offsets[i]}, size: ${this.sizes[i]}]\n`;
-    }
-
-    toString() {
-        var str = super.toString();
-        str += "FilesCount: " + this.nfiles + '\n';
-        return str + '\n';
-    }
-}

@@ -15,7 +15,8 @@ rerunButton.onclick = rerun;
 document.querySelector('#redraw').onclick = redrawPage;
 
 var pageNumber = 4;
-var djvuUrl = 'assets/colorbook.djvu';
+var djvuUrl = 'assets/tech_primer/index.djvu';
+var baseUrl = 'http://localhost:9000/assets/tech_primer/';
 
 document.querySelector('#next').onclick = () => {
     pageNumber++;
@@ -54,7 +55,7 @@ function renderDjVu() {
     /** @type {DjVuWorker} */
     djvuWorker = new DjVu.Worker();
     Globals.loadFile(djvuUrl)
-        .then(buffer => djvuWorker.createDocument(buffer))
+        .then(buffer => djvuWorker.createDocument(buffer, {baseUrl}))
         .then(() => redrawPage());
 }
 

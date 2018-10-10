@@ -224,8 +224,8 @@ export default class DjVuWorker {
         return this.createNewPromise({ command: 'endMultiPageDocument' });
     }
 
-    createDocument(buffer) {
-        return this.createNewPromise({ command: 'createDocument', buffer: buffer }, [buffer]);
+    createDocument(buffer, options) {
+        return this.createNewPromise({ command: 'createDocument', buffer: buffer, options: options }, [buffer]);
     }
 
     getPageImageDataWithDpi(pagenumber) {

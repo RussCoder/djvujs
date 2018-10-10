@@ -1,16 +1,29 @@
 import DjViChunk from './chunks/DjViChunk';
 import DjVuPage from './DjVuPage';
-import { DIRMChunk } from './chunks/IFFChunks';
+import DIRMChunk from './chunks/DirmChunk';
 import NAVMChunk from './chunks/NavmChunk';
 import DjVuWriter from './DjVuWriter';
 import DjVu from './DjVu';
 import ThumChunk from './chunks/ThumChunk';
 import ByteStream from './ByteStream';
-import { IncorrectFileFormatDjVuError, NoSuchPageDjVuError } from './DjVuErrors';
+import {
+    IncorrectFileFormatDjVuError,
+    NoSuchPageDjVuError,
+    CorruptedFileDjVuError,
+    NoBaseUrlDjVuError
+} from './DjVuErrors';
+
+const MEMORY_LIMIT = 50 * 1024 * 1024; // 50 MB
 
 export default class DjVuDocument {
-    constructor(arraybuffer) {
+    constructor(arraybuffer, options = { baseUrl: null, memoryLimit: MEMORY_LIMIT }) {
         this.buffer = arraybuffer;
+        this.baseUrl = options.baseUrl && options.baseUrl.trim();
+        if (this.baseUrl !== null && this.baseUrl && this.baseUrl[this.baseUrl.length - 1] !== '/') {
+            this.baseUrl += '/';
+        }
+        this.memoryLimit = options.memoryLimit || MEMORY_LIMIT; // required to limit the size of cache in case of indirect djvu
+
         this.bs = new ByteStream(arraybuffer);
         this.formatID = this.bs.readStr4();
         if (this.formatID !== 'AT&T') {
@@ -20,72 +33,99 @@ export default class DjVuDocument {
         this.length = this.bs.getInt32();
         this.id += this.bs.readStr4();
         if (this.id == 'FORMDJVM') {
-            var id = this.bs.readStr4();
-            var length = this.bs.getInt32();
-            this.bs.jump(-8);
-            this.dirm = new DIRMChunk(this.bs.fork(length + 8));
-            this.bs.jump(8 + length + (length & 1 ? 1 : 0));
-
-            // all chunks of the file in the order which they are listed in the DIRM chunk
-            this.dirmOrderedChunks = new Array(this.dirm.getFilesCount());
+            this._initMultiPageDocument();
+        } else {
+            this.bs.jump(-12);
+            this.pages = [new DjVuPage(this.bs.fork(this.length + 8))];
         }
-        this.getINCLChunkCallback = id => this.djvi[id].innerChunk;
+    }
+
+    _initMultiPageDocument() { // for FORMDJVM
+        this._readMetaDataChunk();
+        this._readContentsChunkIfExists();
 
         /**
          * @type {Array<DjVuPage>}
          */
         this.pages = []; //страницы FORMDJVU
         this.thumbs = [];
-        //разделяемые ресурсы
-        this.djvi = {};
-        this.navm = null; // человеческое оглавление 
+        this.djvi = {}; //разделяемые ресурсы
+        this.getINCLChunkCallback = id => this.djvi[id].innerChunk;
         this.idToPageNumberMap = {}; // used to get pages by their id (url)
 
-        this.init();
+        if (this.dirm.isBundled) {
+            this._parseComponents();
+        } else {
+            this.pages = new Array(this.dirm.getPagesQuantity()); // fixed length array in order to know what pages are loaded and what are not.
+            this.memoryUsage = this.bs.buffer.byteLength;
+            this.loadedPageNumbers = [];
+        }
     }
 
-    init() {
-        if (this.dirm) {
+    _readMetaDataChunk() { // DIRM chunk
+        var id = this.bs.readStr4();
+        if (id !== 'DIRM') {
+            throw new CorruptedFileDjVuError("The DIRM chunk must be the first but there is " + id + " instead!");
+        }
+        var length = this.bs.getInt32();
+        this.bs.jump(-8);
+        this.dirm = new DIRMChunk(this.bs.fork(length + 8)); // document directory, metadata for multi-page documents
+        this.bs.jump(8 + length + (length & 1 ? 1 : 0));
+    }
+
+    _readContentsChunkIfExists() { // NAVM chunk
+        this.navm = null; // человеческое оглавление 
+        if (this.bs.remainingLength() > 8) {
             var id = this.bs.readStr4();
             var length = this.bs.getInt32();
             this.bs.jump(-8);
-            if (id == 'NAVM') {
+            if (id === 'NAVM') {
                 this.navm = new NAVMChunk(this.bs.fork(length + 8))
             }
-            for (var i = 0; i < this.dirm.offsets.length; i++) {
-                this.bs.setOffset(this.dirm.offsets[i]);
-                var id = this.bs.readStr4();
-                var length = this.bs.getInt32();
-                id += this.bs.readStr4();
-                this.bs.jump(-12);
-                switch (id) {
-                    case "FORMDJVU":
-                        this.pages.push(this.dirmOrderedChunks[i] = new DjVuPage(
-                            this.bs.fork(length + 8),
-                            this.getINCLChunkCallback
-                        ));
-                        this.idToPageNumberMap[this.dirm.ids[i]] = this.pages.length;
-                        break;
-                    case "FORMDJVI":
-                        //через строчку id chunk INCL ссылается на нужный ресурс
-                        this.dirmOrderedChunks[i] = this.djvi[this.dirm.ids[i]] = new DjViChunk(this.bs.fork(length + 8));
-                        break;
-                    case "FORMTHUM":
-                        this.thumbs.push(this.dirmOrderedChunks[i] = new ThumChunk(this.bs.fork(length + 8)));
-                        break;
-                    default:
-                        console.error("Incorrect chunk ID: ", id);
-                }
+        }
+    }
+
+    _parseComponents() {
+        // all chunks of the file in the order which they are listed in the DIRM chunk
+        this.dirmOrderedChunks = new Array(this.dirm.getFilesQuantity());
+
+        for (var i = 0; i < this.dirm.offsets.length; i++) {
+            this.bs.setOffset(this.dirm.offsets[i]);
+            var id = this.bs.readStr4();
+            var length = this.bs.getInt32();
+            id += this.bs.readStr4();
+            this.bs.jump(-12);
+            switch (id) {
+                case "FORMDJVU":
+                    this.pages.push(this.dirmOrderedChunks[i] = new DjVuPage(
+                        this.bs.fork(length + 8),
+                        this.getINCLChunkCallback
+                    ));
+                    this.idToPageNumberMap[this.dirm.ids[i]] = this.pages.length;
+                    break;
+                case "FORMDJVI":
+                    //через строчку id chunk INCL ссылается на нужный ресурс
+                    this.dirmOrderedChunks[i] = this.djvi[this.dirm.ids[i]] = new DjViChunk(this.bs.fork(length + 8));
+                    break;
+                case "FORMTHUM":
+                    this.thumbs.push(this.dirmOrderedChunks[i] = new ThumChunk(this.bs.fork(length + 8)));
+                    break;
+                default:
+                    console.error("Incorrect chunk ID: ", id);
             }
         }
-        else {
-            this.bs.jump(-12);
-            this.pages.push(new DjVuPage(this.bs.fork(this.length + 8)));
-        }
+    }
+
+    isBundled() {
+        return this.dirm ? this.dirm.isBundled : true;
     }
 
     getContents() {
         return this.navm ? this.navm.getContents() : null;
+    }
+
+    getMemoryUsage() {
+        return this.memoryUsage;
     }
 
     getPageNumberByUrl(url) {
@@ -105,7 +145,38 @@ export default class DjVuDocument {
         return pageNumber || null;
     }
 
-    getPage(number) {
+    releaseMemoryIfRequired(preservedDependencies = null) {
+        if (this.memoryUsage <= this.memoryLimit) {
+            //console.log(`%c Memory wasnt released  ${this.memoryUsage}, ${this.loadedPageNumbers.length}, ${Object.keys(this.djvi).length}`, "color: green");
+            return;
+        }
+        //var was = this.memoryUsage;
+        while (this.memoryUsage > this.memoryLimit && this.loadedPageNumbers.length) {
+            var number = this.loadedPageNumbers.shift();
+            this.memoryUsage -= this.pages[number].bs.buffer.byteLength;
+            this.pages[number] = null;
+        }
+
+        if (this.memoryUsage > this.memoryLimit && !this.loadedPageNumbers.length) { // remove all dictionaries, if there is no pages
+            this.resetLastRequestedPage();
+
+            var newDjVi = {};
+            if (preservedDependencies) {
+                preservedDependencies.forEach(id => {
+                    newDjVi[id] = this.djvi[id];
+                    this.memoryUsage += newDjVi[id].bs.buffer.byteLength; // will be subtracted back further
+                });
+            }
+            Object.keys(this.djvi).forEach(key => {
+                this.memoryUsage -= this.djvi[key].bs.buffer.byteLength;
+            });
+
+            this.djvi = newDjVi;
+        }
+        //console.log(`%c Memory was released ${was}, ${this.memoryUsage}, ${this.loadedPageNumbers.length}, ${Object.keys(this.djvi).length}`, "color: red");
+    }
+
+    async getPage(number) {
         var page = this.pages[number - 1];
         if (this.lastRequestedPage && this.lastRequestedPage !== page) {
             this.lastRequestedPage.reset();
@@ -113,10 +184,55 @@ export default class DjVuDocument {
         this.lastRequestedPage = page;
 
         if (!page) {
-            throw new NoSuchPageDjVuError(number);
+            if (number < 1 || number > this.pages.length || this.isBundled()) {
+                throw new NoSuchPageDjVuError(number);
+            } else {
+                if (this.baseUrl === null) {
+                    throw new NoBaseUrlDjVuError();
+                }
+                var pageName = this.dirm.getPageNameByItsNumber(number);
+                var url = this.baseUrl + pageName;
+                var pageBuffer = await (await fetch(url)).arrayBuffer();
+                var bs = new ByteStream(pageBuffer);
+                if (bs.readStr4() !== 'AT&T') {
+                    throw new CorruptedFileDjVuError();
+                }
+
+                var page = new DjVuPage(bs.fork(), this.getINCLChunkCallback);
+                this.memoryUsage += pageBuffer.byteLength;
+                await this._loadDependencies(page.getDependencies());
+
+                this.releaseMemoryIfRequired(page.getDependencies()); // should be called before the page are added to the pages array
+                this.pages[number - 1] = page;
+                this.loadedPageNumbers.push(number - 1);
+                this.lastRequestedPage = page;
+            }
         }
 
         return this.lastRequestedPage;
+    }
+
+    async _loadDependencies(dependencies) {
+        var unloadedDependencies = dependencies.filter(id => !this.djvi[id]);
+        if (!unloadedDependencies.length) {
+            return;
+        }
+        await Promise.all(unloadedDependencies.map(async id => {
+            var url = this.baseUrl + this.dirm.getComponentNameByItsId(id);
+            var componentBuffer = await (await fetch(url)).arrayBuffer();
+            var bs = new ByteStream(componentBuffer);
+            if (bs.readStr4() !== 'AT&T') {
+                throw new CorruptedFileDjVuError();
+            }
+            var chunkId = bs.readStr4();
+            var length = bs.getInt32();
+            chunkId += bs.readStr4();
+            if (chunkId !== "FORMDJVI") {
+                throw new CorruptedFileDjVuError();
+            }
+            this.djvi[id] = new DjViChunk(bs.jump(-12).fork(length + 8));
+            this.memoryUsage += componentBuffer.byteLength;
+        }));
     }
 
     getPageUnsafe(number) {
