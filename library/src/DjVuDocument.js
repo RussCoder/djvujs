@@ -10,19 +10,29 @@ import {
     IncorrectFileFormatDjVuError,
     NoSuchPageDjVuError,
     CorruptedFileDjVuError,
-    NoBaseUrlDjVuError
+    NoBaseUrlDjVuError,
+    UnsuccessfulRequestDjVuError,
+    NetworkDjVuError,
 } from './DjVuErrors';
 
 const MEMORY_LIMIT = 50 * 1024 * 1024; // 50 MB
 
 export default class DjVuDocument {
-    constructor(arraybuffer, options = { baseUrl: null, memoryLimit: MEMORY_LIMIT }) {
+    constructor(arraybuffer, { baseUrl = null, memoryLimit = MEMORY_LIMIT } = {}) {
         this.buffer = arraybuffer;
-        this.baseUrl = options.baseUrl && options.baseUrl.trim();
-        if (this.baseUrl !== null && this.baseUrl && this.baseUrl[this.baseUrl.length - 1] !== '/') {
-            this.baseUrl += '/';
+        this.baseUrl = baseUrl && baseUrl.trim();
+        if (this.baseUrl !== null && this.baseUrl) {
+            if (this.baseUrl[this.baseUrl.length - 1] !== '/') {
+                this.baseUrl += '/';
+            }
+            if (!/^http/.test(this.baseUrl)) { // a relative URL
+                this.baseUrl = new URL(this.baseUrl, location.origin).href; // all URL in a worker should be absolute
+            }
         }
-        this.memoryLimit = options.memoryLimit || MEMORY_LIMIT; // required to limit the size of cache in case of indirect djvu
+        this.memoryLimit = memoryLimit; // required to limit the size of cache in case of indirect djvu
+
+        this.djvi = {}; //разделяемые ресурсы. Могут потребоваться и в случае одностраничного документа
+        this.getINCLChunkCallback = id => this.djvi[id].innerChunk;
 
         this.bs = new ByteStream(arraybuffer);
         this.formatID = this.bs.readStr4();
@@ -32,11 +42,13 @@ export default class DjVuDocument {
         this.id = this.bs.readStr4();
         this.length = this.bs.getInt32();
         this.id += this.bs.readStr4();
-        if (this.id == 'FORMDJVM') {
+        if (this.id === 'FORMDJVM') {
             this._initMultiPageDocument();
-        } else {
+        } else if (this.id === 'FORMDJVU') {
             this.bs.jump(-12);
-            this.pages = [new DjVuPage(this.bs.fork(this.length + 8))];
+            this.pages = [new DjVuPage(this.bs.fork(this.length + 8), this.getINCLChunkCallback)];
+        } else {
+            throw new CorruptedFileDjVuError(`The id of the first chunk of the document should be either FORMDJVM or FORMDJVU, but there is ${this.id}!`);
         }
     }
 
@@ -49,8 +61,6 @@ export default class DjVuDocument {
          */
         this.pages = []; //страницы FORMDJVU
         this.thumbs = [];
-        this.djvi = {}; //разделяемые ресурсы
-        this.getINCLChunkCallback = id => this.djvi[id].innerChunk;
         this.idToPageNumberMap = {}; // used to get pages by their id (url)
 
         if (this.dirm.isBundled) {
@@ -128,6 +138,14 @@ export default class DjVuDocument {
         return this.memoryUsage;
     }
 
+    getMemoryLimit() {
+        return this.memoryLimit;
+    }
+
+    setMemoryLimit(limit = MEMORY_LIMIT) {
+        this.memoryLimit = limit;
+    }
+
     getPageNumberByUrl(url) {
         if (url[0] !== '#') {
             return null;
@@ -147,7 +165,7 @@ export default class DjVuDocument {
 
     releaseMemoryIfRequired(preservedDependencies = null) {
         if (this.memoryUsage <= this.memoryLimit) {
-            //console.log(`%c Memory wasnt released  ${this.memoryUsage}, ${this.loadedPageNumbers.length}, ${Object.keys(this.djvi).length}`, "color: green");
+            //console.log(`%c Memory wasnt released  ${this.memoryUsage}, ${this.memoryLimit}, ${this.loadedPageNumbers.length}, ${Object.keys(this.djvi).length}`, "color: green");
             return;
         }
         //var was = this.memoryUsage;
@@ -192,43 +210,76 @@ export default class DjVuDocument {
                 }
                 var pageName = this.dirm.getPageNameByItsNumber(number);
                 var url = this.baseUrl + pageName;
-                var pageBuffer = await (await fetch(url)).arrayBuffer();
+
+                try {
+                    var response = await fetch(url);
+                } catch (e) {
+                    throw new NetworkDjVuError({ pageNumber: number, url: url });
+                }
+
+                if (!response.ok) {
+                    throw new UnsuccessfulRequestDjVuError(response, { pageNumber: number });
+                }
+
+                var pageBuffer = await response.arrayBuffer();
                 var bs = new ByteStream(pageBuffer);
                 if (bs.readStr4() !== 'AT&T') {
-                    throw new CorruptedFileDjVuError();
+                    throw new CorruptedFileDjVuError(`The file gotten as the page number ${number} isn't a djvu file!`);
                 }
 
                 var page = new DjVuPage(bs.fork(), this.getINCLChunkCallback);
                 this.memoryUsage += pageBuffer.byteLength;
-                await this._loadDependencies(page.getDependencies());
+                await this._loadDependencies(page.getDependencies(), number);
 
                 this.releaseMemoryIfRequired(page.getDependencies()); // should be called before the page are added to the pages array
                 this.pages[number - 1] = page;
                 this.loadedPageNumbers.push(number - 1);
                 this.lastRequestedPage = page;
             }
+        } else if (!this.isOnePageDependenciesLoaded && this.id === "FORMDJVU") { // single page document
+            var dependencies = page.getDependencies();
+            if (dependencies.length) {
+                await this._loadDependencies(dependencies, 1);
+            }
+            this.isOnePageDependenciesLoaded = true;
         }
 
         return this.lastRequestedPage;
     }
 
-    async _loadDependencies(dependencies) {
+    async _loadDependencies(dependencies, pageNumber = null) {
         var unloadedDependencies = dependencies.filter(id => !this.djvi[id]);
         if (!unloadedDependencies.length) {
             return;
         }
         await Promise.all(unloadedDependencies.map(async id => {
-            var url = this.baseUrl + this.dirm.getComponentNameByItsId(id);
-            var componentBuffer = await (await fetch(url)).arrayBuffer();
+            var url = this.baseUrl + (this.dirm ? this.dirm.getComponentNameByItsId(id) : id);
+
+            try {
+                var response = await fetch(url);
+            } catch (e) {
+                throw new NetworkDjVuError({ pageNumber: pageNumber, dependencyId: id, url: url });
+            }
+
+            if (!response.ok) {
+                throw new UnsuccessfulRequestDjVuError(response, { pageNumber: pageNumber, dependencyId: id });
+            }
+
+            var componentBuffer = await response.arrayBuffer();
             var bs = new ByteStream(componentBuffer);
             if (bs.readStr4() !== 'AT&T') {
-                throw new CorruptedFileDjVuError();
+                throw new CorruptedFileDjVuError(
+                    `The file gotten as a dependency ${id} ${pageNumber ? `for the page number ${pageNumber}` : ''} isn't a djvu file!`
+                );
             }
+
             var chunkId = bs.readStr4();
             var length = bs.getInt32();
             chunkId += bs.readStr4();
             if (chunkId !== "FORMDJVI") {
-                throw new CorruptedFileDjVuError();
+                throw new CorruptedFileDjVuError(
+                    `The file gotten as a dependency ${id} ${pageNumber ? `for the page number ${pageNumber}` : ''} isn't a djvu file with shared data!`
+                );
             }
             this.djvi[id] = new DjViChunk(bs.jump(-12).fork(length + 8));
             this.memoryUsage += componentBuffer.byteLength;

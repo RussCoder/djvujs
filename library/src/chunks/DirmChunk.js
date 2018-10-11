@@ -40,7 +40,7 @@ export default class DIRMChunk extends IFFChunk {
             this.names[i] = this.flags[i] & 128 ? bsz.readStrNT() : this.ids[i]; // check hasname flag
             this.titles[i] = this.flags[i] & 64 ? bsz.readStrNT() : this.ids[i]; // check hastitle flag
 
-            if (this.flags[i] & 1) {
+            if ((this.flags[i] & 63) === 1) {
                 this.pagesIds.push(this.ids[i]);
             }
             this.idToNameRegistry[this.ids[i]] = this.names[i];

@@ -54,6 +54,59 @@ export class NoBaseUrlDjVuError extends DjVuError {
     }
 }
 
+function getErrorMessageByData(data) {
+    var message = '';
+    if (data.pageNumber) {
+        if (data.dependencyId) {
+            message = `A dependency ${data.dependencyId} for the page number ${data.pageNumber} can't be loaded!\n`;
+        } else {
+            message = `The page number ${data.pageNumber} can't be loaded!`;
+        }
+    } else if (data.dependencyId) {
+        message = `A dependency ${data.dependencyId} can't be loaded!\n`;
+    }
+    return message;
+}
+
+export class UnsuccessfulRequestDjVuError extends DjVuError {
+    constructor(response, data = { pageNumber: null, dependencyId: null }) {
+        var message = getErrorMessageByData(data);
+        super(DjVuErrorCodes.UNSUCCESSFUL_REQUEST,
+            message + '\n' +
+            `The request to ${response.url} wasn't successful.\n` +
+            `The response status is ${response.status}.\n` +
+            `The response status text is: "${response.statusText}".`
+        );
+        this.status = response.status;
+        this.statusText = response.statusText;
+        this.url = response.url;
+        if (data.pageNumber) {
+            this.pageNumber = data.pageNumber;
+        }
+        if (data.dependencyId) {
+            this.dependencyId = data.dependencyId;
+        }
+    }
+}
+
+export class NetworkDjVuError extends DjVuError {
+    constructor(data = { pageNumber: null, dependencyId: null, url: null }) {
+        super(DjVuErrorCodes.NETWORK_ERROR,
+            getErrorMessageByData(data) + '\n' +
+            "A network error occurred! Check your network connection!"
+        );
+        if (data.pageNumber) {
+            this.pageNumber = data.pageNumber;
+        }
+        if (data.dependencyId) {
+            this.dependencyId = data.dependencyId;
+        }
+        if (data.url) {
+            this.url = data.url;
+        }
+    }
+}
+
 export const DjVuErrorCodes = Object.freeze({
     FILE_IS_CORRUPTED: 'FILE_IS_CORRUPTED',
     INCORRECT_FILE_FORMAT: 'INCORRECT_FILE_FORMAT',
@@ -62,4 +115,6 @@ export const DjVuErrorCodes = Object.freeze({
     DATA_CANNOT_BE_TRANSFERRED: 'DATA_CANNOT_BE_TRANSFERRED',
     INCORRECT_TASK: 'INCORRECT_TASK',
     NO_BASE_URL: 'NO_BASE_URL',
+    NETWORK_ERROR: 'NETWORK_ERROR',
+    UNSUCCESSFUL_REQUEST: 'UNSUCCESSFUL_REQUEST',
 });

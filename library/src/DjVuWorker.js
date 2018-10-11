@@ -147,9 +147,9 @@ export default class DjVuWorker {
                 callbacks.resolve(obj.url);
                 break;
             case 'run':
-                var restoredResult = obj.result.length && obj.result.map ?
-                    obj.result.map(result => this.restoreValueAfterTransfer(result)) :
-                    this.restoreValueAfterTransfer(obj.result);
+                var restoredResult = !obj.result ? obj.result :
+                    obj.result.length && obj.result.map ? obj.result.map(result => this.restoreValueAfterTransfer(result)) :
+                        this.restoreValueAfterTransfer(obj.result);
                 //console.log("Got task response", Date.now() - obj.time);
                 callbacks.resolve(restoredResult);
                 break;
