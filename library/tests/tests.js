@@ -2,54 +2,71 @@
 
 var djvuWorker = new DjVu.Worker();
 
-var resultImageData;
-
 var outputBlock = $('#test_results_wrapper');
 
 // test invocations 
 
-function runAllTests() {
+async function runAllTests() {
     var testNames = Object.keys(Tests);
+    var inPrior = testNames.filter(name => name[0] === '$');
+    var usual = testNames.filter(name => !/^[$,_]/.test(name));
+    testNames = [...inPrior, ...usual];
+
     var totalTime = 0;
-    var runNextTest = () => {
-        while (testNames.length) {
-            var testName = testNames.shift();
-            if (testName[0] === "_") {
-                continue;
-            }
-            TestHelper.writeLog(`${testName} started...`);
-            var startTime = performance.now();
-            return Tests[testName]().then((result) => {
-                var testTime = performance.now() - startTime;
-                totalTime += testTime;
-                if (!result) {
-                    TestHelper.writeLog(`${testName} succeeded!`, "green");
-                } else if (result.isSuccess) {
-                    TestHelper.writeLog(`${testName} succeeded!`, "green");
-                    if (result.messages) {
-                        result.messages.forEach(message => {
-                            TestHelper.writeLog(message, "orange");
-                        });
-                    }
-                } else {
-                    TestHelper.writeLog(`Error: ${JSON.stringify(result)}`, "red");
-                    TestHelper.writeLog(`${testName} failed!`, "red");
-                }
-                TestHelper.writeLog(`It has taken ${Math.round(testTime)} milliseconds`, "blue");
-                TestHelper.endTestBlock();
-                return runNextTest();
-            });
+    var total = testNames.length;
+    var failed = 0;
+
+    while (testNames.length) {
+        var testName = testNames.shift();
+        TestHelper.writeLog(`${testName} started...`);
+        var startTime = performance.now();
+
+        try {
+            var result = await Tests[testName]();
+        } catch (e) {
+            result = e;
         }
 
-        TestHelper.writeLog(`Total time = ${Math.round(totalTime)} milliseconds`, "blue");
-    };
+        var testTime = performance.now() - startTime;
+        totalTime += testTime;
+        if (!result) {
+            TestHelper.writeLog(`${testName} succeeded!`, "green");
+        } else if (result.isSuccess) {
+            TestHelper.writeLog(`${testName} succeeded!`, "green");
+            if (result.messages) {
+                result.messages.forEach(message => {
+                    TestHelper.writeLog(message, "orange");
+                });
+            }
+        } else {
+            failed++;
+            TestHelper.writeLog(`Error: ${JSON.stringify(result)}`, "red");
+            TestHelper.writeLog(`${testName} failed!`, "red");
+        }
+        TestHelper.writeLog(`It has taken ${Math.round(testTime)} milliseconds`, "blue");
+        TestHelper.endTestBlock();
+    }
 
-    return runNextTest();
+    TestHelper.writeLog(`Total time = ${Math.round(totalTime)} milliseconds`, "blue");
+    TestHelper.writeLog(`Total number of test = ${total}`, "blue");
+    if (failed) {
+        TestHelper.writeLog(`Number of failed tests = ${failed}`, "red");
+    } else {
+        TestHelper.writeLog('All tests succeeded!', "green");
+    }
 }
 
 var TestHelper = {
 
     testBlock: null,
+
+    renderImageData(imageData) {
+        var canvas = document.createElement('canvas');
+        canvas.width = imageData.width;
+        canvas.height = imageData.height;
+        canvas.getContext('2d').putImageData(imageData, 0, 0);
+        document.body.appendChild(canvas);
+    },
 
     writeLog(message, color = "black") {
         if (!this.testBlock) {
@@ -182,8 +199,17 @@ var TestHelper = {
 
 var Tests = {
 
-    async _imageTest(djvuName, pageNum, imageName = null, hash = null, rotate = 0) {
+    async _imageTest(djvuName, pageNumber, imageName = null, hash = null, rotate = 0) {
+        return await this._imageTestX({
+            djvuUrl: '/assets/' + djvuName,
+            pageNumber,
+            imageUrl: imageName ? '/assets/' + imageName : imageName,
+            hash,
+            rotate
+        });
+    },
 
+    async _imageTestX({ djvuUrl, baseUrl = null, pageNumber, imageUrl = null, hash = null, rotate = 0 }) {
         function checkByHash(data, message) {
             var isHashTheSame = TestHelper.getHashOfArray(data) === hash;
             return {
@@ -195,15 +221,15 @@ var Tests = {
             };
         }
 
-        var buffer = await (await fetch(`/assets/${djvuName}`)).arrayBuffer();
-        await djvuWorker.createDocument(buffer);
-        var obj = await djvuWorker.getPageImageDataWithDpi(pageNum);
-        resultImageData = obj.imageData;
-        if (imageName === null) {
+        var buffer = await (await fetch(djvuUrl)).arrayBuffer();
+        await djvuWorker.createDocument(buffer, baseUrl ? { baseUrl } : undefined);
+        var obj = await djvuWorker.getPageImageDataWithDpi(pageNumber);
+        var resultImageData = obj.imageData;
+        if (imageUrl === null) {
             var result = checkByHash(resultImageData.data);
             return result.isSuccess ? null : result.messages[0];
         }
-        var canonicImageData = await TestHelper.getImageDataByImageURI(`/assets/${imageName}`, rotate);
+        var canonicImageData = await TestHelper.getImageDataByImageURI(imageUrl, rotate);
         var result = TestHelper.compareImageData(canonicImageData, resultImageData);
         if (result !== null && hash) {
             result = checkByHash(resultImageData.data, result);
@@ -417,6 +443,87 @@ var Tests = {
 
     testSliceDocumentWithCyrillicIds() {
         return this._sliceTest(`/assets/history.djvu`, 2, 2, `/assets/history_2.djvu`);
+    },
+
+    async testIndirectDjVu() {
+        var buffer = await (await fetch('/assets/czech_indirect/index.djvu')).arrayBuffer();
+        djvuWorker.createDocument(buffer, { baseUrl: '/assets/czech_indirect/', memoryLimit: 0 });
+
+        async function checkPage(number, canonicHash) {
+            var imageData = await djvuWorker.doc.getPage(number).getImageData().run();
+            //TestHelper.renderImageData(imageData);
+            var hash = TestHelper.getHashOfArray(imageData.data);
+            if (hash !== canonicHash) {
+                throw "Hash of isn't the same!";
+            }
+        }
+
+        await checkPage(3, 400840825);
+        var memoryUsage1 = await djvuWorker.doc.getMemoryUsage().run();
+        await checkPage(1, -769561152);
+        var memoryUsage2 = await djvuWorker.doc.getMemoryUsage().run();
+        await checkPage(3, 400840825);
+        var memoryUsage3 = await djvuWorker.doc.getMemoryUsage().run();
+
+        if (memoryUsage2 >= memoryUsage1) {
+            throw "The memory wasn't released!";
+        }
+        if (memoryUsage1 !== memoryUsage3) {
+            throw "There is a memory leakage!";
+        }
+        await djvuWorker.doc.setMemoryLimit(1000000).run();
+        await checkPage(1, -769561152);
+        var memoryUsage4 = await djvuWorker.doc.getMemoryUsage().run();
+        if (memoryUsage4 <= memoryUsage3) {
+            throw "The memory limit is ignored!";
+        }
+
+        try {
+            await djvuWorker.doc.getPage(2).getImageData().run();
+            throw "There is no error, but there must be one!";
+        } catch (e) {
+            if (!(
+                e.code === DjVu.ErrorCodes.UNSUCCESSFUL_REQUEST
+                && e.status === 404
+                && e.pageNumber === 2
+                && !e.dependencyId
+            )) {
+                throw { message: "Different Error!", error: e };
+            }
+        }
+
+        try {
+            await djvuWorker.doc.getPage(4).getImageData().run();
+            throw "There is no error, but there must be one!";
+        } catch (e) {
+            if (!(
+                e.code === DjVu.ErrorCodes.UNSUCCESSFUL_REQUEST
+                && e.status === 404
+                && e.pageNumber === 4
+                && e.dependencyId === 'dict1085.iff' // the dependency was spoiled manually in the file
+            )) {
+                throw { message: "Different Error!", error: e };
+            }
+        }
+    },
+
+    testOpenIndirectDjVuPageDirectly() {
+        return this._imageTestX({
+            djvuUrl: '/assets/czech_indirect/p0001.djvu',
+            baseUrl: '/assets/czech_indirect/',
+            imageUrl: '/assets/czech_indirect/p0001.png',
+            pageNumber: 1,
+            hash: 400840825,
+        });
+    },
+
+    testPageWithEmptyLastChunk() {
+        return this._imageTestX({
+            djvuUrl: '/assets/ccitt_2.djvu',
+            imageUrl: '/assets/ccitt_2.png',
+            pageNumber: 1,
+            hash: -1646655329,
+        });
     },
 
     testGrayscaleBG44() {

@@ -6,20 +6,24 @@ body {
 #test_results_wrapper {
     font-family: monospace;
     box-shadow: 0 0 1px lightgray;
-    padding: 1em;
-    margin: 1em;
+    padding: 0.2em;
+    margin: 0.2em;
     display: flex;
     flex-wrap: wrap;
     flex-direction: column;
+    align-content: flex-start;
     box-sizing: border-box;
-    max-height: 95%;
+    justify-content: flex-start;
+    height: 95%;
+    overflow: auto;
 }
 
 .test_block {
     box-shadow: 0 0 1px gray;
     padding: 0.5em;
-    flex: 1 1 auto;
+    flex: 0 0 auto;
     width: 25em;
     white-space: normal;
     word-wrap: break-word;
+    margin: 0.2em;
 }

@@ -5,7 +5,7 @@
  */
 
 DjVu.setDebugMode(true);
- 
+
 var fileSize = 0;
 var output;
 var djvuArrayBuffer;
@@ -16,9 +16,9 @@ var rerunButton = document.querySelector('#rerun');
 rerunButton.onclick = rerun;
 document.querySelector('#redraw').onclick = redrawPage;
 
-var pageNumber = 1;
-var djvuUrl = 'assets/tech_primer/index.djvu';
-var baseUrl = 'assets/tech_primer/';
+var pageNumber = 3;
+var djvuUrl = 'assets/czech_indirect/index.djvu';
+var baseUrl = 'assets/czech_indirect/';
 
 document.querySelector('#next').onclick = () => {
     pageNumber++;
@@ -35,6 +35,18 @@ function saveStringAsFile(string) {
     link.download = 'string.txt';
     var blob = new Blob([string], { type: 'text/plain' });
     link.href = window.URL.createObjectURL(blob);
+    link.click();
+}
+
+function saveImage(imageData) {
+    var canvas = document.createElement('canvas');
+    canvas.width = imageData.width;
+    canvas.height = imageData.height;
+    var ctx = canvas.getContext('2d');
+    ctx.putImageData(imageData, 0, 0);
+    var link = document.createElement('a');
+    link.download = 'image.png';
+    link.href = canvas.toDataURL();
     link.click();
 }
 
@@ -125,7 +137,7 @@ async function readDjvu(buf) {
     var link = document.querySelector('#dochref');
     var time = performance.now();
     console.log("Buffer length = " + buf.byteLength);
-    djvuDocument = new DjVu.Document(buf, {baseUrl: baseUrl});
+    djvuDocument = new DjVu.Document(buf, { baseUrl: baseUrl });
     Globals.counter = 0;
 
     //writeln(djvuDocument.toString(true));
@@ -144,8 +156,10 @@ async function redrawPage() {
     console.log('**** Render Page ****');
     var time = performance.now();
     var page = await djvuDocument.getPage(pageNumber);
+    var imageData = page.getImageData();
+    //saveImage(imageData);
     Globals.drawImage(
-        page.getImageData(),
+        imageData,
         page.getDpi() * 1
     );
     //console.log(doc.pages[pageNumber].getText());
