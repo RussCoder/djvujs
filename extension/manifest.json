@@ -17,7 +17,8 @@
             ],
             "js": [
                 "content.js"
-            ]
+            ],
+            "run-at": "document_end"
         }
     ],
     "permissions": [
