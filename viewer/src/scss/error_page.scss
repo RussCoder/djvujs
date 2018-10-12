@@ -3,11 +3,12 @@
     padding: 1em;
     font-family: monospace;
     border: 1px solid gray;
-    margin: 2em;
+    margin: 2em auto;
     overflow: auto;
 
     .header {
         text-align: center;
+        font-weight: 600;
         font-size: 2em;
         margin: 0.5em;
     }
@@ -25,7 +26,7 @@
         border: 1px solid gray;
 
         .key {
-            font-weight: bold;
+            font-weight: 600;
             margin: 0 0.5em;
         }
     }

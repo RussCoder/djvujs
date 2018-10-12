@@ -1,5 +1,10 @@
 # DjVu.js Library Changelog
 
+## v.0.3.0 (14.09.2018)
+
+- The support of indirect djvu files.
+- Bug fixes.
+
 ## v.0.2.2 (14.09.2018)
 
 - Rotation flags are processed now. A image of page is rotated by default if required.
