@@ -1,5 +1,11 @@
 # DjVu.js Viewer Changelog
 
+## v.0.2.3 (12.10.2018)
+
+- Some errors are shown instead of pages rather than in a pop-up window.
+- Loading placeholder is shown when there is no image yet.
+- Minor changes to support indirect djvu.
+
 ## v.0.2.2 (27.08.2018)
 
 - Rotate pages 0, 90, 180, 270 degrees clockwise.

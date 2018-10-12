@@ -23,6 +23,7 @@ export default function fileLoadingReducer(state = initialState, action) {
             }
 
         case Consts.END_FILE_LOADING_ACTION:
+        case Consts.ERROR_ACTION:
             return initialState;
 
         default:

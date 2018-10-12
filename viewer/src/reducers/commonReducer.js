@@ -44,6 +44,7 @@ export default (state = initialState, action) => {
             }
 
         case Consts.IMAGE_DATA_RECEIVED_ACTION:
+        case Consts.PAGE_ERROR_ACTION:
             return {
                 ...state,
                 isLoading: false,

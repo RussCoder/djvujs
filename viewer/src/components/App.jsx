@@ -12,6 +12,8 @@ import Footer from './Footer';
 import LeftPanel from './LeftPanel';
 import NotificationWindow from './NotificationWindow';
 import HelpWindow from './HelpWindow';
+import ErrorPage from './ErrorPage';
+import LoadingPlaceholder from './LoadingPlaceholder';
 
 const TextBlock = ({ text }) => (
     <pre className="text_block">
@@ -36,7 +38,10 @@ class App extends Component {
                     !this.props.isFileLoaded ? <InitialScreen /> : [
                         <div key="central_block" className="central_block">
                             <LeftPanel />
-                            {this.props.isTextMode ? <TextBlock text={this.props.pageText} /> : <ImageBlock />}
+                            {this.props.pageError ? <ErrorPage pageNumber={this.props.pageNumber} error={this.props.pageError} /> :
+                                this.props.isTextMode ? <TextBlock text={this.props.pageText} /> :
+                                    this.props.imageData ? <ImageBlock /> :
+                                        <LoadingPlaceholder />}
                         </div>,
                         <DownPanel key="down_panel" />
                     ]
@@ -52,6 +57,9 @@ class App extends Component {
 
 export default connect(
     state => ({
+        imageData: get.imageData(state),
+        pageError: get.pageError(state),
+        pageNumber: get.currentPageNumber(state),
         isFileLoaded: get.isDocumentLoaded(state),
         isFileLoading: get.isFileLoading(state),
         isFullPageView: get.isFullPageView(state),

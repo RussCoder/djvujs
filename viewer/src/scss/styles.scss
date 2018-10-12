@@ -28,6 +28,8 @@ body.disable_scroll_djvujs {
     @import "central_block";
     @import "footer";
     @import "rotation_control";
+    @import "error_page";
+    @import "loading_placeholder";
 
     &.full_page_view {
         top: 0;

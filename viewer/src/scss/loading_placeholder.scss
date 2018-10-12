@@ -1,0 +1,12 @@
+.loading_placeholder {
+    font-size: 3em;
+    font-style: italic;
+    flex: 1 1 auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    .message {
+        margin-left: 0.5em;
+    }
+}

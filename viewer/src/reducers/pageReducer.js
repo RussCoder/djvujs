@@ -9,6 +9,7 @@ const initialState = Object.freeze({
     textZones: null,
     cursorMode: Consts.GRAB_CURSOR_MODE,
     currentPageNumber: 1,
+    pageError: null,
 });
 
 export default function pageReducer(state = initialState, action) {
@@ -36,17 +37,30 @@ export default function pageReducer(state = initialState, action) {
         //     }
 
         case Consts.SET_NEW_PAGE_NUMBER_ACTION:
-            return {
-                ...state,
-                currentPageNumber: action.pageNumber
-            };
+            if (state.pageError) {
+                return {
+                    ...initialState,
+                    currentPageNumber: action.pageNumber,
+                };
+            } else {
+                return {
+                    ...state,
+                    currentPageNumber: action.pageNumber
+                };
+            }
 
         case Consts.PAGE_TEXT_FETCHED_ACTION:
             return {
                 ...state,
                 pageText: action.pageText,
                 textZones: action.textZones
-            }
+            };
+
+        case Consts.PAGE_ERROR_ACTION:
+            return {
+                ...state,
+                pageError: action.error,
+            };
 
         default:
             return state;

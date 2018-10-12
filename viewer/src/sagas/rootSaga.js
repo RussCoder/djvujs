@@ -18,7 +18,7 @@ import createSagaDataObject from "./sagaData";
 
 const sagas = {
     * fetchImageDataByPageNumber(pageNumber, djvuWorker) {
-        if (pageNumber !== null & !this.pages[pageNumber]) {
+        if (pageNumber !== null && (!this.pages[pageNumber] || this.pages[pageNumber].error)) {
             if (this.imageDataPromisePageNumber !== pageNumber) {
                 if (this.imageDataPromise) {
                     djvuWorker.cancelAllTasks();
@@ -31,10 +31,15 @@ const sagas = {
                 );
             }
 
-            const [imageData, dpi] = yield this.imageDataPromise;
-            this.pages[pageNumber] = { imageData, dpi };
-            this.imageDataPromisePageNumber = null;
-            this.imageDataPromise = null;
+            try {
+                const [imageData, dpi] = yield this.imageDataPromise;
+                this.pages[pageNumber] = { imageData, dpi };
+            } catch (e) {
+                this.pages[pageNumber] = { error: e };
+            } finally {
+                this.imageDataPromisePageNumber = null;
+                this.imageDataPromise = null;
+            }
         }
     },
 
@@ -48,11 +53,17 @@ const sagas = {
 
         yield* this.fetchImageDataByPageNumber(currentPageNumber, djvuWorker);
 
-        yield put({
-            type: Consts.IMAGE_DATA_RECEIVED_ACTION,
-            imageData: this.pages[currentPageNumber].imageData,
-            imageDpi: this.pages[currentPageNumber].dpi
-        });
+        const currentPageData = this.pages[currentPageNumber];
+
+        if (currentPageData.error) {
+            yield put(Actions.pageErrorAction(currentPageData.error));
+        } else {
+            yield put({
+                type: Consts.IMAGE_DATA_RECEIVED_ACTION,
+                imageData: this.pages[currentPageNumber].imageData,
+                imageDpi: this.pages[currentPageNumber].dpi
+            });
+        }
 
         if (nextPageNumber > prevPageNumber) { // when the current page is the last one. 
             yield* this.fetchImageDataByPageNumber(nextPageNumber, djvuWorker);
@@ -88,16 +99,20 @@ const sagas = {
         const state = yield select();
         const djvuWorker = get.djvuWorker(state);
 
-        const [text, textZones] = yield djvuWorker.run(
-            djvuWorker.doc.getPage(pageNumber).getText(),
-            djvuWorker.doc.getPage(pageNumber).getNormalizedTextZones(),
-        );
+        try {
+            const [text, textZones] = yield djvuWorker.run(
+                djvuWorker.doc.getPage(pageNumber).getText(),
+                djvuWorker.doc.getPage(pageNumber).getNormalizedTextZones(),
+            );
 
-        yield put({
-            type: Consts.PAGE_TEXT_FETCHED_ACTION,
-            pageText: text,
-            textZones: textZones
-        });
+            yield put({
+                type: Consts.PAGE_TEXT_FETCHED_ACTION,
+                pageText: text,
+                textZones: textZones
+            });
+        } catch (e) {
+            yield put(Actions.pageErrorAction(e));
+        }
     },
 
     * fetchPageTextIfRequired(action) {

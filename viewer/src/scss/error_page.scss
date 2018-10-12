@@ -1,0 +1,32 @@
+.error_page {
+    background: pink;
+    padding: 1em;
+    font-family: monospace;
+    border: 1px solid gray;
+    margin: 2em;
+    overflow: auto;
+
+    .header {
+        text-align: center;
+        font-size: 2em;
+        margin: 0.5em;
+    }
+
+    .message {
+        font-size: 1.2em;
+        margin: 0.2em;
+    }
+
+    .error_details {
+        list-style-position: inside;
+        white-space: pre-wrap;
+        margin: 0.5em;
+        padding: 0.5em;
+        border: 1px solid gray;
+
+        .key {
+            font-weight: bold;
+            margin: 0 0.5em;
+        }
+    }
+}
