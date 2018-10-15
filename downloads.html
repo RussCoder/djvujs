@@ -29,11 +29,11 @@
 
 Here you can download the library and the viewer .js and .css files.
 
-<p><a href="/assets/dist/djvu.js?v=3" download="djvu.js">Download DjVu.js library (version 0.2.2)</a></p>
+<p><a href="/assets/dist/djvu.js?v=4" download="djvu.js">Download DjVu.js library (version 0.3.0)</a></p>
 
-<p></p><a href="/assets/dist/djvu_viewer.js?v=3" download="djvu_viewer.js">Download DjVu.js Viewer .js file (version 0.2.2)</a>
+<p></p><a href="/assets/dist/djvu_viewer.js?v=4" download="djvu_viewer.js">Download DjVu.js Viewer .js file (version 0.2.3)</a>
 
-<p></p><a href="/assets/dist/djvu_viewer.css?v=3" download="djvu_viewer.css">Download DjVu.js Viewer .css file (version 0.2.2)</a>
+<p></p><a href="/assets/dist/djvu_viewer.css?v=4" download="djvu_viewer.css">Download DjVu.js Viewer .css file (version 0.2.3)</a>
 
 <p>You can download <em>the previous versions</em> <a href="https://github.com/RussCoder/djvujs/releases">here</a>.</p>
 
@@ -79,7 +79,19 @@ to start a local web server in order to make everything work as it works on the 
 <li><code>async loadDocumentByUrl(url, config = null)</code> - loads the documents as an <code>ArrayBuffer</code> and then invokes the previous method.</li>
 <li><code>configure(config)</code> - just sets the options. Note, that when a document is loaded some option are reset to the initial ones, so you have to call the method again or use the last parameter of the two previous methods.</li>
 </ul>
-<p>The <code>config</code> is an object containing options for the viewer. Right now,the only one option is available, namely the rotation of a page: <code>{pageRotation: 90}</code>. There are 4 valid values: 0, 90, 180 and 270.</p>
+<p>The <code>config</code> is an object containing options for the viewer. It&#39;s an optional parameter. It has the following shape:</p>
+<pre><code class="language-json">
+{
+    pageRotation: 90,
+    djvuOptions: {
+        baseUrl: &quot;/url/to/directory/with/indirect/djvu/&quot;
+    }
+}
+</code></pre>
+<ul>
+<li><code>pageRotation</code> - the rotation of a page, it can be 0, 90, 180, 270.</li>
+<li><code>djvuOptions</code> - an object which is passed to the library. Now there is only one option - the base url, which is the url to a directory which contains the files of an indirect djvu. For bundled djvu this parameter is not required. The base url is extracted automatically from a url to the index.djvu, when the <code>loadDocumentByUrl</code> is called, but in case of <code>loadDocument</code> method, this parameter should be provided manually.</li>
+</ul>
 <p>Thus, to load a document programmatically you can do the following:</p>
 <pre><code>var viewer = new DjVu.Viewer();
 viewer = render(document.getElementById(&#39;for_viewer&#39;));

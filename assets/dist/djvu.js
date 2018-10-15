@@ -5,7 +5,7 @@ var DjVu = (function () {
     'use strict;'
 
     var DjVu = {
-        VERSION: '0.2.2',
+        VERSION: '0.3.0',
         IS_DEBUG: false,
         setDebugMode: (flag) => DjVu.IS_DEBUG = flag
     };
@@ -686,315 +686,6 @@ var DjVu = (function () {
         }
     }
 
-    class ByteStream {
-        constructor(buffer, offsetx, length) {
-            this.buffer = buffer;
-            this.offsetx = offsetx || 0;
-            this.offset = 0;
-            this.length = length || buffer.byteLength;
-            if (this.length + offsetx > buffer.byteLength) {
-                this.length = buffer.byteLength - offsetx;
-                console.error("Incorrect length in ByteStream!");
-            }
-            this.viewer = new DataView(this.buffer, this.offsetx, this.length);
-        }
-        getUint8Array(length) {
-            length = length || this.restLength();
-            var off = this.offset;
-            this.offset += length;
-            return new Uint8Array(this.buffer, this.offsetx + off, length);
-        }
-        toUint8Array() {
-            return new Uint8Array(this.buffer, this.offsetx, this.length);
-        }
-        restLength() {
-            return this.length - this.offset;
-        }
-        reset() {
-            this.offset = 0;
-        }
-        byte() {
-            if (this.offset >= this.length) {
-                this.offset++;
-                return 0xff;
-            }
-            return this.viewer.getUint8(this.offset++);
-        }
-        getInt8() {
-            return this.viewer.getInt8(this.offset++);
-        }
-        getInt16() {
-            var tmp = this.viewer.getInt16(this.offset);
-            this.offset += 2;
-            return tmp;
-        }
-        getUint16() {
-            var tmp = this.viewer.getUint16(this.offset);
-            this.offset += 2;
-            return tmp;
-        }
-        getInt32() {
-            var tmp = this.viewer.getInt32(this.offset);
-            this.offset += 4;
-            return tmp;
-        }
-        getUint8() {
-            return this.viewer.getUint8(this.offset++);
-        }
-        getInt24() {
-            var uint = this.getUint24();
-            return (uint & 0x800000) ? (0xffffff - val + 1) * -1 : uint
-        }
-        getUint24() {
-            return (this.byte() << 16) | (this.byte() << 8) | this.byte();
-        }
-        jump(length) {
-            this.offset += length;
-        }
-        setOffset(offset) {
-            this.offset = offset;
-        }
-        readChunkName() {
-            return this.readStr4();
-        }
-        readStr4() {
-            var str = "";
-            for (var i = 0; i < 4; i++) {
-                var byte = this.viewer.getUint8(this.offset++);
-                str += String.fromCharCode(byte);
-            }
-            return str;
-        }
-        readStrNT() {
-            var array = [];
-            var byte = this.getUint8();
-            while (byte) {
-                array.push(byte);
-                byte = this.getUint8();
-            }
-            return createStringFromUtf8Array(array);
-        }
-        readStrUTF(byteLength) {
-            return createStringFromUtf8Array(this.getUint8Array(byteLength));
-        }
-        fork(_length) {
-            var length = _length || (this.length - this.offset);
-            return new ByteStream(this.buffer, this.offsetx + this.offset, length);
-        }
-        clone() {
-            return new ByteStream(this.buffer, this.offsetx, this.length);
-        }
-        isEmpty() {
-            return this.offset >= this.length;
-        }
-    }
-
-    class BZZDecoder {
-        constructor(zp) {
-            this.zp = zp;
-            this.maxblock = 4096;
-            this.FREQMAX = 4;
-            this.CTXIDS = 3;
-            this.mtf = new Uint8Array(256);
-            for (var i = 0; i < 256; i++) {
-                this.mtf[i] = i;
-            }
-            this.ctx = new Uint8Array(300);
-            this.size = 0;
-            this.blocksize = 0;
-            this.data = null;
-        }
-        decode_raw(bits) {
-            var n = 1;
-            var m = (1 << bits);
-            while (n < m) {
-                var b = this.zp.decode();
-                n = (n << 1) | b;
-            }
-            return n - m;
-        }
-        decode_binary(ctxoff, bits) {
-            var n = 1;
-            var m = (1 << bits);
-            ctxoff--;
-            while (n < m) {
-                var b = this.zp.decode(this.ctx, ctxoff + n);
-                n = (n << 1) | b;
-            }
-            return n - m;
-        }
-        _decode() {
-            this.size = this.decode_raw(24);
-            if (!this.size) {
-                return 0;
-            }
-            if (this.size > this.maxblock * 1024) {
-                throw new Error("Too big block. Error");
-            }
-            if (this.blocksize < this.size) {
-                this.blocksize = this.size;
-                this.data = new Uint8Array(this.blocksize);
-            } else if (this.data == null) {
-                this.data = new Uint8Array(this.blocksize);
-            }
-            var fshift = 0;
-            if (this.zp.decode()) {
-                fshift++;
-                if (this.zp.decode()) {
-                    fshift++;
-                }
-            }
-            var freq = new Array(this.FREQMAX);
-            for (var i = 0; i < this.FREQMAX; freq[i++] = 0);
-            var fadd = 4;
-            var mtfno = 3;
-            var markerpos = -1;
-            for (var i = 0; i < this.size; i++) {
-                var ctxid = this.CTXIDS - 1;
-                if (ctxid > mtfno) {
-                    ctxid = mtfno;
-                }
-                var ctxoff = 0;
-                switch (0)
-                {
-                    default:
-                        if (this.zp.decode(this.ctx, ctxoff + ctxid) != 0) {
-                            mtfno = 0;
-                            this.data[i] = this.mtf[mtfno];
-                            break;
-                        }
-                        ctxoff += this.CTXIDS;
-                        if (this.zp.decode(this.ctx, ctxoff + ctxid) != 0) {
-                            mtfno = 1;
-                            this.data[i] = this.mtf[mtfno];
-                            break;
-                        }
-                        ctxoff += this.CTXIDS;
-                        if (this.zp.decode(this.ctx, ctxoff + 0) != 0) {
-                            mtfno = 2 + this.decode_binary(ctxoff + 1, 1);
-                            this.data[i] = this.mtf[mtfno];
-                            break;
-                        }
-                        ctxoff += (1 + 1);
-                        if (this.zp.decode(this.ctx, ctxoff + 0) != 0) {
-                            mtfno = 4 + this.decode_binary(ctxoff + 1, 2);
-                            this.data[i] = this.mtf[mtfno];
-                            break;
-                        }
-                        ctxoff += (1 + 3);
-                        if (this.zp.decode(this.ctx, ctxoff + 0) != 0) {
-                            mtfno = 8 + this.decode_binary(ctxoff + 1, 3);
-                            this.data[i] = this.mtf[mtfno];
-                            break;
-                        }
-                        ctxoff += (1 + 7);
-                        if (this.zp.decode(this.ctx, ctxoff + 0) != 0) {
-                            mtfno = 16 + this.decode_binary(ctxoff + 1, 4);
-                            this.data[i] = this.mtf[mtfno];
-                            break;
-                        }
-                        ctxoff += (1 + 15);
-                        if (this.zp.decode(this.ctx, ctxoff + 0) != 0) {
-                            mtfno = 32 + this.decode_binary(ctxoff + 1, 5);
-                            this.data[i] = this.mtf[mtfno];
-                            break;
-                        }
-                        ctxoff += (1 + 31);
-                        if (this.zp.decode(this.ctx, ctxoff + 0) != 0) {
-                            mtfno = 64 + this.decode_binary(ctxoff + 1, 6);
-                            this.data[i] = this.mtf[mtfno];
-                            break;
-                        }
-                        ctxoff += (1 + 63);
-                        if (this.zp.decode(this.ctx, ctxoff + 0) != 0) {
-                            mtfno = 128 + this.decode_binary(ctxoff + 1, 7);
-                            this.data[i] = this.mtf[mtfno];
-                            break;
-                        }
-                        mtfno = 256;
-                        this.data[i] = 0;
-                        markerpos = i;
-                        continue;
-                }
-                var k;
-                fadd = fadd + (fadd >> fshift);
-                if (fadd > 0x10000000) {
-                    fadd >>= 24;
-                    freq[0] >>= 24;
-                    freq[1] >>= 24;
-                    freq[2] >>= 24;
-                    freq[3] >>= 24;
-                    for (k = 4; k < this.FREQMAX; k++) {
-                        freq[k] >>= 24;
-                    }
-                }
-                var fc = fadd;
-                if (mtfno < this.FREQMAX) {
-                    fc += freq[mtfno];
-                }
-                for (k = mtfno; k >= this.FREQMAX; k--) {
-                    this.mtf[k] = this.mtf[k - 1];
-                }
-                for (; (k > 0) && ((0xffffffff & fc) >= (0xffffffff & freq[k - 1])); k--) {
-                    this.mtf[k] = this.mtf[k - 1];
-                    freq[k] = freq[k - 1];
-                }
-                this.mtf[k] = this.data[i];
-                freq[k] = fc;
-            }
-            if ((markerpos < 1) || (markerpos >= this.size)) {
-                throw new Error("ByteStream.corrupt");
-            }
-            var pos = new Uint32Array(this.size);
-            for (var j = 0; j < this.size; pos[j++] = 0);
-            var count = new Array(256);
-            for (var i = 0; i < 256; count[i++] = 0);
-            for (var i = 0; i < markerpos; i++) {
-                var c = this.data[i];
-                pos[i] = (c << 24) | (count[0xff & c] & 0xffffff);
-                count[0xff & c]++;
-            }
-            for (var i = markerpos + 1; i < this.size; i++) {
-                var c = this.data[i];
-                pos[i] = (c << 24) | (count[0xff & c] & 0xffffff);
-                count[0xff & c]++;
-            }
-            var last = 1;
-            for (var i = 0; i < 256; i++) {
-                var tmp = count[i];
-                count[i] = last;
-                last += tmp;
-            }
-            var j = 0;
-            last = this.size - 1;
-            while (last > 0) {
-                var n = pos[j];
-                var c = pos[j] >> 24;
-                this.data[--last] = 0xff & c;
-                j = count[0xff & c] + (n & 0xffffff);
-            }
-            if (j != markerpos) {
-                throw new Error("ByteStream.corrupt");
-            }
-            return this.size;
-        }
-        getByteStream() {
-            var bsw, size;
-            while (size = this._decode()) {
-                if (!bsw) {
-                    bsw = new ByteStreamWriter(size - 1);
-                    var arr = new Uint8Array(this.data.buffer, 0, this.data.length - 1);
-                    bsw.writeArray(arr);
-                }
-            }
-            this.data = null;
-            return new ByteStream(bsw.getBuffer());
-        }
-        static decodeByteStream(bs) {
-            return new BZZDecoder(new ZPDecoder(bs)).getByteStream();
-        }
-    }
-
     class DjVuError {
         constructor(code, message) {
             this.code = code;
@@ -1032,6 +723,64 @@ var DjVu = (function () {
             this.task = task;
         }
     }
+    class NoBaseUrlDjVuError extends DjVuError {
+        constructor() {
+            super(DjVuErrorCodes.NO_BASE_URL,
+                "The base URL is required for the indirect djvu to load components," +
+                " but no base URL was provided to the document constructor!"
+            );
+        }
+    }
+    function getErrorMessageByData(data) {
+        var message = '';
+        if (data.pageNumber) {
+            if (data.dependencyId) {
+                message = `A dependency ${data.dependencyId} for the page number ${data.pageNumber} can't be loaded!\n`;
+            } else {
+                message = `The page number ${data.pageNumber} can't be loaded!`;
+            }
+        } else if (data.dependencyId) {
+            message = `A dependency ${data.dependencyId} can't be loaded!\n`;
+        }
+        return message;
+    }
+    class UnsuccessfulRequestDjVuError extends DjVuError {
+        constructor(response, data = { pageNumber: null, dependencyId: null }) {
+            var message = getErrorMessageByData(data);
+            super(DjVuErrorCodes.UNSUCCESSFUL_REQUEST,
+                message + '\n' +
+                `The request to ${response.url} wasn't successful.\n` +
+                `The response status is ${response.status}.\n` +
+                `The response status text is: "${response.statusText}".`
+            );
+            this.status = response.status;
+            this.statusText = response.statusText;
+            this.url = response.url;
+            if (data.pageNumber) {
+                this.pageNumber = data.pageNumber;
+            }
+            if (data.dependencyId) {
+                this.dependencyId = data.dependencyId;
+            }
+        }
+    }
+    class NetworkDjVuError extends DjVuError {
+        constructor(data = { pageNumber: null, dependencyId: null, url: null }) {
+            super(DjVuErrorCodes.NETWORK_ERROR,
+                getErrorMessageByData(data) + '\n' +
+                "A network error occurred! Check your network connection!"
+            );
+            if (data.pageNumber) {
+                this.pageNumber = data.pageNumber;
+            }
+            if (data.dependencyId) {
+                this.dependencyId = data.dependencyId;
+            }
+            if (data.url) {
+                this.url = data.url;
+            }
+        }
+    }
     const DjVuErrorCodes = Object.freeze({
         FILE_IS_CORRUPTED: 'FILE_IS_CORRUPTED',
         INCORRECT_FILE_FORMAT: 'INCORRECT_FILE_FORMAT',
@@ -1039,6 +788,9 @@ var DjVu = (function () {
         UNEXPECTED_ERROR: 'UNEXPECTED_ERROR',
         DATA_CANNOT_BE_TRANSFERRED: 'DATA_CANNOT_BE_TRANSFERRED',
         INCORRECT_TASK: 'INCORRECT_TASK',
+        NO_BASE_URL: 'NO_BASE_URL',
+        NETWORK_ERROR: 'NETWORK_ERROR',
+        UNSUCCESSFUL_REQUEST: 'UNSUCCESSFUL_REQUEST',
     });
 
     class IFFChunk {
@@ -1142,46 +894,6 @@ var DjVu = (function () {
         }
     }
     class CIDaChunk extends INCLChunk { }
-    class DIRMChunk extends IFFChunk {
-        constructor(bs) {
-            super(bs);
-            this.dflags = bs.byte();
-            this.nfiles = bs.getInt16();
-            this.offsets = new Int32Array(this.nfiles);
-            this.sizes = new Uint32Array(this.nfiles);
-            this.flags = new Uint8Array(this.nfiles);
-            this.ids = new Array(this.nfiles);
-            this.names = new Array(this.nfiles);
-            this.titles = new Array(this.nfiles);
-            for (var i = 0; i < this.nfiles; i++) {
-                this.offsets[i] = bs.getInt32();
-            }
-            var bsbs = bs.fork(this.length - 3 - 4 * this.nfiles);
-            var bsz = BZZDecoder.decodeByteStream(bsbs);
-            for (var i = 0; i < this.nfiles; i++) {
-                this.sizes[i] = bsz.getUint24();
-            }
-            for (var i = 0; i < this.nfiles; i++) {
-                this.flags[i] = bsz.byte();
-            }
-            for (var i = 0; i < this.nfiles && !bsz.isEmpty(); i++) {
-                this.ids[i] = bsz.readStrNT();
-                this.names[i] = this.flags[i] & 128 ? bsz.readStrNT() : this.ids[i];
-                this.titles[i] = this.flags[i] & 64 ? bsz.readStrNT() : this.ids[i];
-            }
-        }
-        getFilesCount() {
-            return this.nfiles;
-        }
-        getMetadataStringByIndex(i) {
-            return `[id: "${this.ids[i]}", flag: ${this.flags[i]}, offset: ${this.offsets[i]}, size: ${this.sizes[i]}]\n`;
-        }
-        toString() {
-            var str = super.toString();
-            str += "FilesCount: " + this.nfiles + '\n';
-            return str + '\n';
-        }
-    }
 
     class JB2Codec extends IFFChunk {
         constructor(bs) {
@@ -1683,6 +1395,314 @@ var DjVu = (function () {
             }
             DjVu.IS_DEBUG && console.log("JB2Image creating time = ", performance.now() - time);
             return image;
+        }
+    }
+
+    class ByteStream {
+        constructor(buffer, offsetx, length) {
+            this.buffer = buffer;
+            this.offsetx = offsetx || 0;
+            this.offset = 0;
+            this.length = length || buffer.byteLength;
+            if (this.length + offsetx > buffer.byteLength) {
+                this.length = buffer.byteLength - offsetx;
+                console.error("Incorrect length in ByteStream!");
+            }
+            this.viewer = new DataView(this.buffer, this.offsetx, this.length);
+        }
+        getUint8Array(length = this.remainingLength()) {
+            var off = this.offset;
+            this.offset += length;
+            return new Uint8Array(this.buffer, this.offsetx + off, length);
+        }
+        toUint8Array() {
+            return new Uint8Array(this.buffer, this.offsetx, this.length);
+        }
+        remainingLength() {
+            return this.length - this.offset;
+        }
+        reset() {
+            this.offset = 0;
+        }
+        byte() {
+            if (this.offset >= this.length) {
+                this.offset++;
+                return 0xff;
+            }
+            return this.viewer.getUint8(this.offset++);
+        }
+        getInt8() {
+            return this.viewer.getInt8(this.offset++);
+        }
+        getInt16() {
+            var tmp = this.viewer.getInt16(this.offset);
+            this.offset += 2;
+            return tmp;
+        }
+        getUint16() {
+            var tmp = this.viewer.getUint16(this.offset);
+            this.offset += 2;
+            return tmp;
+        }
+        getInt32() {
+            var tmp = this.viewer.getInt32(this.offset);
+            this.offset += 4;
+            return tmp;
+        }
+        getUint8() {
+            return this.viewer.getUint8(this.offset++);
+        }
+        getInt24() {
+            var uint = this.getUint24();
+            return (uint & 0x800000) ? (0xffffff - val + 1) * -1 : uint
+        }
+        getUint24() {
+            return (this.byte() << 16) | (this.byte() << 8) | this.byte();
+        }
+        jump(length) {
+            this.offset += length;
+            return this;
+        }
+        setOffset(offset) {
+            this.offset = offset;
+        }
+        readChunkName() {
+            return this.readStr4();
+        }
+        readStr4() {
+            var str = "";
+            for (var i = 0; i < 4; i++) {
+                var byte = this.viewer.getUint8(this.offset++);
+                str += String.fromCharCode(byte);
+            }
+            return str;
+        }
+        readStrNT() {
+            var array = [];
+            var byte = this.getUint8();
+            while (byte) {
+                array.push(byte);
+                byte = this.getUint8();
+            }
+            return createStringFromUtf8Array(array);
+        }
+        readStrUTF(byteLength) {
+            return createStringFromUtf8Array(this.getUint8Array(byteLength));
+        }
+        fork(length = this.remainingLength()) {
+            return new ByteStream(this.buffer, this.offsetx + this.offset, length);
+        }
+        clone() {
+            return new ByteStream(this.buffer, this.offsetx, this.length);
+        }
+        isEmpty() {
+            return this.offset >= this.length;
+        }
+    }
+
+    class BZZDecoder {
+        constructor(zp) {
+            this.zp = zp;
+            this.maxblock = 4096;
+            this.FREQMAX = 4;
+            this.CTXIDS = 3;
+            this.mtf = new Uint8Array(256);
+            for (var i = 0; i < 256; i++) {
+                this.mtf[i] = i;
+            }
+            this.ctx = new Uint8Array(300);
+            this.size = 0;
+            this.blocksize = 0;
+            this.data = null;
+        }
+        decode_raw(bits) {
+            var n = 1;
+            var m = (1 << bits);
+            while (n < m) {
+                var b = this.zp.decode();
+                n = (n << 1) | b;
+            }
+            return n - m;
+        }
+        decode_binary(ctxoff, bits) {
+            var n = 1;
+            var m = (1 << bits);
+            ctxoff--;
+            while (n < m) {
+                var b = this.zp.decode(this.ctx, ctxoff + n);
+                n = (n << 1) | b;
+            }
+            return n - m;
+        }
+        _decode() {
+            this.size = this.decode_raw(24);
+            if (!this.size) {
+                return 0;
+            }
+            if (this.size > this.maxblock * 1024) {
+                throw new Error("Too big block. Error");
+            }
+            if (this.blocksize < this.size) {
+                this.blocksize = this.size;
+                this.data = new Uint8Array(this.blocksize);
+            } else if (this.data == null) {
+                this.data = new Uint8Array(this.blocksize);
+            }
+            var fshift = 0;
+            if (this.zp.decode()) {
+                fshift++;
+                if (this.zp.decode()) {
+                    fshift++;
+                }
+            }
+            var freq = new Array(this.FREQMAX);
+            for (var i = 0; i < this.FREQMAX; freq[i++] = 0);
+            var fadd = 4;
+            var mtfno = 3;
+            var markerpos = -1;
+            for (var i = 0; i < this.size; i++) {
+                var ctxid = this.CTXIDS - 1;
+                if (ctxid > mtfno) {
+                    ctxid = mtfno;
+                }
+                var ctxoff = 0;
+                switch (0)
+                {
+                    default:
+                        if (this.zp.decode(this.ctx, ctxoff + ctxid) != 0) {
+                            mtfno = 0;
+                            this.data[i] = this.mtf[mtfno];
+                            break;
+                        }
+                        ctxoff += this.CTXIDS;
+                        if (this.zp.decode(this.ctx, ctxoff + ctxid) != 0) {
+                            mtfno = 1;
+                            this.data[i] = this.mtf[mtfno];
+                            break;
+                        }
+                        ctxoff += this.CTXIDS;
+                        if (this.zp.decode(this.ctx, ctxoff + 0) != 0) {
+                            mtfno = 2 + this.decode_binary(ctxoff + 1, 1);
+                            this.data[i] = this.mtf[mtfno];
+                            break;
+                        }
+                        ctxoff += (1 + 1);
+                        if (this.zp.decode(this.ctx, ctxoff + 0) != 0) {
+                            mtfno = 4 + this.decode_binary(ctxoff + 1, 2);
+                            this.data[i] = this.mtf[mtfno];
+                            break;
+                        }
+                        ctxoff += (1 + 3);
+                        if (this.zp.decode(this.ctx, ctxoff + 0) != 0) {
+                            mtfno = 8 + this.decode_binary(ctxoff + 1, 3);
+                            this.data[i] = this.mtf[mtfno];
+                            break;
+                        }
+                        ctxoff += (1 + 7);
+                        if (this.zp.decode(this.ctx, ctxoff + 0) != 0) {
+                            mtfno = 16 + this.decode_binary(ctxoff + 1, 4);
+                            this.data[i] = this.mtf[mtfno];
+                            break;
+                        }
+                        ctxoff += (1 + 15);
+                        if (this.zp.decode(this.ctx, ctxoff + 0) != 0) {
+                            mtfno = 32 + this.decode_binary(ctxoff + 1, 5);
+                            this.data[i] = this.mtf[mtfno];
+                            break;
+                        }
+                        ctxoff += (1 + 31);
+                        if (this.zp.decode(this.ctx, ctxoff + 0) != 0) {
+                            mtfno = 64 + this.decode_binary(ctxoff + 1, 6);
+                            this.data[i] = this.mtf[mtfno];
+                            break;
+                        }
+                        ctxoff += (1 + 63);
+                        if (this.zp.decode(this.ctx, ctxoff + 0) != 0) {
+                            mtfno = 128 + this.decode_binary(ctxoff + 1, 7);
+                            this.data[i] = this.mtf[mtfno];
+                            break;
+                        }
+                        mtfno = 256;
+                        this.data[i] = 0;
+                        markerpos = i;
+                        continue;
+                }
+                var k;
+                fadd = fadd + (fadd >> fshift);
+                if (fadd > 0x10000000) {
+                    fadd >>= 24;
+                    freq[0] >>= 24;
+                    freq[1] >>= 24;
+                    freq[2] >>= 24;
+                    freq[3] >>= 24;
+                    for (k = 4; k < this.FREQMAX; k++) {
+                        freq[k] >>= 24;
+                    }
+                }
+                var fc = fadd;
+                if (mtfno < this.FREQMAX) {
+                    fc += freq[mtfno];
+                }
+                for (k = mtfno; k >= this.FREQMAX; k--) {
+                    this.mtf[k] = this.mtf[k - 1];
+                }
+                for (; (k > 0) && ((0xffffffff & fc) >= (0xffffffff & freq[k - 1])); k--) {
+                    this.mtf[k] = this.mtf[k - 1];
+                    freq[k] = freq[k - 1];
+                }
+                this.mtf[k] = this.data[i];
+                freq[k] = fc;
+            }
+            if ((markerpos < 1) || (markerpos >= this.size)) {
+                throw new Error("ByteStream.corrupt");
+            }
+            var pos = new Uint32Array(this.size);
+            for (var j = 0; j < this.size; pos[j++] = 0);
+            var count = new Array(256);
+            for (var i = 0; i < 256; count[i++] = 0);
+            for (var i = 0; i < markerpos; i++) {
+                var c = this.data[i];
+                pos[i] = (c << 24) | (count[0xff & c] & 0xffffff);
+                count[0xff & c]++;
+            }
+            for (var i = markerpos + 1; i < this.size; i++) {
+                var c = this.data[i];
+                pos[i] = (c << 24) | (count[0xff & c] & 0xffffff);
+                count[0xff & c]++;
+            }
+            var last = 1;
+            for (var i = 0; i < 256; i++) {
+                var tmp = count[i];
+                count[i] = last;
+                last += tmp;
+            }
+            var j = 0;
+            last = this.size - 1;
+            while (last > 0) {
+                var n = pos[j];
+                var c = pos[j] >> 24;
+                this.data[--last] = 0xff & c;
+                j = count[0xff & c] + (n & 0xffffff);
+            }
+            if (j != markerpos) {
+                throw new Error("ByteStream.corrupt");
+            }
+            return this.size;
+        }
+        getByteStream() {
+            var bsw, size;
+            while (size = this._decode()) {
+                if (!bsw) {
+                    bsw = new ByteStreamWriter(size - 1);
+                    var arr = new Uint8Array(this.data.buffer, 0, this.data.length - 1);
+                    bsw.writeArray(arr);
+                }
+            }
+            this.data = null;
+            return new ByteStream(bsw.getBuffer());
+        }
+        static decodeByteStream(bs) {
+            return new BZZDecoder(new ZPDecoder(bs)).getByteStream();
         }
     }
 
@@ -2425,7 +2445,9 @@ var DjVu = (function () {
                 this.bs.jump(-8);
                 var chunkBs = this.bs.fork(length + 8);
                 this.bs.jump(8 + length + (length & 1));
-                if (id == "FG44") {
+                if (!length) {
+                    chunk = new IFFChunk(chunkBs);
+                } else if (id == "FG44") {
                     chunk = this.fg44 = new ColorChunk(chunkBs);
                 } else if (id == "BG44") {
                     this.bg44arr.push(chunk = new ColorChunk(chunkBs));
@@ -2695,6 +2717,64 @@ var DjVu = (function () {
             this.init();
             var str = this.iffchunks.reduce((str, chunk) => str + chunk.toString(), '');
             return super.toString(str);
+        }
+    }
+
+    class DIRMChunk extends IFFChunk {
+        constructor(bs) {
+            super(bs);
+            this.dflags = bs.byte();
+            this.isBundled = this.dflags >> 7;
+            this.nfiles = bs.getInt16();
+            if (this.isBundled) {
+                this.offsets = new Int32Array(this.nfiles);
+                for (var i = 0; i < this.nfiles; i++) {
+                    this.offsets[i] = bs.getInt32();
+                }
+            }
+            this.sizes = new Uint32Array(this.nfiles);
+            this.flags = new Uint8Array(this.nfiles);
+            this.ids = new Array(this.nfiles);
+            this.names = new Array(this.nfiles);
+            this.titles = new Array(this.nfiles);
+            var bsz = BZZDecoder.decodeByteStream(bs.fork());
+            for (var i = 0; i < this.nfiles; i++) {
+                this.sizes[i] = bsz.getUint24();
+            }
+            for (var i = 0; i < this.nfiles; i++) {
+                this.flags[i] = bsz.byte();
+            }
+            this.pagesIds = [];
+            this.idToNameRegistry = {};
+            for (var i = 0; i < this.nfiles && !bsz.isEmpty(); i++) {
+                this.ids[i] = bsz.readStrNT();
+                this.names[i] = this.flags[i] & 128 ? bsz.readStrNT() : this.ids[i];
+                this.titles[i] = this.flags[i] & 64 ? bsz.readStrNT() : this.ids[i];
+                if ((this.flags[i] & 63) === 1) {
+                    this.pagesIds.push(this.ids[i]);
+                }
+                this.idToNameRegistry[this.ids[i]] = this.names[i];
+            }
+        }
+        getPageNameByItsNumber(number) {
+            return this.getComponentNameByItsId(this.pagesIds[number - 1]);
+        }
+        getComponentNameByItsId(id) {
+            return this.idToNameRegistry[id];
+        }
+        getPagesQuantity() {
+            return this.pagesIds.length;
+        }
+        getFilesQuantity() {
+            return this.nfiles;
+        }
+        getMetadataStringByIndex(i) {
+            return `[id: "${this.ids[i]}", flag: ${this.flags[i]}, offset: ${this.offsets[i]}, size: ${this.sizes[i]}]\n`;
+        }
+        toString() {
+            var str = super.toString();
+            str += "FilesCount: " + this.nfiles + '\n';
+            return str + '\n';
         }
     }
 
@@ -3053,9 +3133,22 @@ var DjVu = (function () {
 
     class ThumChunk extends CompositeChunk { }
 
+    const MEMORY_LIMIT = 50 * 1024 * 1024;
     class DjVuDocument {
-        constructor(arraybuffer) {
+        constructor(arraybuffer, { baseUrl = null, memoryLimit = MEMORY_LIMIT } = {}) {
             this.buffer = arraybuffer;
+            this.baseUrl = baseUrl && baseUrl.trim();
+            if (this.baseUrl !== null && this.baseUrl) {
+                if (this.baseUrl[this.baseUrl.length - 1] !== '/') {
+                    this.baseUrl += '/';
+                }
+                if (!/^http/.test(this.baseUrl)) {
+                    this.baseUrl = new URL(this.baseUrl, location.origin).href;
+                }
+            }
+            this.memoryLimit = memoryLimit;
+            this.djvi = {};
+            this.getINCLChunkCallback = id => this.djvi[id].innerChunk;
             this.bs = new ByteStream(arraybuffer);
             this.formatID = this.bs.readStr4();
             if (this.formatID !== 'AT&T') {
@@ -3064,62 +3157,91 @@ var DjVu = (function () {
             this.id = this.bs.readStr4();
             this.length = this.bs.getInt32();
             this.id += this.bs.readStr4();
-            if (this.id == 'FORMDJVM') {
-                var id = this.bs.readStr4();
-                var length = this.bs.getInt32();
-                this.bs.jump(-8);
-                this.dirm = new DIRMChunk(this.bs.fork(length + 8));
-                this.bs.jump(8 + length + (length & 1 ? 1 : 0));
-                this.dirmOrderedChunks = new Array(this.dirm.getFilesCount());
+            if (this.id === 'FORMDJVM') {
+                this._initMultiPageDocument();
+            } else if (this.id === 'FORMDJVU') {
+                this.bs.jump(-12);
+                this.pages = [new DjVuPage(this.bs.fork(this.length + 8), this.getINCLChunkCallback)];
+            } else {
+                throw new CorruptedFileDjVuError(`The id of the first chunk of the document should be either FORMDJVM or FORMDJVU, but there is ${this.id}!`);
             }
-            this.getINCLChunkCallback = id => this.djvi[id].innerChunk;
+        }
+        _initMultiPageDocument() {
+            this._readMetaDataChunk();
+            this._readContentsChunkIfExists();
             this.pages = [];
             this.thumbs = [];
-            this.djvi = {};
-            this.navm = null;
             this.idToPageNumberMap = {};
-            this.init();
+            if (this.dirm.isBundled) {
+                this._parseComponents();
+            } else {
+                this.pages = new Array(this.dirm.getPagesQuantity());
+                this.memoryUsage = this.bs.buffer.byteLength;
+                this.loadedPageNumbers = [];
+            }
         }
-        init() {
-            if (this.dirm) {
+        _readMetaDataChunk() {
+            var id = this.bs.readStr4();
+            if (id !== 'DIRM') {
+                throw new CorruptedFileDjVuError("The DIRM chunk must be the first but there is " + id + " instead!");
+            }
+            var length = this.bs.getInt32();
+            this.bs.jump(-8);
+            this.dirm = new DIRMChunk(this.bs.fork(length + 8));
+            this.bs.jump(8 + length + (length & 1 ? 1 : 0));
+        }
+        _readContentsChunkIfExists() {
+            this.navm = null;
+            if (this.bs.remainingLength() > 8) {
                 var id = this.bs.readStr4();
                 var length = this.bs.getInt32();
                 this.bs.jump(-8);
-                if (id == 'NAVM') {
+                if (id === 'NAVM') {
                     this.navm = new NAVMChunk(this.bs.fork(length + 8));
                 }
-                for (var i = 0; i < this.dirm.offsets.length; i++) {
-                    this.bs.setOffset(this.dirm.offsets[i]);
-                    var id = this.bs.readStr4();
-                    var length = this.bs.getInt32();
-                    id += this.bs.readStr4();
-                    this.bs.jump(-12);
-                    switch (id) {
-                        case "FORMDJVU":
-                            this.pages.push(this.dirmOrderedChunks[i] = new DjVuPage(
-                                this.bs.fork(length + 8),
-                                this.getINCLChunkCallback
-                            ));
-                            this.idToPageNumberMap[this.dirm.ids[i]] = this.pages.length;
-                            break;
-                        case "FORMDJVI":
-                            this.dirmOrderedChunks[i] = this.djvi[this.dirm.ids[i]] = new DjViChunk(this.bs.fork(length + 8));
-                            break;
-                        case "FORMTHUM":
-                            this.thumbs.push(this.dirmOrderedChunks[i] = new ThumChunk(this.bs.fork(length + 8)));
-                            break;
-                        default:
-                            console.error("Incorrect chunk ID: ", id);
-                    }
+            }
+        }
+        _parseComponents() {
+            this.dirmOrderedChunks = new Array(this.dirm.getFilesQuantity());
+            for (var i = 0; i < this.dirm.offsets.length; i++) {
+                this.bs.setOffset(this.dirm.offsets[i]);
+                var id = this.bs.readStr4();
+                var length = this.bs.getInt32();
+                id += this.bs.readStr4();
+                this.bs.jump(-12);
+                switch (id) {
+                    case "FORMDJVU":
+                        this.pages.push(this.dirmOrderedChunks[i] = new DjVuPage(
+                            this.bs.fork(length + 8),
+                            this.getINCLChunkCallback
+                        ));
+                        this.idToPageNumberMap[this.dirm.ids[i]] = this.pages.length;
+                        break;
+                    case "FORMDJVI":
+                        this.dirmOrderedChunks[i] = this.djvi[this.dirm.ids[i]] = new DjViChunk(this.bs.fork(length + 8));
+                        break;
+                    case "FORMTHUM":
+                        this.thumbs.push(this.dirmOrderedChunks[i] = new ThumChunk(this.bs.fork(length + 8)));
+                        break;
+                    default:
+                        console.error("Incorrect chunk ID: ", id);
                 }
             }
-            else {
-                this.bs.jump(-12);
-                this.pages.push(new DjVuPage(this.bs.fork(this.length + 4)));
-            }
+        }
+        isBundled() {
+            return this.dirm ? this.dirm.isBundled : true;
         }
         getContents() {
             return this.navm ? this.navm.getContents() : null;
+        }
+        getMemoryUsage() {
+            return this.memoryUsage;
+        }
+        getMemoryLimit() {
+            return this.memoryLimit;
+        }
+        setMemoryLimit(limit = MEMORY_LIMIT) {
+            this.memoryLimit = limit;
         }
         getPageNumberByUrl(url) {
             if (url[0] !== '#') {
@@ -3135,16 +3257,108 @@ var DjVu = (function () {
             }
             return pageNumber || null;
         }
-        getPage(number) {
+        releaseMemoryIfRequired(preservedDependencies = null) {
+            if (this.memoryUsage <= this.memoryLimit) {
+                return;
+            }
+            while (this.memoryUsage > this.memoryLimit && this.loadedPageNumbers.length) {
+                var number = this.loadedPageNumbers.shift();
+                this.memoryUsage -= this.pages[number].bs.buffer.byteLength;
+                this.pages[number] = null;
+            }
+            if (this.memoryUsage > this.memoryLimit && !this.loadedPageNumbers.length) {
+                this.resetLastRequestedPage();
+                var newDjVi = {};
+                if (preservedDependencies) {
+                    preservedDependencies.forEach(id => {
+                        newDjVi[id] = this.djvi[id];
+                        this.memoryUsage += newDjVi[id].bs.buffer.byteLength;
+                    });
+                }
+                Object.keys(this.djvi).forEach(key => {
+                    this.memoryUsage -= this.djvi[key].bs.buffer.byteLength;
+                });
+                this.djvi = newDjVi;
+            }
+        }
+        async getPage(number) {
             var page = this.pages[number - 1];
             if (this.lastRequestedPage && this.lastRequestedPage !== page) {
                 this.lastRequestedPage.reset();
             }
             this.lastRequestedPage = page;
             if (!page) {
-                throw new NoSuchPageDjVuError(number);
+                if (number < 1 || number > this.pages.length || this.isBundled()) {
+                    throw new NoSuchPageDjVuError(number);
+                } else {
+                    if (this.baseUrl === null) {
+                        throw new NoBaseUrlDjVuError();
+                    }
+                    var pageName = this.dirm.getPageNameByItsNumber(number);
+                    var url = this.baseUrl + pageName;
+                    try {
+                        var response = await fetch(url);
+                    } catch (e) {
+                        throw new NetworkDjVuError({ pageNumber: number, url: url });
+                    }
+                    if (!response.ok) {
+                        throw new UnsuccessfulRequestDjVuError(response, { pageNumber: number });
+                    }
+                    var pageBuffer = await response.arrayBuffer();
+                    var bs = new ByteStream(pageBuffer);
+                    if (bs.readStr4() !== 'AT&T') {
+                        throw new CorruptedFileDjVuError(`The file gotten as the page number ${number} isn't a djvu file!`);
+                    }
+                    var page = new DjVuPage(bs.fork(), this.getINCLChunkCallback);
+                    this.memoryUsage += pageBuffer.byteLength;
+                    await this._loadDependencies(page.getDependencies(), number);
+                    this.releaseMemoryIfRequired(page.getDependencies());
+                    this.pages[number - 1] = page;
+                    this.loadedPageNumbers.push(number - 1);
+                    this.lastRequestedPage = page;
+                }
+            } else if (!this.isOnePageDependenciesLoaded && this.id === "FORMDJVU") {
+                var dependencies = page.getDependencies();
+                if (dependencies.length) {
+                    await this._loadDependencies(dependencies, 1);
+                }
+                this.isOnePageDependenciesLoaded = true;
             }
             return this.lastRequestedPage;
+        }
+        async _loadDependencies(dependencies, pageNumber = null) {
+            var unloadedDependencies = dependencies.filter(id => !this.djvi[id]);
+            if (!unloadedDependencies.length) {
+                return;
+            }
+            await Promise.all(unloadedDependencies.map(async id => {
+                var url = this.baseUrl + (this.dirm ? this.dirm.getComponentNameByItsId(id) : id);
+                try {
+                    var response = await fetch(url);
+                } catch (e) {
+                    throw new NetworkDjVuError({ pageNumber: pageNumber, dependencyId: id, url: url });
+                }
+                if (!response.ok) {
+                    throw new UnsuccessfulRequestDjVuError(response, { pageNumber: pageNumber, dependencyId: id });
+                }
+                var componentBuffer = await response.arrayBuffer();
+                var bs = new ByteStream(componentBuffer);
+                if (bs.readStr4() !== 'AT&T') {
+                    throw new CorruptedFileDjVuError(
+                        `The file gotten as a dependency ${id} ${pageNumber ? `for the page number ${pageNumber}` : ''} isn't a djvu file!`
+                    );
+                }
+                var chunkId = bs.readStr4();
+                var length = bs.getInt32();
+                chunkId += bs.readStr4();
+                if (chunkId !== "FORMDJVI") {
+                    throw new CorruptedFileDjVuError(
+                        `The file gotten as a dependency ${id} ${pageNumber ? `for the page number ${pageNumber}` : ''} isn't a djvu file with shared data!`
+                    );
+                }
+                this.djvi[id] = new DjViChunk(bs.jump(-12).fork(length + 8));
+                this.memoryUsage += componentBuffer.byteLength;
+            }));
         }
         getPageUnsafe(number) {
             return this.pages[number - 1];
@@ -3447,9 +3661,9 @@ var DjVu = (function () {
                     callbacks.resolve(obj.url);
                     break;
                 case 'run':
-                    var restoredResult = obj.result.length && obj.result.map ?
-                        obj.result.map(result => this.restoreValueAfterTransfer(result)) :
-                        this.restoreValueAfterTransfer(obj.result);
+                    var restoredResult = !obj.result ? obj.result :
+                        obj.result.length && obj.result.map ? obj.result.map(result => this.restoreValueAfterTransfer(result)) :
+                            this.restoreValueAfterTransfer(obj.result);
                     callbacks.resolve(restoredResult);
                     break;
                 default:
@@ -3511,8 +3725,8 @@ var DjVu = (function () {
         endMultiPageDocument() {
             return this.createNewPromise({ command: 'endMultiPageDocument' });
         }
-        createDocument(buffer) {
-            return this.createNewPromise({ command: 'createDocument', buffer: buffer }, [buffer]);
+        createDocument(buffer, options) {
+            return this.createNewPromise({ command: 'createDocument', buffer: buffer, options: options }, [buffer]);
         }
         getPageImageDataWithDpi(pagenumber) {
             return this.createNewPromise({
@@ -4050,10 +4264,10 @@ var DjVu = (function () {
     function initWorker() {
         var djvuDocument;
         var iwiw;
-        onmessage = function (oEvent) {
+        onmessage = async function (oEvent) {
             try {
                 var obj = oEvent.data;
-                handlers[obj.command](obj);
+                await handlers[obj.command](obj);
             } catch (error) {
                 var errorObj = error instanceof DjVuError ? error : {
                     code: DjVuErrorCodes.UNEXPECTED_ERROR,
@@ -4087,19 +4301,21 @@ var DjVu = (function () {
             return value;
         }
         var handlers = {
-            run(obj) {
-                const results = obj.data.map(task => {
+            async run(obj) {
+                const results = await Promise.all(obj.data.map(async task => {
                     try {
-                        return task.funcs.reduce((res, func, i) => {
-                            return res[func](...task.args[i]);
-                        }, djvuDocument);
+                        var res = djvuDocument;
+                        for(var i = 0; i < task.funcs.length; i++) {
+                            res = await res[task.funcs[i]](...task.args[i]);
+                        }
+                        return res;
                     } catch (e) {
                         if (e instanceof TypeError) {
                             throw new IncorrectTaskDjVuError(task);
                         }
                         throw e;
                     }
-                });
+                }));
                 var transferList = [];
                 var processedResults = results.map(result => processValueBeforeTransfer(result, transferList));
                 try {
@@ -4132,17 +4348,17 @@ var DjVu = (function () {
                     pageNumber: djvuDocument.getPageNumberByUrl(obj.url)
                 });
             },
-            getPageText(obj) {
+            async getPageText(obj) {
                 var pagenum = +obj.pagenumber;
-                var text = djvuDocument.getPage(pagenum).getText();
+                var text = await djvuDocument.getPage(pagenum).getText();
                 postMessage({
                     command: 'getPageText',
                     text: text
                 });
             },
-            getPageImageDataWithDpi(obj) {
+            async getPageImageDataWithDpi(obj) {
                 var pagenum = +obj.pagenumber;
-                var page = djvuDocument.getPage(pagenum);
+                var page = await djvuDocument.getPage(pagenum);
                 var imageData = page.getImageData();
                 var dpi = page.getDpi();
                 postMessage({
@@ -4195,7 +4411,7 @@ var DjVu = (function () {
                 postMessage({ command: 'slice', buffer: ndoc.buffer }, [ndoc.buffer]);
             },
             createDocument(obj) {
-                djvuDocument = new DjVuDocument(obj.buffer);
+                djvuDocument = new DjVuDocument(obj.buffer, obj.options);
                 postMessage({ command: 'createDocument', pagenumber: djvuDocument.pages.length });
             },
             reloadDocument() {

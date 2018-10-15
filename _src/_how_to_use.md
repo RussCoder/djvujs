@@ -58,7 +58,20 @@ Furthermore, the viewer has a program API, which allows to open djvu files progr
 - `async loadDocumentByUrl(url, config = null)` - loads the documents as an `ArrayBuffer` and then invokes the previous method.
 - `configure(config)` - just sets the options. Note, that when a document is loaded some option are reset to the initial ones, so you have to call the method again or use the last parameter of the two previous methods.
 
-The `config` is an object containing options for the viewer. Right now,the only one option is available, namely the rotation of a page: `{pageRotation: 90}`. There are 4 valid values: 0, 90, 180 and 270.
+The `config` is an object containing options for the viewer. It's an optional parameter. It has the following shape:
+```json
+
+{
+    pageRotation: 90,
+    djvuOptions: {
+        baseUrl: "/url/to/directory/with/indirect/djvu/"
+    }
+}
+
+```
+
+- `pageRotation` - the rotation of a page, it can be 0, 90, 180, 270.
+- `djvuOptions` - an object which is passed to the library. Now there is only one option - the base url, which is the url to a directory which contains the files of an indirect djvu. For bundled djvu this parameter is not required. The base url is extracted automatically from a url to the index.djvu, when the `loadDocumentByUrl` is called, but in case of `loadDocument` method, this parameter should be provided manually.
 
 Thus, to load a document programmatically you can do the following:
 
