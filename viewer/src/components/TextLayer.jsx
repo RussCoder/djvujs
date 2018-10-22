@@ -17,19 +17,21 @@ class TextLayer extends React.Component {
             return null;
         }
         const scaleFactor = Consts.DEFAULT_DPI / this.props.imageDpi * this.props.userScale;
+        const scaledWidth = Math.floor(imageWidth * scaleFactor);
+        const scaledHeight = Math.floor(imageHeight * scaleFactor);
 
         return (
             <div className="text_layer_wrapper"
                 style={{
-                    width: (imageWidth * scaleFactor) + 'px',
-                    height: (imageHeight * scaleFactor) + 'px'
+                    width: scaledWidth + 'px',
+                    height: scaledHeight + 'px'
                 }}
             >
                 <div
                     className="text_layer"
                     style={{
-                        left: (-(imageWidth - imageWidth * scaleFactor) / 2) + 'px',
-                        top: (-(imageHeight - imageHeight * scaleFactor) / 2) + 'px',
+                        left: (-(imageWidth - scaledWidth) / 2) + 'px',
+                        top: (-(imageHeight - scaledHeight) / 2) + 'px',
                         width: imageWidth + 'px',
                         height: imageHeight + 'px',
                         transform: `scale(${scaleFactor})`

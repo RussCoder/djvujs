@@ -9,6 +9,10 @@
         top: 50%;
         transform: translateX(-50%) translateY(-50%);
 
+        &>canvas {
+            display: block;
+        }
+
         &.rotate90 {
             transform: translateX(-50%) translateY(-50%) rotate(90deg);
         }
@@ -33,6 +37,7 @@
                 position: absolute;
 
                 .text_zone {
+                    line-height: initial;
                     color: rgba(0, 0, 0, 0);
                     white-space: nowrap;
                     text-align-last: justify;

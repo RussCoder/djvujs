@@ -13,12 +13,14 @@ import LeftPanel from './LeftPanel';
 import NotificationWindow from './NotificationWindow';
 import HelpWindow from './HelpWindow';
 import ErrorPage from './ErrorPage';
-import LoadingPlaceholder from './LoadingPlaceholder';
+import LoadingLayer from './LoadingLayer';
 
 const TextBlock = ({ text }) => (
-    <pre className="text_block">
-        {text === null ? "Loading ..." : text || <em>No text provided</em>}
-    </pre>
+    <div className="text_block">
+        <pre className="text">
+            {text === null ? "Loading ..." : text || <em>No text provided</em>}
+        </pre>
+    </div>
 );
 
 class App extends Component {
@@ -35,16 +37,19 @@ class App extends Component {
                 {this.props.isFileLoading ?
                     <FileLoadingScreen /> :
 
-                    !this.props.isFileLoaded ? <InitialScreen /> : [
-                        <div key="central_block" className="central_block">
-                            <LeftPanel />
-                            {this.props.pageError ? <ErrorPage pageNumber={this.props.pageNumber} error={this.props.pageError} /> :
-                                this.props.isTextMode ? <TextBlock text={this.props.pageText} /> :
-                                    this.props.imageData ? <ImageBlock /> :
-                                        <LoadingPlaceholder />}
-                        </div>,
-                        <DownPanel key="down_panel" />
-                    ]
+                    !this.props.isFileLoaded ? <InitialScreen /> :
+                        <React.Fragment>
+                            <div className="central_block">
+                                <LeftPanel />
+                                <div className="page_zone">
+                                    {this.props.pageError ? <ErrorPage pageNumber={this.props.pageNumber} error={this.props.pageError} /> :
+                                        this.props.isTextMode ? <TextBlock text={this.props.pageText} /> :
+                                            this.props.imageData ? <ImageBlock /> : null}
+                                    {(this.props.isLoading && !this.props.isTextMode) ? <LoadingLayer /> : null}
+                                </div>
+                            </div>
+                            <DownPanel />
+                        </React.Fragment>
                 }
                 {this.props.isFileLoading ? null : <Footer />}
 
@@ -57,6 +62,7 @@ class App extends Component {
 
 export default connect(
     state => ({
+        isLoading: get.isLoading(state),
         imageData: get.imageData(state),
         pageError: get.pageError(state),
         pageNumber: get.currentPageNumber(state),

@@ -3,8 +3,9 @@
     padding: 1em;
     font-family: monospace;
     border: 1px solid gray;
-    margin: 2em auto;
     overflow: auto;
+    height: 100%;
+    box-sizing: border-box;
 
     .header {
         text-align: center;

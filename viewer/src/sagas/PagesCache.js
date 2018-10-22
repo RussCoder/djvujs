@@ -21,9 +21,13 @@ export default class PagesCache {
         //window.pc = this;
     }
 
-    resetPagesCache() {
+    cancelCachingTask() {
         this.lastCachingTask && this.lastCachingTask.cancel();
         this.lastCachingTask = null;
+    }
+
+    resetPagesCache() {
+        this.cancelCachingTask();
         this.pages = {};
         this.imageDataPromise = null;
         this.imageDataPromisePageNumber = null;
@@ -33,7 +37,7 @@ export default class PagesCache {
         const newPages = {
             [currentPageNumber]: this.pages[currentPageNumber]
         };
-        var pageNumbersToCache = [];
+        var pageNumbersToCache = null;
 
         if (currentPageNumber > 1 && currentPageNumber < pagesCount) {
             pageNumbersToCache = [currentPageNumber + 1, currentPageNumber - 1];
@@ -45,15 +49,21 @@ export default class PagesCache {
                 : pagesCount >= 2 ? [currentPageNumber - 1] : null;
         }
 
-        for (var pageNumber of pageNumbersToCache) {
-            newPages[pageNumber] = this.pages[pageNumber];
+        if (pageNumbersToCache) {
+            for (var pageNumber of pageNumbersToCache) {
+                newPages[pageNumber] = this.pages[pageNumber];
+            }
         }
 
         this.pages = newPages;
 
+        this.cancelCachingTask(); // it should kind of be cancelled automatically, since it is forked rather than spawned, but auto cancellation doesn't work
         yield* this.fetchImageDataByPageNumber(currentPageNumber);
-        // load other pages in a parallel task
-        this.lastCachingTask = yield fork([this, this.cachePages], pageNumbersToCache);
+
+        if (pageNumbersToCache) {
+            // load other pages in a parallel task
+            this.lastCachingTask = yield fork([this, this.cachePages], pageNumbersToCache);
+        }
 
         return this.pages[currentPageNumber];
     }
@@ -75,20 +85,21 @@ export default class PagesCache {
                 this.imageDataPromise = this.djvuWorker.run(
                     this.djvuWorker.doc.getPage(pageNumber).getImageData(),
                     this.djvuWorker.doc.getPage(pageNumber).getDpi(),
-                );    
+                );
             }
 
             try {
                 //yield delay(2000);
-                const [imageData, dpi] = yield this.imageDataPromise;
-                //console.log('fetchImageDataByPageNumber', pageNumber);      
+                let res = yield this.imageDataPromise;
+                const [imageData, dpi] = res;
                 this.pages[pageNumber] = { imageData, dpi };
             } catch (e) {
                 this.pages[pageNumber] = { error: e };
-            } finally {
-                this.imageDataPromisePageNumber = null;
-                this.imageDataPromise = null;
             }
+
+            // not in finally block, because the finally block is executed when a saga task is cancelled, but it's not needed
+            this.imageDataPromise = null;
+            this.imageDataPromisePageNumber = null;
         }
     }
 }

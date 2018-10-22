@@ -29,7 +29,7 @@ body.disable_scroll_djvujs {
     @import "footer";
     @import "rotation_control";
     @import "error_page";
-    @import "loading_placeholder";
+    @import "loading_layer";
 
     &.full_page_view {
         top: 0;

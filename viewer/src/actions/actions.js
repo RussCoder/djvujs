@@ -4,10 +4,13 @@ import DjVu from '../DjVu';
 
 const Actions = {
 
-    pageErrorAction: error => ({
-        type: Consts.PAGE_ERROR_ACTION,
-        error: error,
-    }),
+    pageErrorAction: error => {
+        //console.error(error);
+        return ({
+            type: Consts.PAGE_ERROR_ACTION,
+            error: error,
+        });
+    },
 
     setApiCallbackAction: (callbackName, callback) => ({
         type: Consts.SET_API_CALLBACK_ACTION,

@@ -11,7 +11,7 @@ class RootSaga {
     constructor() {
         this.callbacks = {};
         this.djvuWorker = new DjVu.Worker();
-        this.pagesCache = new PagesCache(this.djvuWorker);  
+        this.pagesCache = new PagesCache(this.djvuWorker);
     }
 
     * getImageData() {
@@ -39,8 +39,8 @@ class RootSaga {
         const pageNumber = get.currentPageNumber(state);
 
         if (isTextMode) {
+            this.pagesCache.cancelCachingTask();
             this.djvuWorker.cancelAllTasks();
-            // TODO maybe stop caching task here
             yield* this.fetchPageText(pageNumber);
         }
 
@@ -55,7 +55,7 @@ class RootSaga {
                 this.djvuWorker.doc.getPage(pageNumber).getText(),
                 this.djvuWorker.doc.getPage(pageNumber).getNormalizedTextZones(),
             );
-
+            
             yield put({
                 type: Consts.PAGE_TEXT_FETCHED_ACTION,
                 pageText: text,
