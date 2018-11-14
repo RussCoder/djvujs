@@ -348,6 +348,21 @@ var Tests = {
         }
     },
 
+    async testPageUrlWithLeadingZero() {
+        const buffer = await (await fetch(`/assets/djvu3spec+.djvu`)).arrayBuffer();
+        await djvuWorker.createDocument(buffer);
+        const contents = await djvuWorker.getContents();
+        const url = contents[2].url;
+        if (url !== '#002') {
+            return `Incorrect url of a page! Got ${url}, while expected #002`;
+        }
+        const pageNumber = await djvuWorker.doc.getPageNumberByUrl(url).run();
+        if (pageNumber !== 2) {
+            return `Incorrect page number was returned! Got ${pageNumber} for url ${url}`;
+        }
+        return null;
+    },
+
     async testGetPageNumberByUrl() {
         const buffer = await (await fetch(`/assets/DjVu3Spec.djvu`)).arrayBuffer();
         await djvuWorker.createDocument(buffer);

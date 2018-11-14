@@ -130,6 +130,10 @@ export default class DjVuDocument {
         return this.dirm ? this.dirm.isBundled : true;
     }
 
+    getPagesQuantity() {
+        return this.dirm ? this.dirm.getPagesQuantity() : 1;
+    }
+
     getContents() {
         return this.navm ? this.navm.getContents() : null;
     }
@@ -155,7 +159,7 @@ export default class DjVuDocument {
         var pageNumber = this.idToPageNumberMap[ref];
         if (!pageNumber) {
             var num = Math.round(Number(ref));
-            if (num.toString() === ref && num >= 1 && num <= this.pages.length) {
+            if (num >= 1 && num <= this.pages.length) { // there can be refs like "#057";
                 pageNumber = num;
             }
         }

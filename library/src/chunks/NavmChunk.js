@@ -17,6 +17,7 @@ export default class NAVMChunk extends IFFChunk {
         return this.contents;
     }
 
+    // returns Array<Bookmark> where Bookmark is {description: string, url: string, children: ?array<Bookmark>}
     decode() {
         if (this.isDecoded) {
             return;
