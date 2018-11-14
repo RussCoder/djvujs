@@ -7,7 +7,7 @@ const initialState = Object.freeze({
     pageRotation: 0,
     isLoading: false,
     isTextMode: false,
-    pagesCount: null,
+    pagesQuantity: null,
     isFullPageView: false,
     errorHeader: null,
     contents: null,
@@ -55,7 +55,7 @@ export default (state = initialState, action) => {
                 ...initialState,
                 isLoading: true,
                 isFullPageView: state.isFullPageView,
-                pagesCount: action.pagesCount,
+                pagesQuantity: action.pagesQuantity,
                 fileName: action.fileName
             };
 

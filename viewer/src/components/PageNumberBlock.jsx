@@ -12,11 +12,11 @@ class PageNumberBlock extends React.Component {
 
     static propTypes = {
         pageNumber: PropTypes.number,
-        pagesCount: PropTypes.number
+        pagesQuantity: PropTypes.number
     };
 
     setNewPageNumber(number) {
-        if (number >= 1 && number <= this.props.pagesCount) {
+        if (number >= 1 && number <= this.props.pagesQuantity) {
             this.props.setNewPageNumber(number);
         }
     }
@@ -60,7 +60,7 @@ class PageNumberBlock extends React.Component {
 export default connect(state => {
     return {
         pageNumber: get.currentPageNumber(state),
-        pagesCount: get.pagesCount(state)
+        pagesQuantity: get.pagesQuantity(state)
     };
 },
     {

@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import '../css/styles.css';
 
 import { get } from '../reducers/rootReducer';
-import DownPanel from "./DownPanel";
+import Toolbar from "./Toolbar";
 import ImageBlock from "./ImageBlock";
 import InitialScreen from './InitialScreen';
 import FileLoadingScreen from './FileLoadingScreen';
@@ -48,7 +48,7 @@ class App extends Component {
                                     {(this.props.isLoading && !this.props.isTextMode) ? <LoadingLayer /> : null}
                                 </div>
                             </div>
-                            <DownPanel />
+                            <Toolbar />
                         </React.Fragment>
                 }
                 {this.props.isFileLoading ? null : <Footer />}

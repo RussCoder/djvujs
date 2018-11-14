@@ -33,20 +33,20 @@ export default class PagesCache {
         this.imageDataPromisePageNumber = null;
     }
 
-    * fetchCurrentPageByNumber(currentPageNumber, pagesCount) {
+    * fetchCurrentPageByNumber(currentPageNumber, pagesQuantity) {
         const newPages = {
             [currentPageNumber]: this.pages[currentPageNumber]
         };
         var pageNumbersToCache = null;
 
-        if (currentPageNumber > 1 && currentPageNumber < pagesCount) {
+        if (currentPageNumber > 1 && currentPageNumber < pagesQuantity) {
             pageNumbersToCache = [currentPageNumber + 1, currentPageNumber - 1];
         } else if (currentPageNumber === 1) {
-            pageNumbersToCache = pagesCount >= 3 ? [2, 3]
-                : pagesCount >= 2 ? [2] : null;
-        } else if (currentPageNumber === pagesCount) {
-            pageNumbersToCache = pagesCount >= 3 ? [currentPageNumber - 1, currentPageNumber - 2]
-                : pagesCount >= 2 ? [currentPageNumber - 1] : null;
+            pageNumbersToCache = pagesQuantity >= 3 ? [2, 3]
+                : pagesQuantity >= 2 ? [2] : null;
+        } else if (currentPageNumber === pagesQuantity) {
+            pageNumbersToCache = pagesQuantity >= 3 ? [currentPageNumber - 1, currentPageNumber - 2]
+                : pagesQuantity >= 2 ? [currentPageNumber - 1] : null;
         }
 
         if (pageNumbersToCache) {

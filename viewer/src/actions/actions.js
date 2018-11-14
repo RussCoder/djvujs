@@ -43,7 +43,7 @@ const Actions = {
 
     goToNextPageAction: () => (dispatch, getState) => {
         const state = getState();
-        if (get.currentPageNumber(state) < get.pagesCount(state)) {
+        if (get.currentPageNumber(state) < get.pagesQuantity(state)) {
             dispatch(Actions.setNewPageNumberAction(get.currentPageNumber(state) + 1));
         }
     },

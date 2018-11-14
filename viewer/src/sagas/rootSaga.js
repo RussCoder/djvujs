@@ -17,9 +17,9 @@ class RootSaga {
     * getImageData() {
         const state = yield select();
         const currentPageNumber = get.currentPageNumber(state);
-        const pagesCount = get.pagesCount(state);
+        const pagesQuantity = get.pagesQuantity(state);
 
-        const currentPageData = yield* this.pagesCache.fetchCurrentPageByNumber(currentPageNumber, pagesCount);
+        const currentPageData = yield* this.pagesCache.fetchCurrentPageByNumber(currentPageNumber, pagesQuantity);
 
         if (currentPageData.error) {
             yield put(Actions.pageErrorAction(currentPageData.error));
@@ -87,10 +87,10 @@ class RootSaga {
         this.pagesCache.resetPagesCache();
 
         yield this.djvuWorker.createDocument(action.arrayBuffer, action.options);
-        const pagesCount = yield this.djvuWorker.getPageCount();
+        const pagesQuantity = yield this.djvuWorker.doc.getPagesQuantity().run();
         yield put({
             type: Consts.DOCUMENT_CREATED_ACTION,
-            pagesCount: pagesCount,
+            pagesQuantity: pagesQuantity,
             fileName: action.fileName
         });
 

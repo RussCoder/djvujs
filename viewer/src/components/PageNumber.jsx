@@ -5,7 +5,7 @@ export default class PageNumber extends React.Component {
 
     static propTypes = {
         pageNumber: PropTypes.number.isRequired,
-        pagesCount: PropTypes.number,
+        pagesQuantity: PropTypes.number,
         setNewPageNumber: PropTypes.func.isRequired
     };
 
@@ -32,13 +32,13 @@ export default class PageNumber extends React.Component {
     }
 
     setNewPageNumber(number) {
-        if (!this.props.pagesCount) {
+        if (!this.props.pagesQuantity) {
             return;
         }
         if (number < 1) {
             number = 1;
-        } else if (number > this.props.pagesCount) {
-            number = this.props.pagesCount;
+        } else if (number > this.props.pagesQuantity) {
+            number = this.props.pagesQuantity;
         }
         if (number !== this.props.pageNumber) {
             this.props.setNewPageNumber(number);
@@ -87,7 +87,7 @@ export default class PageNumber extends React.Component {
                 />
             );
         } else {
-            var st = this.props.pagesCount ? " / " + this.props.pagesCount : "";
+            var st = this.props.pagesQuantity ? " / " + this.props.pagesQuantity : "";
             return (
                 <span
                     onClick={this.startPageNumberEditing}

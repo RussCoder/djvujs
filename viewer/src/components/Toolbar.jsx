@@ -1,13 +1,12 @@
 import React from 'react';
-
 import PageNumberBlock from './PageNumberBlock'
 import ScaleGizmo from './ScaleGizmo';
 import TextModeButton from './TextModeButton';
 import CursorModeButtonGroup from './CursorModeButtonGroup';
 import RotationControl from './RotationControl';
 
-const DownPanel = () => (
-    <div className="down_panel">
+export default () => (
+    <div className="toolbar">
         <TextModeButton />
         <CursorModeButtonGroup />
         <PageNumberBlock />
@@ -15,5 +14,3 @@ const DownPanel = () => (
         <RotationControl />
     </div>
 );
-
-export default DownPanel;
