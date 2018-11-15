@@ -1,6 +1,11 @@
 # DjVu.js Library Changelog
 
-## v.0.3.0 (14.09.2018)
+## v.0.3.1 (15.11.2018)
+
+- New method for getting quantity of pages.
+- Correct processing of page urls with leading zeros (like "#002").
+
+## v.0.3.0 (12.10.2018)
 
 - The support of indirect djvu files.
 - Bug fixes.

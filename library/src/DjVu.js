@@ -1,5 +1,5 @@
 var DjVu = {
-    VERSION: '0.3.0',
+    VERSION: '0.3.1',
     IS_DEBUG: false,
     setDebugMode: (flag) => DjVu.IS_DEBUG = flag
 };

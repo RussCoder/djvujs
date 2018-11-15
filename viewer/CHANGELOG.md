@@ -1,5 +1,11 @@
 # DjVu.js Viewer Changelog
 
+## v.0.2.4 (15.11.2018)
+
+- Loading layer with a short delay. 
+- Improvement in pages caching logic. 
+- Minor fixes. 
+
 ## v.0.2.3 (12.10.2018)
 
 - Some errors are shown instead of pages rather than in a pop-up window.
