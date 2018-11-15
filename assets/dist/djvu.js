@@ -5,7 +5,7 @@ var DjVu = (function () {
     'use strict;'
 
     var DjVu = {
-        VERSION: '0.3.0',
+        VERSION: '0.3.1',
         IS_DEBUG: false,
         setDebugMode: (flag) => DjVu.IS_DEBUG = flag
     };
@@ -3231,6 +3231,9 @@ var DjVu = (function () {
         isBundled() {
             return this.dirm ? this.dirm.isBundled : true;
         }
+        getPagesQuantity() {
+            return this.dirm ? this.dirm.getPagesQuantity() : 1;
+        }
         getContents() {
             return this.navm ? this.navm.getContents() : null;
         }
@@ -3251,7 +3254,7 @@ var DjVu = (function () {
             var pageNumber = this.idToPageNumberMap[ref];
             if (!pageNumber) {
                 var num = Math.round(Number(ref));
-                if (num.toString() === ref && num >= 1 && num <= this.pages.length) {
+                if (num >= 1 && num <= this.pages.length) {
                     pageNumber = num;
                 }
             }
