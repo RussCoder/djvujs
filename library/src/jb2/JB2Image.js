@@ -85,6 +85,7 @@ export default class JB2Image extends JB2Codec {
                     this.addBlit(bm, coords.x, coords.y);
                     //this.copyToBitmap(bm, coords.x, coords.y);
                     this.dict.push(bm);
+                    //Globals.drawBitmapOnImageCanvas(bm, coords.x, coords.y, this);
                     break;
 
                 case 2: // New symbol, add to library only
@@ -202,7 +203,7 @@ export default class JB2Image extends JB2Codec {
             y = this.firstBottom + verticalOffset - height + 1;
             this.firstLeft = x;
             this.firstBottom = y;
-            this.baseline.reinit();
+            this.baseline.fill(y);
         }
         else {
             x = this.lastRight + horizontalOffset;

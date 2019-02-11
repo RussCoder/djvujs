@@ -91,7 +91,7 @@ var Globals = {
         // this.canvasCtx.translate(-this.canvas.width / 2, -this.canvas.height / 2);
         this.canvasCtx.drawImage(oc, 0, 0, tmpW2, tmpH2,
             0, 0, canvas.width, canvas.height);
-        DjVu.IS_DEBUG && console.log("Canvas resizing time = ", performance.now() - time); 
+        DjVu.IS_DEBUG && console.log("Canvas resizing time = ", performance.now() - time);
         //this.canvasCtx.setTransform(1, 0, 0, 1, 0, 0);
     },
 
@@ -130,6 +130,34 @@ var Globals = {
         this.img.width = image.width / scale;
         (tmp = this.canvas.parentNode) ? tmp.removeChild(this.canvas) : 0;
         DjVu.IS_DEBUG && console.log("DataURL creating time = ", performance.now() - time);
+    },
+
+    /** рисует символ на хосте с учетом его координат (можно посимвольно рисовать картинку) - отладочная функция*/
+    drawBitmapOnImageCanvas(bm, x, y, jb2Image) {
+        if (this._drawTime && (Date.now() - this._drawTime) < 100) { // если не под отладчиком, то не рисовать
+            return;
+        } else {
+            this._drawTime = Date.now();
+        }
+        if (!this.testImageData) {
+            console.warn("Debug draw function is enabled!");
+            this.testImageData = document.createElement('canvas')
+                .getContext('2d')
+                .createImageData(jb2Image.width, jb2Image.height);
+            this.testImageData.data.fill(255); // все белым непрозрачным
+        }
+        var pixelArray = this.testImageData.data;
+        for (var i = y, k = 0; k < bm.height; k++ , i++) {
+            for (var j = x, t = 0; t < bm.width; t++ , j++) {
+                if (bm.get(k, t)) {
+                    var pixelIndex = ((jb2Image.height - i - 1) * jb2Image.width + j) * 4;
+                    pixelArray[pixelIndex] = 0;
+                    pixelArray[pixelIndex + 1] = 0;
+                    pixelArray[pixelIndex + 2] = 0;
+                }
+            }
+        }
+        Globals.drawImage(this.testImageData, 300);
     }
 };
 

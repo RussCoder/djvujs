@@ -137,17 +137,18 @@ export class NumContext {
 export class Baseline {
     constructor() {
         this.arr = new Array(3);
+        this.fill(0); // на всякий случай заполняем нулями, хотя вообще это не должно быть нужно
+        this.index = -1;
     }
 
     add(val) {
-        this.arr.shift();
-        this.arr.push(val);
+        if (++this.index === 3) {
+            this.index = 0;
+        }
+        this.arr[this.index] = val;
     }
 
-    getVal() {
-        if (!this.arr[0]) {
-            return this.arr[1] ? this.arr[1] : this.arr[2];
-        }
+    getVal() { // возвращает медианное значение
         if (this.arr[0] >= this.arr[1] && this.arr[0] <= this.arr[2]
             || this.arr[0] <= this.arr[1] && this.arr[0] >= this.arr[2]) {
             return this.arr[0];
@@ -160,7 +161,7 @@ export class Baseline {
         }
     }
 
-    reinit() {
-        this.arr[0] = this.arr[1] = this.arr[2] = 0;
+    fill(val) { // инициализируем все 3 значения положением 1 символа на строке (и пока не будет добавлено еще 2, это значение и будет медианным)
+        this.arr[0] = this.arr[1] = this.arr[2] = val;
     }
 }
