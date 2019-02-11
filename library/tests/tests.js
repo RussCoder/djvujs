@@ -590,6 +590,15 @@ var Tests = {
         }
     },
 
+    testDeutschBaseline() { // документ в котором Baseline считался неправильно и символы были не на своих местах
+        return this._imageTestX({
+            djvuUrl: '/assets/deutsch.djvu',
+            imageUrl: '/assets/deutsch_1.png',
+            pageNumber: 1,
+            hash: 2018317133,
+        });
+    },
+
     /*test3LayerColorImage() { // отключен так как не ясен алгоритм масштабирования слоев
         return this._imageTest("colorbook.djvu", 3, "colorbook_4.png");
     }*/
