@@ -5,7 +5,7 @@ var DjVu = (function () {
     'use strict;'
 
     var DjVu = {
-        VERSION: '0.3.1',
+        VERSION: '0.3.2',
         IS_DEBUG: false,
         setDebugMode: (flag) => DjVu.IS_DEBUG = flag
     };
@@ -661,15 +661,16 @@ var DjVu = (function () {
     class Baseline {
         constructor() {
             this.arr = new Array(3);
+            this.fill(0);
+            this.index = -1;
         }
         add(val) {
-            this.arr.shift();
-            this.arr.push(val);
+            if (++this.index === 3) {
+                this.index = 0;
+            }
+            this.arr[this.index] = val;
         }
         getVal() {
-            if (!this.arr[0]) {
-                return this.arr[1] ? this.arr[1] : this.arr[2];
-            }
             if (this.arr[0] >= this.arr[1] && this.arr[0] <= this.arr[2]
                 || this.arr[0] <= this.arr[1] && this.arr[0] >= this.arr[2]) {
                 return this.arr[0];
@@ -681,8 +682,8 @@ var DjVu = (function () {
                 return this.arr[2];
             }
         }
-        reinit() {
-            this.arr[0] = this.arr[1] = this.arr[2] = 0;
+        fill(val) {
+            this.arr[0] = this.arr[1] = this.arr[2] = val;
         }
     }
 
@@ -1300,7 +1301,7 @@ var DjVu = (function () {
                 y = this.firstBottom + verticalOffset - height + 1;
                 this.firstLeft = x;
                 this.firstBottom = y;
-                this.baseline.reinit();
+                this.baseline.fill(y);
             }
             else {
                 x = this.lastRight + horizontalOffset;

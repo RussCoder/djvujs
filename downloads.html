@@ -29,16 +29,16 @@
 
 Here you can download the library and the viewer .js and .css files.
 
-<p><a href="/assets/dist/djvu.js?v=5" download="djvu.js">Download DjVu.js library (version 0.3.1)</a></p>
+<p><a href="/assets/dist/djvu.js?v=6" download="djvu.js">Download DjVu.js library (version 0.3.2)</a></p>
 
-<p></p><a href="/assets/dist/djvu_viewer.js?v=5" download="djvu_viewer.js">Download DjVu.js Viewer .js file (version 0.2.4)</a>
+<p></p><a href="/assets/dist/djvu_viewer.js?v=6" download="djvu_viewer.js">Download DjVu.js Viewer .js file (version 0.2.4)</a>
 
-<p></p><a href="/assets/dist/djvu_viewer.css?v=5" download="djvu_viewer.css">Download DjVu.js Viewer .css file (version 0.2.4)</a>
+<p></p><a href="/assets/dist/djvu_viewer.css?v=6" download="djvu_viewer.css">Download DjVu.js Viewer .css file (version 0.2.4)</a>
 
 <p>You can download <em>the previous versions</em> <a href="https://github.com/RussCoder/djvujs/releases">here</a>.</p>
 
 <h2>How to use it</h2><p>Create a folder with all 3 files, that you have downloaded here (<code>djvu.js</code>, <code>djvu_viewer.js</code> and <code>djvu_viewer.css</code>). Then in the same folder create an .html file (let&#39;s say <code>index.html</code>) with the following content.</p>
-<pre><code class="language-markup">&lt;!DOCTYPE html&gt;
+<pre><code class="language-html">&lt;!DOCTYPE html&gt;
 &lt;html&gt;
 
 &lt;header&gt;
@@ -47,10 +47,19 @@ Here you can download the library and the viewer .js and .css files.
     &lt;script src=&quot;djvu_viewer.js&quot;&gt;&lt;/script&gt;
     &lt;link href=&quot;djvu_viewer.css&quot; rel=&quot;stylesheet&quot;&gt;
 
+    &lt;style&gt;
+        #for_viewer {
+            height: 80vh;
+            width: 90vw;
+            margin: 5vh auto;
+            border: 1px solid black;
+        }
+    &lt;/style&gt;
+
     &lt;script&gt;
-        window.onload = function () {
+        window.onload = function() {
             // save as a global value
-            window.ViewerInstance = new DjVu.Viewer(); 
+            window.ViewerInstance = new DjVu.Viewer();
             // render into the element
             window.ViewerInstance.render(
                 document.querySelector(&quot;#for_viewer&quot;)
@@ -80,7 +89,7 @@ to start a local web server in order to make everything work as it works on the 
 <li><code>configure(config)</code> - just sets the options. Note, that when a document is loaded some option are reset to the initial ones, so you have to call the method again or use the last parameter of the two previous methods.</li>
 </ul>
 <p>The <code>config</code> is an object containing options for the viewer. It&#39;s an optional parameter. It has the following shape:</p>
-<pre><code class="language-json">
+<pre><code class="language-js">
 {
     pageRotation: 90,
     djvuOptions: {
@@ -93,11 +102,12 @@ to start a local web server in order to make everything work as it works on the 
 <li><code>djvuOptions</code> - an object which is passed to the library. Now there is only one option - the base url, which is the url to a directory which contains the files of an indirect djvu. For bundled djvu this parameter is not required. The base url is extracted automatically from a url to the index.djvu, when the <code>loadDocumentByUrl</code> is called, but in case of <code>loadDocument</code> method, this parameter should be provided manually.</li>
 </ul>
 <p>Thus, to load a document programmatically you can do the following:</p>
-<pre><code>var viewer = new DjVu.Viewer();
+<pre><code class="language-js">var viewer = new DjVu.Viewer();
 viewer = render(document.getElementById(&#39;for_viewer&#39;));
-viewer.loadDocumentByUrl(&#39;assets/my-djvu-file.djvu&#39;);</code></pre><p>Also you can load the file by your own and then use the <code>loadDocument</code> method. However, in case of the <code>loadDocumentByUrl</code> you will see a progress bar of loading, if your file is rather big.</p>
+viewer.loadDocumentByUrl(&#39;assets/my-djvu-file.djvu&#39;);</code></pre>
+<p>Also you can load the file by your own and then use the <code>loadDocument</code> method. However, in case of the <code>loadDocumentByUrl</code> you will see a progress bar of loading, if your file is rather big.</p>
 <p>You can create several links to djvu files and open them in the viewer, when a user clicks on them. Here is the complete example:</p>
-<pre><code class="language-markup">&lt;!DOCTYPE html&gt;
+<pre><code class="language-html">&lt;!DOCTYPE html&gt;
 &lt;html&gt;
 
 &lt;header&gt;

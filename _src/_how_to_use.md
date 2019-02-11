@@ -2,31 +2,40 @@
 
 Create a folder with all 3 files, that you have downloaded here (`djvu.js`, `djvu_viewer.js` and `djvu_viewer.css`). Then in the same folder create an .html file (let's say `index.html`) with the following content.
 
-```markup
+```html
 <!DOCTYPE html>
 <html>
 
 <header>
-	<meta charset="utf-8">
-	<script src="djvu.js"></script>
-	<script src="djvu_viewer.js"></script>
-	<link href="djvu_viewer.css" rel="stylesheet">
+    <meta charset="utf-8">
+    <script src="djvu.js"></script>
+    <script src="djvu_viewer.js"></script>
+    <link href="djvu_viewer.css" rel="stylesheet">
 
-	<script>
-		window.onload = function () {
+    <style>
+        #for_viewer {
+            height: 80vh;
+            width: 90vw;
+            margin: 5vh auto;
+            border: 1px solid black;
+        }
+    </style>
+
+    <script>
+        window.onload = function() {
             // save as a global value
-            window.ViewerInstance = new DjVu.Viewer(); 
+            window.ViewerInstance = new DjVu.Viewer();
             // render into the element
             window.ViewerInstance.render(
                 document.querySelector("#for_viewer")
             );
-		};
-	</script>
+        };
+    </script>
 
 </header>
 
 <body>
-	<div id="for_viewer"></div>
+    <div id="for_viewer"></div>
 </body>
 
 </html>
@@ -59,7 +68,7 @@ Furthermore, the viewer has a program API, which allows to open djvu files progr
 - `configure(config)` - just sets the options. Note, that when a document is loaded some option are reset to the initial ones, so you have to call the method again or use the last parameter of the two previous methods.
 
 The `config` is an object containing options for the viewer. It's an optional parameter. It has the following shape:
-```json
+```js
 
 {
     pageRotation: 90,
@@ -75,7 +84,7 @@ The `config` is an object containing options for the viewer. It's an optional pa
 
 Thus, to load a document programmatically you can do the following:
 
-```
+```js
 var viewer = new DjVu.Viewer();
 viewer = render(document.getElementById('for_viewer'));
 viewer.loadDocumentByUrl('assets/my-djvu-file.djvu');
@@ -85,7 +94,7 @@ Also you can load the file by your own and then use the `loadDocument` method. H
 
 You can create several links to djvu files and open them in the viewer, when a user clicks on them. Here is the complete example:
 
-```markup
+```html
 <!DOCTYPE html>
 <html>
 
