@@ -18,9 +18,9 @@ function promisify(func) {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (sender.tab && message === "include_scripts") {
         Promise.all([
-            promisify(chrome.tabs.executeScript)(sender.tab.id, { file: 'djvu.js', runAt: "document_end" }),
-            promisify(chrome.tabs.executeScript)(sender.tab.id, { file: 'djvu_viewer.js', runAt: "document_end" }),
-            promisify(chrome.tabs.insertCSS)(sender.tab.id, { file: 'djvu_viewer.css', runAt: "document_end" })
+            promisify(chrome.tabs.executeScript)(sender.tab.id, { frameId: sender.frameId, file: 'djvu.js', runAt: "document_end" }),
+            promisify(chrome.tabs.executeScript)(sender.tab.id, { frameId: sender.frameId, file: 'djvu_viewer.js', runAt: "document_end" }),
+            promisify(chrome.tabs.insertCSS)(sender.tab.id, { frameId: sender.frameId, file: 'djvu_viewer.css', runAt: "document_end" })
         ]).then(() => {
             sendResponse();
         })
