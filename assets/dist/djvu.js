@@ -5,7 +5,7 @@ var DjVu = (function () {
     'use strict;'
 
     var DjVu = {
-        VERSION: '0.3.2',
+        VERSION: '0.3.3',
         IS_DEBUG: false,
         setDebugMode: (flag) => DjVu.IS_DEBUG = flag
     };
@@ -1209,13 +1209,13 @@ var DjVu = (function () {
                         bm = this.decodeBitmap(width, height);
                         var coords = this.decodeSymbolCoords(bm.width, bm.height);
                         this.addBlit(bm, coords.x, coords.y);
-                        this.dict.push(bm);
+                        this.dict.push(bm.removeEmptyEdges());
                         break;
                     case 2:
                         width = this.decodeNum(0, 262142, this.symbolWidthCtx);
                         height = this.decodeNum(0, 262142, this.symbolHeightCtx);
                         bm = this.decodeBitmap(width, height);
-                        this.dict.push(bm);
+                        this.dict.push(bm.removeEmptyEdges());
                         break;
                     case 3:
                         width = this.decodeNum(0, 262142, this.symbolWidthCtx);
