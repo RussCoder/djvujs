@@ -84,7 +84,7 @@ export default class JB2Image extends JB2Codec {
                     var coords = this.decodeSymbolCoords(bm.width, bm.height);
                     this.addBlit(bm, coords.x, coords.y);
                     //this.copyToBitmap(bm, coords.x, coords.y);
-                    this.dict.push(bm);
+                    this.dict.push(bm.removeEmptyEdges());
                     //Globals.drawBitmapOnImageCanvas(bm, coords.x, coords.y, this);
                     break;
 
@@ -92,7 +92,7 @@ export default class JB2Image extends JB2Codec {
                     width = this.decodeNum(0, 262142, this.symbolWidthCtx);
                     height = this.decodeNum(0, 262142, this.symbolHeightCtx);
                     bm = this.decodeBitmap(width, height);
-                    this.dict.push(bm);
+                    this.dict.push(bm.removeEmptyEdges());
                     break;
 
                 case 3: // New symbol, add to image only 

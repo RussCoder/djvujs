@@ -599,6 +599,15 @@ var Tests = {
         });
     },
 
+    testNewJB2SymbolWithEmptyEdges() { 
+        return this._imageTestX({
+            djvuUrl: '/assets/vega.djvu',
+            imageUrl: '/assets/vega_1.png',
+            pageNumber: 1,
+            hash: 1675742877,
+        });
+    },
+
     /*test3LayerColorImage() { // отключен так как не ясен алгоритм масштабирования слоев
         return this._imageTest("colorbook.djvu", 3, "colorbook_4.png");
     }*/
