@@ -29,6 +29,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 })
 
 var tabIds = new Set();
+function openViewerTab(djvuUrl = null) {
+    chrome.tabs.create({ url: "viewer.html" + (djvuUrl ? "#" + djvuUrl : '') }, tab => tabIds.add(tab.id));
+}
 
 chrome.tabs.onRemoved.addListener(tabId => { // to bypass a Chrome bug due to which GPU memory is not released after all tabs are closed.
     if (tabIds.has(tabId)) {
@@ -39,12 +42,16 @@ chrome.tabs.onRemoved.addListener(tabId => { // to bypass a Chrome bug due to wh
     }
 });
 
-chrome.browserAction.onClicked.addListener(() => {
-    chrome.tabs.create({ url: "viewer.html" }, tab => tabIds.add(tab.id));
-});
+chrome.browserAction.onClicked.addListener(() => openViewerTab());
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
     if (info.menuItemId === "open_with") {
-        chrome.tabs.create({ url: "viewer.html" + "#" + info.linkUrl }, tab => tabIds.add(tab.id));
+        openViewerTab(info.linkUrl);
     }
 });
+
+chrome.webRequest.onBeforeRequest.addListener(details => { // interception of direct file opening
+    chrome.tabs.remove(details.tabId);
+    openViewerTab(details.url);
+    return { redirectUrl: 'javascript:void(0)' };
+}, { urls: ['file:///*/*.djvu', 'file:///*/*.djv'], types: ['main_frame'] }, ["blocking"]);

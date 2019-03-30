@@ -3,7 +3,7 @@ import DjVuPage from './DjVuPage';
 import DIRMChunk from './chunks/DirmChunk';
 import NAVMChunk from './chunks/NavmChunk';
 import DjVuWriter from './DjVuWriter';
-import DjVu from './DjVu';
+import DjVu, { loadFileViaXHR } from './DjVu';
 import ThumChunk from './chunks/ThumChunk';
 import ByteStream from './ByteStream';
 import {
@@ -216,16 +216,16 @@ export default class DjVuDocument {
                 var url = this.baseUrl + pageName;
 
                 try {
-                    var response = await fetch(url);
+                    var xhr = await loadFileViaXHR(url);
                 } catch (e) {
                     throw new NetworkDjVuError({ pageNumber: number, url: url });
                 }
 
-                if (!response.ok) {
-                    throw new UnsuccessfulRequestDjVuError(response, { pageNumber: number });
+                if (xhr.status && xhr.status !== 200) {
+                    throw new UnsuccessfulRequestDjVuError(xhr, { pageNumber: number });
                 }
 
-                var pageBuffer = await response.arrayBuffer();
+                var pageBuffer = xhr.response;
                 var bs = new ByteStream(pageBuffer);
                 if (bs.readStr4() !== 'AT&T') {
                     throw new CorruptedFileDjVuError(`The file gotten as the page number ${number} isn't a djvu file!`);
@@ -260,16 +260,16 @@ export default class DjVuDocument {
             var url = this.baseUrl + (this.dirm ? this.dirm.getComponentNameByItsId(id) : id);
 
             try {
-                var response = await fetch(url);
+                var xhr = await loadFileViaXHR(url);
             } catch (e) {
                 throw new NetworkDjVuError({ pageNumber: pageNumber, dependencyId: id, url: url });
             }
 
-            if (!response.ok) {
-                throw new UnsuccessfulRequestDjVuError(response, { pageNumber: pageNumber, dependencyId: id });
+            if (xhr.status && xhr.status !== 200) {
+                throw new UnsuccessfulRequestDjVuError(xhr, { pageNumber: pageNumber, dependencyId: id });
             }
 
-            var componentBuffer = await response.arrayBuffer();
+            var componentBuffer =  xhr.response;
             var bs = new ByteStream(componentBuffer);
             if (bs.readStr4() !== 'AT&T') {
                 throw new CorruptedFileDjVuError(

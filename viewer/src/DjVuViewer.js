@@ -8,7 +8,7 @@ import { loadFile } from './utils';
 
 export default class DjVuViewer {
 
-    static VERSION = '0.2.4';
+    static VERSION = '0.2.5';
 
     constructor() {
         this.store = configureStore();
@@ -26,6 +26,9 @@ export default class DjVuViewer {
     configure(config = {}) {
         if (config.pageRotation) {
             this.store.dispatch(Actions.setPageRotationAction(config.pageRotation));
+        }
+        if (config.pageScale) {
+            this.store.dispatch(Actions.setUserScaleAction(config.pageScale));
         }
         return this;
     }

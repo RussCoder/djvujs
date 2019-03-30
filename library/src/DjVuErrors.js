@@ -69,17 +69,17 @@ function getErrorMessageByData(data) {
 }
 
 export class UnsuccessfulRequestDjVuError extends DjVuError {
-    constructor(response, data = { pageNumber: null, dependencyId: null }) {
+    constructor(xhr, data = { pageNumber: null, dependencyId: null }) {
         var message = getErrorMessageByData(data);
         super(DjVuErrorCodes.UNSUCCESSFUL_REQUEST,
             message + '\n' +
-            `The request to ${response.url} wasn't successful.\n` +
-            `The response status is ${response.status}.\n` +
-            `The response status text is: "${response.statusText}".`
+            `The request to ${xhr.responseURL} wasn't successful.\n` +
+            `The response status is ${xhr.status}.\n` +
+            `The response status text is: "${xhr.statusText}".`
         );
-        this.status = response.status;
-        this.statusText = response.statusText;
-        this.url = response.url;
+        this.status = xhr.status;
+        this.statusText = xhr.statusText;
+        this.url = xhr.responseURL;
         if (data.pageNumber) {
             this.pageNumber = data.pageNumber;
         }
