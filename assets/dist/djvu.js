@@ -5,28 +5,20 @@ var DjVu = (function () {
     'use strict;'
 
     var DjVu = {
-        VERSION: '0.3.3',
+        VERSION: '0.3.4',
         IS_DEBUG: false,
         setDebugMode: (flag) => DjVu.IS_DEBUG = flag
     };
-    DjVu.Utils = {
-        loadFile(url, responseType = 'arraybuffer') {
-            console.warn("loadFile is a deprecated function!");
-            return new Promise((resolve, reject) => {
-                var xhr = new XMLHttpRequest();
-                xhr.open("GET", url);
-                xhr.responseType = responseType;
-                xhr.onload = (e) => {
-                    if (xhr.status !== 200) {
-                        return reject({ message: "Something went wrong!", xhr: xhr })
-                    }
-                    DjVu.IS_DEBUG && console.log("File loaded: ", e.loaded);
-                    resolve(xhr.response);
-                };
-                xhr.send();
-            });
-        }
-    };
+    function loadFileViaXHR(url, responseType = 'arraybuffer') {
+        return new Promise((resolve, reject) => {
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", url);
+            xhr.responseType = responseType;
+            xhr.onload = (e) => resolve(xhr);
+            xhr.onerror = (e) => reject(xhr);
+            xhr.send();
+        });
+    }
     function createStringFromUtf8Array(utf8array) {
         var codePoints = utf8ToCodePoints(utf8array);
         return String.fromCodePoint ? String.fromCodePoint(...codePoints) : String.fromCharCode(...codePoints);
@@ -746,17 +738,17 @@ var DjVu = (function () {
         return message;
     }
     class UnsuccessfulRequestDjVuError extends DjVuError {
-        constructor(response, data = { pageNumber: null, dependencyId: null }) {
+        constructor(xhr, data = { pageNumber: null, dependencyId: null }) {
             var message = getErrorMessageByData(data);
             super(DjVuErrorCodes.UNSUCCESSFUL_REQUEST,
                 message + '\n' +
-                `The request to ${response.url} wasn't successful.\n` +
-                `The response status is ${response.status}.\n` +
-                `The response status text is: "${response.statusText}".`
+                `The request to ${xhr.responseURL} wasn't successful.\n` +
+                `The response status is ${xhr.status}.\n` +
+                `The response status text is: "${xhr.statusText}".`
             );
-            this.status = response.status;
-            this.statusText = response.statusText;
-            this.url = response.url;
+            this.status = xhr.status;
+            this.statusText = xhr.statusText;
+            this.url = xhr.responseURL;
             if (data.pageNumber) {
                 this.pageNumber = data.pageNumber;
             }
@@ -3301,14 +3293,14 @@ var DjVu = (function () {
                     var pageName = this.dirm.getPageNameByItsNumber(number);
                     var url = this.baseUrl + pageName;
                     try {
-                        var response = await fetch(url);
+                        var xhr = await loadFileViaXHR(url);
                     } catch (e) {
                         throw new NetworkDjVuError({ pageNumber: number, url: url });
                     }
-                    if (!response.ok) {
-                        throw new UnsuccessfulRequestDjVuError(response, { pageNumber: number });
+                    if (xhr.status && xhr.status !== 200) {
+                        throw new UnsuccessfulRequestDjVuError(xhr, { pageNumber: number });
                     }
-                    var pageBuffer = await response.arrayBuffer();
+                    var pageBuffer = xhr.response;
                     var bs = new ByteStream(pageBuffer);
                     if (bs.readStr4() !== 'AT&T') {
                         throw new CorruptedFileDjVuError(`The file gotten as the page number ${number} isn't a djvu file!`);
@@ -3338,14 +3330,14 @@ var DjVu = (function () {
             await Promise.all(unloadedDependencies.map(async id => {
                 var url = this.baseUrl + (this.dirm ? this.dirm.getComponentNameByItsId(id) : id);
                 try {
-                    var response = await fetch(url);
+                    var xhr = await loadFileViaXHR(url);
                 } catch (e) {
                     throw new NetworkDjVuError({ pageNumber: pageNumber, dependencyId: id, url: url });
                 }
-                if (!response.ok) {
-                    throw new UnsuccessfulRequestDjVuError(response, { pageNumber: pageNumber, dependencyId: id });
+                if (xhr.status && xhr.status !== 200) {
+                    throw new UnsuccessfulRequestDjVuError(xhr, { pageNumber: pageNumber, dependencyId: id });
                 }
-                var componentBuffer = await response.arrayBuffer();
+                var componentBuffer =  xhr.response;
                 var bs = new ByteStream(componentBuffer);
                 if (bs.readStr4() !== 'AT&T') {
                     throw new CorruptedFileDjVuError(

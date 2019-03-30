@@ -72,6 +72,7 @@ The `config` is an object containing options for the viewer. It's an optional pa
 
 {
     pageRotation: 90,
+    pageScale: 2,
     djvuOptions: {
         baseUrl: "/url/to/directory/with/indirect/djvu/"
     }
@@ -80,6 +81,7 @@ The `config` is an object containing options for the viewer. It's an optional pa
 ```
 
 - `pageRotation` - the rotation of a page, it can be 0, 90, 180, 270.
+- `pageScale` - the scale of a page, it is a number from 0.1 to 6 (~ 10% to 600%). Numbers less/greater than the limits are replaced by the limits themselves, to wit, 8 will be treated as 6, and 0.001 as 0.1, 0 will be ignored at all and the default scale value (which is 1) will be used.  
 - `djvuOptions` - an object which is passed to the library. Now there is only one option - the base url, which is the url to a directory which contains the files of an indirect djvu. For bundled djvu this parameter is not required. The base url is extracted automatically from a url to the index.djvu, when the `loadDocumentByUrl` is called, but in case of `loadDocument` method, this parameter should be provided manually.
 
 Thus, to load a document programmatically you can do the following:

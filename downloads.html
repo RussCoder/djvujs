@@ -29,11 +29,11 @@
 
 Here you can download the library and the viewer .js and .css files.
 
-<p><a href="/assets/dist/djvu.js?v=7" download="djvu.js">Download DjVu.js library (version 0.3.3)</a></p>
+<p><a href="/assets/dist/djvu.js?v=8" download="djvu.js">Download DjVu.js library (version 0.3.4)</a></p>
 
-<p></p><a href="/assets/dist/djvu_viewer.js?v=7" download="djvu_viewer.js">Download DjVu.js Viewer .js file (version 0.2.4)</a>
+<p></p><a href="/assets/dist/djvu_viewer.js?v=8" download="djvu_viewer.js">Download DjVu.js Viewer .js file (version 0.2.5)</a>
 
-<p></p><a href="/assets/dist/djvu_viewer.css?v=7" download="djvu_viewer.css">Download DjVu.js Viewer .css file (version 0.2.4)</a>
+<p></p><a href="/assets/dist/djvu_viewer.css?v=8" download="djvu_viewer.css">Download DjVu.js Viewer .css file (version 0.2.5)</a>
 
 <p>You can download <em>the previous versions</em> <a href="https://github.com/RussCoder/djvujs/releases">here</a>.</p>
 
@@ -92,6 +92,7 @@ to start a local web server in order to make everything work as it works on the 
 <pre><code class="language-js">
 {
     pageRotation: 90,
+    pageScale: 2,
     djvuOptions: {
         baseUrl: &quot;/url/to/directory/with/indirect/djvu/&quot;
     }
@@ -99,6 +100,7 @@ to start a local web server in order to make everything work as it works on the 
 </code></pre>
 <ul>
 <li><code>pageRotation</code> - the rotation of a page, it can be 0, 90, 180, 270.</li>
+<li><code>pageScale</code> - the scale of a page, it is a number from 0.1 to 6 (~ 10% to 600%). Numbers less/greater than the limits are replaced by the limits themselves, to wit, 8 will be treated as 6, and 0.001 as 0.1, 0 will be ignored at all and the default scale value (which is 1) will be used.  </li>
 <li><code>djvuOptions</code> - an object which is passed to the library. Now there is only one option - the base url, which is the url to a directory which contains the files of an indirect djvu. For bundled djvu this parameter is not required. The base url is extracted automatically from a url to the index.djvu, when the <code>loadDocumentByUrl</code> is called, but in case of <code>loadDocument</code> method, this parameter should be provided manually.</li>
 </ul>
 <p>Thus, to load a document programmatically you can do the following:</p>
