@@ -3,8 +3,8 @@ import { stringToCodePoints, codePointsToUtf8 } from './DjVu';
 export default class ByteStreamWriter {
     constructor(length) {
         //размер шага роста используемой памяти
-        this.growStep = length || 4096;
-        this.buffer = new ArrayBuffer(this.growStep);
+        this.growthStep = length || 4096; // not used now
+        this.buffer = new ArrayBuffer(this.growthStep);
         this.viewer = new DataView(this.buffer);
         this.offset = 0;
         this.offsetMarks = {};
@@ -21,10 +21,6 @@ export default class ByteStreamWriter {
     saveOffsetMark(mark) {
         this.offsetMarks[mark] = this.offset;
         return this;
-    }
-
-    get bufferLength() {
-        return this.buffer.byteLength;
     }
 
     writeByte(byte) {
@@ -74,25 +70,27 @@ export default class ByteStreamWriter {
         return this.buffer.slice(0, this.offset);
     }
 
-    checkOffset(bytes) {
-        bytes = bytes || 0;
-        var bool = this.offset + bytes >= this.bufferLength;
+    checkOffset(requiredBytesNumber = 0) {
+        var bool = this.offset + requiredBytesNumber >= this.buffer.byteLength;
         if (bool) {
-            this.extense();
+            this._expand(requiredBytesNumber);
         }
         return bool;
     }
 
-    extense() {
-        //Globals.Timer.start("extenseTime");
+    _expand(requiredBytesNumber) {
+        //Globals.Timer.start("expandTime");
 
-        var newlength = this.bufferLength + this.buffer.byteLength;
-        var nb = new ArrayBuffer(newlength);
+        var newLength = 2 * this.buffer.byteLength; // perhaps it's not the best strategy but still it works
+        if (newLength < this.buffer.byteLength + requiredBytesNumber) {
+            newLength += requiredBytesNumber;
+        }
+        var nb = new ArrayBuffer(newLength);
         new Uint8Array(nb).set(new Uint8Array(this.buffer)); // быстрое копирование ArrayBuffer
         this.buffer = nb;
         this.viewer = new DataView(this.buffer);
 
-        //Globals.Timer.end("extenseTime");
+        //Globals.Timer.end("expandTime");
     }
 
     //смещение на length байт

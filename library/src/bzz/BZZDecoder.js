@@ -9,10 +9,6 @@ export default class BZZDecoder {
         this.maxblock = 4096;
         this.FREQMAX = 4;
         this.CTXIDS = 3;
-        this.mtf = new Uint8Array(256);
-        for (var i = 0; i < 256; i++) {
-            this.mtf[i] = i;
-        }
         this.ctx = new Uint8Array(300);
         this.size = 0;
         this.blocksize = 0;
@@ -70,7 +66,11 @@ export default class BZZDecoder {
             }
         }
 
-        // Prepare Quasi MTF ** уже есть
+        // Prepare Quasi MTF
+        var mtf = new Uint8Array(256);
+        for (var i = 0; i < 256; i++) {
+            mtf[i] = i;
+        }
 
         var freq = new Array(this.FREQMAX);
 
@@ -97,7 +97,7 @@ export default class BZZDecoder {
 
                     if (this.zp.decode(this.ctx, ctxoff + ctxid) != 0) {
                         mtfno = 0;
-                        this.data[i] = this.mtf[mtfno];
+                        this.data[i] = mtf[mtfno];
                         break;
                     }
 
@@ -105,7 +105,7 @@ export default class BZZDecoder {
 
                     if (this.zp.decode(this.ctx, ctxoff + ctxid) != 0) {
                         mtfno = 1;
-                        this.data[i] = this.mtf[mtfno];
+                        this.data[i] = mtf[mtfno];
                         break;
                     }
 
@@ -113,7 +113,7 @@ export default class BZZDecoder {
 
                     if (this.zp.decode(this.ctx, ctxoff + 0) != 0) {
                         mtfno = 2 + this.decode_binary(ctxoff + 1, 1);
-                        this.data[i] = this.mtf[mtfno];
+                        this.data[i] = mtf[mtfno];
                         break;
                     }
 
@@ -121,7 +121,7 @@ export default class BZZDecoder {
 
                     if (this.zp.decode(this.ctx, ctxoff + 0) != 0) {
                         mtfno = 4 + this.decode_binary(ctxoff + 1, 2);
-                        this.data[i] = this.mtf[mtfno];
+                        this.data[i] = mtf[mtfno];
                         break;
                     }
 
@@ -129,7 +129,7 @@ export default class BZZDecoder {
 
                     if (this.zp.decode(this.ctx, ctxoff + 0) != 0) {
                         mtfno = 8 + this.decode_binary(ctxoff + 1, 3);
-                        this.data[i] = this.mtf[mtfno];
+                        this.data[i] = mtf[mtfno];
                         break;
                     }
 
@@ -137,7 +137,7 @@ export default class BZZDecoder {
 
                     if (this.zp.decode(this.ctx, ctxoff + 0) != 0) {
                         mtfno = 16 + this.decode_binary(ctxoff + 1, 4);
-                        this.data[i] = this.mtf[mtfno];
+                        this.data[i] = mtf[mtfno];
                         break;
                     }
 
@@ -145,7 +145,7 @@ export default class BZZDecoder {
 
                     if (this.zp.decode(this.ctx, ctxoff + 0) != 0) {
                         mtfno = 32 + this.decode_binary(ctxoff + 1, 5);
-                        this.data[i] = this.mtf[mtfno];
+                        this.data[i] = mtf[mtfno];
                         break;
                     }
 
@@ -153,7 +153,7 @@ export default class BZZDecoder {
 
                     if (this.zp.decode(this.ctx, ctxoff + 0) != 0) {
                         mtfno = 64 + this.decode_binary(ctxoff + 1, 6);
-                        this.data[i] = this.mtf[mtfno];
+                        this.data[i] = mtf[mtfno];
                         break;
                     }
 
@@ -161,7 +161,7 @@ export default class BZZDecoder {
 
                     if (this.zp.decode(this.ctx, ctxoff + 0) != 0) {
                         mtfno = 128 + this.decode_binary(ctxoff + 1, 7);
-                        this.data[i] = this.mtf[mtfno];
+                        this.data[i] = mtf[mtfno];
                         break;
                     }
 
@@ -196,15 +196,15 @@ export default class BZZDecoder {
             }
 
             for (k = mtfno; k >= this.FREQMAX; k--) {
-                this.mtf[k] = this.mtf[k - 1];
+                mtf[k] = mtf[k - 1];
             }
 
             for (; (k > 0) && ((0xffffffff & fc) >= (0xffffffff & freq[k - 1])); k--) {
-                this.mtf[k] = this.mtf[k - 1];
+                mtf[k] = mtf[k - 1];
                 freq[k] = freq[k - 1];
             }
 
-            this.mtf[k] = this.data[i];
+            mtf[k] = this.data[i];
             freq[k] = fc;
         }
 
@@ -271,9 +271,10 @@ export default class BZZDecoder {
         while (size = this._decode()) {
             if (!bsw) {
                 bsw = new ByteStreamWriter(size - 1);
-                var arr = new Uint8Array(this.data.buffer, 0, this.data.length - 1);
-                bsw.writeArray(arr);
             }
+            // From specification: "The array DATA[0...BLOCKSIZE-2] then contains the decoded bytes of the block." So size - 1; 
+            var arr = new Uint8Array(this.data.buffer, 0, size - 1);
+            bsw.writeArray(arr);
         }
         // для высвобождения памяти.
         this.data = null;
@@ -281,7 +282,7 @@ export default class BZZDecoder {
     }
 
     /**
-     * @param {ByteStream} bs 
+     * @param {ByteStream} bs
      * @return {ByteStream}
      */
     static decodeByteStream(bs) {
