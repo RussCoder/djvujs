@@ -608,6 +608,15 @@ var Tests = {
         });
     },
 
+    testFileWith2BZZEncodedBlocks() { 
+        return this._imageTestX({
+            djvuUrl: '/assets/irish.djvu',
+            imageUrl: '/assets/irish_1.png',
+            pageNumber: 1,
+            hash: -371412505,
+        });
+    },
+
     /*test3LayerColorImage() { // отключен так как не ясен алгоритм масштабирования слоев
         return this._imageTest("colorbook.djvu", 3, "colorbook_4.png");
     }*/
