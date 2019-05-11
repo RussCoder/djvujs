@@ -19,6 +19,9 @@ class ImageBlock extends React.Component {
         userScale: PropTypes.number
     };
 
+    pageElementList = {};
+    _pageRefs = {};
+
     getSnapshotBeforeUpdate() {
         let horizontalRatio = null;
         if (this.wrapper.scrollWidth > this.wrapper.clientWidth) {
@@ -31,6 +34,19 @@ class ImageBlock extends React.Component {
         }
 
         return { horizontalRatio, verticalRatio };
+    }
+
+    scrollCurrentPageIntoViewIfRequired(prevProps) {
+        const currentPageElement = this.pageElementList[this.props.currentPageNumber];
+        if (!currentPageElement || this.props.currentPageNumber === prevProps.currentPageNumber) {
+            return;
+        }
+        const pageRect = currentPageElement.getBoundingClientRect();
+        const wrapperRect = this.wrapper.getBoundingClientRect();
+
+        if (!this.isVisible(pageRect, wrapperRect)) {
+            currentPageElement.scrollIntoView();
+        }
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
@@ -51,6 +67,9 @@ class ImageBlock extends React.Component {
                 this.wrapper.scrollTop = snapshot.verticalRatio ? (snapshot.verticalRatio * this.wrapper.scrollHeight - this.wrapper.clientHeight / 2) : (heightDiff / 2);
             }
         }
+
+        this.scrollCurrentPageIntoViewIfRequired(prevProps);
+
         this.complexImage && (this.complexImage.style.opacity = 1); // show the content after the scroll bars were adjusted
     }
 
@@ -59,6 +78,7 @@ class ImageBlock extends React.Component {
     }
 
     onWheel = (e) => {
+        console.log(e.nativeEvent.cancelable);
         if (this.scrollTimeStamp) {
             if (e.nativeEvent.timeStamp - this.scrollTimeStamp < 100) {
                 e.nativeEvent.preventDefault();
@@ -126,29 +146,141 @@ class ImageBlock extends React.Component {
 
     complexImageRef = node => this.complexImage = node;
 
+    downSearch(wrapperRect) {
+        console.log('DOWN SEARCH');
+        for (let number = this.props.currentPageNumber + 1; ; number++) {
+            const page = this.pageElementList[number];
+            if (!page) {
+                return null;
+            }
+            const pageRect = page.getBoundingClientRect();
+            if (this.isVisible(pageRect, wrapperRect)) {
+                return number;
+            }
+        }
+    }
+
+    upSearch(wrapperRect, currentPageVisibility) {
+        console.log('UP SEARCH');
+        let lastVisiblePageNumber = currentPageVisibility ? this.props.currentPageNumber : null;
+
+        for (let number = this.props.currentPageNumber - 1; ; number--) {
+            const page = this.pageElementList[number];
+            if (!page) {
+                return lastVisiblePageNumber;
+            }
+            const pageRect = page.getBoundingClientRect();
+
+            if (this.isVisible(pageRect, wrapperRect)) {
+                lastVisiblePageNumber = number;
+            } else if (lastVisiblePageNumber) {
+                return lastVisiblePageNumber;
+            }
+        }
+    }
+
+    /**
+     * A page is considered visible, if there is at least 25% of it is shown and it's at the top of the viewport (actual when there are many small pages, or a scale is small)
+     * or if it takes more than 50% if the viewport (actual when there are bigger pages, the most common situation)
+     */
+    isVisible(pageRect, wrapperRect) {
+        return (
+            ((pageRect.bottom - wrapperRect.top) >= 0.25 * pageRect.height && pageRect.bottom <= wrapperRect.bottom)
+            || (pageRect.top > wrapperRect.top && (wrapperRect.bottom - pageRect.top) >= wrapperRect.height * 0.5)
+            || (pageRect.bottom < wrapperRect.bottom && (pageRect.bottom - wrapperRect.top) >= wrapperRect.height * 0.5)
+        );
+    }
+
+    setNewPageNumber(pageNumber) {
+        if (pageNumber && pageNumber !== this.props.currentPageNumber) {
+            this.props.dispatch(Actions.setNewPageNumberAction(pageNumber));
+        }
+    }
+
+    _onScroll = e => {
+        this._lastScrollTimestamp = null;
+        const wrapperRect = this.wrapper.getBoundingClientRect();
+        const currentPage = this.pageElementList[this.props.currentPageNumber];
+        if(!currentPage) {
+            return;
+        }
+        const pageRect = currentPage.getBoundingClientRect();
+
+        const currentPageVisibility = this.isVisible(pageRect, wrapperRect);
+        let newCurrentPageNumber = null;
+        if (currentPageVisibility) {
+            newCurrentPageNumber = this.upSearch(wrapperRect, currentPageVisibility);
+        } else if (pageRect.top < wrapperRect.top) {
+            newCurrentPageNumber = this.downSearch(wrapperRect, currentPageVisibility);
+        } else {
+            newCurrentPageNumber = this.upSearch(wrapperRect, currentPageVisibility);
+        }
+
+        this.setNewPageNumber(newCurrentPageNumber);
+    }
+
+    onScroll = (e) => { // invoke on last scroll event, but not less frequently than once within 500 ms
+        if (this._lastScrollTimestamp && e.nativeEvent.timeStamp - this._lastScrollTimestamp > 500) {
+            clearTimeout(this.scrollTimeout);
+            this._onScroll();
+        } else {
+            if (!this._lastScrollTimestamp) {
+                this._lastScrollTimestamp = e.nativeEvent.timeStamp;
+            }
+            clearTimeout(this.scrollTimeout);
+            this.scrollTimeout = setTimeout(this._onScroll, 50);
+        }
+    }
+
+    getPageRef = (number) => { // as optimization to avoid recreation of an arrow function on each render
+        if (!this._pageRefs[number]) {
+            this._pageRefs[number] = node => this.pageElementList[number] = node;
+        }
+
+        return this._pageRefs[number];
+    }
+
     render() {
         const isGrabMode = this.props.cursorMode === Consts.GRAB_CURSOR_MODE;
         const classes = {
-            image_block: true,
+            image_block: !this.props.continuousMode,
+            continuous_image_block: this.props.continuousMode,
             grab: isGrabMode
         };
         return (
             <div
                 className={cx(classes)}
                 onWheel={this.onWheel}
+                onScroll={this.onScroll}
                 ref={this.wrapperRef}
                 onMouseDown={isGrabMode ? this.startMoving : null}
                 onMouseUp={isGrabMode ? this.finishMoving : null}
                 onMouseLeave={isGrabMode ? this.finishMoving : null}
             >
-                {this.props.imageData ?
-                    <div
-                        className="complex_image_wrapper"
-                        ref={this.complexImageRef}
-                        style={{ opacity: 0 }} // is changed in the ComponentDidUpdate
-                    >
-                        <ComplexImage {...this.props} />
-                    </div> : null}
+                {this.props.continuousMode ? this.props.pagesList.map((pageData, i) => {
+                    return (
+                        <div className="complex_image_wrapper" key={i}>
+                            <ComplexImage
+                                imageUrl={pageData.url}
+                                imageDpi={pageData.dpi}
+                                imageWidth={pageData.width}
+                                imageHeight={pageData.height}
+                                userScale={this.props.userScale}
+                                rotation={this.props.rotation}
+                                outerRef={this.getPageRef(i + 1)}
+                                textZones={pageData.textZones}
+                            />
+                        </div>
+                    );
+                }) :
+                    this.props.imageData ?
+                        <div
+                            className="complex_image_wrapper"
+                            ref={this.complexImageRef}
+                            style={{ opacity: 0 }} // is changed in the ComponentDidUpdate
+                        >
+                            <ComplexImage {...this.props} />
+                        </div> : null}
             </div>
         );
     }
@@ -156,6 +288,9 @@ class ImageBlock extends React.Component {
 
 export default connect(
     state => ({
+        currentPageNumber: get.currentPageNumber(state),
+        continuousMode: get.continuousMode(state),
+        pagesList: get.pagesList(state),
         imageData: get.imageData(state),
         imageDpi: get.imageDpi(state),
         userScale: get.userScale(state),

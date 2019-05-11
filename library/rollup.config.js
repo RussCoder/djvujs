@@ -1,4 +1,6 @@
 const cleanup = require('rollup-plugin-cleanup');
+const resolve = require('rollup-plugin-node-resolve');
+const commonjs = require('rollup-plugin-commonjs');
 
 const outputTemplate = {
     format: 'iife',
@@ -15,6 +17,8 @@ module.exports = {
         Object.assign({ file: '../extension/djvu.js' }, outputTemplate)
     ],
     plugins: [
+        resolve(),
+        commonjs(),
         cleanup()
     ]
 };

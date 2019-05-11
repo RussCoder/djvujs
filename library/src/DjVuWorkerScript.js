@@ -12,7 +12,7 @@ export default function initWorker() {
     /** @type {IWImageWriter} */
     var iwiw; // объект записи документов
 
-    // обрабочик приема событий
+    // обработчик приема событий
     onmessage = async function (oEvent) {
         try { // отлавливаем все исключения
             var obj = oEvent.data;
@@ -54,6 +54,7 @@ export default function initWorker() {
 
     var handlers = {
 
+        /* A universal command which handles all tasks created via doc proxy property of the DjVuWorker class */
         async run(obj) {
             //console.log("Got task request", Date.now() - obj.time);
             const results = await Promise.all(obj.data.map(async task => {
@@ -89,6 +90,10 @@ export default function initWorker() {
                 throw new UnableToTransferDataDjVuError(obj.data);
             }
         },
+
+        revokeObjectURL(obj) {
+            URL.revokeObjectURL(obj.url);
+        }, 
 
         createDocumentUrl() {
             postMessage({

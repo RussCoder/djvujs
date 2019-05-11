@@ -30,6 +30,15 @@ body.disable_scroll_djvujs {
     @import "rotation_control";
     @import "error_page";
     @import "loading_layer";
+    @import "complex_image";
+
+    .grab {
+        cursor: grab;
+    }
+
+    .grabbing {
+        cursor: grabbing;
+    }
 
     &.full_page_view {
         top: 0;

@@ -4,6 +4,19 @@ import DjVu from '../DjVu';
 
 const Actions = {
 
+    dropPageAction: pageNumber => ({ type: Consts.DROP_PAGE_ACTION, pageNumber: pageNumber }),
+
+    pagesSizesAreGottenAction: (pagesSizes) => ({
+        type: Consts.PAGES_SIZES_ARE_GOTTEN,
+        sizes: pagesSizes,
+    }),
+
+    pageIsLoadedAction: (pageData, pageNumber) => ({
+        type: Consts.PAGE_IS_LOADED_ACTION,
+        pageNumber: pageNumber,
+        pageData: pageData,
+    }),
+
     pageErrorAction: error => {
         //console.error(error);
         return ({

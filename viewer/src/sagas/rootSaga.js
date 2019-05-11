@@ -6,12 +6,14 @@ import Consts from "../constants/consts";
 import Actions from "../actions/actions";
 import PagesCache from './PagesCache';
 import DjVu from '../DjVu';
+import PageDataManager from './PageDataManager';
 
 class RootSaga {
     constructor() {
         this.callbacks = {};
         this.djvuWorker = new DjVu.Worker();
         this.pagesCache = new PagesCache(this.djvuWorker);
+        this.pageDataManager = null;
     }
 
     * getImageData() {
@@ -35,17 +37,22 @@ class RootSaga {
 
     * fetchPageData() {
         const state = yield select();
-        const isTextMode = get.isTextMode(state);
-        const pageNumber = get.currentPageNumber(state);
 
-        if (isTextMode) {
-            this.pagesCache.cancelCachingTask();
-            this.djvuWorker.cancelAllTasks();
+        if (get.continuousMode(state)) {
+            yield* this.pageDataManager.startDataFetching(Date.now());
+        } else {
+            const isTextMode = get.isTextMode(state);
+            const pageNumber = get.currentPageNumber(state);
+
+            if (isTextMode) {
+                this.pagesCache.cancelCachingTask();
+                this.djvuWorker.cancelAllTasks();
+                yield* this.fetchPageText(pageNumber);
+            }
+
+            yield* this.getImageData();
             yield* this.fetchPageText(pageNumber);
         }
-
-        yield* this.getImageData();
-        yield* this.fetchPageText(pageNumber);
     }
 
     * fetchPageText(pageNumber) {
@@ -55,7 +62,7 @@ class RootSaga {
                 this.djvuWorker.doc.getPage(pageNumber).getText(),
                 this.djvuWorker.doc.getPage(pageNumber).getNormalizedTextZones(),
             );
-            
+
             yield put({
                 type: Consts.PAGE_TEXT_FETCHED_ACTION,
                 pageText: text,
@@ -82,6 +89,12 @@ class RootSaga {
         yield* this.fetchPageText(currentPageNumber);
     }
 
+    * prepareForContinuousMode() {
+        const pagesSizes = yield this.djvuWorker.doc.getPagesSizes().run();
+        this.pageDataManager = new PageDataManager(this.djvuWorker, pagesSizes.length);
+        yield put(Actions.pagesSizesAreGottenAction(pagesSizes));
+    }
+
     * createDocumentFromArrayBufferAction(action) {
         this.djvuWorker.cancelAllTasks();
         this.pagesCache.resetPagesCache();
@@ -94,9 +107,14 @@ class RootSaga {
             fileName: action.fileName
         });
 
-        if (this.callbacks['document_created']) {
+        if (this.callbacks['document_created']) { // for outer API
             this.callbacks['document_created']();
             delete this.callbacks['document_created'];
+        }
+
+        const state = yield select();
+        if (get.continuousMode(state)) {
+            yield* this.prepareForContinuousMode();
         }
 
         const contents = yield this.djvuWorker.getContents();
@@ -105,7 +123,9 @@ class RootSaga {
             contents: contents
         });
 
-        yield* this.fetchPageData();
+        // set the current number to start page fetching saga
+        // fetchPageData should be called via yield* directly, otherwise it won't be cancelled by takeLatest effect
+        yield put(Actions.setNewPageNumberAction(get.currentPageNumber(state))); // set the current number to start page fetching saga
     }
 
     * setPageByUrl(action) {

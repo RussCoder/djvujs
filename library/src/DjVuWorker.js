@@ -37,16 +37,23 @@ export default class DjVuWorker {
     cancelTask(promise) {
         if (!this.promiseMap.delete(promise)) {
             if (this.currentPromise === promise) {
-                this.currentPromise = null;
-                this.callbacks = null;
+                this. dropCurrentTask();
             }
         }
     }
 
-    cancelAllTasks() {
-        this.promiseMap.clear();
+    dropCurrentTask() {
         this.currentPromise = null;
         this.callbacks = null;
+    }
+
+    emptyTaskQueue() {
+        this.promiseMap.clear();
+    }
+
+    cancelAllTasks() {
+        this.emptyTaskQueue();
+        this. dropCurrentTask();
     }
 
     createNewPromise(commandObj, transferList) {
@@ -174,6 +181,13 @@ export default class DjVuWorker {
             data: data,
             //time: Date.now(),
         });
+    }
+
+    revokeObjectURL(url) { // if an an ObjectURL was created inside a worker it can be revoked only inside this very worker
+        this.worker.postMessage({
+            command: this.revokeObjectURL.name,
+            url: url,
+        })
     }
 
     createDocumentUrl() {

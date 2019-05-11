@@ -7,6 +7,31 @@ import DjVuText from './chunks/DjVuText';
 import { ZPDecoder } from './ZPCodec';
 import DjVu from './DjVu';
 import { CorruptedFileDjVuError } from './DjVuErrors';
+import png from 'pngjs/browser';
+
+const offscreenCanvas = OffscreenCanvas ? new OffscreenCanvas(0, 0) : null;
+const ctx = offscreenCanvas ? offscreenCanvas.getContext('2d') : null;
+
+async function createBlobFromImageData(imageData) {
+    if (!offscreenCanvas) {
+        return null;
+    }
+    offscreenCanvas.width = imageData.width;
+    offscreenCanvas.height = imageData.height;
+    ctx.putImageData(imageData, 0, 0);
+    const blob = await offscreenCanvas.convertToBlob();
+    offscreenCanvas.width = 0;
+    offscreenCanvas.height = 0;
+    return blob;
+}
+
+self.allUrls = [];
+
+self.releaseAllUrls = () => {
+    for(const url of self.allUrls) {
+        URL.revokeObjectURL(url);
+    }
+}
 
 /**
  * Страница документа
@@ -69,6 +94,35 @@ export default class DjVuPage extends CompositeChunk {
         } else {
             return this.init().info.dpi;
         }
+    }
+
+    getHeight() {
+        return this.info ? this.info.height : this.init().info.height;
+    }
+
+    getWidth() {
+        return this.info ? this.info.width : this.init().info.width;
+    }
+
+    async createPngObjectUrl() {
+        var time = performance.now();
+        var imageData = this.getImageData();
+        var imageBlob = await createBlobFromImageData(imageData);
+        if (!imageBlob) {
+            const pngImage = png.PNG.sync.write(this.getImageData())
+            imageBlob = new Blob([pngImage.buffer]);
+        }
+        DjVu.IS_DEBUG && console.log("Png creation time = ", performance.now() - time);
+        var url = URL.createObjectURL(imageBlob);
+        self.allUrls.push(url);
+        return {
+            //url: URL.createObjectURL(new Blob([new ArrayBuffer(10 * 1024 * 1024)])),
+            url: url,
+            byteLength: imageBlob.size,
+            width: this.getWidth(),
+            height: this.getHeight(),
+            dpi: this.getDpi(),
+        };
     }
 
     // метод поиска зависимостей, то есть INCLChunk

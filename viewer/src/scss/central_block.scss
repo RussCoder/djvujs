@@ -16,6 +16,7 @@
         padding: 0.5em;
 
         @import "image_block";
+        @import "continuous_image_block";
 
         .text_block {
             overflow: auto;

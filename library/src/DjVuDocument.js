@@ -126,6 +126,18 @@ export default class DjVuDocument {
         }
     }
 
+    getPagesSizes() {
+        var sizes = this.pages.map(page => {
+            return {
+                width: page.getWidth(),
+                height: page.getHeight(),
+                dpi: page.getDpi(),
+            };
+        });
+        this.pages.forEach(page => page.reset());
+        return sizes;
+    }
+
     isBundled() {
         return this.dirm ? this.dirm.isBundled : true;
     }

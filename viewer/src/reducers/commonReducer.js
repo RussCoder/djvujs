@@ -13,10 +13,43 @@ const initialState = Object.freeze({
     contents: null,
     errorMessage: null,
     isHelpWindowShown: false,
+    continuousMode: true,
+    pagesList: [],
 });
 
 export default (state = initialState, action) => {
     switch (action.type) {
+
+        case Consts.DROP_PAGE_ACTION: {
+            const newPagesList = [...state.pagesList];
+            const index = action.pageNumber - 1;
+            if (newPagesList[index]) { // some pages (loaded as "last pages" of the previous saga) can not be in the state, but only in the registry in the saga class
+                newPagesList[index] = {
+                    width: newPagesList[index].width,
+                    height: newPagesList[index].height,
+                    dpi: newPagesList[index].dpi,
+                };
+            }
+            return { ...state, pagesList: newPagesList };
+        }
+
+        case Consts.PAGES_SIZES_ARE_GOTTEN:
+            return {
+                ...state,
+                isLoading: false,
+                pagesList: action.sizes,
+            };
+
+        case Consts.PAGE_IS_LOADED_ACTION:
+            if (state.pagesList[action.pageNumber - 1].url) { // if it has been already loaded we should avoid unnecessary updates
+                return state;
+            }
+            const newPagesList = [...state.pagesList];
+            newPagesList[action.pageNumber - 1] = action.pageData;
+            return {
+                ...state,
+                pagesList: newPagesList
+            };
 
         case Consts.SET_PAGE_ROTATION_ACTION:
             return {

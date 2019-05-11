@@ -2,12 +2,17 @@
     position: relative;
     border: 1px solid darkgray;
     overflow: hidden;
+    transform: translate3d(0, 0, 0); // just for performance optimization when continuos mode is enabled
 
     .complex_image_content {
         position: absolute;
         left: 50%;
         top: 50%;
         transform: translateX(-50%) translateY(-50%);
+
+        img {
+            display: block;
+        }
 
         &>canvas {
             display: block;
