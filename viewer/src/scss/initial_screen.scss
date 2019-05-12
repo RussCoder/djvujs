@@ -12,6 +12,17 @@
     .content {
         max-height: 100%;
 
+        .continuous_scroll_button {
+            height: 1em;
+            display: inline-flex;
+            flex-direction: column;
+            justify-content: center;
+            flex-wrap: nowrap;
+            justify-content: center;
+            overflow: hidden;
+            max-height: 100%;
+        }
+
         .header {
             text-align: center;
             font-size: 2em;
@@ -24,7 +35,11 @@
         }
 
         .update_message {
-            color: darkblue;
+            color: darkgreen;
+        }
+
+        .previous_update_message {
+            font-size: 0.5em;
         }
 
         div {

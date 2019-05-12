@@ -3,6 +3,8 @@ import React from 'react';
 import HelpButton from './HelpButton';
 import FileZone from './FileZone';
 import DjVu from '../DjVu';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faFileImage } from '@fortawesome/free-regular-svg-icons';
 
 class InitialScreen extends React.Component {
 
@@ -15,7 +17,19 @@ class InitialScreen extends React.Component {
                     <div className="header">{`DjVu.js Viewer v.${DjVu.Viewer.VERSION} welcomes you!`}</div>
                     <div className="djvujs_version">{`(powered with DjVu.js v.${DjVu.VERSION})`}</div>
 
-                    {isChromeExtension ? <div class="update_message">
+                    <div className="update_message">
+                        NEW!
+                        The continuous scroll mode was added. It's not enabled by default, since there still may be bugs,
+                        but you can try it out by by clicking on
+                        <span
+                            className={`continuous_scroll_button control_button`}
+                            title="Continuous scroll view mode"       
+                        >
+                            <FontAwesomeIcon icon={faFileImage} />
+                            <FontAwesomeIcon icon={faFileImage} />
+                        </span> icon.
+                    </div>
+                    {isChromeExtension ? <div className="previous_update_message">
                         UPDATE:
                         Now the Google Chrome version of the extension allows to open local files by a browser directly (via a double-click)!
                         But you have to enable the <strong>"Allow access to file URLs"</strong> option on the extension's options page.

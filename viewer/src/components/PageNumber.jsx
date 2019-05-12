@@ -41,7 +41,7 @@ export default class PageNumber extends React.Component {
             number = this.props.pagesQuantity;
         }
         if (number !== this.props.pageNumber) {
-            this.props.setNewPageNumber(number);
+            this.props.setNewPageNumber(number, true);
         }
     }
 

@@ -1,4 +1,4 @@
-import { INCLChunk, ColorChunk, CIDaChunk, IFFChunk, INFOChunk, CompositeChunk } from './chunks/IFFChunks';
+import { INCLChunk, ColorChunk, CIDaChunk, IFFChunk, INFOChunk, CompositeChunk, ErrorChunk } from './chunks/IFFChunks';
 import JB2Dict from './jb2/JB2Dict';
 import JB2Image from './jb2/JB2Image';
 import DjVuPalette from './chunks/DjVuPalette';
@@ -9,7 +9,7 @@ import DjVu from './DjVu';
 import { CorruptedFileDjVuError } from './DjVuErrors';
 import png from 'pngjs/browser';
 
-const offscreenCanvas = OffscreenCanvas ? new OffscreenCanvas(0, 0) : null;
+const offscreenCanvas = self.OffscreenCanvas ? new OffscreenCanvas(0, 0) : null;
 const ctx = offscreenCanvas ? offscreenCanvas.getContext('2d') : null;
 
 async function createBlobFromImageData(imageData) {
@@ -23,14 +23,6 @@ async function createBlobFromImageData(imageData) {
     offscreenCanvas.width = 0;
     offscreenCanvas.height = 0;
     return blob;
-}
-
-self.allUrls = [];
-
-self.releaseAllUrls = () => {
-    for(const url of self.allUrls) {
-        URL.revokeObjectURL(url);
-    }
 }
 
 /**
@@ -114,7 +106,6 @@ export default class DjVuPage extends CompositeChunk {
         }
         DjVu.IS_DEBUG && console.log("Png creation time = ", performance.now() - time);
         var url = URL.createObjectURL(imageBlob);
-        self.allUrls.push(url);
         return {
             //url: URL.createObjectURL(new Blob([new ArrayBuffer(10 * 1024 * 1024)])),
             url: url,
@@ -196,7 +187,11 @@ export default class DjVuPage extends CompositeChunk {
                 inclChunk.id === "Djbz" ? this.djbz = inclChunk : this.iffchunks.push(inclChunk);
                 this.dependencies.push(chunk.ref);
             } else if (id === "CIDa") {
-                chunk = new CIDaChunk(chunkBs);
+                try {
+                    chunk = new CIDaChunk(chunkBs);
+                } catch(e) {
+                    chunk = new ErrorChunk('CIDa', e);
+                }
             } else if (id === 'Djbz') {
                 chunk = this.djbz = new JB2Dict(chunkBs);
             } else if (id === 'FGbz') {

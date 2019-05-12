@@ -2,7 +2,7 @@
     position: relative;
     border: 1px solid darkgray;
     overflow: hidden;
-    transform: translate3d(0, 0, 0); // just for performance optimization when continuos mode is enabled
+    margin: 0 auto;
 
     .complex_image_content {
         position: absolute;

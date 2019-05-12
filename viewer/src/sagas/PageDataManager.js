@@ -1,37 +1,29 @@
 import { put, select } from 'redux-saga/effects';
 import Actions from "../actions/actions";
 import { get } from '../reducers/rootReducer';
+import Consts from '../constants/consts';
 
 const radius = 15;
 
-window.allLinks = [];
-
-window.releaseAllLinks = () => {
-    for (const url of window.allLinks) {
-        URL.revokeObjectURL(url);
-    }
-}
-
 export default class PageDataManager {
     constructor(djvuWorker, pagesCount) {
-        this.list = [];
-        this.maxLength = 5;
+        this._reset(djvuWorker, pagesCount);
+    }
+
+    _reset(djvuWorker, pagesCount) {
         this.pagesCount = pagesCount;
-        this.allPages = new Array(pagesCount);
+        this.allPages = {};
         this.djvuWorker = djvuWorker;
         this.obsoletePageNumbers = [];
 
         // a previous saga is cancelled on a new action, so we should keep the last promise in order to avoid fetching the same page twice
         this.lastLoadPagePromise = null;
         this.lastLoadPageNumber = null;
+    }
 
-        window.revokeAllObjectUrls = () => {
-            for (const url of window.allLinks) {
-                djvuWorker.revokeObjectURL(url);
-            }
-        }
-
-        window.djvuWorker = djvuWorker;
+    * reset() {
+        yield* this.dropAllPages();
+        this._reset(this.djvuWorker, this.pagesCount);
     }
 
     setPageNumber(pageNumber) {
@@ -68,6 +60,14 @@ export default class PageDataManager {
         }
     }
 
+    * dropAllPages() {
+        yield put({ type: Consts.DROP_ALL_PAGES_ACTION });
+        for (const pageNumber of Object.keys(this.allPages)) {
+            this.djvuWorker.revokeObjectURL(this.allPages[pageNumber].url);
+        }
+        this.allPages = {};
+    }
+
     * dropPage(pageNumber) {
         yield put(Actions.dropPageAction(pageNumber));
         this.djvuWorker.revokeObjectURL(this.allPages[pageNumber].url);
@@ -88,8 +88,6 @@ export default class PageDataManager {
         const [page, textZones] = yield this.lastLoadPagePromise;
         page.textZones = textZones;
         this.allPages[this.lastLoadPageNumber] = page;
-        window.allLinks.push(page.url);
-        console.log('Loaded page', this.lastLoadPageNumber);
         this.lastLoadPagePromise = null;
         this.lastLoadPageNumber = null;
     }
@@ -103,7 +101,6 @@ export default class PageDataManager {
             this.lastLoadPageNumber = pageNumber;
 
             yield* this.loadPageFromLastPromise();
-            console.log("DIRECTLY");
             yield* this.removeObsoletePagesIfRequired();
         }
 
@@ -114,9 +111,7 @@ export default class PageDataManager {
         // the process of loading can't be stopped so it's by all means better
         // to save the page to the registry, even if it will not be used soon
         if (this.lastLoadPagePromise) {
-            console.log('LOAD LAST PAGE', this.lastLoadPageNumber);
             yield* this.loadPageFromLastPromise();
-            console.log('SAGA AFTER LAST PAGE', time);
         }
 
         const state = yield select();
@@ -128,24 +123,19 @@ export default class PageDataManager {
         const span = Math.min(this.pageNumber - this.leftNumber, this.rightNumber - this.pageNumber);
 
         yield* this.loadPage(this.pageNumber);
-        console.log('SAGA ', time);
 
         for (let i = 1; i <= span; i++) {
             yield* this.loadPage(this.pageNumber + i);
-            console.log('SAGA ', time);
             yield* this.loadPage(this.pageNumber - i);
-            console.log('SAGA ', time);
         }
 
         if (this.pageNumber - this.leftNumber < this.rightNumber - this.pageNumber) { // if we are nearer to the beginning
             for (let i = this.leftNumber + 2 * span + 1; i <= this.rightNumber; i++) { // load pages in a usual order
                 yield* this.loadPage(i);
-                console.log('SAGA ', time);
             }
         } else {
             for (let i = this.rightNumber - 2 * span - 1; i >= this.leftNumber; i--) { // else load pages in a reversed order
                 yield* this.loadPage(i);
-                console.log('SAGA ', time);
             }
         }
     }

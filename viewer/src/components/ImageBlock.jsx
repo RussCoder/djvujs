@@ -2,11 +2,14 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import cx from 'classnames';
+import memoize from 'memoize-one';
 
 import Actions from '../actions/actions';
 import { get } from '../reducers/rootReducer';
 import Consts from '../constants/consts';
 import ComplexImage from './ComplexImage';
+import VirtualList from './VirtualList';
+import { createDeferredHandler } from './helpers';
 
 /**
  * CanvasImage wrapper. Handles user scaling of the image and grabbing.
@@ -19,10 +22,10 @@ class ImageBlock extends React.Component {
         userScale: PropTypes.number
     };
 
-    pageElementList = {};
-    _pageRefs = {};
-
     getSnapshotBeforeUpdate() {
+        if (!this.wrapper) {
+            return null;
+        }
         let horizontalRatio = null;
         if (this.wrapper.scrollWidth > this.wrapper.clientWidth) {
             horizontalRatio = (this.wrapper.scrollLeft + this.wrapper.clientWidth / 2) / this.wrapper.scrollWidth;
@@ -36,20 +39,19 @@ class ImageBlock extends React.Component {
         return { horizontalRatio, verticalRatio };
     }
 
-    scrollCurrentPageIntoViewIfRequired(prevProps) {
-        const currentPageElement = this.pageElementList[this.props.currentPageNumber];
-        if (!currentPageElement || this.props.currentPageNumber === prevProps.currentPageNumber) {
-            return;
-        }
-        const pageRect = currentPageElement.getBoundingClientRect();
-        const wrapperRect = this.wrapper.getBoundingClientRect();
-
-        if (!this.isVisible(pageRect, wrapperRect)) {
-            currentPageElement.scrollIntoView();
+    scrollCurrentPageIntoViewIfRequired() {
+        if (this.props.isContinuousScrollMode 
+            && this.props.isPageNumberSetManually 
+            && this.virtualList
+            && !this.virtualList.isItemVisible(this.props.currentPageNumber - 1)) {
+            this.virtualList.scrollToItem(this.props.currentPageNumber - 1);
         }
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
+        if (!this.wrapper) {
+            return;
+        }
         var widthDiff = this.wrapper.scrollWidth - this.wrapper.clientWidth;
         if (widthDiff > 0) {
             this.wrapper.scrollLeft = snapshot.horizontalRatio ? (snapshot.horizontalRatio * this.wrapper.scrollWidth - this.wrapper.clientWidth / 2) : (widthDiff / 2);
@@ -78,25 +80,24 @@ class ImageBlock extends React.Component {
     }
 
     onWheel = (e) => {
-        console.log(e.nativeEvent.cancelable);
         if (this.scrollTimeStamp) {
-            if (e.nativeEvent.timeStamp - this.scrollTimeStamp < 100) {
-                e.nativeEvent.preventDefault();
-                this.scrollTimeStamp = e.nativeEvent.timeStamp;
+            if (e.timeStamp - this.scrollTimeStamp < 100) {
+                e.preventDefault();
+                this.scrollTimeStamp = e.timeStamp;
                 return;
             } else {
                 this.wrapper.style.overflow = null;
                 this.scrollTimeStamp = null;
             }
         }
-        if (!e.ctrlKey && e.nativeEvent.cancelable) {
+        if (!e.ctrlKey && e.cancelable) {
             if ((this.wrapper.scrollHeight === this.wrapper.scrollTop + this.wrapper.clientHeight) && e.deltaY > 0) {
                 e.preventDefault();
-                this.scrollTimeStamp = e.nativeEvent.timeStamp;
+                this.scrollTimeStamp = e.timeStamp;
                 this.props.dispatch(Actions.goToNextPageAction());
             } else if (this.wrapper.scrollTop === 0 && e.deltaY < 0) {
                 e.preventDefault();
-                this.scrollTimeStamp = e.nativeEvent.timeStamp;
+                this.scrollTimeStamp = e.timeStamp;
                 this.scrollToBottomOnUpdate = true;
                 this.props.dispatch(Actions.goToPreviousPageAction());
             }
@@ -124,6 +125,9 @@ class ImageBlock extends React.Component {
     };
 
     startMoving = (e) => {
+        if (!this.isGrabMode()) {
+            return;
+        }
         e.preventDefault();
         this.initialGrabbingState = {
             clientX: e.clientX,
@@ -136,60 +140,40 @@ class ImageBlock extends React.Component {
     };
 
     finishMoving = (e) => {
+        if (!this.isGrabMode()) {
+            return;
+        }
         e.preventDefault();
         this.initialGrabbingState = null;
         this.wrapper.classList.remove('grabbing');
         this.wrapper.removeEventListener('mousemove', this.handleMoving);
     };
 
-    wrapperRef = (node) => this.wrapper = node;
+    wrapperRef = (node) => {
+        this.wrapper = node;
+        if (node) {
+            node.removeEventListener('mousedown', this.startMoving);
+            node.removeEventListener('mouseup', this.finishMoving);
+            node.removeEventListener('mouseleave', this.finishMoving);
+
+            node.addEventListener('mousedown', this.startMoving);
+            node.addEventListener('mouseup', this.finishMoving);
+            node.addEventListener('mouseleave', this.finishMoving);
+            node.removeEventListener('wheel', this.onWheel);
+            node.addEventListener('wheel', this.onWheel);
+
+            if (this.props.isContinuousScrollMode) {
+                node.removeEventListener('scroll', this.onScroll);
+                node.addEventListener('scroll', this.onScroll);
+            }
+        }
+    }
+
+    isGrabMode() {
+        return this.props.cursorMode === Consts.GRAB_CURSOR_MODE;
+    }
 
     complexImageRef = node => this.complexImage = node;
-
-    downSearch(wrapperRect) {
-        console.log('DOWN SEARCH');
-        for (let number = this.props.currentPageNumber + 1; ; number++) {
-            const page = this.pageElementList[number];
-            if (!page) {
-                return null;
-            }
-            const pageRect = page.getBoundingClientRect();
-            if (this.isVisible(pageRect, wrapperRect)) {
-                return number;
-            }
-        }
-    }
-
-    upSearch(wrapperRect, currentPageVisibility) {
-        console.log('UP SEARCH');
-        let lastVisiblePageNumber = currentPageVisibility ? this.props.currentPageNumber : null;
-
-        for (let number = this.props.currentPageNumber - 1; ; number--) {
-            const page = this.pageElementList[number];
-            if (!page) {
-                return lastVisiblePageNumber;
-            }
-            const pageRect = page.getBoundingClientRect();
-
-            if (this.isVisible(pageRect, wrapperRect)) {
-                lastVisiblePageNumber = number;
-            } else if (lastVisiblePageNumber) {
-                return lastVisiblePageNumber;
-            }
-        }
-    }
-
-    /**
-     * A page is considered visible, if there is at least 25% of it is shown and it's at the top of the viewport (actual when there are many small pages, or a scale is small)
-     * or if it takes more than 50% if the viewport (actual when there are bigger pages, the most common situation)
-     */
-    isVisible(pageRect, wrapperRect) {
-        return (
-            ((pageRect.bottom - wrapperRect.top) >= 0.25 * pageRect.height && pageRect.bottom <= wrapperRect.bottom)
-            || (pageRect.top > wrapperRect.top && (wrapperRect.bottom - pageRect.top) >= wrapperRect.height * 0.5)
-            || (pageRect.bottom < wrapperRect.bottom && (pageRect.bottom - wrapperRect.top) >= wrapperRect.height * 0.5)
-        );
-    }
 
     setNewPageNumber(pageNumber) {
         if (pageNumber && pageNumber !== this.props.currentPageNumber) {
@@ -198,99 +182,78 @@ class ImageBlock extends React.Component {
     }
 
     _onScroll = e => {
-        this._lastScrollTimestamp = null;
-        const wrapperRect = this.wrapper.getBoundingClientRect();
-        const currentPage = this.pageElementList[this.props.currentPageNumber];
-        if(!currentPage) {
-            return;
-        }
-        const pageRect = currentPage.getBoundingClientRect();
-
-        const currentPageVisibility = this.isVisible(pageRect, wrapperRect);
-        let newCurrentPageNumber = null;
-        if (currentPageVisibility) {
-            newCurrentPageNumber = this.upSearch(wrapperRect, currentPageVisibility);
-        } else if (pageRect.top < wrapperRect.top) {
-            newCurrentPageNumber = this.downSearch(wrapperRect, currentPageVisibility);
-        } else {
-            newCurrentPageNumber = this.upSearch(wrapperRect, currentPageVisibility);
-        }
-
-        this.setNewPageNumber(newCurrentPageNumber);
+        this._firstScrollTimestamp = null;
+        this.setNewPageNumber(this.virtualList.getCurrentVisibleItemIndex() + 1);
     }
 
-    onScroll = (e) => { // invoke on last scroll event, but not less frequently than once within 500 ms
-        if (this._lastScrollTimestamp && e.nativeEvent.timeStamp - this._lastScrollTimestamp > 500) {
-            clearTimeout(this.scrollTimeout);
-            this._onScroll();
-        } else {
-            if (!this._lastScrollTimestamp) {
-                this._lastScrollTimestamp = e.nativeEvent.timeStamp;
-            }
-            clearTimeout(this.scrollTimeout);
-            this.scrollTimeout = setTimeout(this._onScroll, 50);
-        }
-    }
+    onScroll = createDeferredHandler(this._onScroll)
 
-    getPageRef = (number) => { // as optimization to avoid recreation of an arrow function on each render
-        if (!this._pageRefs[number]) {
-            this._pageRefs[number] = node => this.pageElementList[number] = node;
-        }
+    getItemSizes = memoize((pageList, userScale, rotation) => {
+        const isRotated = rotation === 90 || rotation === 270;
+        return this.props.pageList.map(page => {
+            const scaleFactor = Consts.DEFAULT_DPI / page.dpi * userScale;
+            return Math.floor((isRotated ? page.width : page.height) * scaleFactor) + 6; // 2px for top and bottom image borders, 4px for vertical paddings of the wrapper element
+        })
+    });
 
-        return this._pageRefs[number];
-    }
+    virtualListRef = component => this.virtualList = component;
+
+    itemRenderer = React.memo(({ index, style, data: pageData }) => {
+        return (
+            <div style={style} className="continuous_scroll_item" key={index}>
+                <ComplexImage
+                    imageUrl={pageData.url}
+                    imageDpi={pageData.dpi}
+                    imageWidth={pageData.width}
+                    imageHeight={pageData.height}
+                    userScale={this.props.userScale}
+                    rotation={this.props.rotation}
+                    textZones={pageData.textZones}
+                />
+            </div>
+        )
+    });
 
     render() {
         const isGrabMode = this.props.cursorMode === Consts.GRAB_CURSOR_MODE;
         const classes = {
-            image_block: !this.props.continuousMode,
-            continuous_image_block: this.props.continuousMode,
+            image_block: true,
             grab: isGrabMode
         };
-        return (
-            <div
-                className={cx(classes)}
-                onWheel={this.onWheel}
-                onScroll={this.onScroll}
-                ref={this.wrapperRef}
-                onMouseDown={isGrabMode ? this.startMoving : null}
-                onMouseUp={isGrabMode ? this.finishMoving : null}
-                onMouseLeave={isGrabMode ? this.finishMoving : null}
-            >
-                {this.props.continuousMode ? this.props.pagesList.map((pageData, i) => {
-                    return (
-                        <div className="complex_image_wrapper" key={i}>
-                            <ComplexImage
-                                imageUrl={pageData.url}
-                                imageDpi={pageData.dpi}
-                                imageWidth={pageData.width}
-                                imageHeight={pageData.height}
-                                userScale={this.props.userScale}
-                                rotation={this.props.rotation}
-                                outerRef={this.getPageRef(i + 1)}
-                                textZones={pageData.textZones}
-                            />
-                        </div>
-                    );
-                }) :
-                    this.props.imageData ?
-                        <div
-                            className="complex_image_wrapper"
-                            ref={this.complexImageRef}
-                            style={{ opacity: 0 }} // is changed in the ComponentDidUpdate
-                        >
-                            <ComplexImage {...this.props} />
-                        </div> : null}
-            </div>
-        );
+
+        const { pageSizeList, pageList, userScale, rotation } = this.props;
+        return this.props.isContinuousScrollMode && pageList.length ?
+            <VirtualList
+                ref={this.virtualListRef}
+                outerRef={this.wrapperRef}
+                className={cx({ grab: isGrabMode })}
+                itemSizes={this.getItemSizes(pageSizeList, userScale, rotation)}
+                data={pageList}
+                itemRenderer={this.itemRenderer}
+            />
+            : this.props.imageData ?
+                <div
+                    className={cx(classes)}
+                    ref={this.wrapperRef}
+                >
+                    <div
+                        className="complex_image_wrapper"
+                        ref={this.complexImageRef}
+                        style={{ opacity: 0 }} // is changed in the ComponentDidUpdate
+                    >
+                        <ComplexImage {...this.props} />
+                    </div>
+                </div> : null;
     }
 }
 
 export default connect(
     state => ({
         currentPageNumber: get.currentPageNumber(state),
-        continuousMode: get.continuousMode(state),
-        pagesList: get.pagesList(state),
+        isPageNumberSetManually: get.isPageNumberSetManually(state),
+        isContinuousScrollMode: get.isContinuousScrollMode(state),
+        pageList: get.pageList(state),
+        pageSizeList: get.pageSizeList(state),
         imageData: get.imageData(state),
         imageDpi: get.imageDpi(state),
         userScale: get.userScale(state),

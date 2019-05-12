@@ -69,4 +69,22 @@ body.disable_scroll_djvujs {
         @extend .icon_button;
         margin: 0 0.5em;
     }
+
+    .virtual_list {
+        overflow: auto;
+        width: 100%;
+        height: 100%;
+
+        &>div {
+            min-width: 100%;
+            position: relative;
+        }
+
+        .continuous_scroll_item {
+            box-sizing: border-box;
+            min-width: 100%;
+            padding: 2px 0;
+            transform: translate3d(0, 0, 0); // just for performance optimization when continuos mode is enabled
+        }
+    }
 }

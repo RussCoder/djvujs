@@ -57,14 +57,14 @@ const Actions = {
     goToNextPageAction: () => (dispatch, getState) => {
         const state = getState();
         if (get.currentPageNumber(state) < get.pagesQuantity(state)) {
-            dispatch(Actions.setNewPageNumberAction(get.currentPageNumber(state) + 1));
+            dispatch(Actions.setNewPageNumberAction(get.currentPageNumber(state) + 1, true));
         }
     },
 
     goToPreviousPageAction: () => (dispatch, getState) => {
         const state = getState();
         if (get.currentPageNumber(state) > 1) {
-            dispatch(Actions.setNewPageNumberAction(get.currentPageNumber(state) - 1));
+            dispatch(Actions.setNewPageNumberAction(get.currentPageNumber(state) - 1, true));
         }
     },
 
@@ -107,9 +107,10 @@ const Actions = {
         fileName: fileName
     }),
 
-    setNewPageNumberAction: (pageNumber) => ({
+    setNewPageNumberAction: (pageNumber, isPageNumberSetManually = false) => ({
         type: Consts.SET_NEW_PAGE_NUMBER_ACTION,
-        pageNumber: pageNumber
+        pageNumber: pageNumber,
+        isPageNumberSetManually: isPageNumberSetManually,
     }),
 
     setPageByUrlAction(url) {
@@ -144,11 +145,6 @@ const Actions = {
             isFullPageView: isFullPageView
         });
     },
-
-    toggleTextModeAction: (isTextMode) => ({
-        type: Consts.TOGGLE_TEXT_MODE_ACTION,
-        isTextMode: isTextMode
-    })
 };
 
 export default Actions;

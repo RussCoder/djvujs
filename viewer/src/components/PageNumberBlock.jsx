@@ -17,7 +17,7 @@ class PageNumberBlock extends React.Component {
 
     setNewPageNumber(number) {
         if (number >= 1 && number <= this.props.pagesQuantity) {
-            this.props.setNewPageNumber(number);
+            this.props.setNewPageNumber(number, true);
         }
     }
 

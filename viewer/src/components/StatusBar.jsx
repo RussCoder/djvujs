@@ -8,22 +8,25 @@ import { get } from '../reducers/rootReducer';
 class StatusBar extends React.Component {
 
     static propTypes = {
-        isLoading: PropTypes.bool.isRequired
+        isLoading: PropTypes.bool.isRequired,
+        isContinuousScrollMode: PropTypes.bool.isRequired,
     };
 
     render() {
+        const isLoading = this.props.isLoading && !this.props.isContinuousScrollMode;
         return (
             <div className="status_bar">
                 <FontAwesomeIcon
-                    icon={this.props.isLoading ? faSpinner : faCheck}
-                    pulse={this.props.isLoading ? true : false}
+                    icon={isLoading ? faSpinner : faCheck}
+                    pulse={isLoading ? true : false}
                 />
-                <span className="message">{this.props.isLoading ? "Loading..." : "Ready"}</span>
+                <span className="message">{isLoading ? "Loading..." : "Ready"}</span>
             </div>
         );
     }
 }
 
 export default connect(state => ({
-    isLoading: get.isLoading(state)
+    isLoading: get.isLoading(state),
+    isContinuousScrollMode: get.isContinuousScrollMode(state),
 }))(StatusBar);

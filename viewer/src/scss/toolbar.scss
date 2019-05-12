@@ -3,16 +3,16 @@
 .toolbar {
     flex: 0 0 auto;
     border: 1px solid gray;
-    padding: 0.5em;
+    padding: 0.3em;
     display: flex;
     flex-wrap: nowrap;
     justify-content: space-between;
     align-items: center;
     margin-top: 0.5em;
     width: 90%;
-    height: 1.5em;
+    height: 2em;
     text-align: center;
-    max-width: 40em;
+    max-width: 45em;
 
     .scale_gizmo {
         display: flex;
@@ -51,5 +51,28 @@
             }
         }
 
+    }
+
+    .view_mode_group {
+        display: flex;
+        align-items: center;
+        height: 100%;
+
+        span {
+            opacity: 0.5;
+
+            &.active {
+                opacity: 1;
+            }
+        }
+
+        .continuous_scroll_button {
+            display: inline-flex;
+            flex-direction: column;
+            flex-wrap: nowrap;
+            justify-content: center;
+            overflow: hidden;
+            max-height: 100%;
+        }
     }
 }

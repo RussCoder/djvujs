@@ -38,7 +38,7 @@ class RootSaga {
     * fetchPageData() {
         const state = yield select();
 
-        if (get.continuousMode(state)) {
+        if (get.isContinuousScrollMode(state)) {
             yield* this.pageDataManager.startDataFetching(Date.now());
         } else {
             const isTextMode = get.isTextMode(state);
@@ -73,11 +73,7 @@ class RootSaga {
         }
     }
 
-    * fetchPageTextIfRequired(action) {
-        if (!action.isTextMode) {
-            return;
-        }
-
+    * fetchPageTextIfRequired() {
         const state = yield select();
         const currentPageNumber = get.currentPageNumber(state);
         const pageText = get.pageText(state);
@@ -97,14 +93,19 @@ class RootSaga {
 
     * createDocumentFromArrayBufferAction(action) {
         this.djvuWorker.cancelAllTasks();
-        this.pagesCache.resetPagesCache();
+        this.resetWorker();
 
         yield this.djvuWorker.createDocument(action.arrayBuffer, action.options);
-        const pagesQuantity = yield this.djvuWorker.doc.getPagesQuantity().run();
+        const [pagesQuantity, isBundled] = yield this.djvuWorker.run(
+            this.djvuWorker.doc.getPagesQuantity(),
+            this.djvuWorker.doc.isBundled(),
+        );
+
         yield put({
             type: Consts.DOCUMENT_CREATED_ACTION,
             pagesQuantity: pagesQuantity,
-            fileName: action.fileName
+            fileName: action.fileName,
+            isIndirect: !isBundled,
         });
 
         if (this.callbacks['document_created']) { // for outer API
@@ -113,7 +114,8 @@ class RootSaga {
         }
 
         const state = yield select();
-        if (get.continuousMode(state)) {
+        this.pageDataManager = null; // we don't have to reset it, since the worker was recreated and all memory was release in any case
+        if (get.isContinuousScrollMode(state)) {
             yield* this.prepareForContinuousMode();
         }
 
@@ -123,15 +125,20 @@ class RootSaga {
             contents: contents
         });
 
+        yield* this.resetCurrentPageNumber();
+    }
+
+    * resetCurrentPageNumber() {
         // set the current number to start page fetching saga
         // fetchPageData should be called via yield* directly, otherwise it won't be cancelled by takeLatest effect
-        yield put(Actions.setNewPageNumberAction(get.currentPageNumber(state))); // set the current number to start page fetching saga
+        const state = yield select();
+        yield put(Actions.setNewPageNumberAction(get.currentPageNumber(state), true)); // set the current number to start page fetching saga   
     }
 
     * setPageByUrl(action) {
         const pageNumber = yield this.djvuWorker.getPageNumberByUrl(action.url);
         if (pageNumber !== null) {
-            yield put(Actions.setNewPageNumberAction(pageNumber));
+            yield put(Actions.setNewPageNumberAction(pageNumber, true));
         }
     }
 
@@ -169,14 +176,41 @@ class RootSaga {
         this.callbacks[action.callbackName] = action.callback;
     }
 
+    * switchToContinuosScrollMode() {
+        this.djvuWorker.cancelAllTasks();
+        if (!this.pageDataManager) {
+            yield* this.prepareForContinuousMode();
+        }
+        this.pagesCache.resetPagesCache();
+        yield* this.resetCurrentPageNumber();
+    }
+
+    * switchToSinglePageMode() {
+        this.djvuWorker.cancelAllTasks();
+        if (this.pageDataManager) {
+            yield* this.pageDataManager.reset();
+        }
+        yield* this.resetCurrentPageNumber();
+    }
+
+    * switchToTextMode() {
+        this.djvuWorker.cancelAllTasks();
+        if (this.pageDataManager) {
+            yield* this.pageDataManager.reset();
+        }
+        yield* this.fetchPageTextIfRequired();
+    }
+
     * main() {
         yield takeLatest(Consts.CREATE_DOCUMENT_FROM_ARRAY_BUFFER_ACTION, this.withErrorHandler(this.createDocumentFromArrayBufferAction));
-        yield takeLatest(Consts.TOGGLE_TEXT_MODE_ACTION, this.withErrorHandler(this.fetchPageTextIfRequired));
         yield takeLatest(Consts.SET_NEW_PAGE_NUMBER_ACTION, this.withErrorHandler(this.fetchPageData));
         yield takeLatest(Consts.SET_PAGE_BY_URL_ACTION, this.withErrorHandler(this.setPageByUrl));
         yield takeLatest(Consts.SAVE_DOCUMENT_ACTION, this.withErrorHandler(this.saveDocument));
         yield takeLatest(Consts.CLOSE_DOCUMENT_ACTION, this.withErrorHandler(this.resetWorker));
         yield takeLatest(Consts.SET_API_CALLBACK_ACTION, this.withErrorHandler(this.setCallback));
+        yield takeLatest(Consts.ENABLE_CONTINUOUS_SCROLL_MODE_ACTION, this.withErrorHandler(this.switchToContinuosScrollMode));
+        yield takeLatest(Consts.ENABLE_SINGLE_PAGE_MODE_ACTION, this.withErrorHandler(this.switchToSinglePageMode));
+        yield takeLatest(Consts.ENABLE_TEXT_MODE_ACTION, this.withErrorHandler(this.switchToTextMode));
     }
 }
 

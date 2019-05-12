@@ -13,42 +13,26 @@ const initialState = Object.freeze({
     contents: null,
     errorMessage: null,
     isHelpWindowShown: false,
-    continuousMode: true,
-    pagesList: [],
+    isContinuousScrollMode: false,
+    isIndirect: false,
 });
 
 export default (state = initialState, action) => {
     switch (action.type) {
 
-        case Consts.DROP_PAGE_ACTION: {
-            const newPagesList = [...state.pagesList];
-            const index = action.pageNumber - 1;
-            if (newPagesList[index]) { // some pages (loaded as "last pages" of the previous saga) can not be in the state, but only in the registry in the saga class
-                newPagesList[index] = {
-                    width: newPagesList[index].width,
-                    height: newPagesList[index].height,
-                    dpi: newPagesList[index].dpi,
-                };
-            }
-            return { ...state, pagesList: newPagesList };
-        }
+        case Consts.ENABLE_CONTINUOUS_SCROLL_MODE_ACTION:
+            return { ...state, isContinuousScrollMode: true, isTextMode: false };
+
+        case Consts.ENABLE_SINGLE_PAGE_MODE_ACTION:
+            return { ...state, isContinuousScrollMode: false, isTextMode: false };
+
+        case Consts.ENABLE_TEXT_MODE_ACTION:
+            return { ...state, isContinuousScrollMode: false, isTextMode: true };
 
         case Consts.PAGES_SIZES_ARE_GOTTEN:
             return {
                 ...state,
                 isLoading: false,
-                pagesList: action.sizes,
-            };
-
-        case Consts.PAGE_IS_LOADED_ACTION:
-            if (state.pagesList[action.pageNumber - 1].url) { // if it has been already loaded we should avoid unnecessary updates
-                return state;
-            }
-            const newPagesList = [...state.pagesList];
-            newPagesList[action.pageNumber - 1] = action.pageData;
-            return {
-                ...state,
-                pagesList: newPagesList
             };
 
         case Consts.SET_PAGE_ROTATION_ACTION:
@@ -88,8 +72,10 @@ export default (state = initialState, action) => {
                 ...initialState,
                 isLoading: true,
                 isFullPageView: state.isFullPageView,
+                isContinuousScrollMode: state.isContinuousScrollMode,
                 pagesQuantity: action.pagesQuantity,
-                fileName: action.fileName
+                fileName: action.fileName,
+                isIndirect: action.isIndirect,
             };
 
         case Consts.CLOSE_DOCUMENT_ACTION:
@@ -114,12 +100,6 @@ export default (state = initialState, action) => {
             return {
                 ...state,
                 isFullPageView: action.isFullPageView
-            }
-
-        case Consts.TOGGLE_TEXT_MODE_ACTION:
-            return {
-                ...state,
-                isTextMode: action.isTextMode
             }
 
         case Consts.ERROR_ACTION:

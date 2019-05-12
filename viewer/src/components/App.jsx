@@ -43,10 +43,10 @@ class App extends Component {
                                 <LeftPanel />
                                 <div className="page_zone">
                                     {this.props.pageError ? <ErrorPage pageNumber={this.props.pageNumber} error={this.props.pageError} /> :
-                                        this.props.continuousMode ? <ImageBlock /> :
+                                        this.props.isContinuousScrollMode ? <ImageBlock /> :
                                             this.props.isTextMode ? <TextBlock text={this.props.pageText} /> :
                                                 this.props.imageData ? <ImageBlock /> : null}
-                                    {(this.props.isLoading && !this.props.isTextMode && !this.props.continuousMode) ? <LoadingLayer /> : null}
+                                    {(this.props.isLoading && !this.props.isTextMode && !this.props.isContinuousScrollMode) ? <LoadingLayer /> : null}
                                 </div>
                             </div>
                             <Toolbar />
@@ -74,6 +74,6 @@ export default connect(
         pageText: get.pageText(state),
         errorHeader: get.errorHeader(state),
         errorMessage: get.errorMessage(state),
-        continuousMode: get.continuousMode(state),
+        isContinuousScrollMode: get.isContinuousScrollMode(state),
     })
 )(App);

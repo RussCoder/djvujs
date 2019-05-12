@@ -129,3 +129,14 @@ export class INCLChunk extends IFFChunk {
  * Обычно содержит в себе информацию о программе-кодировщике
  */
 export class CIDaChunk extends INCLChunk { }
+
+export class ErrorChunk {
+    constructor(id, e) {
+        this.id = id;
+        this.e = e;
+    }
+
+    toString() {
+        return `Error creating ${this.id}: ${this.e.toString()}\n`;
+    }
+}
