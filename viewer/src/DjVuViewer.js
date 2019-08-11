@@ -8,7 +8,7 @@ import { loadFile } from './utils';
 
 export default class DjVuViewer {
 
-    static VERSION = '0.3.0';
+    static VERSION = '0.3.1';
 
     constructor() {
         this.store = configureStore();
@@ -53,10 +53,19 @@ export default class DjVuViewer {
             var buffer = await loadFile(url, (e) => {
                 this.store.dispatch(Actions.fileLoadingProgressAction(e.loaded, e.total));
             });
-            var res = /[^/]*$/.exec(url.trim());
+            var res = /[^/#]*(?=#|$)/.exec(url.trim());
             var baseUrl = new URL('./', url).href;
             config.djvuOptions = { baseUrl: baseUrl };
             await this.loadDocument(buffer, res ? res[0] : '***', config);
+            // now we should process #page=some_number case
+            const hash = new URL(url.toLowerCase()).hash;
+            if (hash) {
+                const page = /(?:page=)(\d+)$/.exec(hash);
+                const pageNumber = page ? +page[1] : null;
+                if (pageNumber) {
+                    this.store.dispatch(Actions.setNewPageNumberAction(pageNumber, true));
+                }
+            }
         } catch (e) {
             this.store.dispatch(Actions.errorAction(e));
         } finally {
