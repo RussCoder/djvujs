@@ -1,5 +1,14 @@
 # DjVu.js Viewer Changelog
 
+## v.0.3.1 (11.08.2019)
+- A page number can be set in the URL, e.g. some.djvu#page=10.
+
+## v.0.3.0 (12.05.2019)
+- Continuous scroll mode.
+
+## v.0.2.5 (30.03.2019)
+- Page scale can be set programmatically.
+
 ## v.0.2.4 (15.11.2018)
 
 - Loading layer with a short delay. 

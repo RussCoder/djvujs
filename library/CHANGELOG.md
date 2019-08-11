@@ -1,5 +1,25 @@
 # DjVu.js Library Changelog
 
+## v.0.4.0 (18.05.2019)
+
+- png.js was integrated into djvu.js to create png files (and Object URLs to them) of the pages inside a worker. It's required for the continuous scroll mode, since a png file is much less than a raw ImageData object.
+
+## v.0.3.5 (03.04.2019)
+
+- Fixed a bug having taken place when there were more than 1 block in bzz encoded data.
+
+## v.0.3.4 (30.03.2019)
+
+- Now XHR is used instead of fetch(), since the latter can't load local files (i.e. file:/// urls).
+
+## v.0.3.3 (02.03.2019)
+
+- Fixed a bug. Now empty edges are removed for all symbols added to the dict.
+
+## v.0.3.2 (11.02.2019)
+
+- Fixed a bug when baseline (y coord) was computed incorrectly.
+
 ## v.0.3.1 (15.11.2018)
 
 - New method for getting quantity of pages.
