@@ -8,7 +8,7 @@ import { loadFile } from './utils';
 
 export default class DjVuViewer {
 
-    static VERSION = '0.3.1';
+    static VERSION = '0.3.2';
 
     constructor() {
         this.store = configureStore();

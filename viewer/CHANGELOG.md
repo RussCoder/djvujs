@@ -1,5 +1,8 @@
 # DjVu.js Viewer Changelog
 
+## v.0.3.2 (26.10.2019)
+- Fixed a bug due to which it was impossible to create many instance of the viewer on the same page.
+
 ## v.0.3.1 (11.08.2019)
 - A page number can be set in the URL, e.g. some.djvu#page=10.
 
