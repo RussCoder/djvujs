@@ -6,3 +6,4 @@ build
 extension
 compile
 _src/assets
+.idea

@@ -1,7 +1,7 @@
 doctype
 html
   head
-    != partial("../_partials/head", {title: "DjVu.js - Открывайте файлы DjVu онлайн!"})
+    != partial("../_partials/head", {title: "DjVu.js - Открытие и просмотр файлов DjVu онлайн!"})
   body
     header 
         != partial("../_partials/lang_block")
@@ -15,4 +15,4 @@ html
     div.main 
         != yield
     footer
-        | DjVu.js 2018 | Возможно, все права защищены. 
+        | DjVu.js 2016 - !{'<script>document.write(new Date().getFullYear())</script>'} | Возможно, все права защищены. 

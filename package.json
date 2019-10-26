@@ -7,7 +7,7 @@
     "static": "harp server ./ --port 9000"
   },
   "devDependencies": {
-    "fs-extra": "^7.0.0",
-    "harp": "^0.29.0"
+    "fs-extra": "^8.1.0",
+    "harp": "^0.31.0"
   }
 }
