@@ -33,6 +33,7 @@ const Consts = {
     ENABLE_CONTINUOUS_SCROLL_MODE_ACTION: null,
     ENABLE_SINGLE_PAGE_MODE_ACTION: null,
     ENABLE_TEXT_MODE_ACTION: null,
+    OPTIONS_UPDATED_ACTION: null,
 
     SET_API_CALLBACK_ACTION: null, // A special action for interaction with sagas. Used for program API of the viewer, look at the DjVuViewer.js
 };

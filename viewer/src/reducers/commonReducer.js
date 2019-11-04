@@ -15,10 +15,17 @@ const initialState = Object.freeze({
     isHelpWindowShown: false,
     isContinuousScrollMode: false,
     isIndirect: false,
+    options: {
+        interceptHttpRequests: false,
+    },
 });
 
 export default (state = initialState, action) => {
+    const payload = action.payload;
     switch (action.type) {
+
+        case Consts.OPTIONS_UPDATED_ACTION:
+            return { ...state, options: payload };
 
         case Consts.ENABLE_CONTINUOUS_SCROLL_MODE_ACTION:
             return { ...state, isContinuousScrollMode: true, isTextMode: false };
@@ -76,12 +83,14 @@ export default (state = initialState, action) => {
                 pagesQuantity: action.pagesQuantity,
                 fileName: action.fileName,
                 isIndirect: action.isIndirect,
+                options: state.options,
             };
 
         case Consts.CLOSE_DOCUMENT_ACTION:
             return {
                 ...initialState,
-                isFullPageView: state.isFullPageView
+                isFullPageView: state.isFullPageView,
+                options: state.options,
             };
 
         case Consts.CONTENTS_IS_GOTTEN_ACTION:

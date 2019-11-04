@@ -1,9 +1,15 @@
-window.onload = function () {
-    window.ViewerInstance = new window.DjVu.Viewer();
-    window.ViewerInstance.render(document.getElementById('root'));
+'use strict';
 
-    hashChangeHandler();
-    window.onhashchange = hashChangeHandler;
+window.onunload = () => chrome.runtime.sendMessage("unregister_viewer_tab");
+
+window.onload = () => {
+    chrome.runtime.sendMessage("register_viewer_tab", () => {
+        window.ViewerInstance = new window.DjVu.Viewer();
+        window.ViewerInstance.render(document.getElementById('root'));
+
+        hashChangeHandler();
+        window.onhashchange = hashChangeHandler;
+    });
 };
 
 function hashChangeHandler() {

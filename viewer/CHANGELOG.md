@@ -1,5 +1,8 @@
 # DjVu.js Viewer Changelog
 
+## v.0.3.3 (03.11.2019)
+- Options. There is only one option to open all links to .djvu files via the viewer on click. It's available only in the extension.
+
 ## v.0.3.2 (26.10.2019)
 - Fixed a bug due to which it was impossible to create many instance of the viewer on the same page.
 

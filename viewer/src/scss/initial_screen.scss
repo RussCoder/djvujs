@@ -12,6 +12,46 @@
     .content {
         max-height: 100%;
 
+        .central {
+            margin-bottom: 2em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .options {
+            margin: 0;
+            margin-right: 0.5em;
+            flex: 0 0 auto;
+            max-width: 20em;
+            float: left;
+            border: 2px solid gray;
+            border-radius: 0.2em;
+            padding: 0.5em;
+
+            .header {
+                font-size: 1em;
+                font-weight: bold;
+                margin: 0.5em 0;
+            }
+
+            .option {
+                display: flex;
+                align-items: center;
+                cursor: pointer;
+
+                input[type=checkbox] {
+                    transform: scale(1.5);
+                    flex: 0 0 auto;
+                    cursor: pointer;
+                    display: inline-block;
+                    margin-right: 1em; 
+                    outline: none;
+                }
+            }
+        }
+
         .continuous_scroll_button {
             height: 1em;
             display: inline-flex;
@@ -35,7 +75,9 @@
         }
 
         .update_message {
-            color: darkgreen;
+            color: brown;
+            flex: 1 1;
+            min-width: 15em;
         }
 
         .previous_update_message {

@@ -15,6 +15,47 @@ function promisify(func) {
     };
 }
 
+const getViewerUrl = (djvuUrl = null) => chrome.runtime.getURL("viewer.html" + (djvuUrl ? "#" + djvuUrl : ''));
+
+const tabIds = new Set();
+let unregisterTimeouts = {};
+let tabRemovedHandlerSet = false;
+
+const _unregisterViewerTab = tabId => {
+    if (unregisterTimeouts[tabId]) delete unregisterTimeouts[tabId];
+
+    if (tabIds.has(tabId)) {
+        tabIds.delete(tabId);
+        if (!tabIds.size) {
+            // to bypass a Chrome bug due to which GPU memory is not released after all tabs are closed
+            chrome.runtime.reload()
+        }
+    }
+}
+
+const unregisterViewerTab = (tabId) => {
+    if (unregisterTimeouts[tabId]) {
+        clearTimeout(unregisterTimeouts[tabId]);
+    }
+
+    // to let reload a tab with the viewer, otherwise it will be closed on attempt to reload it (if there is only one viewer tab opened).
+    unregisterTimeouts[tabId] = setTimeout(_unregisterViewerTab, 300, tabId); // in practice it doesn't exceed 150 ms (~70ms in Chrome and ~130ms in Firefox)
+};
+
+const registerViewerTab = tabId => {
+    if (unregisterTimeouts[tabId]) {
+        clearTimeout(unregisterTimeouts[tabId]);
+        delete unregisterTimeouts[tabId];
+    }
+    tabIds.add(tabId);
+
+    if (!tabRemovedHandlerSet) {
+        // only to a bit improve user experience and reload the extension without a delay when a tab is closed
+        chrome.tabs.onRemoved.addListener(tabId => _unregisterViewerTab(tabId));
+        tabRemovedHandlerSet = true;
+    }
+};
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (sender.tab && message === "include_scripts") {
         Promise.all([
@@ -24,23 +65,23 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         ]).then(() => {
             sendResponse();
         })
-        return true;
+        return true; // do not send response immediately
     }
+
+    if (sender.tab && message === "register_viewer_tab") {
+        registerViewerTab(sender.tab.id);
+    }
+
+    if (sender.tab && message === "unregister_viewer_tab") {
+        unregisterViewerTab(sender.tab.id);
+    }
+
+    sendResponse();
 })
 
-var tabIds = new Set();
 function openViewerTab(djvuUrl = null) {
-    chrome.tabs.create({ url: "viewer.html" + (djvuUrl ? "#" + djvuUrl : '') }, tab => tabIds.add(tab.id));
+    chrome.tabs.create({ url: getViewerUrl(djvuUrl) });
 }
-
-chrome.tabs.onRemoved.addListener(tabId => { // to bypass a Chrome bug due to which GPU memory is not released after all tabs are closed.
-    if (tabIds.has(tabId)) {
-        tabIds.delete(tabId);
-        if (!tabIds.size) {
-            chrome.runtime.reload();
-        }
-    }
-});
 
 chrome.browserAction.onClicked.addListener(() => openViewerTab());
 
@@ -50,8 +91,65 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     }
 });
 
-chrome.webRequest.onBeforeRequest.addListener(details => { // interception of direct file opening
-    chrome.tabs.remove(details.tabId);
-    openViewerTab(details.url);
-    return { redirectUrl: 'javascript:void(0)' };
-}, { urls: ['file:///*/*.djvu', 'file:///*/*.djv'], types: ['main_frame'] }, ["blocking"]);
+// interception of direct file opening
+chrome.webRequest.onBeforeRequest.addListener(details => {
+    return { redirectUrl: getViewerUrl(details.url) };
+}, {
+    urls: [
+        'file:///*/*.djvu',
+        'file:///*/*.djv',
+    ],
+    types: ['main_frame']
+},
+    ["blocking"]
+);
+
+// it shouldn't be the same function as the file opening interceptor,
+// since this event listener can be removed independently from the file opening interceptor
+const requestInterceptor = details => {
+    return { redirectUrl: getViewerUrl(details.url) };
+}
+
+let isHttpInterceptingEnabled = false;
+
+const enableHttpIntercepting = () => {
+    !isHttpInterceptingEnabled && chrome.webRequest.onBeforeRequest.addListener(requestInterceptor, {
+        urls: [
+            'http://*/*.djvu',
+            'http://*/*.djv',
+            'https://*/*.djvu',
+            'https://*/*.djv',
+        ],
+        types: ['main_frame']
+    },
+        ["blocking"]
+    );
+    isHttpInterceptingEnabled = true;
+};
+
+const disableHttpIntercepting = () => {
+    isHttpInterceptingEnabled && chrome.webRequest.onBeforeRequest.removeListener(requestInterceptor);
+    isHttpInterceptingEnabled = false;
+};
+
+chrome.storage.local.get('djvu_js_options', options => {
+    try {
+        options = JSON.parse(options['djvu_js_options']);
+        if (options.interceptHttpRequests) {
+            enableHttpIntercepting();
+        }
+    } catch (e) { }
+});
+
+chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local' && changes['djvu_js_options']) {
+        if (changes['djvu_js_options'].newValue) {
+            const options = JSON.parse(changes['djvu_js_options'].newValue);
+            if (options.interceptHttpRequests) {
+                enableHttpIntercepting();
+            } else {
+                disableHttpIntercepting();
+            }
+        }
+    }
+});

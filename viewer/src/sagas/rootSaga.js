@@ -8,6 +8,8 @@ import PagesCache from './PagesCache';
 import DjVu from '../DjVu';
 import PageDataManager from './PageDataManager';
 
+const inExtension = !DjVu.notInExtension && window.chrome && window.chrome.runtime && window.chrome.runtime.id;
+
 class RootSaga {
     constructor() {
         this.callbacks = {};
@@ -201,6 +203,37 @@ class RootSaga {
         yield* this.fetchPageTextIfRequired();
     }
 
+    * updateOptions() {
+        const state = yield select();
+        const options = get.options(state);
+
+        if (inExtension) {
+            yield new Promise(resolve => window.chrome.storage.local.set({ 'djvu_js_options': JSON.stringify(options) }, resolve));
+        } else {
+            localStorage.setItem('djvu_js_options', JSON.stringify(options));
+        }
+    }
+
+    * loadOptions() {
+        try {
+            let options;
+            if (inExtension) {
+                options = yield new Promise(resolve => window.chrome.storage.local.get('djvu_js_options', resolve));
+                options = options['djvu_js_options'];
+            } else {
+                options = localStorage.getItem('djvu_js_options');
+            }
+
+            if (options) {
+                options = JSON.parse(options);
+                yield put({
+                    type: Consts.OPTIONS_UPDATED_ACTION,
+                    payload: options,
+                })
+            }
+        } catch (e) { }
+    }
+
     * main() {
         yield takeLatest(Consts.CREATE_DOCUMENT_FROM_ARRAY_BUFFER_ACTION, this.withErrorHandler(this.createDocumentFromArrayBufferAction));
         yield takeLatest(Consts.SET_NEW_PAGE_NUMBER_ACTION, this.withErrorHandler(this.fetchPageData));
@@ -211,6 +244,9 @@ class RootSaga {
         yield takeLatest(Consts.ENABLE_CONTINUOUS_SCROLL_MODE_ACTION, this.withErrorHandler(this.switchToContinuosScrollMode));
         yield takeLatest(Consts.ENABLE_SINGLE_PAGE_MODE_ACTION, this.withErrorHandler(this.switchToSinglePageMode));
         yield takeLatest(Consts.ENABLE_TEXT_MODE_ACTION, this.withErrorHandler(this.switchToTextMode));
+        yield takeLatest(Consts.OPTIONS_UPDATED_ACTION, this.withErrorHandler(this.updateOptions));
+
+        yield* this.withErrorHandler(this.loadOptions)();
     }
 }
 

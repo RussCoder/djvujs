@@ -2,7 +2,9 @@
     "manifest_version": 2,
     "name": "DjVu.js Viewer",
     "short_name": "DV",
-    "version": "0.3.2.0",
+    "version": "0.3.3.0",
+    "author": "RussCoder",
+    "homepage_url": "https://github.com/RussCoder/djvujs",
     "description": "Opens links to .djvu files. Allows to open .djvu files from a local disk. Processes djvu <object> & <embed> tags.",
     "background": {
         "scripts": [
@@ -23,10 +25,14 @@
         }
     ],
     "permissions": [
+        "storage",
         "webRequest",
         "webRequestBlocking",
         "<all_urls>",
         "contextMenus"
+    ],
+    "web_accessible_resources": [
+        "viewer.html"
     ],
     "icons": {
         "16": "djvu16.png",
@@ -43,9 +49,5 @@
             "64": "djvu64.png",
             "96": "djvu96.png"
         }
-    },
-    "developer": {
-        "name": "RussCoder",
-        "url": "https://github.com/RussCoder/djvujs"
     }
 }
