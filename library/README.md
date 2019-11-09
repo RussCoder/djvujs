@@ -1,8 +1,27 @@
 # DjVu.js Library
 
-The file contains some information about the inner structure of the project. It may be useful for you, if you want to play with code or contribute to the project. 
+The file contains some information about the inner structure of the project and about how to use the library. It may be useful for you, if you want to play with code or contribute to the project. 
 
 It's implied that you have run `npm install` and all dependencies are installed correctly.
+
+## How to use it
+
+There is no classic documentation of the library's API, but there is a good example script with many comments, which can give you a rather good understanding how to use the library.
+It's located at `library/debug/js/examples.js`.
+To run it, you should clone the repository and in the root directory do the following:
+
+```
+cd library
+npm install
+npm start
+```
+
+After the debug server is run (usually on 9000 port) access `http://localhost:9000/examples.html` to see the results, and then read the code
+and the comments to understand how it works. You can edit the code (and the page will reload automatically).
+
+Also you can read source code of `DjVuDocument.js`, `DjVuPage.js` and `DjVuWorker.js` in the `src` directory to know more about the API.
+
+If you have more questions, free free to create an issue.
 
 ## The structure
 

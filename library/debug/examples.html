@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>DjVu.js usage examples</title>
+    <link rel="shortcut icon" href="/catfav.png" type="image/x-icon" />
+    <script type="text/javascript" src="/js/reloader.js"></script>
+    <script type="text/javascript" src="/dist/djvu.js"></script>
+    <script type="text/javascript" src="/js/examples.js"></script>
+    <style>
+        img,
+        canvas {
+            max-width: 90%;
+            height: auto;
+            border: 1px solid black;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>DjVu.js library usage examples</h1>
+    <h2>(open the console and read the source code to know how it works)</h2>
+    <h3>Canvas gotten with sync interface</h3>
+    <canvas id="sync-canvas"></canvas>
+    <h3>Canvas gotten with async interface</h3>
+    <canvas id="async-canvas"></canvas>
+    <h3>Image gotten with async interface (as an image URL)</h3>
+    <img id="async-image" />
+</body>
+
+</html>

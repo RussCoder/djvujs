@@ -15,8 +15,8 @@ rerunButton.onclick = rerun;
 document.querySelector('#redraw').onclick = redrawPage;
 
 var pageNumber = 4;
-var djvuUrl = 'assets/tech_primer/index.djvu';
-var baseUrl = 'http://localhost:9000/assets/tech_primer/';
+var djvuUrl = 'assets/DjVu3Spec.djvu';
+var baseUrl = 'http://localhost:9000/assets/';
 
 document.querySelector('#next').onclick = () => {
     pageNumber++;
