@@ -12,9 +12,18 @@ export default class DjVuViewer {
 
     constructor() {
         this.store = configureStore();
+
+        if (process.env.NODE_ENV === 'development') {
+            if (module.hot) {
+                module.hot.accept('./components/App', () => {
+                    this.render(this.htmlElement);
+                });
+            }
+        }
     }
 
     render(element) {
+        this.htmlElement = element;
         ReactDOM.render(
             <Provider store={this.store}>
                 <App />

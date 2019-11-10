@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import '../css/styles.css';
 
 import { get } from '../reducers/rootReducer';
 import Toolbar from "./Toolbar";
