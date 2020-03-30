@@ -1,5 +1,8 @@
 # DjVu.js Viewer Changelog
 
+## v.0.3.4 (30.03.2020)
+- Viewer's programmatic API enhancement: page number can be set via configure(), getPageNumber() and PAGE_NUMBER_CHANGED event were added.
+
 ## v.0.3.3 (03.11.2019)
 - Options. There is only one option to open all links to .djvu files via the viewer on click. It's available only in the extension.
 

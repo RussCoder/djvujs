@@ -6,11 +6,12 @@ import rootReducer from './reducers/rootReducer';
 import createRootSaga from './sagas/rootSaga';
 import initHotkeys from './hotkeys';
 
-const configureStore = () => {
+const configureStore = (eventMiddleware = undefined) => {
     const sagaMiddleware = createSagaMiddleware();
     const store = createStore(rootReducer, applyMiddleware(
         thunkMiddleware,
-        sagaMiddleware
+        sagaMiddleware,
+        eventMiddleware
     ));
     sagaMiddleware.run(createRootSaga());
     initHotkeys(store);

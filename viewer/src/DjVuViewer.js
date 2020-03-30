@@ -5,13 +5,23 @@ import App from './components/App.jsx';
 import Actions from './actions/actions';
 import configureStore from './store';
 import { loadFile } from './utils';
+import EventEmitter from 'eventemitter3';
+import Consts from './constants/consts';
+import { get } from './reducers';
 
-export default class DjVuViewer {
+const Events = {
+    PAGE_NUMBER_CHANGED: 'PAGE_NUMBER_CHANGED',
+};
 
-    static VERSION = '0.3.3';
+export default class DjVuViewer extends EventEmitter {
+
+    static VERSION = '0.3.4';
+
+    static Events = Events;
 
     constructor() {
-        this.store = configureStore();
+        super();
+        this.store = configureStore(this.eventMiddleware);
 
         if (process.env.NODE_ENV === 'development') {
             if (module.hot) {
@@ -20,6 +30,30 @@ export default class DjVuViewer {
                 });
             }
         }
+    }
+
+    eventMiddleware = store => next => action => {
+        let result;
+        switch (action.type) {
+            case Consts.SET_NEW_PAGE_NUMBER_ACTION:
+                const oldPageNumber = this.getPageNumber();
+                result = next(action);
+                const newPageNumber = this.getPageNumber();
+                if (oldPageNumber !== newPageNumber) {
+                    this.emit(Events.PAGE_NUMBER_CHANGED);
+                }
+                break;
+
+            default:
+                result = next(action);
+                break;
+        }
+
+        return result;
+    };
+
+    getPageNumber() {
+        return get.currentPageNumber(this.store.getState());
     }
 
     render(element) {
@@ -32,13 +66,13 @@ export default class DjVuViewer {
         );
     }
 
-    configure(config = {}) {
-        if (config.pageRotation) {
-            this.store.dispatch(Actions.setPageRotationAction(config.pageRotation));
-        }
-        if (config.pageScale) {
-            this.store.dispatch(Actions.setUserScaleAction(config.pageScale));
-        }
+    configure({ pageNumber, pageRotation, pageScale } = {}) {
+        const dispatch = this.store.dispatch.bind(this.store);
+
+        pageNumber && dispatch(Actions.setNewPageNumberAction(pageNumber, true));
+        pageRotation && dispatch(Actions.setPageRotationAction(pageRotation));
+        pageScale && dispatch(Actions.setUserScaleAction(pageScale));
+
         return this;
     }
 

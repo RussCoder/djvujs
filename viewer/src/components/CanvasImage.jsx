@@ -22,7 +22,7 @@ export default class CanvasImage extends React.Component {
         this.lastUserScale = null;
     }
 
-    componentWillReceiveProps(nextProps) {
+    UNSAFE_componentWillReceiveProps(nextProps) {
         if (this.props.imageData !== nextProps.imageData) {
             this.lastUserScale = null;
             clearTimeout(this.redrawImageTimeout);

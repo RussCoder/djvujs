@@ -40,7 +40,7 @@
     <script id="djvu_js_lib" src="%PUBLIC_URL%/tmp/djvu.js"></script>
     <script>
         window.onload = function () {
-            window.DjVuViewerInstance = new window.DjVu.Viewer();
+            window.viewer = window.DjVuViewerInstance = new window.DjVu.Viewer();
             window.DjVuViewerInstance.render(document.getElementById('root'));
 
             // window.DjVuViewerInstance2 = new window.DjVu.Viewer();
