@@ -2681,7 +2681,7 @@ var DjVu = (function () {
       }
       for (var y = 0; y < height; y++) {
         for (var x = 0; x < width; x++) {
-          var rgba = getRGBA(data, inIndex);
+          var rgba = getRGBA();
           switch (options.colorType) {
             case constants.COLORTYPE_COLOR_ALPHA:
             case constants.COLORTYPE_COLOR:
@@ -5459,8 +5459,6 @@ var DjVu = (function () {
         case exports.DEFLATERAW:
           this.err = zlib_deflate.deflateSetDictionary(this.strm, this.dictionary);
           break;
-        default:
-          break;
       }
       if (this.err !== exports.Z_OK) {
         this._error('Failed to set dictionary');
@@ -5478,8 +5476,6 @@ var DjVu = (function () {
         case exports.INFLATERAW:
         case exports.GUNZIP:
           this.err = zlib_inflate.inflateReset(this.strm);
-          break;
-        default:
           break;
       }
       if (this.err !== exports.Z_OK) {
@@ -7204,7 +7200,7 @@ var DjVu = (function () {
       value = +value;
       offset = offset >>> 0;
       if (!noAssert) {
-        checkIEEE754(buf, value, offset, 4, 3.4028234663852886e+38, -3.4028234663852886e+38);
+        checkIEEE754(buf, value, offset, 4);
       }
       ieee754.write(buf, value, offset, littleEndian, 23, 4);
       return offset + 4
@@ -7219,7 +7215,7 @@ var DjVu = (function () {
       value = +value;
       offset = offset >>> 0;
       if (!noAssert) {
-        checkIEEE754(buf, value, offset, 8, 1.7976931348623157E+308, -1.7976931348623157E+308);
+        checkIEEE754(buf, value, offset, 8);
       }
       ieee754.write(buf, value, offset, littleEndian, 52, 8);
       return offset + 8
@@ -11810,7 +11806,7 @@ var DjVu = (function () {
           if (!state.reading) {
             processNextTick(nReadingNextTick, this);
           } else if (state.length) {
-            emitReadable(this, state);
+            emitReadable(this);
           }
         }
       }

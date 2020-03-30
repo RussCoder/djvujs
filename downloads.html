@@ -29,11 +29,11 @@
 
 Here you can download the library and the viewer .js and .css files.
 
-<p><a href="/assets/dist/djvu.js?v=1" download="djvu.js">Download DjVu.js library (version 0.4.0)</a></p>
+<p><a href="/assets/dist/djvu.js?v=2" download="djvu.js">Download DjVu.js library (version 0.4.0)</a></p>
 
-<p></p><a href="/assets/dist/djvu_viewer.js?v=1" download="djvu_viewer.js">Download DjVu.js Viewer .js file (version 0.3.3)</a>
+<p></p><a href="/assets/dist/djvu_viewer.js?v=2" download="djvu_viewer.js">Download DjVu.js Viewer .js file (version 0.3.4)</a>
 
-<p></p><a href="/assets/dist/djvu_viewer.css?v=1" download="djvu_viewer.css">Download DjVu.js Viewer .css file (version 0.3.3)</a>
+<p></p><a href="/assets/dist/djvu_viewer.css?v=2" download="djvu_viewer.css">Download DjVu.js Viewer .css file (version 0.3.4)</a>
 
 <p>You can download <em>the previous versions</em> <a href="https://github.com/RussCoder/djvujs/releases">here</a>.</p>
 
@@ -87,10 +87,14 @@ to start a local web server in order to make everything work as it works on the 
 <li><code>loadDocument(buffer, name = &quot;***&quot;, config = null)</code> - accepts the <code>ArrayBuffer</code> and a name of a document which should be shown at footer (it&#39;s optional).</li>
 <li><code>async loadDocumentByUrl(url, config = null)</code> - loads the documents as an <code>ArrayBuffer</code> and then invokes the previous method.</li>
 <li><code>configure(config)</code> - just sets the options. Note, that when a document is loaded some option are reset to the initial ones, so you have to call the method again or use the last parameter of the two previous methods.</li>
+<li><code>getPageNumber()</code> - returns the current page number.</li>
+<li><code>on(eventName, handler)</code> - to add an event handler.</li>
+<li><code>off(eventName)</code> - to remove an event handler.</li>
 </ul>
 <p>The <code>config</code> is an object containing options for the viewer. It&#39;s an optional parameter. It has the following shape:</p>
-<pre><code class="language-js">
+<pre><code class="language-js">// any of the parameters may be omitted, use only those you need
 {
+    pageNumber: 10,
     pageRotation: 90,
     pageScale: 2,
     djvuOptions: {
@@ -99,14 +103,30 @@ to start a local web server in order to make everything work as it works on the 
 }
 </code></pre>
 <ul>
+<li><code>pageNumber</code> - the number of a currently opened page. Greater than or equal to 1. If it&#39;s less than 1, 1 will be used, if it&#39;s greater than the 
+total number of pages in a document, then the last page number will be used.</li>
 <li><code>pageRotation</code> - the rotation of a page, it can be 0, 90, 180, 270.</li>
 <li><code>pageScale</code> - the scale of a page, it is a number from 0.1 to 6 (~ 10% to 600%). Numbers less/greater than the limits are replaced by the limits themselves, to wit, 8 will be treated as 6, and 0.001 as 0.1, 0 will be ignored at all and the default scale value (which is 1) will be used.  </li>
 <li><code>djvuOptions</code> - an object which is passed to the library. Now there is only one option - the base url, which is the url to a directory which contains the files of an indirect djvu. For bundled djvu this parameter is not required. The base url is extracted automatically from a url to the index.djvu, when the <code>loadDocumentByUrl</code> is called, but in case of <code>loadDocument</code> method, this parameter should be provided manually.</li>
 </ul>
+<p>Also there are <code>DjVu.Viewer.Events</code>:</p>
+<ul>
+<li><code>PAGE_NUMBER_CHANGED</code> - fired when the number of a currently opened page is changed. The event handler receives no arguments.</li>
+</ul>
 <p>Thus, to load a document programmatically you can do the following:</p>
-<pre><code class="language-js">var viewer = new DjVu.Viewer();
-viewer = render(document.getElementById(&#39;for_viewer&#39;));
-viewer.loadDocumentByUrl(&#39;assets/my-djvu-file.djvu&#39;);</code></pre>
+<pre><code class="language-js">async function loadDocument {
+    const viewer = new DjVu.Viewer();
+    viewer = render(document.getElementById(&#39;for_viewer&#39;));
+    await viewer.loadDocumentByUrl(&#39;assets/my-djvu-file.djvu&#39;);
+
+    viewer.configure({ // you also can pass the same object as a second parameter to .loadDocumentByUrl()
+        pageNumber: 10,
+    });
+
+    viewer.on(Djvu.Viewer.Events.PAGE_NUMBER_CHANGED, () =&gt; { // no args are passed here
+        console.log(&#39;Page number changed to&#39;, viewer.getPageNumber());
+    })
+}</code></pre>
 <p>Also you can load the file by your own and then use the <code>loadDocument</code> method. However, in case of the <code>loadDocumentByUrl</code> you will see a progress bar of loading, if your file is rather big.</p>
 <p>You can create several links to djvu files and open them in the viewer, when a user clicks on them. Here is the complete example:</p>
 <pre><code class="language-html">&lt;!DOCTYPE html&gt;
