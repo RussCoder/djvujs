@@ -14,8 +14,8 @@ var rerunButton = document.querySelector('#rerun');
 rerunButton.onclick = rerun;
 document.querySelector('#redraw').onclick = redrawPage;
 
-var pageNumber = 4;
-var djvuUrl = 'assets/DjVu3Spec.djvu';
+var pageNumber = 1;
+var djvuUrl = 'assets/slow.djvu';
 var baseUrl = 'http://localhost:9000/assets/';
 
 document.querySelector('#next').onclick = () => {

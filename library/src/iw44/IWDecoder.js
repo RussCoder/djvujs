@@ -192,6 +192,8 @@ export default class IWDecoder extends IWCodecBaseClass {
     }
 
     getBytemap() {
+        var time = performance.now();
+
         var fullWidth = Math.ceil(this.info.width / 32) * 32;
         var fullHeight = Math.ceil(this.info.height / 32) * 32;
         var blockRows = Math.ceil(this.info.height / 32);
@@ -217,6 +219,8 @@ export default class IWDecoder extends IWCodecBaseClass {
         DjVu.IS_DEBUG && console.time("inverseTime");
         this.inverseWaveletTransform(bm);
         DjVu.IS_DEBUG && console.timeEnd("inverseTime");
+
+        DjVu.IS_DEBUG && console.log("getBytemap time = ", performance.now() - time);
 
         return bm;
     }

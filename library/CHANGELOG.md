@@ -1,8 +1,13 @@
 # DjVu.js Library Changelog
 
+## v.0.4.1 (22.04.2020)
+
+- Wrapped some loop's bodies into functions to avoid code deoptimizations in Chrome in some cases.
+
 ## v.0.4.0 (18.05.2019)
 
-- png.js was integrated into djvu.js to create png files (and Object URLs to them) of the pages inside a worker. It's required for the continuous scroll mode, since a png file is much less than a raw ImageData object.
+- png.js was integrated into djvu.js to create png files (and Object URLs to them) of the pages inside a worker. 
+It's required for the continuous scroll mode, since a png file is much less than a raw ImageData object.
 
 ## v.0.3.5 (03.04.2019)
 

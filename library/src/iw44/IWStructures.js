@@ -1,3 +1,12 @@
+function _normalize(val) {
+    val = (val + 32) >> 6;   // убираем 6 дробных бит в этом псевдо дробном числе
+    if (val < -128) {
+        return -128;
+    } else if (val >= 128) {
+        return 127;
+    }
+    return val;
+}
 
 export class Pixelmap {
     constructor(ybytemap, cbbytemap, crbytemap) {
@@ -9,37 +18,33 @@ export class Pixelmap {
         this.b = new Uint8ClampedArray(length);
 
         if (cbbytemap) {
-            for (var i = 0; i < length; i++) {
-                var y = this._normalize(ybytemap.byIndex(i));
-                var b = this._normalize(cbbytemap.byIndex(i));
-                var r = this._normalize(crbytemap.byIndex(i));
-
-                var t2 = r + (r >> 1);
-                var t3 = y + 128 - (b >> 2);
-
-                this.r[i] = y + 128 + t2;
-                this.g[i] = t3 - (t2 >> 1);
-                this.b[i] = t3 + (b << 1);
-            }
+            this._constructColorfulPixelMap(ybytemap.array, cbbytemap.array, crbytemap.array);
         } else {
-            for (var i = 0; i < length; i++) {
-                var v = this._normalize(ybytemap.byIndex(i));
-                v = 127 - v;
-                this.r[i] = v;
-                this.g[i] = v;
-                this.b[i] = v;
-            }
+            this._constructGrayScalePixelMap(ybytemap.array);
         }
     }
 
-    _normalize(val) {
-        val = (val + 32) >> 6;   // убираем 6 дробных бит в этом псевдо дробном числе
-        if (val < -128) {
-            return -128;
-        } else if (val >= 128) {
-            return 127;
-        }
-        return val;
+    _constructGrayScalePixelMap(yArray) {
+        yArray.forEach((v, i) => {
+            this.r[i] = this.g[i] = this.b[i] = 127 - _normalize(v);
+        });
+    }
+
+    _constructColorfulPixelMap(yArray, cbArray, crArray) {
+        // using forEach instead of for loop to make the loop body a function - 
+        // it helps Chrome not to deoptimize code. It was added for slow.djvu (the last page). 
+        yArray.forEach((val, i) => {
+            const y = _normalize(val);
+            const b = _normalize(cbArray[i]);
+            const r = _normalize(crArray[i]);
+
+            const t2 = r + (r >> 1);
+            const t3 = y + 128 - (b >> 2);
+
+            this.r[i] = y + 128 + t2;
+            this.g[i] = t3 - (t2 >> 1);
+            this.b[i] = t3 + (b << 1);
+        });
     }
 
     writePixel(index, pixelArray, pixelIndex) {
@@ -86,10 +91,6 @@ export class LinearBytemap {
     constructor(width, height) {
         this.width = width;
         this.array = new Int16Array(width * height);
-    }
-
-    byIndex(i) {
-        return this.array[i];
     }
 
     get(i, j) {
