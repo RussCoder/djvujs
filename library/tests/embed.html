@@ -1,3 +1,5 @@
+<!-- A page to test the browser extension, namely how the viewer builds into a third party page-->
+
 <!DOCTYPE html>
 <html>
 
@@ -9,6 +11,9 @@
 </head>
 
 <body style="height: 100vh">
+    <object type="image/x.djvu" data="/assets/boy.djvu" width="10" height="10">
+        <param name="src" value="/assets/boy.djvu">
+    </object>
     <object classid="clsid:0e8d0700-75df-11d3-8b4a-0008c7450c4a" width="100%" height="100%">
         <param name="src" value="/assets/czech.djvu">
     </object>

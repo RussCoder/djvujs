@@ -14,10 +14,14 @@
         }
 
         var div = document.createElement('div');
-        if (tag.height) {
+        div.style.minWidth = '600px'; // to fit the toolbar
+        div.style.minHeight = '200px';
+
+        if (tag.height) { // deliberately use attribute, not styles
             div.style.height = isJustNumber(tag.height) ? Number(tag.height) + "px" : tag.height;
         } else {
             div.style.height = '90vh';
+            div.style.maxHeight = '90%';
         }
         if (tag.width) {
             div.style.width = isJustNumber(tag.width) ? Number(tag.width) + "px" : tag.width;
@@ -33,7 +37,10 @@
         viewer.render(div);
     }
 
-    const objects = document.querySelectorAll('object[classid="clsid:0e8d0700-75df-11d3-8b4a-0008c7450c4a"]');
+    const objects = document.querySelectorAll(
+        'object[classid="clsid:0e8d0700-75df-11d3-8b4a-0008c7450c4a"]'
+        + ', object[type="image/x.djvu"]'
+    );
     if (objects.length) {
         includeScripts().then(() => {
             objects.forEach(object => {
