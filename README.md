@@ -22,7 +22,7 @@ The library is only being developed and may be noticeably changed in the future.
 
 ## How to build it
 
-If you have Node.js (v.8.x or higher) installed, after you cloned the repository, run 
+If you have Node.js (10.x or higher) installed, after you cloned the repository, run 
 ```
 npm run install
 npm run build

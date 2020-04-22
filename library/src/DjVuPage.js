@@ -189,7 +189,7 @@ export default class DjVuPage extends CompositeChunk {
             } else if (id === "CIDa") {
                 try {
                     chunk = new CIDaChunk(chunkBs);
-                } catch(e) {
+                } catch (e) {
                     chunk = new ErrorChunk('CIDa', e);
                 }
             } else if (id === 'Djbz') {
@@ -228,7 +228,7 @@ export default class DjVuPage extends CompositeChunk {
                 for (var i = 0; i < width; i++) {
                     var rowOffset = (width - i - 1) * height;
                     var to = height + rowOffset;
-                    for (var newIndex = rowOffset, oldIndex = i; newIndex < to; newIndex++ , oldIndex += width) {
+                    for (var newIndex = rowOffset, oldIndex = i; newIndex < to; newIndex++, oldIndex += width) {
                         newPixelArray[newIndex] = oldPixelArray[oldIndex];
                     }
                 }
@@ -236,7 +236,7 @@ export default class DjVuPage extends CompositeChunk {
                 for (var i = 0; i < width; i++) {
                     var rowOffset = i * height;
                     var from = height + rowOffset - 1;
-                    for (var newIndex = from, oldIndex = i; newIndex >= rowOffset; newIndex-- , oldIndex += width) {
+                    for (var newIndex = from, oldIndex = i; newIndex >= rowOffset; newIndex--, oldIndex += width) {
                         newPixelArray[newIndex] = oldPixelArray[oldIndex];
                     }
                 }
