@@ -31,7 +31,6 @@
         div.className = "djvu_js_viewer_container";
         tag.parentNode.replaceChild(div, tag);
 
-        DjVu.notInExtension = true;
         var viewer = new DjVu.Viewer();
         viewer.loadDocumentByUrl(src);
         viewer.render(div);

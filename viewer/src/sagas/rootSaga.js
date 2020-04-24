@@ -7,13 +7,18 @@ import Actions from "../actions/actions";
 import PagesCache from './PagesCache';
 import DjVu from '../DjVu';
 import PageDataManager from './PageDataManager';
-
-const inExtension = !DjVu.notInExtension && window.chrome && window.chrome.runtime && window.chrome.runtime.id;
+import { inExtension } from '../utils';
 
 class RootSaga {
     constructor() {
         this.callbacks = {};
-        this.djvuWorker = new DjVu.Worker();
+
+        // Firefox's extension moderators asked me not to use "content_security_policy": "script-src blob:" permission,
+        // so just for them on the main page of the extension a script url should be provided manually.
+        // In all other cases no libURL is required - a blob URL will be generated automatically for the worker.
+        const libURL = inExtension ? document.querySelector('script#djvu_js_lib').src : undefined;
+        this.djvuWorker = new DjVu.Worker(libURL);
+
         this.pagesCache = new PagesCache(this.djvuWorker);
         this.pageDataManager = null;
     }

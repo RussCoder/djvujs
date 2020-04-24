@@ -44,3 +44,7 @@ export function composeHighOrderGet(statePartToGetMap) {
     });
     return newGet;
 }
+
+export const inExtension = !!(document.querySelector('input#djvu_js_extension_main_page')
+    && window.chrome && window.chrome.runtime && window.chrome.runtime.id);
+export const isChromeExtension = inExtension && !/Firefox/.test(navigator.userAgent);
