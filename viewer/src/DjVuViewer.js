@@ -6,16 +6,18 @@ import Actions from './actions/actions';
 import configureStore from './store';
 import { loadFile } from './utils';
 import EventEmitter from 'eventemitter3';
-import Consts from './constants/consts';
+import Consts, { constant } from './constants/consts';
 import { get } from './reducers';
 
-const Events = {
-    PAGE_NUMBER_CHANGED: 'PAGE_NUMBER_CHANGED',
-};
+const Events = constant({
+    PAGE_NUMBER_CHANGED: null,
+    DOCUMENT_CHANGED: null,
+    DOCUMENT_CLOSED: null,
+});
 
 export default class DjVuViewer extends EventEmitter {
 
-    static VERSION = '0.3.4';
+    static VERSION = '0.3.5';
 
     static Events = Events;
 
@@ -44,6 +46,16 @@ export default class DjVuViewer extends EventEmitter {
                 }
                 break;
 
+            case Consts.DOCUMENT_CREATED_ACTION:
+                result = next(action);
+                this.emit(Events.DOCUMENT_CHANGED);
+                break;
+
+            case Consts.CLOSE_DOCUMENT_ACTION:
+                result = next(action);
+                this.emit(Events.DOCUMENT_CLOSED);
+                break;
+
             default:
                 result = next(action);
                 break;
@@ -54,6 +66,10 @@ export default class DjVuViewer extends EventEmitter {
 
     getPageNumber() {
         return get.currentPageNumber(this.store.getState());
+    }
+
+    getDocumentName() {
+        return get.fileName(this.store.getState());
     }
 
     render(element) {
@@ -82,8 +98,17 @@ export default class DjVuViewer extends EventEmitter {
                 config && this.configure(config);
                 resolve();
             }));
-            this.store.dispatch(Actions.createDocumentFromArrayBufferAction(buffer, config.djvuOptions, name));
+            this.store.dispatch(Actions.createDocumentFromArrayBufferAction(buffer, name, config.djvuOptions));
         });
+    }
+
+    _getFileNameFromUrl(url) {
+        try {
+            const res = /[^/#]*(?=#|$)/.exec(url.trim());
+            return res ? decodeURIComponent(res[0]) : '***';
+        } catch (e) {
+            return '***';
+        }
     }
 
     async loadDocumentByUrl(url, config = null) {
@@ -96,10 +121,10 @@ export default class DjVuViewer extends EventEmitter {
             var buffer = await loadFile(url, (e) => {
                 this.store.dispatch(Actions.fileLoadingProgressAction(e.loaded, e.total));
             });
-            var res = /[^/#]*(?=#|$)/.exec(url.trim());
+
             var baseUrl = new URL('./', url).href;
             config.djvuOptions = { baseUrl: baseUrl };
-            await this.loadDocument(buffer, res ? res[0] : '***', config);
+            await this.loadDocument(buffer, this._getFileNameFromUrl(url), config);
             // now we should process #page=some_number case
             const hash = new URL(url.toLowerCase()).hash;
             if (hash) {

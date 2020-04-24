@@ -100,7 +100,7 @@ const Actions = {
         return { type: Consts.CLOSE_MODAL_WINDOW_ACTION };
     },
 
-    createDocumentFromArrayBufferAction: (arrayBuffer, options, fileName = "***") => ({
+    createDocumentFromArrayBufferAction: (arrayBuffer, fileName = "***", options = {}) => ({
         type: Consts.CREATE_DOCUMENT_FROM_ARRAY_BUFFER_ACTION,
         arrayBuffer: arrayBuffer,
         options: options,

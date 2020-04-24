@@ -37,7 +37,7 @@ export default class DjVuWorker {
     cancelTask(promise) {
         if (!this.promiseMap.delete(promise)) {
             if (this.currentPromise === promise) {
-                this. dropCurrentTask();
+                this.dropCurrentTask();
             }
         }
     }
@@ -53,7 +53,7 @@ export default class DjVuWorker {
 
     cancelAllTasks() {
         this.emptyTaskQueue();
-        this. dropCurrentTask();
+        this.dropCurrentTask();
     }
 
     createNewPromise(commandObj, transferList) {

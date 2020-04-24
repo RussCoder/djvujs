@@ -1,5 +1,10 @@
 # DjVu.js Viewer Changelog
 
+## v.0.3.5 (24.04.2020)
+- New DOCUMENT_CLOSED and DOCUMENT_CHANGED events to change the page title dynamically. 
+- decodeURIComponent applied to a file's name derived from a URL.
+- Fixed a bug due to which there was no file names, but only ***. 
+
 ## v.0.3.4 (30.03.2020)
 - Viewer's programmatic API enhancement: page number can be set via configure(), getPageNumber() and PAGE_NUMBER_CHANGED event were added.
 

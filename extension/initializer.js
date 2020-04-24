@@ -1,11 +1,21 @@
 'use strict';
 
+let viewer;
+
 window.onunload = () => chrome.runtime.sendMessage("unregister_viewer_tab");
 
 window.onload = () => {
     chrome.runtime.sendMessage("register_viewer_tab", () => {
-        window.ViewerInstance = new window.DjVu.Viewer();
-        window.ViewerInstance.render(document.getElementById('root'));
+        viewer = new DjVu.Viewer();
+        viewer.render(document.getElementById('root'));
+
+        viewer.on(DjVu.Viewer.Events.DOCUMENT_CHANGED, () => {
+            document.title = viewer.getDocumentName();
+        });
+
+        viewer.on(DjVu.Viewer.Events.DOCUMENT_CLOSED, () => {
+            document.title = 'DjVu.js Viewer';
+        });
 
         hashChangeHandler();
         window.onhashchange = hashChangeHandler;
@@ -15,10 +25,6 @@ window.onload = () => {
 function hashChangeHandler() {
     if (location.hash) {
         var url = location.hash.substr(1);
-        window.ViewerInstance.loadDocumentByUrl(url);
-        var res = /[^/]*$/.exec(url.trim());
-        if (res) {
-            document.title = res[0];
-        }
+        viewer.loadDocumentByUrl(url);
     }
 }

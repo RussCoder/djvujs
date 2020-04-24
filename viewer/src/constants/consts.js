@@ -38,10 +38,13 @@ const Consts = {
     SET_API_CALLBACK_ACTION: null, // A special action for interaction with sagas. Used for program API of the viewer, look at the DjVuViewer.js
 };
 
-for (const key in Consts) {
-    if (Consts[key] === null) {
-        Consts[key] = key;
+export function constant(obj) {
+    for (const key in obj) {
+        if (obj[key] === null) {
+            obj[key] = key;
+        }
     }
+    return Object.freeze(obj);
 }
 
-export default Object.freeze(Consts);
+export default constant(Consts);
