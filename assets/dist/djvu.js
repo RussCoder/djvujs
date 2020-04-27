@@ -5,7 +5,7 @@ var DjVu = (function () {
     'use strict;'
 
     var DjVu = {
-        VERSION: '0.4.0',
+        VERSION: '0.4.1',
         IS_DEBUG: false,
         setDebugMode: (flag) => DjVu.IS_DEBUG = flag
     };
@@ -1833,6 +1833,15 @@ var DjVu = (function () {
         { from: 48, to: 63 }
     ];
 
+    function _normalize(val) {
+        val = (val + 32) >> 6;
+        if (val < -128) {
+            return -128;
+        } else if (val >= 128) {
+            return 127;
+        }
+        return val;
+    }
     class Pixelmap {
         constructor(ybytemap, cbbytemap, crbytemap) {
             this.width = ybytemap.width;
@@ -1841,34 +1850,27 @@ var DjVu = (function () {
             this.g = new Uint8ClampedArray(length);
             this.b = new Uint8ClampedArray(length);
             if (cbbytemap) {
-                for (var i = 0; i < length; i++) {
-                    var y = this._normalize(ybytemap.byIndex(i));
-                    var b = this._normalize(cbbytemap.byIndex(i));
-                    var r = this._normalize(crbytemap.byIndex(i));
-                    var t2 = r + (r >> 1);
-                    var t3 = y + 128 - (b >> 2);
-                    this.r[i] = y + 128 + t2;
-                    this.g[i] = t3 - (t2 >> 1);
-                    this.b[i] = t3 + (b << 1);
-                }
+                this._constructColorfulPixelMap(ybytemap.array, cbbytemap.array, crbytemap.array);
             } else {
-                for (var i = 0; i < length; i++) {
-                    var v = this._normalize(ybytemap.byIndex(i));
-                    v = 127 - v;
-                    this.r[i] = v;
-                    this.g[i] = v;
-                    this.b[i] = v;
-                }
+                this._constructGrayScalePixelMap(ybytemap.array);
             }
         }
-        _normalize(val) {
-            val = (val + 32) >> 6;
-            if (val < -128) {
-                return -128;
-            } else if (val >= 128) {
-                return 127;
-            }
-            return val;
+        _constructGrayScalePixelMap(yArray) {
+            yArray.forEach((v, i) => {
+                this.r[i] = this.g[i] = this.b[i] = 127 - _normalize(v);
+            });
+        }
+        _constructColorfulPixelMap(yArray, cbArray, crArray) {
+            yArray.forEach((val, i) => {
+                const y = _normalize(val);
+                const b = _normalize(cbArray[i]);
+                const r = _normalize(crArray[i]);
+                const t2 = r + (r >> 1);
+                const t3 = y + 128 - (b >> 2);
+                this.r[i] = y + 128 + t2;
+                this.g[i] = t3 - (t2 >> 1);
+                this.b[i] = t3 + (b << 1);
+            });
         }
         writePixel(index, pixelArray, pixelIndex) {
             pixelArray[pixelIndex] = this.r[index];
@@ -1880,9 +1882,6 @@ var DjVu = (function () {
         constructor(width, height) {
             this.width = width;
             this.array = new Int16Array(width * height);
-        }
-        byIndex(i) {
-            return this.array[i];
         }
         get(i, j) {
             return this.array[i * this.width + j];
@@ -2105,6 +2104,7 @@ var DjVu = (function () {
             }
         }
         getBytemap() {
+            var time = performance.now();
             var fullWidth = Math.ceil(this.info.width / 32) * 32;
             var fullHeight = Math.ceil(this.info.height / 32) * 32;
             var blockRows = Math.ceil(this.info.height / 32);
@@ -2121,6 +2121,7 @@ var DjVu = (function () {
             DjVu.IS_DEBUG && console.time("inverseTime");
             this.inverseWaveletTransform(bm);
             DjVu.IS_DEBUG && console.timeEnd("inverseTime");
+            DjVu.IS_DEBUG && console.log("getBytemap time = ", performance.now() - time);
             return bm;
         }
         inverseWaveletTransform(bitmap) {
@@ -2243,27 +2244,36 @@ var DjVu = (function () {
             }
         }
         createPixelmap() {
+            var time = performance.now();
             var ybitmap = this.ycodec.getBytemap();
             var cbbitmap = this.cbcodec ? this.cbcodec.getBytemap() : null;
             var crbitmap = this.crcodec ? this.crcodec.getBytemap() : null;
+            var pixelMapTime = performance.now();
             this.pixelmap = new Pixelmap(ybitmap, cbbitmap, crbitmap);
+            DjVu.IS_DEBUG && console.log('Pixelmap constructor time = ', performance.now() - pixelMapTime);
+            DjVu.IS_DEBUG && console.log('IWImage.createPixelmap time = ', performance.now() - time);
         }
         getImage() {
+            const time = performance.now();
             if (!this.pixelmap) {
                 this.createPixelmap();
             }
-            var width = this.info.width;
-            var height = this.info.height;
-            var image = new ImageData(width, height);
-            for (var i = 0; i < height; i++) {
-                var rowOffset = i * this.pixelmap.width;
-                var pixelIndex = ((height - i - 1) * width) << 2;
-                for (var j = 0; j < width; j++) {
+            const width = this.info.width;
+            const height = this.info.height;
+            const image = new ImageData(width, height);
+            const processRow = (i) => {
+                const rowOffset = i * this.pixelmap.width;
+                let pixelIndex = ((height - i - 1) * width) << 2;
+                for (let j = 0; j < width; j++) {
                     this.pixelmap.writePixel(rowOffset + j, image.data, pixelIndex);
                     image.data[pixelIndex | 3] = 255;
                     pixelIndex += 4;
                 }
+            };
+            for (let i = 0; i < height; i++) {
+                processRow(i);
             }
+            DjVu.IS_DEBUG && console.log('IWImage.getImage time = ', performance.now() - time);
             return image;
         }
     }
@@ -2386,96 +2396,96 @@ var DjVu = (function () {
     }
 
     var browser = createCommonjsModule(function (module, exports) {
-    (function(f){{module.exports=f();}})(function(){return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof commonjsRequire&&commonjsRequire;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t);}return n[i].exports}for(var u="function"==typeof commonjsRequire&&commonjsRequire,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+    (function(f){{module.exports=f();}})(function(){return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof commonjsRequire=="function"&&commonjsRequire;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r);}return n[o].exports}var i=typeof commonjsRequire=="function"&&commonjsRequire;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
     (function (Buffer){
-    var interlaceUtils = require('./interlace');
-    var pixelBppMapper = [
-      function() {},
-      function(pxData, data, pxPos, rawPos) {
+    let interlaceUtils = require("./interlace");
+    let pixelBppMapper = [
+      function () {},
+      function (pxData, data, pxPos, rawPos) {
         if (rawPos === data.length) {
-          throw new Error('Ran out of data');
+          throw new Error("Ran out of data");
         }
-        var pixel = data[rawPos];
+        let pixel = data[rawPos];
         pxData[pxPos] = pixel;
         pxData[pxPos + 1] = pixel;
         pxData[pxPos + 2] = pixel;
         pxData[pxPos + 3] = 0xff;
       },
-      function(pxData, data, pxPos, rawPos) {
+      function (pxData, data, pxPos, rawPos) {
         if (rawPos + 1 >= data.length) {
-          throw new Error('Ran out of data');
+          throw new Error("Ran out of data");
         }
-        var pixel = data[rawPos];
+        let pixel = data[rawPos];
         pxData[pxPos] = pixel;
         pxData[pxPos + 1] = pixel;
         pxData[pxPos + 2] = pixel;
         pxData[pxPos + 3] = data[rawPos + 1];
       },
-      function(pxData, data, pxPos, rawPos) {
+      function (pxData, data, pxPos, rawPos) {
         if (rawPos + 2 >= data.length) {
-          throw new Error('Ran out of data');
+          throw new Error("Ran out of data");
         }
         pxData[pxPos] = data[rawPos];
         pxData[pxPos + 1] = data[rawPos + 1];
         pxData[pxPos + 2] = data[rawPos + 2];
         pxData[pxPos + 3] = 0xff;
       },
-      function(pxData, data, pxPos, rawPos) {
+      function (pxData, data, pxPos, rawPos) {
         if (rawPos + 3 >= data.length) {
-          throw new Error('Ran out of data');
+          throw new Error("Ran out of data");
         }
         pxData[pxPos] = data[rawPos];
         pxData[pxPos + 1] = data[rawPos + 1];
         pxData[pxPos + 2] = data[rawPos + 2];
         pxData[pxPos + 3] = data[rawPos + 3];
-      }
+      },
     ];
-    var pixelBppCustomMapper = [
-      function() {},
-      function(pxData, pixelData, pxPos, maxBit) {
-        var pixel = pixelData[0];
+    let pixelBppCustomMapper = [
+      function () {},
+      function (pxData, pixelData, pxPos, maxBit) {
+        let pixel = pixelData[0];
         pxData[pxPos] = pixel;
         pxData[pxPos + 1] = pixel;
         pxData[pxPos + 2] = pixel;
         pxData[pxPos + 3] = maxBit;
       },
-      function(pxData, pixelData, pxPos) {
-        var pixel = pixelData[0];
+      function (pxData, pixelData, pxPos) {
+        let pixel = pixelData[0];
         pxData[pxPos] = pixel;
         pxData[pxPos + 1] = pixel;
         pxData[pxPos + 2] = pixel;
         pxData[pxPos + 3] = pixelData[1];
       },
-      function(pxData, pixelData, pxPos, maxBit) {
+      function (pxData, pixelData, pxPos, maxBit) {
         pxData[pxPos] = pixelData[0];
         pxData[pxPos + 1] = pixelData[1];
         pxData[pxPos + 2] = pixelData[2];
         pxData[pxPos + 3] = maxBit;
       },
-      function(pxData, pixelData, pxPos) {
+      function (pxData, pixelData, pxPos) {
         pxData[pxPos] = pixelData[0];
         pxData[pxPos + 1] = pixelData[1];
         pxData[pxPos + 2] = pixelData[2];
         pxData[pxPos + 3] = pixelData[3];
-      }
+      },
     ];
     function bitRetriever(data, depth) {
-      var leftOver = [];
-      var i = 0;
+      let leftOver = [];
+      let i = 0;
       function split() {
         if (i === data.length) {
-          throw new Error('Ran out of data');
+          throw new Error("Ran out of data");
         }
-        var byte = data[i];
+        let byte = data[i];
         i++;
-        var byte8, byte7, byte6, byte5, byte4, byte3, byte2, byte1;
+        let byte8, byte7, byte6, byte5, byte4, byte3, byte2, byte1;
         switch (depth) {
           default:
-            throw new Error('unrecognised depth');
+            throw new Error("unrecognised depth");
           case 16:
             byte2 = data[i];
             i++;
-            leftOver.push(((byte << 8) + byte2));
+            leftOver.push((byte << 8) + byte2);
             break;
           case 4:
             byte2 = byte & 0x0f;
@@ -2484,50 +2494,50 @@ var DjVu = (function () {
             break;
           case 2:
             byte4 = byte & 3;
-            byte3 = byte >> 2 & 3;
-            byte2 = byte >> 4 & 3;
-            byte1 = byte >> 6 & 3;
+            byte3 = (byte >> 2) & 3;
+            byte2 = (byte >> 4) & 3;
+            byte1 = (byte >> 6) & 3;
             leftOver.push(byte1, byte2, byte3, byte4);
             break;
           case 1:
             byte8 = byte & 1;
-            byte7 = byte >> 1 & 1;
-            byte6 = byte >> 2 & 1;
-            byte5 = byte >> 3 & 1;
-            byte4 = byte >> 4 & 1;
-            byte3 = byte >> 5 & 1;
-            byte2 = byte >> 6 & 1;
-            byte1 = byte >> 7 & 1;
+            byte7 = (byte >> 1) & 1;
+            byte6 = (byte >> 2) & 1;
+            byte5 = (byte >> 3) & 1;
+            byte4 = (byte >> 4) & 1;
+            byte3 = (byte >> 5) & 1;
+            byte2 = (byte >> 6) & 1;
+            byte1 = (byte >> 7) & 1;
             leftOver.push(byte1, byte2, byte3, byte4, byte5, byte6, byte7, byte8);
             break;
         }
       }
       return {
-        get: function(count) {
+        get: function (count) {
           while (leftOver.length < count) {
             split();
           }
-          var returner = leftOver.slice(0, count);
+          let returner = leftOver.slice(0, count);
           leftOver = leftOver.slice(count);
           return returner;
         },
-        resetAfterLine: function() {
+        resetAfterLine: function () {
           leftOver.length = 0;
         },
-        end: function() {
+        end: function () {
           if (i !== data.length) {
-            throw new Error('extra data found');
+            throw new Error("extra data found");
           }
-        }
+        },
       };
     }
     function mapImage8Bit(image, pxData, getPxPos, bpp, data, rawPos) {
-      var imageWidth = image.width;
-      var imageHeight = image.height;
-      var imagePass = image.index;
-      for (var y = 0; y < imageHeight; y++) {
-        for (var x = 0; x < imageWidth; x++) {
-          var pxPos = getPxPos(x, y, imagePass);
+      let imageWidth = image.width;
+      let imageHeight = image.height;
+      let imagePass = image.index;
+      for (let y = 0; y < imageHeight; y++) {
+        for (let x = 0; x < imageWidth; x++) {
+          let pxPos = getPxPos(x, y, imagePass);
           pixelBppMapper[bpp](pxData, data, pxPos, rawPos);
           rawPos += bpp;
         }
@@ -2535,78 +2545,92 @@ var DjVu = (function () {
       return rawPos;
     }
     function mapImageCustomBit(image, pxData, getPxPos, bpp, bits, maxBit) {
-      var imageWidth = image.width;
-      var imageHeight = image.height;
-      var imagePass = image.index;
-      for (var y = 0; y < imageHeight; y++) {
-        for (var x = 0; x < imageWidth; x++) {
-          var pixelData = bits.get(bpp);
-          var pxPos = getPxPos(x, y, imagePass);
+      let imageWidth = image.width;
+      let imageHeight = image.height;
+      let imagePass = image.index;
+      for (let y = 0; y < imageHeight; y++) {
+        for (let x = 0; x < imageWidth; x++) {
+          let pixelData = bits.get(bpp);
+          let pxPos = getPxPos(x, y, imagePass);
           pixelBppCustomMapper[bpp](pxData, pixelData, pxPos, maxBit);
         }
         bits.resetAfterLine();
       }
     }
-    exports.dataToBitMap = function(data, bitmapInfo) {
-      var width = bitmapInfo.width;
-      var height = bitmapInfo.height;
-      var depth = bitmapInfo.depth;
-      var bpp = bitmapInfo.bpp;
-      var interlace = bitmapInfo.interlace;
+    exports.dataToBitMap = function (data, bitmapInfo) {
+      let width = bitmapInfo.width;
+      let height = bitmapInfo.height;
+      let depth = bitmapInfo.depth;
+      let bpp = bitmapInfo.bpp;
+      let interlace = bitmapInfo.interlace;
+      let bits;
       if (depth !== 8) {
-        var bits = bitRetriever(data, depth);
+        bits = bitRetriever(data, depth);
       }
-      var pxData;
+      let pxData;
       if (depth <= 8) {
-        pxData = new Buffer(width * height * 4);
-      }
-      else {
+        pxData = Buffer.alloc(width * height * 4);
+      } else {
         pxData = new Uint16Array(width * height * 4);
       }
-      var maxBit = Math.pow(2, depth) - 1;
-      var rawPos = 0;
-      var images;
-      var getPxPos;
+      let maxBit = Math.pow(2, depth) - 1;
+      let rawPos = 0;
+      let images;
+      let getPxPos;
       if (interlace) {
         images = interlaceUtils.getImagePasses(width, height);
         getPxPos = interlaceUtils.getInterlaceIterator(width, height);
-      }
-      else {
-        var nonInterlacedPxPos = 0;
-        getPxPos = function() {
-          var returner = nonInterlacedPxPos;
+      } else {
+        let nonInterlacedPxPos = 0;
+        getPxPos = function () {
+          let returner = nonInterlacedPxPos;
           nonInterlacedPxPos += 4;
           return returner;
         };
         images = [{ width: width, height: height }];
       }
-      for (var imageIndex = 0; imageIndex < images.length; imageIndex++) {
+      for (let imageIndex = 0; imageIndex < images.length; imageIndex++) {
         if (depth === 8) {
-          rawPos = mapImage8Bit(images[imageIndex], pxData, getPxPos, bpp, data, rawPos);
-        }
-        else {
-          mapImageCustomBit(images[imageIndex], pxData, getPxPos, bpp, bits, maxBit);
+          rawPos = mapImage8Bit(
+            images[imageIndex],
+            pxData,
+            getPxPos,
+            bpp,
+            data,
+            rawPos
+          );
+        } else {
+          mapImageCustomBit(
+            images[imageIndex],
+            pxData,
+            getPxPos,
+            bpp,
+            bits,
+            maxBit
+          );
         }
       }
       if (depth === 8) {
         if (rawPos !== data.length) {
-          throw new Error('extra data found');
+          throw new Error("extra data found");
         }
-      }
-      else {
+      } else {
         bits.end();
       }
       return pxData;
     };
     }).call(this,require("buffer").Buffer);
-    },{"./interlace":11,"buffer":32}],2:[function(require,module,exports){
+    },{"./interlace":11,"buffer":28}],2:[function(require,module,exports){
     (function (Buffer){
-    var constants = require('./constants');
-    module.exports = function(dataIn, width, height, options) {
-      var outHasAlpha = [constants.COLORTYPE_COLOR_ALPHA, constants.COLORTYPE_ALPHA].indexOf(options.colorType) !== -1;
+    let constants = require("./constants");
+    module.exports = function (dataIn, width, height, options) {
+      let outHasAlpha =
+        [constants.COLORTYPE_COLOR_ALPHA, constants.COLORTYPE_ALPHA].indexOf(
+          options.colorType
+        ) !== -1;
       if (options.colorType === options.inputColorType) {
-        var bigEndian = (function() {
-          var buffer = new ArrayBuffer(2);
+        let bigEndian = (function () {
+          let buffer = new ArrayBuffer(2);
           new DataView(buffer).setInt16(0, 256, true );
           return new Int16Array(buffer)[0] !== 256;
         })();
@@ -2614,21 +2638,21 @@ var DjVu = (function () {
           return dataIn;
         }
       }
-      var data = options.bitDepth !== 16 ? dataIn : new Uint16Array(dataIn.buffer);
-      var maxValue = 255;
-      var inBpp = constants.COLORTYPE_TO_BPP_MAP[options.inputColorType];
+      let data = options.bitDepth !== 16 ? dataIn : new Uint16Array(dataIn.buffer);
+      let maxValue = 255;
+      let inBpp = constants.COLORTYPE_TO_BPP_MAP[options.inputColorType];
       if (inBpp === 4 && !options.inputHasAlpha) {
         inBpp = 3;
       }
-      var outBpp = constants.COLORTYPE_TO_BPP_MAP[options.colorType];
+      let outBpp = constants.COLORTYPE_TO_BPP_MAP[options.colorType];
       if (options.bitDepth === 16) {
         maxValue = 65535;
         outBpp *= 2;
       }
-      var outData = new Buffer(width * height * outBpp);
-      var inIndex = 0;
-      var outIndex = 0;
-      var bgColor = options.bgColor || {};
+      let outData = Buffer.alloc(width * height * outBpp);
+      let inIndex = 0;
+      let outIndex = 0;
+      let bgColor = options.bgColor || {};
       if (bgColor.red === undefined) {
         bgColor.red = maxValue;
       }
@@ -2639,10 +2663,10 @@ var DjVu = (function () {
         bgColor.blue = maxValue;
       }
       function getRGBA() {
-        var red;
-        var green;
-        var blue;
-        var alpha = maxValue;
+        let red;
+        let green;
+        let blue;
+        let alpha = maxValue;
         switch (options.inputColorType) {
           case constants.COLORTYPE_COLOR_ALPHA:
             alpha = data[inIndex + 3];
@@ -2667,21 +2691,34 @@ var DjVu = (function () {
             blue = red;
             break;
           default:
-            throw new Error('input color type:' + options.inputColorType + ' is not supported at present');
+            throw new Error(
+              "input color type:" +
+                options.inputColorType +
+                " is not supported at present"
+            );
         }
         if (options.inputHasAlpha) {
           if (!outHasAlpha) {
             alpha /= maxValue;
-            red = Math.min(Math.max(Math.round((1 - alpha) * bgColor.red + alpha * red), 0), maxValue);
-            green = Math.min(Math.max(Math.round((1 - alpha) * bgColor.green + alpha * green), 0), maxValue);
-            blue = Math.min(Math.max(Math.round((1 - alpha) * bgColor.blue + alpha * blue), 0), maxValue);
+            red = Math.min(
+              Math.max(Math.round((1 - alpha) * bgColor.red + alpha * red), 0),
+              maxValue
+            );
+            green = Math.min(
+              Math.max(Math.round((1 - alpha) * bgColor.green + alpha * green), 0),
+              maxValue
+            );
+            blue = Math.min(
+              Math.max(Math.round((1 - alpha) * bgColor.blue + alpha * blue), 0),
+              maxValue
+            );
           }
         }
         return { red: red, green: green, blue: blue, alpha: alpha };
       }
-      for (var y = 0; y < height; y++) {
-        for (var x = 0; x < width; x++) {
-          var rgba = getRGBA();
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          let rgba = getRGBA();
           switch (options.colorType) {
             case constants.COLORTYPE_COLOR_ALPHA:
             case constants.COLORTYPE_COLOR:
@@ -2692,8 +2729,7 @@ var DjVu = (function () {
                 if (outHasAlpha) {
                   outData[outIndex + 3] = rgba.alpha;
                 }
-              }
-              else {
+              } else {
                 outData.writeUInt16BE(rgba.red, outIndex);
                 outData.writeUInt16BE(rgba.green, outIndex + 2);
                 outData.writeUInt16BE(rgba.blue, outIndex + 4);
@@ -2703,23 +2739,23 @@ var DjVu = (function () {
               }
               break;
             case constants.COLORTYPE_ALPHA:
-            case constants.COLORTYPE_GRAYSCALE:
-              var grayscale = (rgba.red + rgba.green + rgba.blue) / 3;
+            case constants.COLORTYPE_GRAYSCALE: {
+              let grayscale = (rgba.red + rgba.green + rgba.blue) / 3;
               if (options.bitDepth === 8) {
                 outData[outIndex] = grayscale;
                 if (outHasAlpha) {
                   outData[outIndex + 1] = rgba.alpha;
                 }
-              }
-              else {
+              } else {
                 outData.writeUInt16BE(grayscale, outIndex);
                 if (outHasAlpha) {
                   outData.writeUInt16BE(rgba.alpha, outIndex + 2);
                 }
               }
               break;
+            }
             default:
-              throw new Error('unrecognised color Type ' + options.colorType);
+              throw new Error("unrecognised color Type " + options.colorType);
           }
           inIndex += inBpp;
           outIndex += outBpp;
@@ -2728,45 +2764,46 @@ var DjVu = (function () {
       return outData;
     };
     }).call(this,require("buffer").Buffer);
-    },{"./constants":4,"buffer":32}],3:[function(require,module,exports){
+    },{"./constants":4,"buffer":28}],3:[function(require,module,exports){
     (function (process,Buffer){
-    var util = require('util');
-    var Stream = require('stream');
-    var ChunkStream = module.exports = function() {
+    let util = require("util");
+    let Stream = require("stream");
+    let ChunkStream = (module.exports = function () {
       Stream.call(this);
       this._buffers = [];
       this._buffered = 0;
       this._reads = [];
       this._paused = false;
-      this._encoding = 'utf8';
+      this._encoding = "utf8";
       this.writable = true;
-    };
+    });
     util.inherits(ChunkStream, Stream);
-    ChunkStream.prototype.read = function(length, callback) {
+    ChunkStream.prototype.read = function (length, callback) {
       this._reads.push({
         length: Math.abs(length),
         allowLess: length < 0,
-        func: callback
+        func: callback,
       });
-      process.nextTick(function() {
-        this._process();
-        if (this._paused && this._reads.length > 0) {
-          this._paused = false;
-          this.emit('drain');
-        }
-      }.bind(this));
+      process.nextTick(
+        function () {
+          this._process();
+          if (this._paused && this._reads && this._reads.length > 0) {
+            this._paused = false;
+            this.emit("drain");
+          }
+        }.bind(this)
+      );
     };
-    ChunkStream.prototype.write = function(data, encoding) {
+    ChunkStream.prototype.write = function (data, encoding) {
       if (!this.writable) {
-        this.emit('error', new Error('Stream not writable'));
+        this.emit("error", new Error("Stream not writable"));
         return false;
       }
-      var dataBuffer;
+      let dataBuffer;
       if (Buffer.isBuffer(data)) {
         dataBuffer = data;
-      }
-      else {
-        dataBuffer = new Buffer(data, encoding || this._encoding);
+      } else {
+        dataBuffer = Buffer.from(data, encoding || this._encoding);
       }
       this._buffers.push(dataBuffer);
       this._buffered += dataBuffer.length;
@@ -2776,7 +2813,7 @@ var DjVu = (function () {
       }
       return this.writable && !this._paused;
     };
-    ChunkStream.prototype.end = function(data, encoding) {
+    ChunkStream.prototype.end = function (data, encoding) {
       if (data) {
         this.write(data, encoding);
       }
@@ -2786,52 +2823,48 @@ var DjVu = (function () {
       }
       if (this._buffers.length === 0) {
         this._end();
-      }
-      else {
+      } else {
         this._buffers.push(null);
         this._process();
       }
     };
     ChunkStream.prototype.destroySoon = ChunkStream.prototype.end;
-    ChunkStream.prototype._end = function() {
+    ChunkStream.prototype._end = function () {
       if (this._reads.length > 0) {
-        this.emit('error',
-          new Error('Unexpected end of input')
-        );
+        this.emit("error", new Error("Unexpected end of input"));
       }
       this.destroy();
     };
-    ChunkStream.prototype.destroy = function() {
+    ChunkStream.prototype.destroy = function () {
       if (!this._buffers) {
         return;
       }
       this.writable = false;
       this._reads = null;
       this._buffers = null;
-      this.emit('close');
+      this.emit("close");
     };
-    ChunkStream.prototype._processReadAllowingLess = function(read) {
+    ChunkStream.prototype._processReadAllowingLess = function (read) {
       this._reads.shift();
-      var smallerBuf = this._buffers[0];
+      let smallerBuf = this._buffers[0];
       if (smallerBuf.length > read.length) {
         this._buffered -= read.length;
         this._buffers[0] = smallerBuf.slice(read.length);
         read.func.call(this, smallerBuf.slice(0, read.length));
-      }
-      else {
+      } else {
         this._buffered -= smallerBuf.length;
         this._buffers.shift();
         read.func.call(this, smallerBuf);
       }
     };
-    ChunkStream.prototype._processRead = function(read) {
+    ChunkStream.prototype._processRead = function (read) {
       this._reads.shift();
-      var pos = 0;
-      var count = 0;
-      var data = new Buffer(read.length);
+      let pos = 0;
+      let count = 0;
+      let data = Buffer.alloc(read.length);
       while (pos < read.length) {
-        var buf = this._buffers[count++];
-        var len = Math.min(buf.length, read.length - pos);
+        let buf = this._buffers[count++];
+        let len = Math.min(buf.length, read.length - pos);
         buf.copy(data, pos, 0, len);
         pos += len;
         if (len !== buf.length) {
@@ -2844,30 +2877,27 @@ var DjVu = (function () {
       this._buffered -= read.length;
       read.func.call(this, data);
     };
-    ChunkStream.prototype._process = function() {
+    ChunkStream.prototype._process = function () {
       try {
         while (this._buffered > 0 && this._reads && this._reads.length > 0) {
-          var read = this._reads[0];
+          let read = this._reads[0];
           if (read.allowLess) {
             this._processReadAllowingLess(read);
-          }
-          else if (this._buffered >= read.length) {
+          } else if (this._buffered >= read.length) {
             this._processRead(read);
-          }
-          else {
+          } else {
             break;
           }
         }
         if (this._buffers && !this.writable) {
           this._end();
         }
-      }
-      catch (ex) {
-        this.emit('error', ex);
+      } catch (ex) {
+        this.emit("error", ex);
       }
     };
     }).call(this,require('_process'),require("buffer").Buffer);
-    },{"_process":51,"buffer":32,"stream":64,"util":69}],4:[function(require,module,exports){
+    },{"_process":47,"buffer":28,"stream":63,"util":67}],4:[function(require,module,exports){
     module.exports = {
       PNG_SIGNATURE: [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a],
       TYPE_IHDR: 0x49484452,
@@ -2887,170 +2917,169 @@ var DjVu = (function () {
         2: 3,
         3: 1,
         4: 2,
-        6: 4
+        6: 4,
       },
-      GAMMA_DIVISION: 100000
+      GAMMA_DIVISION: 100000,
     };
     },{}],5:[function(require,module,exports){
-    var crcTable = [];
-    (function() {
-      for (var i = 0; i < 256; i++) {
-        var currentCrc = i;
-        for (var j = 0; j < 8; j++) {
+    let crcTable = [];
+    (function () {
+      for (let i = 0; i < 256; i++) {
+        let currentCrc = i;
+        for (let j = 0; j < 8; j++) {
           if (currentCrc & 1) {
             currentCrc = 0xedb88320 ^ (currentCrc >>> 1);
-          }
-          else {
+          } else {
             currentCrc = currentCrc >>> 1;
           }
         }
         crcTable[i] = currentCrc;
       }
-    }());
-    var CrcCalculator = module.exports = function() {
+    })();
+    let CrcCalculator = (module.exports = function () {
       this._crc = -1;
-    };
-    CrcCalculator.prototype.write = function(data) {
-      for (var i = 0; i < data.length; i++) {
+    });
+    CrcCalculator.prototype.write = function (data) {
+      for (let i = 0; i < data.length; i++) {
         this._crc = crcTable[(this._crc ^ data[i]) & 0xff] ^ (this._crc >>> 8);
       }
       return true;
     };
-    CrcCalculator.prototype.crc32 = function() {
+    CrcCalculator.prototype.crc32 = function () {
       return this._crc ^ -1;
     };
-    CrcCalculator.crc32 = function(buf) {
-      var crc = -1;
-      for (var i = 0; i < buf.length; i++) {
+    CrcCalculator.crc32 = function (buf) {
+      let crc = -1;
+      for (let i = 0; i < buf.length; i++) {
         crc = crcTable[(crc ^ buf[i]) & 0xff] ^ (crc >>> 8);
       }
       return crc ^ -1;
     };
     },{}],6:[function(require,module,exports){
     (function (Buffer){
-    var paethPredictor = require('./paeth-predictor');
+    let paethPredictor = require("./paeth-predictor");
     function filterNone(pxData, pxPos, byteWidth, rawData, rawPos) {
-      for (var x = 0; x < byteWidth; x++) {
+      for (let x = 0; x < byteWidth; x++) {
         rawData[rawPos + x] = pxData[pxPos + x];
       }
     }
     function filterSumNone(pxData, pxPos, byteWidth) {
-      var sum = 0;
-      var length = pxPos + byteWidth;
-      for (var i = pxPos; i < length; i++) {
+      let sum = 0;
+      let length = pxPos + byteWidth;
+      for (let i = pxPos; i < length; i++) {
         sum += Math.abs(pxData[i]);
       }
       return sum;
     }
     function filterSub(pxData, pxPos, byteWidth, rawData, rawPos, bpp) {
-      for (var x = 0; x < byteWidth; x++) {
-        var left = x >= bpp ? pxData[pxPos + x - bpp] : 0;
-        var val = pxData[pxPos + x] - left;
+      for (let x = 0; x < byteWidth; x++) {
+        let left = x >= bpp ? pxData[pxPos + x - bpp] : 0;
+        let val = pxData[pxPos + x] - left;
         rawData[rawPos + x] = val;
       }
     }
     function filterSumSub(pxData, pxPos, byteWidth, bpp) {
-      var sum = 0;
-      for (var x = 0; x < byteWidth; x++) {
-        var left = x >= bpp ? pxData[pxPos + x - bpp] : 0;
-        var val = pxData[pxPos + x] - left;
+      let sum = 0;
+      for (let x = 0; x < byteWidth; x++) {
+        let left = x >= bpp ? pxData[pxPos + x - bpp] : 0;
+        let val = pxData[pxPos + x] - left;
         sum += Math.abs(val);
       }
       return sum;
     }
     function filterUp(pxData, pxPos, byteWidth, rawData, rawPos) {
-      for (var x = 0; x < byteWidth; x++) {
-        var up = pxPos > 0 ? pxData[pxPos + x - byteWidth] : 0;
-        var val = pxData[pxPos + x] - up;
+      for (let x = 0; x < byteWidth; x++) {
+        let up = pxPos > 0 ? pxData[pxPos + x - byteWidth] : 0;
+        let val = pxData[pxPos + x] - up;
         rawData[rawPos + x] = val;
       }
     }
     function filterSumUp(pxData, pxPos, byteWidth) {
-      var sum = 0;
-      var length = pxPos + byteWidth;
-      for (var x = pxPos; x < length; x++) {
-        var up = pxPos > 0 ? pxData[x - byteWidth] : 0;
-        var val = pxData[x] - up;
+      let sum = 0;
+      let length = pxPos + byteWidth;
+      for (let x = pxPos; x < length; x++) {
+        let up = pxPos > 0 ? pxData[x - byteWidth] : 0;
+        let val = pxData[x] - up;
         sum += Math.abs(val);
       }
       return sum;
     }
     function filterAvg(pxData, pxPos, byteWidth, rawData, rawPos, bpp) {
-      for (var x = 0; x < byteWidth; x++) {
-        var left = x >= bpp ? pxData[pxPos + x - bpp] : 0;
-        var up = pxPos > 0 ? pxData[pxPos + x - byteWidth] : 0;
-        var val = pxData[pxPos + x] - ((left + up) >> 1);
+      for (let x = 0; x < byteWidth; x++) {
+        let left = x >= bpp ? pxData[pxPos + x - bpp] : 0;
+        let up = pxPos > 0 ? pxData[pxPos + x - byteWidth] : 0;
+        let val = pxData[pxPos + x] - ((left + up) >> 1);
         rawData[rawPos + x] = val;
       }
     }
     function filterSumAvg(pxData, pxPos, byteWidth, bpp) {
-      var sum = 0;
-      for (var x = 0; x < byteWidth; x++) {
-        var left = x >= bpp ? pxData[pxPos + x - bpp] : 0;
-        var up = pxPos > 0 ? pxData[pxPos + x - byteWidth] : 0;
-        var val = pxData[pxPos + x] - ((left + up) >> 1);
+      let sum = 0;
+      for (let x = 0; x < byteWidth; x++) {
+        let left = x >= bpp ? pxData[pxPos + x - bpp] : 0;
+        let up = pxPos > 0 ? pxData[pxPos + x - byteWidth] : 0;
+        let val = pxData[pxPos + x] - ((left + up) >> 1);
         sum += Math.abs(val);
       }
       return sum;
     }
     function filterPaeth(pxData, pxPos, byteWidth, rawData, rawPos, bpp) {
-      for (var x = 0; x < byteWidth; x++) {
-        var left = x >= bpp ? pxData[pxPos + x - bpp] : 0;
-        var up = pxPos > 0 ? pxData[pxPos + x - byteWidth] : 0;
-        var upleft = pxPos > 0 && x >= bpp ? pxData[pxPos + x - (byteWidth + bpp)] : 0;
-        var val = pxData[pxPos + x] - paethPredictor(left, up, upleft);
+      for (let x = 0; x < byteWidth; x++) {
+        let left = x >= bpp ? pxData[pxPos + x - bpp] : 0;
+        let up = pxPos > 0 ? pxData[pxPos + x - byteWidth] : 0;
+        let upleft =
+          pxPos > 0 && x >= bpp ? pxData[pxPos + x - (byteWidth + bpp)] : 0;
+        let val = pxData[pxPos + x] - paethPredictor(left, up, upleft);
         rawData[rawPos + x] = val;
       }
     }
     function filterSumPaeth(pxData, pxPos, byteWidth, bpp) {
-      var sum = 0;
-      for (var x = 0; x < byteWidth; x++) {
-        var left = x >= bpp ? pxData[pxPos + x - bpp] : 0;
-        var up = pxPos > 0 ? pxData[pxPos + x - byteWidth] : 0;
-        var upleft = pxPos > 0 && x >= bpp ? pxData[pxPos + x - (byteWidth + bpp)] : 0;
-        var val = pxData[pxPos + x] - paethPredictor(left, up, upleft);
+      let sum = 0;
+      for (let x = 0; x < byteWidth; x++) {
+        let left = x >= bpp ? pxData[pxPos + x - bpp] : 0;
+        let up = pxPos > 0 ? pxData[pxPos + x - byteWidth] : 0;
+        let upleft =
+          pxPos > 0 && x >= bpp ? pxData[pxPos + x - (byteWidth + bpp)] : 0;
+        let val = pxData[pxPos + x] - paethPredictor(left, up, upleft);
         sum += Math.abs(val);
       }
       return sum;
     }
-    var filters = {
+    let filters = {
       0: filterNone,
       1: filterSub,
       2: filterUp,
       3: filterAvg,
-      4: filterPaeth
+      4: filterPaeth,
     };
-    var filterSums = {
+    let filterSums = {
       0: filterSumNone,
       1: filterSumSub,
       2: filterSumUp,
       3: filterSumAvg,
-      4: filterSumPaeth
+      4: filterSumPaeth,
     };
-    module.exports = function(pxData, width, height, options, bpp) {
-      var filterTypes;
-      if (!('filterType' in options) || options.filterType === -1) {
+    module.exports = function (pxData, width, height, options, bpp) {
+      let filterTypes;
+      if (!("filterType" in options) || options.filterType === -1) {
         filterTypes = [0, 1, 2, 3, 4];
-      }
-      else if (typeof options.filterType === 'number') {
+      } else if (typeof options.filterType === "number") {
         filterTypes = [options.filterType];
-      }
-      else {
-        throw new Error('unrecognised filter types');
+      } else {
+        throw new Error("unrecognised filter types");
       }
       if (options.bitDepth === 16) {
         bpp *= 2;
       }
-      var byteWidth = width * bpp;
-      var rawPos = 0;
-      var pxPos = 0;
-      var rawData = new Buffer((byteWidth + 1) * height);
-      var sel = filterTypes[0];
-      for (var y = 0; y < height; y++) {
+      let byteWidth = width * bpp;
+      let rawPos = 0;
+      let pxPos = 0;
+      let rawData = Buffer.alloc((byteWidth + 1) * height);
+      let sel = filterTypes[0];
+      for (let y = 0; y < height; y++) {
         if (filterTypes.length > 1) {
-          var min = Infinity;
-          for (var i = 0; i < filterTypes.length; i++) {
-            var sum = filterSums[filterTypes[i]](pxData, pxPos, byteWidth, bpp);
+          let min = Infinity;
+          for (let i = 0; i < filterTypes.length; i++) {
+            let sum = filterSums[filterTypes[i]](pxData, pxPos, byteWidth, bpp);
             if (sum < min) {
               sel = filterTypes[i];
               min = sum;
@@ -3066,152 +3095,166 @@ var DjVu = (function () {
       return rawData;
     };
     }).call(this,require("buffer").Buffer);
-    },{"./paeth-predictor":15,"buffer":32}],7:[function(require,module,exports){
+    },{"./paeth-predictor":15,"buffer":28}],7:[function(require,module,exports){
     (function (Buffer){
-    var util = require('util');
-    var ChunkStream = require('./chunkstream');
-    var Filter = require('./filter-parse');
-    var FilterAsync = module.exports = function(bitmapInfo) {
+    let util = require("util");
+    let ChunkStream = require("./chunkstream");
+    let Filter = require("./filter-parse");
+    let FilterAsync = (module.exports = function (bitmapInfo) {
       ChunkStream.call(this);
-      var buffers = [];
-      var that = this;
+      let buffers = [];
+      let that = this;
       this._filter = new Filter(bitmapInfo, {
         read: this.read.bind(this),
-        write: function(buffer) {
+        write: function (buffer) {
           buffers.push(buffer);
         },
-        complete: function() {
-          that.emit('complete', Buffer.concat(buffers));
-        }
+        complete: function () {
+          that.emit("complete", Buffer.concat(buffers));
+        },
       });
       this._filter.start();
-    };
+    });
     util.inherits(FilterAsync, ChunkStream);
     }).call(this,require("buffer").Buffer);
-    },{"./chunkstream":3,"./filter-parse":9,"buffer":32,"util":69}],8:[function(require,module,exports){
+    },{"./chunkstream":3,"./filter-parse":9,"buffer":28,"util":67}],8:[function(require,module,exports){
     (function (Buffer){
-    var SyncReader = require('./sync-reader');
-    var Filter = require('./filter-parse');
-    exports.process = function(inBuffer, bitmapInfo) {
-      var outBuffers = [];
-      var reader = new SyncReader(inBuffer);
-      var filter = new Filter(bitmapInfo, {
+    let SyncReader = require("./sync-reader");
+    let Filter = require("./filter-parse");
+    exports.process = function (inBuffer, bitmapInfo) {
+      let outBuffers = [];
+      let reader = new SyncReader(inBuffer);
+      let filter = new Filter(bitmapInfo, {
         read: reader.read.bind(reader),
-        write: function(bufferPart) {
+        write: function (bufferPart) {
           outBuffers.push(bufferPart);
         },
-        complete: function() {
-        }
+        complete: function () {},
       });
       filter.start();
       reader.process();
       return Buffer.concat(outBuffers);
     };
     }).call(this,require("buffer").Buffer);
-    },{"./filter-parse":9,"./sync-reader":22,"buffer":32}],9:[function(require,module,exports){
+    },{"./filter-parse":9,"./sync-reader":22,"buffer":28}],9:[function(require,module,exports){
     (function (Buffer){
-    var interlaceUtils = require('./interlace');
-    var paethPredictor = require('./paeth-predictor');
+    let interlaceUtils = require("./interlace");
+    let paethPredictor = require("./paeth-predictor");
     function getByteWidth(width, bpp, depth) {
-      var byteWidth = width * bpp;
+      let byteWidth = width * bpp;
       if (depth !== 8) {
         byteWidth = Math.ceil(byteWidth / (8 / depth));
       }
       return byteWidth;
     }
-    var Filter = module.exports = function(bitmapInfo, dependencies) {
-      var width = bitmapInfo.width;
-      var height = bitmapInfo.height;
-      var interlace = bitmapInfo.interlace;
-      var bpp = bitmapInfo.bpp;
-      var depth = bitmapInfo.depth;
+    let Filter = (module.exports = function (bitmapInfo, dependencies) {
+      let width = bitmapInfo.width;
+      let height = bitmapInfo.height;
+      let interlace = bitmapInfo.interlace;
+      let bpp = bitmapInfo.bpp;
+      let depth = bitmapInfo.depth;
       this.read = dependencies.read;
       this.write = dependencies.write;
       this.complete = dependencies.complete;
       this._imageIndex = 0;
       this._images = [];
       if (interlace) {
-        var passes = interlaceUtils.getImagePasses(width, height);
-        for (var i = 0; i < passes.length; i++) {
+        let passes = interlaceUtils.getImagePasses(width, height);
+        for (let i = 0; i < passes.length; i++) {
           this._images.push({
             byteWidth: getByteWidth(passes[i].width, bpp, depth),
             height: passes[i].height,
-            lineIndex: 0
+            lineIndex: 0,
           });
         }
-      }
-      else {
+      } else {
         this._images.push({
           byteWidth: getByteWidth(width, bpp, depth),
           height: height,
-          lineIndex: 0
+          lineIndex: 0,
         });
       }
       if (depth === 8) {
         this._xComparison = bpp;
-      }
-      else if (depth === 16) {
+      } else if (depth === 16) {
         this._xComparison = bpp * 2;
-      }
-      else {
+      } else {
         this._xComparison = 1;
       }
+    });
+    Filter.prototype.start = function () {
+      this.read(
+        this._images[this._imageIndex].byteWidth + 1,
+        this._reverseFilterLine.bind(this)
+      );
     };
-    Filter.prototype.start = function() {
-      this.read(this._images[this._imageIndex].byteWidth + 1, this._reverseFilterLine.bind(this));
-    };
-    Filter.prototype._unFilterType1 = function(rawData, unfilteredLine, byteWidth) {
-      var xComparison = this._xComparison;
-      var xBiggerThan = xComparison - 1;
-      for (var x = 0; x < byteWidth; x++) {
-        var rawByte = rawData[1 + x];
-        var f1Left = x > xBiggerThan ? unfilteredLine[x - xComparison] : 0;
+    Filter.prototype._unFilterType1 = function (
+      rawData,
+      unfilteredLine,
+      byteWidth
+    ) {
+      let xComparison = this._xComparison;
+      let xBiggerThan = xComparison - 1;
+      for (let x = 0; x < byteWidth; x++) {
+        let rawByte = rawData[1 + x];
+        let f1Left = x > xBiggerThan ? unfilteredLine[x - xComparison] : 0;
         unfilteredLine[x] = rawByte + f1Left;
       }
     };
-    Filter.prototype._unFilterType2 = function(rawData, unfilteredLine, byteWidth) {
-      var lastLine = this._lastLine;
-      for (var x = 0; x < byteWidth; x++) {
-        var rawByte = rawData[1 + x];
-        var f2Up = lastLine ? lastLine[x] : 0;
+    Filter.prototype._unFilterType2 = function (
+      rawData,
+      unfilteredLine,
+      byteWidth
+    ) {
+      let lastLine = this._lastLine;
+      for (let x = 0; x < byteWidth; x++) {
+        let rawByte = rawData[1 + x];
+        let f2Up = lastLine ? lastLine[x] : 0;
         unfilteredLine[x] = rawByte + f2Up;
       }
     };
-    Filter.prototype._unFilterType3 = function(rawData, unfilteredLine, byteWidth) {
-      var xComparison = this._xComparison;
-      var xBiggerThan = xComparison - 1;
-      var lastLine = this._lastLine;
-      for (var x = 0; x < byteWidth; x++) {
-        var rawByte = rawData[1 + x];
-        var f3Up = lastLine ? lastLine[x] : 0;
-        var f3Left = x > xBiggerThan ? unfilteredLine[x - xComparison] : 0;
-        var f3Add = Math.floor((f3Left + f3Up) / 2);
+    Filter.prototype._unFilterType3 = function (
+      rawData,
+      unfilteredLine,
+      byteWidth
+    ) {
+      let xComparison = this._xComparison;
+      let xBiggerThan = xComparison - 1;
+      let lastLine = this._lastLine;
+      for (let x = 0; x < byteWidth; x++) {
+        let rawByte = rawData[1 + x];
+        let f3Up = lastLine ? lastLine[x] : 0;
+        let f3Left = x > xBiggerThan ? unfilteredLine[x - xComparison] : 0;
+        let f3Add = Math.floor((f3Left + f3Up) / 2);
         unfilteredLine[x] = rawByte + f3Add;
       }
     };
-    Filter.prototype._unFilterType4 = function(rawData, unfilteredLine, byteWidth) {
-      var xComparison = this._xComparison;
-      var xBiggerThan = xComparison - 1;
-      var lastLine = this._lastLine;
-      for (var x = 0; x < byteWidth; x++) {
-        var rawByte = rawData[1 + x];
-        var f4Up = lastLine ? lastLine[x] : 0;
-        var f4Left = x > xBiggerThan ? unfilteredLine[x - xComparison] : 0;
-        var f4UpLeft = x > xBiggerThan && lastLine ? lastLine[x - xComparison] : 0;
-        var f4Add = paethPredictor(f4Left, f4Up, f4UpLeft);
+    Filter.prototype._unFilterType4 = function (
+      rawData,
+      unfilteredLine,
+      byteWidth
+    ) {
+      let xComparison = this._xComparison;
+      let xBiggerThan = xComparison - 1;
+      let lastLine = this._lastLine;
+      for (let x = 0; x < byteWidth; x++) {
+        let rawByte = rawData[1 + x];
+        let f4Up = lastLine ? lastLine[x] : 0;
+        let f4Left = x > xBiggerThan ? unfilteredLine[x - xComparison] : 0;
+        let f4UpLeft = x > xBiggerThan && lastLine ? lastLine[x - xComparison] : 0;
+        let f4Add = paethPredictor(f4Left, f4Up, f4UpLeft);
         unfilteredLine[x] = rawByte + f4Add;
       }
     };
-    Filter.prototype._reverseFilterLine = function(rawData) {
-      var filter = rawData[0];
-      var unfilteredLine;
-      var currentImage = this._images[this._imageIndex];
-      var byteWidth = currentImage.byteWidth;
+    Filter.prototype._reverseFilterLine = function (rawData) {
+      let filter = rawData[0];
+      let unfilteredLine;
+      let currentImage = this._images[this._imageIndex];
+      let byteWidth = currentImage.byteWidth;
       if (filter === 0) {
         unfilteredLine = rawData.slice(1, byteWidth + 1);
-      }
-      else {
-        unfilteredLine = new Buffer(byteWidth);
+      } else {
+        unfilteredLine = Buffer.alloc(byteWidth);
         switch (filter) {
           case 1:
             this._unFilterType1(rawData, unfilteredLine, byteWidth);
@@ -3226,7 +3269,7 @@ var DjVu = (function () {
             this._unFilterType4(rawData, unfilteredLine, byteWidth);
             break;
           default:
-            throw new Error('Unrecognised filter type - ' + filter);
+            throw new Error("Unrecognised filter type - " + filter);
         }
       }
       this.write(unfilteredLine);
@@ -3235,30 +3278,28 @@ var DjVu = (function () {
         this._lastLine = null;
         this._imageIndex++;
         currentImage = this._images[this._imageIndex];
-      }
-      else {
+      } else {
         this._lastLine = unfilteredLine;
       }
       if (currentImage) {
         this.read(currentImage.byteWidth + 1, this._reverseFilterLine.bind(this));
-      }
-      else {
+      } else {
         this._lastLine = null;
         this.complete();
       }
     };
     }).call(this,require("buffer").Buffer);
-    },{"./interlace":11,"./paeth-predictor":15,"buffer":32}],10:[function(require,module,exports){
+    },{"./interlace":11,"./paeth-predictor":15,"buffer":28}],10:[function(require,module,exports){
     (function (Buffer){
     function dePalette(indata, outdata, width, height, palette) {
-      var pxPos = 0;
-      for (var y = 0; y < height; y++) {
-        for (var x = 0; x < width; x++) {
-          var color = palette[indata[pxPos]];
+      let pxPos = 0;
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          let color = palette[indata[pxPos]];
           if (!color) {
-            throw new Error('index ' + indata[pxPos] + ' not in palette');
+            throw new Error("index " + indata[pxPos] + " not in palette");
           }
-          for (var i = 0; i < 4; i++) {
+          for (let i = 0; i < 4; i++) {
             outdata[pxPos + i] = color[i];
           }
           pxPos += 4;
@@ -3266,20 +3307,23 @@ var DjVu = (function () {
       }
     }
     function replaceTransparentColor(indata, outdata, width, height, transColor) {
-      var pxPos = 0;
-      for (var y = 0; y < height; y++) {
-        for (var x = 0; x < width; x++) {
-          var makeTrans = false;
+      let pxPos = 0;
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          let makeTrans = false;
           if (transColor.length === 1) {
             if (transColor[0] === indata[pxPos]) {
               makeTrans = true;
             }
-          }
-          else if (transColor[0] === indata[pxPos] && transColor[1] === indata[pxPos + 1] && transColor[2] === indata[pxPos + 2]) {
+          } else if (
+            transColor[0] === indata[pxPos] &&
+            transColor[1] === indata[pxPos + 1] &&
+            transColor[2] === indata[pxPos + 2]
+          ) {
             makeTrans = true;
           }
           if (makeTrans) {
-            for (var i = 0; i < 4; i++) {
+            for (let i = 0; i < 4; i++) {
               outdata[pxPos + i] = 0;
             }
           }
@@ -3288,36 +3332,37 @@ var DjVu = (function () {
       }
     }
     function scaleDepth(indata, outdata, width, height, depth) {
-      var maxOutSample = 255;
-      var maxInSample = Math.pow(2, depth) - 1;
-      var pxPos = 0;
-      for (var y = 0; y < height; y++) {
-        for (var x = 0; x < width; x++) {
-          for (var i = 0; i < 4; i++) {
-            outdata[pxPos + i] = Math.floor((indata[pxPos + i] * maxOutSample) / maxInSample + 0.5);
+      let maxOutSample = 255;
+      let maxInSample = Math.pow(2, depth) - 1;
+      let pxPos = 0;
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          for (let i = 0; i < 4; i++) {
+            outdata[pxPos + i] = Math.floor(
+              (indata[pxPos + i] * maxOutSample) / maxInSample + 0.5
+            );
           }
           pxPos += 4;
         }
       }
     }
-    module.exports = function(indata, imageData) {
-      var depth = imageData.depth;
-      var width = imageData.width;
-      var height = imageData.height;
-      var colorType = imageData.colorType;
-      var transColor = imageData.transColor;
-      var palette = imageData.palette;
-      var outdata = indata;
+    module.exports = function (indata, imageData) {
+      let depth = imageData.depth;
+      let width = imageData.width;
+      let height = imageData.height;
+      let colorType = imageData.colorType;
+      let transColor = imageData.transColor;
+      let palette = imageData.palette;
+      let outdata = indata;
       if (colorType === 3) {
         dePalette(indata, outdata, width, height, palette);
-      }
-      else {
+      } else {
         if (transColor) {
           replaceTransparentColor(indata, outdata, width, height, transColor);
         }
         if (depth !== 8) {
           if (depth === 16) {
-            outdata = new Buffer(width * height * 4);
+            outdata = Buffer.alloc(width * height * 4);
           }
           scaleDepth(indata, outdata, width, height, depth);
         }
@@ -3325,60 +3370,58 @@ var DjVu = (function () {
       return outdata;
     };
     }).call(this,require("buffer").Buffer);
-    },{"buffer":32}],11:[function(require,module,exports){
-    var imagePasses = [
+    },{"buffer":28}],11:[function(require,module,exports){
+    let imagePasses = [
       {
         x: [0],
-        y: [0]
+        y: [0],
       },
       {
         x: [4],
-        y: [0]
+        y: [0],
       },
       {
         x: [0, 4],
-        y: [4]
+        y: [4],
       },
       {
         x: [2, 6],
-        y: [0, 4]
+        y: [0, 4],
       },
       {
         x: [0, 2, 4, 6],
-        y: [2, 6]
+        y: [2, 6],
       },
       {
         x: [1, 3, 5, 7],
-        y: [0, 2, 4, 6]
+        y: [0, 2, 4, 6],
       },
       {
         x: [0, 1, 2, 3, 4, 5, 6, 7],
-        y: [1, 3, 5, 7]
-      }
+        y: [1, 3, 5, 7],
+      },
     ];
-    exports.getImagePasses = function(width, height) {
-      var images = [];
-      var xLeftOver = width % 8;
-      var yLeftOver = height % 8;
-      var xRepeats = (width - xLeftOver) / 8;
-      var yRepeats = (height - yLeftOver) / 8;
-      for (var i = 0; i < imagePasses.length; i++) {
-        var pass = imagePasses[i];
-        var passWidth = xRepeats * pass.x.length;
-        var passHeight = yRepeats * pass.y.length;
-        for (var j = 0; j < pass.x.length; j++) {
+    exports.getImagePasses = function (width, height) {
+      let images = [];
+      let xLeftOver = width % 8;
+      let yLeftOver = height % 8;
+      let xRepeats = (width - xLeftOver) / 8;
+      let yRepeats = (height - yLeftOver) / 8;
+      for (let i = 0; i < imagePasses.length; i++) {
+        let pass = imagePasses[i];
+        let passWidth = xRepeats * pass.x.length;
+        let passHeight = yRepeats * pass.y.length;
+        for (let j = 0; j < pass.x.length; j++) {
           if (pass.x[j] < xLeftOver) {
             passWidth++;
-          }
-          else {
+          } else {
             break;
           }
         }
-        for (j = 0; j < pass.y.length; j++) {
+        for (let j = 0; j < pass.y.length; j++) {
           if (pass.y[j] < yLeftOver) {
             passHeight++;
-          }
-          else {
+          } else {
             break;
           }
         }
@@ -3388,150 +3431,193 @@ var DjVu = (function () {
       }
       return images;
     };
-    exports.getInterlaceIterator = function(width) {
-      return function(x, y, pass) {
-        var outerXLeftOver = x % imagePasses[pass].x.length;
-        var outerX = (((x - outerXLeftOver) / imagePasses[pass].x.length) * 8) + imagePasses[pass].x[outerXLeftOver];
-        var outerYLeftOver = y % imagePasses[pass].y.length;
-        var outerY = (((y - outerYLeftOver) / imagePasses[pass].y.length) * 8) + imagePasses[pass].y[outerYLeftOver];
-        return (outerX * 4) + (outerY * width * 4);
+    exports.getInterlaceIterator = function (width) {
+      return function (x, y, pass) {
+        let outerXLeftOver = x % imagePasses[pass].x.length;
+        let outerX =
+          ((x - outerXLeftOver) / imagePasses[pass].x.length) * 8 +
+          imagePasses[pass].x[outerXLeftOver];
+        let outerYLeftOver = y % imagePasses[pass].y.length;
+        let outerY =
+          ((y - outerYLeftOver) / imagePasses[pass].y.length) * 8 +
+          imagePasses[pass].y[outerYLeftOver];
+        return outerX * 4 + outerY * width * 4;
       };
     };
     },{}],12:[function(require,module,exports){
     (function (Buffer){
-    var util = require('util');
-    var Stream = require('stream');
-    var constants = require('./constants');
-    var Packer = require('./packer');
-    var PackerAsync = module.exports = function(opt) {
+    let util = require("util");
+    let Stream = require("stream");
+    let constants = require("./constants");
+    let Packer = require("./packer");
+    let PackerAsync = (module.exports = function (opt) {
       Stream.call(this);
-      var options = opt || {};
+      let options = opt || {};
       this._packer = new Packer(options);
       this._deflate = this._packer.createDeflate();
       this.readable = true;
-    };
+    });
     util.inherits(PackerAsync, Stream);
-    PackerAsync.prototype.pack = function(data, width, height, gamma) {
-      this.emit('data', new Buffer(constants.PNG_SIGNATURE));
-      this.emit('data', this._packer.packIHDR(width, height));
+    PackerAsync.prototype.pack = function (data, width, height, gamma) {
+      this.emit("data", Buffer.from(constants.PNG_SIGNATURE));
+      this.emit("data", this._packer.packIHDR(width, height));
       if (gamma) {
-        this.emit('data', this._packer.packGAMA(gamma));
+        this.emit("data", this._packer.packGAMA(gamma));
       }
-      var filteredData = this._packer.filterData(data, width, height);
-      this._deflate.on('error', this.emit.bind(this, 'error'));
-      this._deflate.on('data', function(compressedData) {
-        this.emit('data', this._packer.packIDAT(compressedData));
-      }.bind(this));
-      this._deflate.on('end', function() {
-        this.emit('data', this._packer.packIEND());
-        this.emit('end');
-      }.bind(this));
+      let filteredData = this._packer.filterData(data, width, height);
+      this._deflate.on("error", this.emit.bind(this, "error"));
+      this._deflate.on(
+        "data",
+        function (compressedData) {
+          this.emit("data", this._packer.packIDAT(compressedData));
+        }.bind(this)
+      );
+      this._deflate.on(
+        "end",
+        function () {
+          this.emit("data", this._packer.packIEND());
+          this.emit("end");
+        }.bind(this)
+      );
       this._deflate.end(filteredData);
     };
     }).call(this,require("buffer").Buffer);
-    },{"./constants":4,"./packer":14,"buffer":32,"stream":64,"util":69}],13:[function(require,module,exports){
+    },{"./constants":4,"./packer":14,"buffer":28,"stream":63,"util":67}],13:[function(require,module,exports){
     (function (Buffer){
-    var hasSyncZlib = true;
-    var zlib = require('zlib');
+    let hasSyncZlib = true;
+    let zlib = require("zlib");
     if (!zlib.deflateSync) {
       hasSyncZlib = false;
     }
-    var constants = require('./constants');
-    var Packer = require('./packer');
-    module.exports = function(metaData, opt) {
+    let constants = require("./constants");
+    let Packer = require("./packer");
+    module.exports = function (metaData, opt) {
       if (!hasSyncZlib) {
-        throw new Error('To use the sync capability of this library in old node versions, please pin pngjs to v2.3.0');
+        throw new Error(
+          "To use the sync capability of this library in old node versions, please pin pngjs to v2.3.0"
+        );
       }
-      var options = opt || {};
-      var packer = new Packer(options);
-      var chunks = [];
-      chunks.push(new Buffer(constants.PNG_SIGNATURE));
+      let options = opt || {};
+      let packer = new Packer(options);
+      let chunks = [];
+      chunks.push(Buffer.from(constants.PNG_SIGNATURE));
       chunks.push(packer.packIHDR(metaData.width, metaData.height));
       if (metaData.gamma) {
         chunks.push(packer.packGAMA(metaData.gamma));
       }
-      var filteredData = packer.filterData(metaData.data, metaData.width, metaData.height);
-      var compressedData = zlib.deflateSync(filteredData, packer.getDeflateOptions());
+      let filteredData = packer.filterData(
+        metaData.data,
+        metaData.width,
+        metaData.height
+      );
+      let compressedData = zlib.deflateSync(
+        filteredData,
+        packer.getDeflateOptions()
+      );
       filteredData = null;
       if (!compressedData || !compressedData.length) {
-        throw new Error('bad png - invalid compressed data response');
+        throw new Error("bad png - invalid compressed data response");
       }
       chunks.push(packer.packIDAT(compressedData));
       chunks.push(packer.packIEND());
       return Buffer.concat(chunks);
     };
     }).call(this,require("buffer").Buffer);
-    },{"./constants":4,"./packer":14,"buffer":32,"zlib":30}],14:[function(require,module,exports){
+    },{"./constants":4,"./packer":14,"buffer":28,"zlib":27}],14:[function(require,module,exports){
     (function (Buffer){
-    var constants = require('./constants');
-    var CrcStream = require('./crc');
-    var bitPacker = require('./bitpacker');
-    var filter = require('./filter-pack');
-    var zlib = require('zlib');
-    var Packer = module.exports = function(options) {
+    let constants = require("./constants");
+    let CrcStream = require("./crc");
+    let bitPacker = require("./bitpacker");
+    let filter = require("./filter-pack");
+    let zlib = require("zlib");
+    let Packer = (module.exports = function (options) {
       this._options = options;
       options.deflateChunkSize = options.deflateChunkSize || 32 * 1024;
-      options.deflateLevel = options.deflateLevel != null ? options.deflateLevel : 9;
-      options.deflateStrategy = options.deflateStrategy != null ? options.deflateStrategy : 3;
-      options.inputHasAlpha = options.inputHasAlpha != null ? options.inputHasAlpha : true;
+      options.deflateLevel =
+        options.deflateLevel != null ? options.deflateLevel : 9;
+      options.deflateStrategy =
+        options.deflateStrategy != null ? options.deflateStrategy : 3;
+      options.inputHasAlpha =
+        options.inputHasAlpha != null ? options.inputHasAlpha : true;
       options.deflateFactory = options.deflateFactory || zlib.createDeflate;
       options.bitDepth = options.bitDepth || 8;
-      options.colorType = (typeof options.colorType === 'number') ? options.colorType : constants.COLORTYPE_COLOR_ALPHA;
-      options.inputColorType = (typeof options.inputColorType === 'number') ? options.inputColorType : constants.COLORTYPE_COLOR_ALPHA;
-      if ([
-        constants.COLORTYPE_GRAYSCALE,
-        constants.COLORTYPE_COLOR,
-        constants.COLORTYPE_COLOR_ALPHA,
-        constants.COLORTYPE_ALPHA
-      ].indexOf(options.colorType) === -1) {
-        throw new Error('option color type:' + options.colorType + ' is not supported at present');
+      options.colorType =
+        typeof options.colorType === "number"
+          ? options.colorType
+          : constants.COLORTYPE_COLOR_ALPHA;
+      options.inputColorType =
+        typeof options.inputColorType === "number"
+          ? options.inputColorType
+          : constants.COLORTYPE_COLOR_ALPHA;
+      if (
+        [
+          constants.COLORTYPE_GRAYSCALE,
+          constants.COLORTYPE_COLOR,
+          constants.COLORTYPE_COLOR_ALPHA,
+          constants.COLORTYPE_ALPHA,
+        ].indexOf(options.colorType) === -1
+      ) {
+        throw new Error(
+          "option color type:" + options.colorType + " is not supported at present"
+        );
       }
-      if ([
-        constants.COLORTYPE_GRAYSCALE,
-        constants.COLORTYPE_COLOR,
-        constants.COLORTYPE_COLOR_ALPHA,
-        constants.COLORTYPE_ALPHA
-      ].indexOf(options.inputColorType) === -1) {
-        throw new Error('option input color type:' + options.inputColorType + ' is not supported at present');
+      if (
+        [
+          constants.COLORTYPE_GRAYSCALE,
+          constants.COLORTYPE_COLOR,
+          constants.COLORTYPE_COLOR_ALPHA,
+          constants.COLORTYPE_ALPHA,
+        ].indexOf(options.inputColorType) === -1
+      ) {
+        throw new Error(
+          "option input color type:" +
+            options.inputColorType +
+            " is not supported at present"
+        );
       }
       if (options.bitDepth !== 8 && options.bitDepth !== 16) {
-        throw new Error('option bit depth:' + options.bitDepth + ' is not supported at present');
+        throw new Error(
+          "option bit depth:" + options.bitDepth + " is not supported at present"
+        );
       }
-    };
-    Packer.prototype.getDeflateOptions = function() {
+    });
+    Packer.prototype.getDeflateOptions = function () {
       return {
         chunkSize: this._options.deflateChunkSize,
         level: this._options.deflateLevel,
-        strategy: this._options.deflateStrategy
+        strategy: this._options.deflateStrategy,
       };
     };
-    Packer.prototype.createDeflate = function() {
+    Packer.prototype.createDeflate = function () {
       return this._options.deflateFactory(this.getDeflateOptions());
     };
-    Packer.prototype.filterData = function(data, width, height) {
-      var packedData = bitPacker(data, width, height, this._options);
-      var bpp = constants.COLORTYPE_TO_BPP_MAP[this._options.colorType];
-      var filteredData = filter(packedData, width, height, this._options, bpp);
+    Packer.prototype.filterData = function (data, width, height) {
+      let packedData = bitPacker(data, width, height, this._options);
+      let bpp = constants.COLORTYPE_TO_BPP_MAP[this._options.colorType];
+      let filteredData = filter(packedData, width, height, this._options, bpp);
       return filteredData;
     };
-    Packer.prototype._packChunk = function(type, data) {
-      var len = (data ? data.length : 0);
-      var buf = new Buffer(len + 12);
+    Packer.prototype._packChunk = function (type, data) {
+      let len = data ? data.length : 0;
+      let buf = Buffer.alloc(len + 12);
       buf.writeUInt32BE(len, 0);
       buf.writeUInt32BE(type, 4);
       if (data) {
         data.copy(buf, 8);
       }
-      buf.writeInt32BE(CrcStream.crc32(buf.slice(4, buf.length - 4)), buf.length - 4);
+      buf.writeInt32BE(
+        CrcStream.crc32(buf.slice(4, buf.length - 4)),
+        buf.length - 4
+      );
       return buf;
     };
-    Packer.prototype.packGAMA = function(gamma) {
-      var buf = new Buffer(4);
+    Packer.prototype.packGAMA = function (gamma) {
+      let buf = Buffer.alloc(4);
       buf.writeUInt32BE(Math.floor(gamma * constants.GAMMA_DIVISION), 0);
       return this._packChunk(constants.TYPE_gAMA, buf);
     };
-    Packer.prototype.packIHDR = function(width, height) {
-      var buf = new Buffer(13);
+    Packer.prototype.packIHDR = function (width, height) {
+      let buf = Buffer.alloc(13);
       buf.writeUInt32BE(width, 0);
       buf.writeUInt32BE(height, 4);
       buf[8] = this._options.bitDepth;
@@ -3541,19 +3627,19 @@ var DjVu = (function () {
       buf[12] = 0;
       return this._packChunk(constants.TYPE_IHDR, buf);
     };
-    Packer.prototype.packIDAT = function(data) {
+    Packer.prototype.packIDAT = function (data) {
       return this._packChunk(constants.TYPE_IDAT, data);
     };
-    Packer.prototype.packIEND = function() {
+    Packer.prototype.packIEND = function () {
       return this._packChunk(constants.TYPE_IEND, null);
     };
     }).call(this,require("buffer").Buffer);
-    },{"./bitpacker":2,"./constants":4,"./crc":5,"./filter-pack":6,"buffer":32,"zlib":30}],15:[function(require,module,exports){
+    },{"./bitpacker":2,"./constants":4,"./crc":5,"./filter-pack":6,"buffer":28,"zlib":27}],15:[function(require,module,exports){
     module.exports = function paethPredictor(left, above, upLeft) {
-      var paeth = left + above - upLeft;
-      var pLeft = Math.abs(paeth - left);
-      var pAbove = Math.abs(paeth - above);
-      var pUpLeft = Math.abs(paeth - upLeft);
+      let paeth = left + above - upLeft;
+      let pLeft = Math.abs(paeth - left);
+      let pAbove = Math.abs(paeth - above);
+      let pUpLeft = Math.abs(paeth - upLeft);
       if (pLeft <= pAbove && pLeft <= pUpLeft) {
         return left;
       }
@@ -3563,34 +3649,34 @@ var DjVu = (function () {
       return upLeft;
     };
     },{}],16:[function(require,module,exports){
-    var util = require('util');
-    var zlib = require('zlib');
-    var ChunkStream = require('./chunkstream');
-    var FilterAsync = require('./filter-parse-async');
-    var Parser = require('./parser');
-    var bitmapper = require('./bitmapper');
-    var formatNormaliser = require('./format-normaliser');
-    var ParserAsync = module.exports = function(options) {
+    let util = require("util");
+    let zlib = require("zlib");
+    let ChunkStream = require("./chunkstream");
+    let FilterAsync = require("./filter-parse-async");
+    let Parser = require("./parser");
+    let bitmapper = require("./bitmapper");
+    let formatNormaliser = require("./format-normaliser");
+    let ParserAsync = (module.exports = function (options) {
       ChunkStream.call(this);
       this._parser = new Parser(options, {
         read: this.read.bind(this),
         error: this._handleError.bind(this),
         metadata: this._handleMetaData.bind(this),
-        gamma: this.emit.bind(this, 'gamma'),
+        gamma: this.emit.bind(this, "gamma"),
         palette: this._handlePalette.bind(this),
         transColor: this._handleTransColor.bind(this),
         finished: this._finished.bind(this),
         inflateData: this._inflateData.bind(this),
         simpleTransparency: this._simpleTransparency.bind(this),
-        headersFinished: this._headersFinished.bind(this)
+        headersFinished: this._headersFinished.bind(this),
       });
       this._options = options;
       this.writable = true;
       this._parser.start();
-    };
+    });
     util.inherits(ParserAsync, ChunkStream);
-    ParserAsync.prototype._handleError = function(err) {
-      this.emit('error', err);
+    ParserAsync.prototype._handleError = function (err) {
+      this.emit("error", err);
       this.writable = false;
       this.destroy();
       if (this._inflate && this._inflate.destroy) {
@@ -3598,34 +3684,39 @@ var DjVu = (function () {
       }
       if (this._filter) {
         this._filter.destroy();
-        this._filter.on('error', function() {});
+        this._filter.on("error", function () {});
       }
       this.errord = true;
     };
-    ParserAsync.prototype._inflateData = function(data) {
+    ParserAsync.prototype._inflateData = function (data) {
       if (!this._inflate) {
         if (this._bitmapInfo.interlace) {
           this._inflate = zlib.createInflate();
-          this._inflate.on('error', this.emit.bind(this, 'error'));
-          this._filter.on('complete', this._complete.bind(this));
+          this._inflate.on("error", this.emit.bind(this, "error"));
+          this._filter.on("complete", this._complete.bind(this));
           this._inflate.pipe(this._filter);
-        }
-        else {
-          var rowSize = ((this._bitmapInfo.width * this._bitmapInfo.bpp * this._bitmapInfo.depth + 7) >> 3) + 1;
-          var imageSize = rowSize * this._bitmapInfo.height;
-          var chunkSize = Math.max(imageSize, zlib.Z_MIN_CHUNK);
+        } else {
+          let rowSize =
+            ((this._bitmapInfo.width *
+              this._bitmapInfo.bpp *
+              this._bitmapInfo.depth +
+              7) >>
+              3) +
+            1;
+          let imageSize = rowSize * this._bitmapInfo.height;
+          let chunkSize = Math.max(imageSize, zlib.Z_MIN_CHUNK);
           this._inflate = zlib.createInflate({ chunkSize: chunkSize });
-          var leftToInflate = imageSize;
-          var emitError = this.emit.bind(this, 'error');
-          this._inflate.on('error', function(err) {
+          let leftToInflate = imageSize;
+          let emitError = this.emit.bind(this, "error");
+          this._inflate.on("error", function (err) {
             if (!leftToInflate) {
               return;
             }
             emitError(err);
           });
-          this._filter.on('complete', this._complete.bind(this));
-          var filterWrite = this._filter.write.bind(this._filter);
-          this._inflate.on('data', function(chunk) {
+          this._filter.on("complete", this._complete.bind(this));
+          let filterWrite = this._filter.write.bind(this._filter);
+          this._inflate.on("data", function (chunk) {
             if (!leftToInflate) {
               return;
             }
@@ -3635,77 +3726,77 @@ var DjVu = (function () {
             leftToInflate -= chunk.length;
             filterWrite(chunk);
           });
-          this._inflate.on('end', this._filter.end.bind(this._filter));
+          this._inflate.on("end", this._filter.end.bind(this._filter));
         }
       }
       this._inflate.write(data);
     };
-    ParserAsync.prototype._handleMetaData = function(metaData) {
+    ParserAsync.prototype._handleMetaData = function (metaData) {
       this._metaData = metaData;
       this._bitmapInfo = Object.create(metaData);
       this._filter = new FilterAsync(this._bitmapInfo);
     };
-    ParserAsync.prototype._handleTransColor = function(transColor) {
+    ParserAsync.prototype._handleTransColor = function (transColor) {
       this._bitmapInfo.transColor = transColor;
     };
-    ParserAsync.prototype._handlePalette = function(palette) {
+    ParserAsync.prototype._handlePalette = function (palette) {
       this._bitmapInfo.palette = palette;
     };
-    ParserAsync.prototype._simpleTransparency = function() {
+    ParserAsync.prototype._simpleTransparency = function () {
       this._metaData.alpha = true;
     };
-    ParserAsync.prototype._headersFinished = function() {
-      this.emit('metadata', this._metaData);
+    ParserAsync.prototype._headersFinished = function () {
+      this.emit("metadata", this._metaData);
     };
-    ParserAsync.prototype._finished = function() {
+    ParserAsync.prototype._finished = function () {
       if (this.errord) {
         return;
       }
       if (!this._inflate) {
-        this.emit('error', 'No Inflate block');
-      }
-      else {
+        this.emit("error", "No Inflate block");
+      } else {
         this._inflate.end();
       }
-      this.destroySoon();
     };
-    ParserAsync.prototype._complete = function(filteredData) {
+    ParserAsync.prototype._complete = function (filteredData) {
       if (this.errord) {
         return;
       }
+      let normalisedBitmapData;
       try {
-        var bitmapData = bitmapper.dataToBitMap(filteredData, this._bitmapInfo);
-        var normalisedBitmapData = formatNormaliser(bitmapData, this._bitmapInfo);
+        let bitmapData = bitmapper.dataToBitMap(filteredData, this._bitmapInfo);
+        normalisedBitmapData = formatNormaliser(bitmapData, this._bitmapInfo);
         bitmapData = null;
-      }
-      catch (ex) {
+      } catch (ex) {
         this._handleError(ex);
         return;
       }
-      this.emit('parsed', normalisedBitmapData);
+      this.emit("parsed", normalisedBitmapData);
     };
-    },{"./bitmapper":1,"./chunkstream":3,"./filter-parse-async":7,"./format-normaliser":10,"./parser":18,"util":69,"zlib":30}],17:[function(require,module,exports){
+    },{"./bitmapper":1,"./chunkstream":3,"./filter-parse-async":7,"./format-normaliser":10,"./parser":18,"util":67,"zlib":27}],17:[function(require,module,exports){
     (function (Buffer){
-    var hasSyncZlib = true;
-    var zlib = require('zlib');
-    var inflateSync = require('./sync-inflate');
+    let hasSyncZlib = true;
+    let zlib = require("zlib");
+    let inflateSync = require("./sync-inflate");
     if (!zlib.deflateSync) {
       hasSyncZlib = false;
     }
-    var SyncReader = require('./sync-reader');
-    var FilterSync = require('./filter-parse-sync');
-    var Parser = require('./parser');
-    var bitmapper = require('./bitmapper');
-    var formatNormaliser = require('./format-normaliser');
-    module.exports = function(buffer, options) {
+    let SyncReader = require("./sync-reader");
+    let FilterSync = require("./filter-parse-sync");
+    let Parser = require("./parser");
+    let bitmapper = require("./bitmapper");
+    let formatNormaliser = require("./format-normaliser");
+    module.exports = function (buffer, options) {
       if (!hasSyncZlib) {
-        throw new Error('To use the sync capability of this library in old node versions, please pin pngjs to v2.3.0');
+        throw new Error(
+          "To use the sync capability of this library in old node versions, please pin pngjs to v2.3.0"
+        );
       }
-      var err;
+      let err;
       function handleError(_err_) {
         err = _err_;
       }
-      var metaData;
+      let metaData;
       function handleMetaData(_metaData_) {
         metaData = _metaData_;
       }
@@ -3718,16 +3809,16 @@ var DjVu = (function () {
       function handleSimpleTransparency() {
         metaData.alpha = true;
       }
-      var gamma;
+      let gamma;
       function handleGamma(_gamma_) {
         gamma = _gamma_;
       }
-      var inflateDataList = [];
+      let inflateDataList = [];
       function handleInflateData(inflatedData) {
         inflateDataList.push(inflatedData);
       }
-      var reader = new SyncReader(buffer);
-      var parser = new Parser(options, {
+      let reader = new SyncReader(buffer);
+      let parser = new Parser(options, {
         read: reader.read.bind(reader),
         error: handleError,
         metadata: handleMetaData,
@@ -3735,43 +3826,46 @@ var DjVu = (function () {
         palette: handlePalette,
         transColor: handleTransColor,
         inflateData: handleInflateData,
-        simpleTransparency: handleSimpleTransparency
+        simpleTransparency: handleSimpleTransparency,
       });
       parser.start();
       reader.process();
       if (err) {
         throw err;
       }
-      var inflateData = Buffer.concat(inflateDataList);
+      let inflateData = Buffer.concat(inflateDataList);
       inflateDataList.length = 0;
-      var inflatedData;
+      let inflatedData;
       if (metaData.interlace) {
         inflatedData = zlib.inflateSync(inflateData);
-      }
-      else {
-        var rowSize = ((metaData.width * metaData.bpp * metaData.depth + 7) >> 3) + 1;
-        var imageSize = rowSize * metaData.height;
-        inflatedData = inflateSync(inflateData, { chunkSize: imageSize, maxLength: imageSize });
+      } else {
+        let rowSize =
+          ((metaData.width * metaData.bpp * metaData.depth + 7) >> 3) + 1;
+        let imageSize = rowSize * metaData.height;
+        inflatedData = inflateSync(inflateData, {
+          chunkSize: imageSize,
+          maxLength: imageSize,
+        });
       }
       inflateData = null;
       if (!inflatedData || !inflatedData.length) {
-        throw new Error('bad png - invalid inflate data response');
+        throw new Error("bad png - invalid inflate data response");
       }
-      var unfilteredData = FilterSync.process(inflatedData, metaData);
+      let unfilteredData = FilterSync.process(inflatedData, metaData);
       inflateData = null;
-      var bitmapData = bitmapper.dataToBitMap(unfilteredData, metaData);
+      let bitmapData = bitmapper.dataToBitMap(unfilteredData, metaData);
       unfilteredData = null;
-      var normalisedBitmapData = formatNormaliser(bitmapData, metaData);
+      let normalisedBitmapData = formatNormaliser(bitmapData, metaData);
       metaData.data = normalisedBitmapData;
       metaData.gamma = gamma || 0;
       return metaData;
     };
     }).call(this,require("buffer").Buffer);
-    },{"./bitmapper":1,"./filter-parse-sync":8,"./format-normaliser":10,"./parser":18,"./sync-inflate":21,"./sync-reader":22,"buffer":32,"zlib":30}],18:[function(require,module,exports){
+    },{"./bitmapper":1,"./filter-parse-sync":8,"./format-normaliser":10,"./parser":18,"./sync-inflate":21,"./sync-reader":22,"buffer":28,"zlib":27}],18:[function(require,module,exports){
     (function (Buffer){
-    var constants = require('./constants');
-    var CrcCalculator = require('./crc');
-    var Parser = module.exports = function(options, dependencies) {
+    let constants = require("./constants");
+    let CrcCalculator = require("./crc");
+    let Parser = (module.exports = function (options, dependencies) {
       this._options = options;
       options.checkCRC = options.checkCRC !== false;
       this._hasIHDR = false;
@@ -3796,97 +3890,101 @@ var DjVu = (function () {
       this.inflateData = dependencies.inflateData;
       this.finished = dependencies.finished;
       this.simpleTransparency = dependencies.simpleTransparency;
-      this.headersFinished = dependencies.headersFinished || function() {};
+      this.headersFinished = dependencies.headersFinished || function () {};
+    });
+    Parser.prototype.start = function () {
+      this.read(constants.PNG_SIGNATURE.length, this._parseSignature.bind(this));
     };
-    Parser.prototype.start = function() {
-      this.read(constants.PNG_SIGNATURE.length,
-        this._parseSignature.bind(this)
-      );
-    };
-    Parser.prototype._parseSignature = function(data) {
-      var signature = constants.PNG_SIGNATURE;
-      for (var i = 0; i < signature.length; i++) {
+    Parser.prototype._parseSignature = function (data) {
+      let signature = constants.PNG_SIGNATURE;
+      for (let i = 0; i < signature.length; i++) {
         if (data[i] !== signature[i]) {
-          this.error(new Error('Invalid file signature'));
+          this.error(new Error("Invalid file signature"));
           return;
         }
       }
       this.read(8, this._parseChunkBegin.bind(this));
     };
-    Parser.prototype._parseChunkBegin = function(data) {
-      var length = data.readUInt32BE(0);
-      var type = data.readUInt32BE(4);
-      var name = '';
-      for (var i = 4; i < 8; i++) {
+    Parser.prototype._parseChunkBegin = function (data) {
+      let length = data.readUInt32BE(0);
+      let type = data.readUInt32BE(4);
+      let name = "";
+      for (let i = 4; i < 8; i++) {
         name += String.fromCharCode(data[i]);
       }
-      var ancillary = Boolean(data[4] & 0x20);
+      let ancillary = Boolean(data[4] & 0x20);
       if (!this._hasIHDR && type !== constants.TYPE_IHDR) {
-        this.error(new Error('Expected IHDR on beggining'));
+        this.error(new Error("Expected IHDR on beggining"));
         return;
       }
       this._crc = new CrcCalculator();
-      this._crc.write(new Buffer(name));
+      this._crc.write(Buffer.from(name));
       if (this._chunks[type]) {
         return this._chunks[type](length);
       }
       if (!ancillary) {
-        this.error(new Error('Unsupported critical chunk type ' + name));
+        this.error(new Error("Unsupported critical chunk type " + name));
         return;
       }
       this.read(length + 4, this._skipChunk.bind(this));
     };
-    Parser.prototype._skipChunk = function() {
+    Parser.prototype._skipChunk = function () {
       this.read(8, this._parseChunkBegin.bind(this));
     };
-    Parser.prototype._handleChunkEnd = function() {
+    Parser.prototype._handleChunkEnd = function () {
       this.read(4, this._parseChunkEnd.bind(this));
     };
-    Parser.prototype._parseChunkEnd = function(data) {
-      var fileCrc = data.readInt32BE(0);
-      var calcCrc = this._crc.crc32();
+    Parser.prototype._parseChunkEnd = function (data) {
+      let fileCrc = data.readInt32BE(0);
+      let calcCrc = this._crc.crc32();
       if (this._options.checkCRC && calcCrc !== fileCrc) {
-        this.error(new Error('Crc error - ' + fileCrc + ' - ' + calcCrc));
+        this.error(new Error("Crc error - " + fileCrc + " - " + calcCrc));
         return;
       }
       if (!this._hasIEND) {
         this.read(8, this._parseChunkBegin.bind(this));
       }
     };
-    Parser.prototype._handleIHDR = function(length) {
+    Parser.prototype._handleIHDR = function (length) {
       this.read(length, this._parseIHDR.bind(this));
     };
-    Parser.prototype._parseIHDR = function(data) {
+    Parser.prototype._parseIHDR = function (data) {
       this._crc.write(data);
-      var width = data.readUInt32BE(0);
-      var height = data.readUInt32BE(4);
-      var depth = data[8];
-      var colorType = data[9];
-      var compr = data[10];
-      var filter = data[11];
-      var interlace = data[12];
-      if (depth !== 8 && depth !== 4 && depth !== 2 && depth !== 1 && depth !== 16) {
-        this.error(new Error('Unsupported bit depth ' + depth));
+      let width = data.readUInt32BE(0);
+      let height = data.readUInt32BE(4);
+      let depth = data[8];
+      let colorType = data[9];
+      let compr = data[10];
+      let filter = data[11];
+      let interlace = data[12];
+      if (
+        depth !== 8 &&
+        depth !== 4 &&
+        depth !== 2 &&
+        depth !== 1 &&
+        depth !== 16
+      ) {
+        this.error(new Error("Unsupported bit depth " + depth));
         return;
       }
       if (!(colorType in constants.COLORTYPE_TO_BPP_MAP)) {
-        this.error(new Error('Unsupported color type'));
+        this.error(new Error("Unsupported color type"));
         return;
       }
       if (compr !== 0) {
-        this.error(new Error('Unsupported compression method'));
+        this.error(new Error("Unsupported compression method"));
         return;
       }
       if (filter !== 0) {
-        this.error(new Error('Unsupported filter method'));
+        this.error(new Error("Unsupported filter method"));
         return;
       }
       if (interlace !== 0 && interlace !== 1) {
-        this.error(new Error('Unsupported interlace method'));
+        this.error(new Error("Unsupported interlace method"));
         return;
       }
       this._colorType = colorType;
-      var bpp = constants.COLORTYPE_TO_BPP_MAP[this._colorType];
+      let bpp = constants.COLORTYPE_TO_BPP_MAP[this._colorType];
       this._hasIHDR = true;
       this.metadata({
         width: width,
@@ -3897,43 +3995,38 @@ var DjVu = (function () {
         color: Boolean(colorType & constants.COLORTYPE_COLOR),
         alpha: Boolean(colorType & constants.COLORTYPE_ALPHA),
         bpp: bpp,
-        colorType: colorType
+        colorType: colorType,
       });
       this._handleChunkEnd();
     };
-    Parser.prototype._handlePLTE = function(length) {
+    Parser.prototype._handlePLTE = function (length) {
       this.read(length, this._parsePLTE.bind(this));
     };
-    Parser.prototype._parsePLTE = function(data) {
+    Parser.prototype._parsePLTE = function (data) {
       this._crc.write(data);
-      var entries = Math.floor(data.length / 3);
-      for (var i = 0; i < entries; i++) {
-        this._palette.push([
-          data[i * 3],
-          data[i * 3 + 1],
-          data[i * 3 + 2],
-          0xff
-        ]);
+      let entries = Math.floor(data.length / 3);
+      for (let i = 0; i < entries; i++) {
+        this._palette.push([data[i * 3], data[i * 3 + 1], data[i * 3 + 2], 0xff]);
       }
       this.palette(this._palette);
       this._handleChunkEnd();
     };
-    Parser.prototype._handleTRNS = function(length) {
+    Parser.prototype._handleTRNS = function (length) {
       this.simpleTransparency();
       this.read(length, this._parseTRNS.bind(this));
     };
-    Parser.prototype._parseTRNS = function(data) {
+    Parser.prototype._parseTRNS = function (data) {
       this._crc.write(data);
       if (this._colorType === constants.COLORTYPE_PALETTE_COLOR) {
         if (this._palette.length === 0) {
-          this.error(new Error('Transparency chunk must be after palette'));
+          this.error(new Error("Transparency chunk must be after palette"));
           return;
         }
         if (data.length > this._palette.length) {
-          this.error(new Error('More transparent colors than palette size'));
+          this.error(new Error("More transparent colors than palette size"));
           return;
         }
-        for (var i = 0; i < data.length; i++) {
+        for (let i = 0; i < data.length; i++) {
           this._palette[i][3] = data[i];
         }
         this.palette(this._palette);
@@ -3942,43 +4035,49 @@ var DjVu = (function () {
         this.transColor([data.readUInt16BE(0)]);
       }
       if (this._colorType === constants.COLORTYPE_COLOR) {
-        this.transColor([data.readUInt16BE(0), data.readUInt16BE(2), data.readUInt16BE(4)]);
+        this.transColor([
+          data.readUInt16BE(0),
+          data.readUInt16BE(2),
+          data.readUInt16BE(4),
+        ]);
       }
       this._handleChunkEnd();
     };
-    Parser.prototype._handleGAMA = function(length) {
+    Parser.prototype._handleGAMA = function (length) {
       this.read(length, this._parseGAMA.bind(this));
     };
-    Parser.prototype._parseGAMA = function(data) {
+    Parser.prototype._parseGAMA = function (data) {
       this._crc.write(data);
       this.gamma(data.readUInt32BE(0) / constants.GAMMA_DIVISION);
       this._handleChunkEnd();
     };
-    Parser.prototype._handleIDAT = function(length) {
+    Parser.prototype._handleIDAT = function (length) {
       if (!this._emittedHeadersFinished) {
         this._emittedHeadersFinished = true;
         this.headersFinished();
       }
       this.read(-length, this._parseIDAT.bind(this, length));
     };
-    Parser.prototype._parseIDAT = function(length, data) {
+    Parser.prototype._parseIDAT = function (length, data) {
       this._crc.write(data);
-      if (this._colorType === constants.COLORTYPE_PALETTE_COLOR && this._palette.length === 0) {
-        throw new Error('Expected palette not found');
+      if (
+        this._colorType === constants.COLORTYPE_PALETTE_COLOR &&
+        this._palette.length === 0
+      ) {
+        throw new Error("Expected palette not found");
       }
       this.inflateData(data);
-      var leftOverLength = length - data.length;
+      let leftOverLength = length - data.length;
       if (leftOverLength > 0) {
         this._handleIDAT(leftOverLength);
-      }
-      else {
+      } else {
         this._handleChunkEnd();
       }
     };
-    Parser.prototype._handleIEND = function(length) {
+    Parser.prototype._handleIEND = function (length) {
       this.read(length, this._parseIEND.bind(this));
     };
-    Parser.prototype._parseIEND = function(data) {
+    Parser.prototype._parseIEND = function (data) {
       this._crc.write(data);
       this._hasIEND = true;
       this._handleChunkEnd();
@@ -3987,131 +4086,157 @@ var DjVu = (function () {
       }
     };
     }).call(this,require("buffer").Buffer);
-    },{"./constants":4,"./crc":5,"buffer":32}],19:[function(require,module,exports){
-    var parse = require('./parser-sync');
-    var pack = require('./packer-sync');
-    exports.read = function(buffer, options) {
+    },{"./constants":4,"./crc":5,"buffer":28}],19:[function(require,module,exports){
+    let parse = require("./parser-sync");
+    let pack = require("./packer-sync");
+    exports.read = function (buffer, options) {
       return parse(buffer, options || {});
     };
-    exports.write = function(png, options) {
+    exports.write = function (png, options) {
       return pack(png, options);
     };
     },{"./packer-sync":13,"./parser-sync":17}],20:[function(require,module,exports){
     (function (process,Buffer){
-    var util = require('util');
-    var Stream = require('stream');
-    var Parser = require('./parser-async');
-    var Packer = require('./packer-async');
-    var PNGSync = require('./png-sync');
-    var PNG = exports.PNG = function(options) {
+    let util = require("util");
+    let Stream = require("stream");
+    let Parser = require("./parser-async");
+    let Packer = require("./packer-async");
+    let PNGSync = require("./png-sync");
+    let PNG = (exports.PNG = function (options) {
       Stream.call(this);
       options = options || {};
       this.width = options.width | 0;
       this.height = options.height | 0;
-      this.data = this.width > 0 && this.height > 0 ?
-        new Buffer(4 * this.width * this.height) : null;
+      this.data =
+        this.width > 0 && this.height > 0
+          ? Buffer.alloc(4 * this.width * this.height)
+          : null;
       if (options.fill && this.data) {
         this.data.fill(0);
       }
       this.gamma = 0;
       this.readable = this.writable = true;
       this._parser = new Parser(options);
-      this._parser.on('error', this.emit.bind(this, 'error'));
-      this._parser.on('close', this._handleClose.bind(this));
-      this._parser.on('metadata', this._metadata.bind(this));
-      this._parser.on('gamma', this._gamma.bind(this));
-      this._parser.on('parsed', function(data) {
-        this.data = data;
-        this.emit('parsed', data);
-      }.bind(this));
+      this._parser.on("error", this.emit.bind(this, "error"));
+      this._parser.on("close", this._handleClose.bind(this));
+      this._parser.on("metadata", this._metadata.bind(this));
+      this._parser.on("gamma", this._gamma.bind(this));
+      this._parser.on(
+        "parsed",
+        function (data) {
+          this.data = data;
+          this.emit("parsed", data);
+        }.bind(this)
+      );
       this._packer = new Packer(options);
-      this._packer.on('data', this.emit.bind(this, 'data'));
-      this._packer.on('end', this.emit.bind(this, 'end'));
-      this._parser.on('close', this._handleClose.bind(this));
-      this._packer.on('error', this.emit.bind(this, 'error'));
-    };
+      this._packer.on("data", this.emit.bind(this, "data"));
+      this._packer.on("end", this.emit.bind(this, "end"));
+      this._parser.on("close", this._handleClose.bind(this));
+      this._packer.on("error", this.emit.bind(this, "error"));
+    });
     util.inherits(PNG, Stream);
     PNG.sync = PNGSync;
-    PNG.prototype.pack = function() {
+    PNG.prototype.pack = function () {
       if (!this.data || !this.data.length) {
-        this.emit('error', 'No data provided');
+        this.emit("error", "No data provided");
         return this;
       }
-      process.nextTick(function() {
-        this._packer.pack(this.data, this.width, this.height, this.gamma);
-      }.bind(this));
+      process.nextTick(
+        function () {
+          this._packer.pack(this.data, this.width, this.height, this.gamma);
+        }.bind(this)
+      );
       return this;
     };
-    PNG.prototype.parse = function(data, callback) {
+    PNG.prototype.parse = function (data, callback) {
       if (callback) {
-        var onParsed, onError;
-        onParsed = function(parsedData) {
-          this.removeListener('error', onError);
+        let onParsed, onError;
+        onParsed = function (parsedData) {
+          this.removeListener("error", onError);
           this.data = parsedData;
           callback(null, this);
         }.bind(this);
-        onError = function(err) {
-          this.removeListener('parsed', onParsed);
+        onError = function (err) {
+          this.removeListener("parsed", onParsed);
           callback(err, null);
         }.bind(this);
-        this.once('parsed', onParsed);
-        this.once('error', onError);
+        this.once("parsed", onParsed);
+        this.once("error", onError);
       }
       this.end(data);
       return this;
     };
-    PNG.prototype.write = function(data) {
+    PNG.prototype.write = function (data) {
       this._parser.write(data);
       return true;
     };
-    PNG.prototype.end = function(data) {
+    PNG.prototype.end = function (data) {
       this._parser.end(data);
     };
-    PNG.prototype._metadata = function(metadata) {
+    PNG.prototype._metadata = function (metadata) {
       this.width = metadata.width;
       this.height = metadata.height;
-      this.emit('metadata', metadata);
+      this.emit("metadata", metadata);
     };
-    PNG.prototype._gamma = function(gamma) {
+    PNG.prototype._gamma = function (gamma) {
       this.gamma = gamma;
     };
-    PNG.prototype._handleClose = function() {
+    PNG.prototype._handleClose = function () {
       if (!this._parser.writable && !this._packer.readable) {
-        this.emit('close');
+        this.emit("close");
       }
     };
-    PNG.bitblt = function(src, dst, srcX, srcY, width, height, deltaX, deltaY) {
+    PNG.bitblt = function (src, dst, srcX, srcY, width, height, deltaX, deltaY) {
       srcX |= 0;
       srcY |= 0;
       width |= 0;
       height |= 0;
       deltaX |= 0;
       deltaY |= 0;
-      if (srcX > src.width || srcY > src.height || srcX + width > src.width || srcY + height > src.height) {
-        throw new Error('bitblt reading outside image');
+      if (
+        srcX > src.width ||
+        srcY > src.height ||
+        srcX + width > src.width ||
+        srcY + height > src.height
+      ) {
+        throw new Error("bitblt reading outside image");
       }
-      if (deltaX > dst.width || deltaY > dst.height || deltaX + width > dst.width || deltaY + height > dst.height) {
-        throw new Error('bitblt writing outside image');
+      if (
+        deltaX > dst.width ||
+        deltaY > dst.height ||
+        deltaX + width > dst.width ||
+        deltaY + height > dst.height
+      ) {
+        throw new Error("bitblt writing outside image");
       }
-      for (var y = 0; y < height; y++) {
-        src.data.copy(dst.data,
+      for (let y = 0; y < height; y++) {
+        src.data.copy(
+          dst.data,
           ((deltaY + y) * dst.width + deltaX) << 2,
           ((srcY + y) * src.width + srcX) << 2,
           ((srcY + y) * src.width + srcX + width) << 2
         );
       }
     };
-    PNG.prototype.bitblt = function(dst, srcX, srcY, width, height, deltaX, deltaY) {
+    PNG.prototype.bitblt = function (
+      dst,
+      srcX,
+      srcY,
+      width,
+      height,
+      deltaX,
+      deltaY
+    ) {
       PNG.bitblt(this, dst, srcX, srcY, width, height, deltaX, deltaY);
       return this;
     };
-    PNG.adjustGamma = function(src) {
+    PNG.adjustGamma = function (src) {
       if (src.gamma) {
-        for (var y = 0; y < src.height; y++) {
-          for (var x = 0; x < src.width; x++) {
-            var idx = (src.width * y + x) << 2;
-            for (var i = 0; i < 3; i++) {
-              var sample = src.data[idx + i] / 255;
+        for (let y = 0; y < src.height; y++) {
+          for (let x = 0; x < src.width; x++) {
+            let idx = (src.width * y + x) << 2;
+            for (let i = 0; i < 3; i++) {
+              let sample = src.data[idx + i] / 255;
               sample = Math.pow(sample, 1 / 2.2 / src.gamma);
               src.data[idx + i] = Math.round(sample * 255);
             }
@@ -4120,16 +4245,16 @@ var DjVu = (function () {
         src.gamma = 0;
       }
     };
-    PNG.prototype.adjustGamma = function() {
+    PNG.prototype.adjustGamma = function () {
       PNG.adjustGamma(this);
     };
     }).call(this,require('_process'),require("buffer").Buffer);
-    },{"./packer-async":12,"./parser-async":16,"./png-sync":19,"_process":51,"buffer":32,"stream":64,"util":69}],21:[function(require,module,exports){
+    },{"./packer-async":12,"./parser-async":16,"./png-sync":19,"_process":47,"buffer":28,"stream":63,"util":67}],21:[function(require,module,exports){
     (function (process,Buffer){
-    var assert = require('assert').ok;
-    var zlib = require('zlib');
-    var util = require('util');
-    var kMaxLength = require('buffer').kMaxLength;
+    let assert = require("assert").ok;
+    let zlib = require("zlib");
+    let util = require("util");
+    let kMaxLength = require("buffer").kMaxLength;
     function Inflate(opts) {
       if (!(this instanceof Inflate)) {
         return new Inflate(opts);
@@ -4157,29 +4282,29 @@ var DjVu = (function () {
       engine._handle.close();
       engine._handle = null;
     }
-    Inflate.prototype._processChunk = function(chunk, flushFlag, asyncCb) {
-      if (typeof asyncCb === 'function') {
+    Inflate.prototype._processChunk = function (chunk, flushFlag, asyncCb) {
+      if (typeof asyncCb === "function") {
         return zlib.Inflate._processChunk.call(this, chunk, flushFlag, asyncCb);
       }
-      var self = this;
-      var availInBefore = chunk && chunk.length;
-      var availOutBefore = this._chunkSize - this._offset;
-      var leftToInflate = this._maxLength;
-      var inOff = 0;
-      var buffers = [];
-      var nread = 0;
-      var error;
-      this.on('error', function(err) {
+      let self = this;
+      let availInBefore = chunk && chunk.length;
+      let availOutBefore = this._chunkSize - this._offset;
+      let leftToInflate = this._maxLength;
+      let inOff = 0;
+      let buffers = [];
+      let nread = 0;
+      let error;
+      this.on("error", function (err) {
         error = err;
       });
       function handleChunk(availInAfter, availOutAfter) {
         if (self._hadError) {
           return;
         }
-        var have = availOutBefore - availOutAfter;
-        assert(have >= 0, 'have should not go down');
+        let have = availOutBefore - availOutAfter;
+        assert(have >= 0, "have should not go down");
         if (have > 0) {
-          var out = self._buffer.slice(self._offset, self._offset + have);
+          let out = self._buffer.slice(self._offset, self._offset + have);
           self._offset += have;
           if (out.length > leftToInflate) {
             out = out.slice(0, leftToInflate);
@@ -4197,21 +4322,24 @@ var DjVu = (function () {
           self._buffer = Buffer.allocUnsafe(self._chunkSize);
         }
         if (availOutAfter === 0) {
-          inOff += (availInBefore - availInAfter);
+          inOff += availInBefore - availInAfter;
           availInBefore = availInAfter;
           return true;
         }
         return false;
       }
-      assert(this._handle, 'zlib binding closed');
+      assert(this._handle, "zlib binding closed");
+      let res;
       do {
-        var res = this._handle.writeSync(flushFlag,
+        res = this._handle.writeSync(
+          flushFlag,
           chunk,
           inOff,
           availInBefore,
           this._buffer,
           this._offset,
-          availOutBefore);
+          availOutBefore
+        );
         res = res || this._writeState;
       } while (!this._hadError && handleChunk(res[0], res[1]));
       if (this._hadError) {
@@ -4219,21 +4347,25 @@ var DjVu = (function () {
       }
       if (nread >= kMaxLength) {
         _close(this);
-        throw new RangeError('Cannot create final Buffer. It would be larger than 0x' + kMaxLength.toString(16) + ' bytes');
+        throw new RangeError(
+          "Cannot create final Buffer. It would be larger than 0x" +
+            kMaxLength.toString(16) +
+            " bytes"
+        );
       }
-      var buf = Buffer.concat(buffers, nread);
+      let buf = Buffer.concat(buffers, nread);
       _close(this);
       return buf;
     };
     util.inherits(Inflate, zlib.Inflate);
     function zlibBufferSync(engine, buffer) {
-      if (typeof buffer === 'string') {
+      if (typeof buffer === "string") {
         buffer = Buffer.from(buffer);
       }
       if (!(buffer instanceof Buffer)) {
-        throw new TypeError('Not a string or buffer');
+        throw new TypeError("Not a string or buffer");
       }
-      var flushFlag = engine._finishFlushFlag;
+      let flushFlag = engine._finishFlushFlag;
       if (flushFlag == null) {
         flushFlag = zlib.Z_FINISH;
       }
@@ -4247,36 +4379,38 @@ var DjVu = (function () {
     exports.createInflate = createInflate;
     exports.inflateSync = inflateSync;
     }).call(this,require('_process'),require("buffer").Buffer);
-    },{"_process":51,"assert":23,"buffer":32,"util":69,"zlib":30}],22:[function(require,module,exports){
-    var SyncReader = module.exports = function(buffer) {
+    },{"_process":47,"assert":23,"buffer":28,"util":67,"zlib":27}],22:[function(require,module,exports){
+    let SyncReader = (module.exports = function (buffer) {
       this._buffer = buffer;
       this._reads = [];
-    };
-    SyncReader.prototype.read = function(length, callback) {
+    });
+    SyncReader.prototype.read = function (length, callback) {
       this._reads.push({
         length: Math.abs(length),
         allowLess: length < 0,
-        func: callback
+        func: callback,
       });
     };
-    SyncReader.prototype.process = function() {
+    SyncReader.prototype.process = function () {
       while (this._reads.length > 0 && this._buffer.length) {
-        var read = this._reads[0];
-        if (this._buffer.length && (this._buffer.length >= read.length || read.allowLess)) {
+        let read = this._reads[0];
+        if (
+          this._buffer.length &&
+          (this._buffer.length >= read.length || read.allowLess)
+        ) {
           this._reads.shift();
-          var buf = this._buffer;
+          let buf = this._buffer;
           this._buffer = buf.slice(read.length);
           read.func.call(this, buf.slice(0, read.length));
-        }
-        else {
+        } else {
           break;
         }
       }
       if (this._reads.length > 0) {
-        return new Error('There are some read requests waitng on finished stream');
+        return new Error("There are some read requests waitng on finished stream");
       }
       if (this._buffer.length > 0) {
-        return new Error('unrecognised content at end of stream');
+        return new Error("unrecognised content at end of stream");
       }
     };
     },{}],23:[function(require,module,exports){
@@ -4605,466 +4739,7 @@ var DjVu = (function () {
       return keys;
     };
     }).call(this,typeof commonjsGlobal !== "undefined" ? commonjsGlobal : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {});
-    },{"util/":26}],24:[function(require,module,exports){
-    if (typeof Object.create === 'function') {
-      module.exports = function inherits(ctor, superCtor) {
-        ctor.super_ = superCtor;
-        ctor.prototype = Object.create(superCtor.prototype, {
-          constructor: {
-            value: ctor,
-            enumerable: false,
-            writable: true,
-            configurable: true
-          }
-        });
-      };
-    } else {
-      module.exports = function inherits(ctor, superCtor) {
-        ctor.super_ = superCtor;
-        var TempCtor = function () {};
-        TempCtor.prototype = superCtor.prototype;
-        ctor.prototype = new TempCtor();
-        ctor.prototype.constructor = ctor;
-      };
-    }
-    },{}],25:[function(require,module,exports){
-    module.exports = function isBuffer(arg) {
-      return arg && typeof arg === 'object'
-        && typeof arg.copy === 'function'
-        && typeof arg.fill === 'function'
-        && typeof arg.readUInt8 === 'function';
-    };
-    },{}],26:[function(require,module,exports){
-    (function (process,global){
-    var formatRegExp = /%[sdj%]/g;
-    exports.format = function(f) {
-      if (!isString(f)) {
-        var objects = [];
-        for (var i = 0; i < arguments.length; i++) {
-          objects.push(inspect(arguments[i]));
-        }
-        return objects.join(' ');
-      }
-      var i = 1;
-      var args = arguments;
-      var len = args.length;
-      var str = String(f).replace(formatRegExp, function(x) {
-        if (x === '%%') return '%';
-        if (i >= len) return x;
-        switch (x) {
-          case '%s': return String(args[i++]);
-          case '%d': return Number(args[i++]);
-          case '%j':
-            try {
-              return JSON.stringify(args[i++]);
-            } catch (_) {
-              return '[Circular]';
-            }
-          default:
-            return x;
-        }
-      });
-      for (var x = args[i]; i < len; x = args[++i]) {
-        if (isNull(x) || !isObject(x)) {
-          str += ' ' + x;
-        } else {
-          str += ' ' + inspect(x);
-        }
-      }
-      return str;
-    };
-    exports.deprecate = function(fn, msg) {
-      if (isUndefined(global.process)) {
-        return function() {
-          return exports.deprecate(fn, msg).apply(this, arguments);
-        };
-      }
-      if (process.noDeprecation === true) {
-        return fn;
-      }
-      var warned = false;
-      function deprecated() {
-        if (!warned) {
-          if (process.throwDeprecation) {
-            throw new Error(msg);
-          } else if (process.traceDeprecation) {
-            console.trace(msg);
-          } else {
-            console.error(msg);
-          }
-          warned = true;
-        }
-        return fn.apply(this, arguments);
-      }
-      return deprecated;
-    };
-    var debugs = {};
-    var debugEnviron;
-    exports.debuglog = function(set) {
-      if (isUndefined(debugEnviron))
-        debugEnviron = process.env.NODE_DEBUG || '';
-      set = set.toUpperCase();
-      if (!debugs[set]) {
-        if (new RegExp('\\b' + set + '\\b', 'i').test(debugEnviron)) {
-          var pid = process.pid;
-          debugs[set] = function() {
-            var msg = exports.format.apply(exports, arguments);
-            console.error('%s %d: %s', set, pid, msg);
-          };
-        } else {
-          debugs[set] = function() {};
-        }
-      }
-      return debugs[set];
-    };
-    function inspect(obj, opts) {
-      var ctx = {
-        seen: [],
-        stylize: stylizeNoColor
-      };
-      if (arguments.length >= 3) ctx.depth = arguments[2];
-      if (arguments.length >= 4) ctx.colors = arguments[3];
-      if (isBoolean(opts)) {
-        ctx.showHidden = opts;
-      } else if (opts) {
-        exports._extend(ctx, opts);
-      }
-      if (isUndefined(ctx.showHidden)) ctx.showHidden = false;
-      if (isUndefined(ctx.depth)) ctx.depth = 2;
-      if (isUndefined(ctx.colors)) ctx.colors = false;
-      if (isUndefined(ctx.customInspect)) ctx.customInspect = true;
-      if (ctx.colors) ctx.stylize = stylizeWithColor;
-      return formatValue(ctx, obj, ctx.depth);
-    }
-    exports.inspect = inspect;
-    inspect.colors = {
-      'bold' : [1, 22],
-      'italic' : [3, 23],
-      'underline' : [4, 24],
-      'inverse' : [7, 27],
-      'white' : [37, 39],
-      'grey' : [90, 39],
-      'black' : [30, 39],
-      'blue' : [34, 39],
-      'cyan' : [36, 39],
-      'green' : [32, 39],
-      'magenta' : [35, 39],
-      'red' : [31, 39],
-      'yellow' : [33, 39]
-    };
-    inspect.styles = {
-      'special': 'cyan',
-      'number': 'yellow',
-      'boolean': 'yellow',
-      'undefined': 'grey',
-      'null': 'bold',
-      'string': 'green',
-      'date': 'magenta',
-      'regexp': 'red'
-    };
-    function stylizeWithColor(str, styleType) {
-      var style = inspect.styles[styleType];
-      if (style) {
-        return '\u001b[' + inspect.colors[style][0] + 'm' + str +
-               '\u001b[' + inspect.colors[style][1] + 'm';
-      } else {
-        return str;
-      }
-    }
-    function stylizeNoColor(str, styleType) {
-      return str;
-    }
-    function arrayToHash(array) {
-      var hash = {};
-      array.forEach(function(val, idx) {
-        hash[val] = true;
-      });
-      return hash;
-    }
-    function formatValue(ctx, value, recurseTimes) {
-      if (ctx.customInspect &&
-          value &&
-          isFunction(value.inspect) &&
-          value.inspect !== exports.inspect &&
-          !(value.constructor && value.constructor.prototype === value)) {
-        var ret = value.inspect(recurseTimes, ctx);
-        if (!isString(ret)) {
-          ret = formatValue(ctx, ret, recurseTimes);
-        }
-        return ret;
-      }
-      var primitive = formatPrimitive(ctx, value);
-      if (primitive) {
-        return primitive;
-      }
-      var keys = Object.keys(value);
-      var visibleKeys = arrayToHash(keys);
-      if (ctx.showHidden) {
-        keys = Object.getOwnPropertyNames(value);
-      }
-      if (isError(value)
-          && (keys.indexOf('message') >= 0 || keys.indexOf('description') >= 0)) {
-        return formatError(value);
-      }
-      if (keys.length === 0) {
-        if (isFunction(value)) {
-          var name = value.name ? ': ' + value.name : '';
-          return ctx.stylize('[Function' + name + ']', 'special');
-        }
-        if (isRegExp(value)) {
-          return ctx.stylize(RegExp.prototype.toString.call(value), 'regexp');
-        }
-        if (isDate(value)) {
-          return ctx.stylize(Date.prototype.toString.call(value), 'date');
-        }
-        if (isError(value)) {
-          return formatError(value);
-        }
-      }
-      var base = '', array = false, braces = ['{', '}'];
-      if (isArray(value)) {
-        array = true;
-        braces = ['[', ']'];
-      }
-      if (isFunction(value)) {
-        var n = value.name ? ': ' + value.name : '';
-        base = ' [Function' + n + ']';
-      }
-      if (isRegExp(value)) {
-        base = ' ' + RegExp.prototype.toString.call(value);
-      }
-      if (isDate(value)) {
-        base = ' ' + Date.prototype.toUTCString.call(value);
-      }
-      if (isError(value)) {
-        base = ' ' + formatError(value);
-      }
-      if (keys.length === 0 && (!array || value.length == 0)) {
-        return braces[0] + base + braces[1];
-      }
-      if (recurseTimes < 0) {
-        if (isRegExp(value)) {
-          return ctx.stylize(RegExp.prototype.toString.call(value), 'regexp');
-        } else {
-          return ctx.stylize('[Object]', 'special');
-        }
-      }
-      ctx.seen.push(value);
-      var output;
-      if (array) {
-        output = formatArray(ctx, value, recurseTimes, visibleKeys, keys);
-      } else {
-        output = keys.map(function(key) {
-          return formatProperty(ctx, value, recurseTimes, visibleKeys, key, array);
-        });
-      }
-      ctx.seen.pop();
-      return reduceToSingleString(output, base, braces);
-    }
-    function formatPrimitive(ctx, value) {
-      if (isUndefined(value))
-        return ctx.stylize('undefined', 'undefined');
-      if (isString(value)) {
-        var simple = '\'' + JSON.stringify(value).replace(/^"|"$/g, '')
-                                                 .replace(/'/g, "\\'")
-                                                 .replace(/\\"/g, '"') + '\'';
-        return ctx.stylize(simple, 'string');
-      }
-      if (isNumber(value))
-        return ctx.stylize('' + value, 'number');
-      if (isBoolean(value))
-        return ctx.stylize('' + value, 'boolean');
-      if (isNull(value))
-        return ctx.stylize('null', 'null');
-    }
-    function formatError(value) {
-      return '[' + Error.prototype.toString.call(value) + ']';
-    }
-    function formatArray(ctx, value, recurseTimes, visibleKeys, keys) {
-      var output = [];
-      for (var i = 0, l = value.length; i < l; ++i) {
-        if (hasOwnProperty(value, String(i))) {
-          output.push(formatProperty(ctx, value, recurseTimes, visibleKeys,
-              String(i), true));
-        } else {
-          output.push('');
-        }
-      }
-      keys.forEach(function(key) {
-        if (!key.match(/^\d+$/)) {
-          output.push(formatProperty(ctx, value, recurseTimes, visibleKeys,
-              key, true));
-        }
-      });
-      return output;
-    }
-    function formatProperty(ctx, value, recurseTimes, visibleKeys, key, array) {
-      var name, str, desc;
-      desc = Object.getOwnPropertyDescriptor(value, key) || { value: value[key] };
-      if (desc.get) {
-        if (desc.set) {
-          str = ctx.stylize('[Getter/Setter]', 'special');
-        } else {
-          str = ctx.stylize('[Getter]', 'special');
-        }
-      } else {
-        if (desc.set) {
-          str = ctx.stylize('[Setter]', 'special');
-        }
-      }
-      if (!hasOwnProperty(visibleKeys, key)) {
-        name = '[' + key + ']';
-      }
-      if (!str) {
-        if (ctx.seen.indexOf(desc.value) < 0) {
-          if (isNull(recurseTimes)) {
-            str = formatValue(ctx, desc.value, null);
-          } else {
-            str = formatValue(ctx, desc.value, recurseTimes - 1);
-          }
-          if (str.indexOf('\n') > -1) {
-            if (array) {
-              str = str.split('\n').map(function(line) {
-                return '  ' + line;
-              }).join('\n').substr(2);
-            } else {
-              str = '\n' + str.split('\n').map(function(line) {
-                return '   ' + line;
-              }).join('\n');
-            }
-          }
-        } else {
-          str = ctx.stylize('[Circular]', 'special');
-        }
-      }
-      if (isUndefined(name)) {
-        if (array && key.match(/^\d+$/)) {
-          return str;
-        }
-        name = JSON.stringify('' + key);
-        if (name.match(/^"([a-zA-Z_][a-zA-Z_0-9]*)"$/)) {
-          name = name.substr(1, name.length - 2);
-          name = ctx.stylize(name, 'name');
-        } else {
-          name = name.replace(/'/g, "\\'")
-                     .replace(/\\"/g, '"')
-                     .replace(/(^"|"$)/g, "'");
-          name = ctx.stylize(name, 'string');
-        }
-      }
-      return name + ': ' + str;
-    }
-    function reduceToSingleString(output, base, braces) {
-      var length = output.reduce(function(prev, cur) {
-        if (cur.indexOf('\n') >= 0) ;
-        return prev + cur.replace(/\u001b\[\d\d?m/g, '').length + 1;
-      }, 0);
-      if (length > 60) {
-        return braces[0] +
-               (base === '' ? '' : base + '\n ') +
-               ' ' +
-               output.join(',\n  ') +
-               ' ' +
-               braces[1];
-      }
-      return braces[0] + base + ' ' + output.join(', ') + ' ' + braces[1];
-    }
-    function isArray(ar) {
-      return Array.isArray(ar);
-    }
-    exports.isArray = isArray;
-    function isBoolean(arg) {
-      return typeof arg === 'boolean';
-    }
-    exports.isBoolean = isBoolean;
-    function isNull(arg) {
-      return arg === null;
-    }
-    exports.isNull = isNull;
-    function isNullOrUndefined(arg) {
-      return arg == null;
-    }
-    exports.isNullOrUndefined = isNullOrUndefined;
-    function isNumber(arg) {
-      return typeof arg === 'number';
-    }
-    exports.isNumber = isNumber;
-    function isString(arg) {
-      return typeof arg === 'string';
-    }
-    exports.isString = isString;
-    function isSymbol(arg) {
-      return typeof arg === 'symbol';
-    }
-    exports.isSymbol = isSymbol;
-    function isUndefined(arg) {
-      return arg === void 0;
-    }
-    exports.isUndefined = isUndefined;
-    function isRegExp(re) {
-      return isObject(re) && objectToString(re) === '[object RegExp]';
-    }
-    exports.isRegExp = isRegExp;
-    function isObject(arg) {
-      return typeof arg === 'object' && arg !== null;
-    }
-    exports.isObject = isObject;
-    function isDate(d) {
-      return isObject(d) && objectToString(d) === '[object Date]';
-    }
-    exports.isDate = isDate;
-    function isError(e) {
-      return isObject(e) &&
-          (objectToString(e) === '[object Error]' || e instanceof Error);
-    }
-    exports.isError = isError;
-    function isFunction(arg) {
-      return typeof arg === 'function';
-    }
-    exports.isFunction = isFunction;
-    function isPrimitive(arg) {
-      return arg === null ||
-             typeof arg === 'boolean' ||
-             typeof arg === 'number' ||
-             typeof arg === 'string' ||
-             typeof arg === 'symbol' ||
-             typeof arg === 'undefined';
-    }
-    exports.isPrimitive = isPrimitive;
-    exports.isBuffer = require('./support/isBuffer');
-    function objectToString(o) {
-      return Object.prototype.toString.call(o);
-    }
-    function pad(n) {
-      return n < 10 ? '0' + n.toString(10) : n.toString(10);
-    }
-    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep',
-                  'Oct', 'Nov', 'Dec'];
-    function timestamp() {
-      var d = new Date();
-      var time = [pad(d.getHours()),
-                  pad(d.getMinutes()),
-                  pad(d.getSeconds())].join(':');
-      return [d.getDate(), months[d.getMonth()], time].join(' ');
-    }
-    exports.log = function() {
-      console.log('%s - %s', timestamp(), exports.format.apply(exports, arguments));
-    };
-    exports.inherits = require('inherits');
-    exports._extend = function(origin, add) {
-      if (!add || !isObject(add)) return origin;
-      var keys = Object.keys(add);
-      var i = keys.length;
-      while (i--) {
-        origin[keys[i]] = add[keys[i]];
-      }
-      return origin;
-    };
-    function hasOwnProperty(obj, prop) {
-      return Object.prototype.hasOwnProperty.call(obj, prop);
-    }
-    }).call(this,require('_process'),typeof commonjsGlobal !== "undefined" ? commonjsGlobal : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {});
-    },{"./support/isBuffer":25,"_process":51,"inherits":24}],27:[function(require,module,exports){
+    },{"util/":67}],24:[function(require,module,exports){
     exports.byteLength = byteLength;
     exports.toByteArray = toByteArray;
     exports.fromByteArray = fromByteArray;
@@ -5078,77 +4753,47 @@ var DjVu = (function () {
     }
     revLookup['-'.charCodeAt(0)] = 62;
     revLookup['_'.charCodeAt(0)] = 63;
-    function getLens (b64) {
+    function placeHoldersCount (b64) {
       var len = b64.length;
       if (len % 4 > 0) {
         throw new Error('Invalid string. Length must be a multiple of 4')
       }
-      var validLen = b64.indexOf('=');
-      if (validLen === -1) validLen = len;
-      var placeHoldersLen = validLen === len
-        ? 0
-        : 4 - (validLen % 4);
-      return [validLen, placeHoldersLen]
+      return b64[len - 2] === '=' ? 2 : b64[len - 1] === '=' ? 1 : 0
     }
     function byteLength (b64) {
-      var lens = getLens(b64);
-      var validLen = lens[0];
-      var placeHoldersLen = lens[1];
-      return ((validLen + placeHoldersLen) * 3 / 4) - placeHoldersLen
-    }
-    function _byteLength (b64, validLen, placeHoldersLen) {
-      return ((validLen + placeHoldersLen) * 3 / 4) - placeHoldersLen
+      return (b64.length * 3 / 4) - placeHoldersCount(b64)
     }
     function toByteArray (b64) {
-      var tmp;
-      var lens = getLens(b64);
-      var validLen = lens[0];
-      var placeHoldersLen = lens[1];
-      var arr = new Arr(_byteLength(b64, validLen, placeHoldersLen));
-      var curByte = 0;
-      var len = placeHoldersLen > 0
-        ? validLen - 4
-        : validLen;
-      for (var i = 0; i < len; i += 4) {
-        tmp =
-          (revLookup[b64.charCodeAt(i)] << 18) |
-          (revLookup[b64.charCodeAt(i + 1)] << 12) |
-          (revLookup[b64.charCodeAt(i + 2)] << 6) |
-          revLookup[b64.charCodeAt(i + 3)];
-        arr[curByte++] = (tmp >> 16) & 0xFF;
-        arr[curByte++] = (tmp >> 8) & 0xFF;
-        arr[curByte++] = tmp & 0xFF;
+      var i, l, tmp, placeHolders, arr;
+      var len = b64.length;
+      placeHolders = placeHoldersCount(b64);
+      arr = new Arr((len * 3 / 4) - placeHolders);
+      l = placeHolders > 0 ? len - 4 : len;
+      var L = 0;
+      for (i = 0; i < l; i += 4) {
+        tmp = (revLookup[b64.charCodeAt(i)] << 18) | (revLookup[b64.charCodeAt(i + 1)] << 12) | (revLookup[b64.charCodeAt(i + 2)] << 6) | revLookup[b64.charCodeAt(i + 3)];
+        arr[L++] = (tmp >> 16) & 0xFF;
+        arr[L++] = (tmp >> 8) & 0xFF;
+        arr[L++] = tmp & 0xFF;
       }
-      if (placeHoldersLen === 2) {
-        tmp =
-          (revLookup[b64.charCodeAt(i)] << 2) |
-          (revLookup[b64.charCodeAt(i + 1)] >> 4);
-        arr[curByte++] = tmp & 0xFF;
-      }
-      if (placeHoldersLen === 1) {
-        tmp =
-          (revLookup[b64.charCodeAt(i)] << 10) |
-          (revLookup[b64.charCodeAt(i + 1)] << 4) |
-          (revLookup[b64.charCodeAt(i + 2)] >> 2);
-        arr[curByte++] = (tmp >> 8) & 0xFF;
-        arr[curByte++] = tmp & 0xFF;
+      if (placeHolders === 2) {
+        tmp = (revLookup[b64.charCodeAt(i)] << 2) | (revLookup[b64.charCodeAt(i + 1)] >> 4);
+        arr[L++] = tmp & 0xFF;
+      } else if (placeHolders === 1) {
+        tmp = (revLookup[b64.charCodeAt(i)] << 10) | (revLookup[b64.charCodeAt(i + 1)] << 4) | (revLookup[b64.charCodeAt(i + 2)] >> 2);
+        arr[L++] = (tmp >> 8) & 0xFF;
+        arr[L++] = tmp & 0xFF;
       }
       return arr
     }
     function tripletToBase64 (num) {
-      return lookup[num >> 18 & 0x3F] +
-        lookup[num >> 12 & 0x3F] +
-        lookup[num >> 6 & 0x3F] +
-        lookup[num & 0x3F]
+      return lookup[num >> 18 & 0x3F] + lookup[num >> 12 & 0x3F] + lookup[num >> 6 & 0x3F] + lookup[num & 0x3F]
     }
     function encodeChunk (uint8, start, end) {
       var tmp;
       var output = [];
       for (var i = start; i < end; i += 3) {
-        tmp =
-          ((uint8[i] << 16) & 0xFF0000) +
-          ((uint8[i + 1] << 8) & 0xFF00) +
-          (uint8[i + 2] & 0xFF);
+        tmp = (uint8[i] << 16) + (uint8[i + 1] << 8) + (uint8[i + 2]);
         output.push(tripletToBase64(tmp));
       }
       return output.join('')
@@ -5157,33 +4802,29 @@ var DjVu = (function () {
       var tmp;
       var len = uint8.length;
       var extraBytes = len % 3;
+      var output = '';
       var parts = [];
       var maxChunkLength = 16383;
       for (var i = 0, len2 = len - extraBytes; i < len2; i += maxChunkLength) {
-        parts.push(encodeChunk(
-          uint8, i, (i + maxChunkLength) > len2 ? len2 : (i + maxChunkLength)
-        ));
+        parts.push(encodeChunk(uint8, i, (i + maxChunkLength) > len2 ? len2 : (i + maxChunkLength)));
       }
       if (extraBytes === 1) {
         tmp = uint8[len - 1];
-        parts.push(
-          lookup[tmp >> 2] +
-          lookup[(tmp << 4) & 0x3F] +
-          '=='
-        );
+        output += lookup[tmp >> 2];
+        output += lookup[(tmp << 4) & 0x3F];
+        output += '==';
       } else if (extraBytes === 2) {
-        tmp = (uint8[len - 2] << 8) + uint8[len - 1];
-        parts.push(
-          lookup[tmp >> 10] +
-          lookup[(tmp >> 4) & 0x3F] +
-          lookup[(tmp << 2) & 0x3F] +
-          '='
-        );
+        tmp = (uint8[len - 2] << 8) + (uint8[len - 1]);
+        output += lookup[tmp >> 10];
+        output += lookup[(tmp >> 4) & 0x3F];
+        output += lookup[(tmp << 2) & 0x3F];
+        output += '=';
       }
+      parts.push(output);
       return parts.join('')
     }
-    },{}],28:[function(require,module,exports){
-    },{}],29:[function(require,module,exports){
+    },{}],25:[function(require,module,exports){
+    },{}],26:[function(require,module,exports){
     (function (process,Buffer){
     var assert = require('assert');
     var Zstream = require('pako/lib/zlib/zstream');
@@ -5484,7 +5125,7 @@ var DjVu = (function () {
     };
     exports.Zlib = Zlib;
     }).call(this,require('_process'),require("buffer").Buffer);
-    },{"_process":51,"assert":23,"buffer":32,"pako/lib/zlib/constants":41,"pako/lib/zlib/deflate.js":43,"pako/lib/zlib/inflate.js":45,"pako/lib/zlib/zstream":49}],30:[function(require,module,exports){
+    },{"_process":47,"assert":23,"buffer":28,"pako/lib/zlib/constants":37,"pako/lib/zlib/deflate.js":39,"pako/lib/zlib/inflate.js":41,"pako/lib/zlib/zstream":45}],27:[function(require,module,exports){
     (function (process){
     var Buffer = require('buffer').Buffer;
     var Transform = require('stream').Transform;
@@ -5939,116 +5580,7 @@ var DjVu = (function () {
     util.inherits(InflateRaw, Zlib);
     util.inherits(Unzip, Zlib);
     }).call(this,require('_process'));
-    },{"./binding":29,"_process":51,"assert":23,"buffer":32,"stream":64,"util":69}],31:[function(require,module,exports){
-    (function (global){
-    var buffer = require('buffer');
-    var Buffer = buffer.Buffer;
-    var SlowBuffer = buffer.SlowBuffer;
-    var MAX_LEN = buffer.kMaxLength || 2147483647;
-    exports.alloc = function alloc(size, fill, encoding) {
-      if (typeof Buffer.alloc === 'function') {
-        return Buffer.alloc(size, fill, encoding);
-      }
-      if (typeof encoding === 'number') {
-        throw new TypeError('encoding must not be number');
-      }
-      if (typeof size !== 'number') {
-        throw new TypeError('size must be a number');
-      }
-      if (size > MAX_LEN) {
-        throw new RangeError('size is too large');
-      }
-      var enc = encoding;
-      var _fill = fill;
-      if (_fill === undefined) {
-        enc = undefined;
-        _fill = 0;
-      }
-      var buf = new Buffer(size);
-      if (typeof _fill === 'string') {
-        var fillBuf = new Buffer(_fill, enc);
-        var flen = fillBuf.length;
-        var i = -1;
-        while (++i < size) {
-          buf[i] = fillBuf[i % flen];
-        }
-      } else {
-        buf.fill(_fill);
-      }
-      return buf;
-    };
-    exports.allocUnsafe = function allocUnsafe(size) {
-      if (typeof Buffer.allocUnsafe === 'function') {
-        return Buffer.allocUnsafe(size);
-      }
-      if (typeof size !== 'number') {
-        throw new TypeError('size must be a number');
-      }
-      if (size > MAX_LEN) {
-        throw new RangeError('size is too large');
-      }
-      return new Buffer(size);
-    };
-    exports.from = function from(value, encodingOrOffset, length) {
-      if (typeof Buffer.from === 'function' && (!global.Uint8Array || Uint8Array.from !== Buffer.from)) {
-        return Buffer.from(value, encodingOrOffset, length);
-      }
-      if (typeof value === 'number') {
-        throw new TypeError('"value" argument must not be a number');
-      }
-      if (typeof value === 'string') {
-        return new Buffer(value, encodingOrOffset);
-      }
-      if (typeof ArrayBuffer !== 'undefined' && value instanceof ArrayBuffer) {
-        var offset = encodingOrOffset;
-        if (arguments.length === 1) {
-          return new Buffer(value);
-        }
-        if (typeof offset === 'undefined') {
-          offset = 0;
-        }
-        var len = length;
-        if (typeof len === 'undefined') {
-          len = value.byteLength - offset;
-        }
-        if (offset >= value.byteLength) {
-          throw new RangeError('\'offset\' is out of bounds');
-        }
-        if (len > value.byteLength - offset) {
-          throw new RangeError('\'length\' is out of bounds');
-        }
-        return new Buffer(value.slice(offset, offset + len));
-      }
-      if (Buffer.isBuffer(value)) {
-        var out = new Buffer(value.length);
-        value.copy(out, 0, 0, value.length);
-        return out;
-      }
-      if (value) {
-        if (Array.isArray(value) || (typeof ArrayBuffer !== 'undefined' && value.buffer instanceof ArrayBuffer) || 'length' in value) {
-          return new Buffer(value);
-        }
-        if (value.type === 'Buffer' && Array.isArray(value.data)) {
-          return new Buffer(value.data);
-        }
-      }
-      throw new TypeError('First argument must be a string, Buffer, ' + 'ArrayBuffer, Array, or array-like object.');
-    };
-    exports.allocUnsafeSlow = function allocUnsafeSlow(size) {
-      if (typeof Buffer.allocUnsafeSlow === 'function') {
-        return Buffer.allocUnsafeSlow(size);
-      }
-      if (typeof size !== 'number') {
-        throw new TypeError('size must be a number');
-      }
-      if (size >= MAX_LEN) {
-        throw new RangeError('size is too large');
-      }
-      return new SlowBuffer(size);
-    };
-    }).call(this,typeof commonjsGlobal !== "undefined" ? commonjsGlobal : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {});
-    },{"buffer":32}],32:[function(require,module,exports){
-    (function (Buffer){
+    },{"./binding":26,"_process":47,"assert":23,"buffer":28,"stream":63,"util":67}],28:[function(require,module,exports){
     var base64 = require('base64-js');
     var ieee754 = require('ieee754');
     exports.Buffer = Buffer;
@@ -7427,8 +6959,7 @@ var DjVu = (function () {
     function numberIsNaN (obj) {
       return obj !== obj
     }
-    }).call(this,require("buffer").Buffer);
-    },{"base64-js":27,"buffer":32,"ieee754":35}],33:[function(require,module,exports){
+    },{"base64-js":24,"ieee754":31}],29:[function(require,module,exports){
     (function (Buffer){
     function isArray(arg) {
       if (Array.isArray) {
@@ -7499,221 +7030,413 @@ var DjVu = (function () {
       return Object.prototype.toString.call(o);
     }
     }).call(this,{"isBuffer":require("../../is-buffer/index.js")});
-    },{"../../is-buffer/index.js":37}],34:[function(require,module,exports){
+    },{"../../is-buffer/index.js":33}],30:[function(require,module,exports){
+    var objectCreate = Object.create || objectCreatePolyfill;
+    var objectKeys = Object.keys || objectKeysPolyfill;
+    var bind = Function.prototype.bind || functionBindPolyfill;
     function EventEmitter() {
-      this._events = this._events || {};
+      if (!this._events || !Object.prototype.hasOwnProperty.call(this, '_events')) {
+        this._events = objectCreate(null);
+        this._eventsCount = 0;
+      }
       this._maxListeners = this._maxListeners || undefined;
     }
     module.exports = EventEmitter;
     EventEmitter.EventEmitter = EventEmitter;
     EventEmitter.prototype._events = undefined;
     EventEmitter.prototype._maxListeners = undefined;
-    EventEmitter.defaultMaxListeners = 10;
-    EventEmitter.prototype.setMaxListeners = function(n) {
-      if (!isNumber(n) || n < 0 || isNaN(n))
-        throw TypeError('n must be a positive number');
+    var defaultMaxListeners = 10;
+    var hasDefineProperty;
+    try {
+      var o = {};
+      if (Object.defineProperty) Object.defineProperty(o, 'x', { value: 0 });
+      hasDefineProperty = o.x === 0;
+    } catch (err) { hasDefineProperty = false; }
+    if (hasDefineProperty) {
+      Object.defineProperty(EventEmitter, 'defaultMaxListeners', {
+        enumerable: true,
+        get: function() {
+          return defaultMaxListeners;
+        },
+        set: function(arg) {
+          if (typeof arg !== 'number' || arg < 0 || arg !== arg)
+            throw new TypeError('"defaultMaxListeners" must be a positive number');
+          defaultMaxListeners = arg;
+        }
+      });
+    } else {
+      EventEmitter.defaultMaxListeners = defaultMaxListeners;
+    }
+    EventEmitter.prototype.setMaxListeners = function setMaxListeners(n) {
+      if (typeof n !== 'number' || n < 0 || isNaN(n))
+        throw new TypeError('"n" argument must be a positive number');
       this._maxListeners = n;
       return this;
     };
-    EventEmitter.prototype.emit = function(type) {
-      var er, handler, len, args, i, listeners;
-      if (!this._events)
-        this._events = {};
-      if (type === 'error') {
-        if (!this._events.error ||
-            (isObject(this._events.error) && !this._events.error.length)) {
+    function $getMaxListeners(that) {
+      if (that._maxListeners === undefined)
+        return EventEmitter.defaultMaxListeners;
+      return that._maxListeners;
+    }
+    EventEmitter.prototype.getMaxListeners = function getMaxListeners() {
+      return $getMaxListeners(this);
+    };
+    function emitNone(handler, isFn, self) {
+      if (isFn)
+        handler.call(self);
+      else {
+        var len = handler.length;
+        var listeners = arrayClone(handler, len);
+        for (var i = 0; i < len; ++i)
+          listeners[i].call(self);
+      }
+    }
+    function emitOne(handler, isFn, self, arg1) {
+      if (isFn)
+        handler.call(self, arg1);
+      else {
+        var len = handler.length;
+        var listeners = arrayClone(handler, len);
+        for (var i = 0; i < len; ++i)
+          listeners[i].call(self, arg1);
+      }
+    }
+    function emitTwo(handler, isFn, self, arg1, arg2) {
+      if (isFn)
+        handler.call(self, arg1, arg2);
+      else {
+        var len = handler.length;
+        var listeners = arrayClone(handler, len);
+        for (var i = 0; i < len; ++i)
+          listeners[i].call(self, arg1, arg2);
+      }
+    }
+    function emitThree(handler, isFn, self, arg1, arg2, arg3) {
+      if (isFn)
+        handler.call(self, arg1, arg2, arg3);
+      else {
+        var len = handler.length;
+        var listeners = arrayClone(handler, len);
+        for (var i = 0; i < len; ++i)
+          listeners[i].call(self, arg1, arg2, arg3);
+      }
+    }
+    function emitMany(handler, isFn, self, args) {
+      if (isFn)
+        handler.apply(self, args);
+      else {
+        var len = handler.length;
+        var listeners = arrayClone(handler, len);
+        for (var i = 0; i < len; ++i)
+          listeners[i].apply(self, args);
+      }
+    }
+    EventEmitter.prototype.emit = function emit(type) {
+      var er, handler, len, args, i, events;
+      var doError = (type === 'error');
+      events = this._events;
+      if (events)
+        doError = (doError && events.error == null);
+      else if (!doError)
+        return false;
+      if (doError) {
+        if (arguments.length > 1)
           er = arguments[1];
-          if (er instanceof Error) {
-            throw er;
-          } else {
-            var err = new Error('Uncaught, unspecified "error" event. (' + er + ')');
-            err.context = er;
-            throw err;
-          }
+        if (er instanceof Error) {
+          throw er;
+        } else {
+          var err = new Error('Unhandled "error" event. (' + er + ')');
+          err.context = er;
+          throw err;
         }
       }
-      handler = this._events[type];
-      if (isUndefined(handler))
+      handler = events[type];
+      if (!handler)
         return false;
-      if (isFunction(handler)) {
-        switch (arguments.length) {
-          case 1:
-            handler.call(this);
-            break;
-          case 2:
-            handler.call(this, arguments[1]);
-            break;
-          case 3:
-            handler.call(this, arguments[1], arguments[2]);
-            break;
-          default:
-            args = Array.prototype.slice.call(arguments, 1);
-            handler.apply(this, args);
-        }
-      } else if (isObject(handler)) {
-        args = Array.prototype.slice.call(arguments, 1);
-        listeners = handler.slice();
-        len = listeners.length;
-        for (i = 0; i < len; i++)
-          listeners[i].apply(this, args);
+      var isFn = typeof handler === 'function';
+      len = arguments.length;
+      switch (len) {
+        case 1:
+          emitNone(handler, isFn, this);
+          break;
+        case 2:
+          emitOne(handler, isFn, this, arguments[1]);
+          break;
+        case 3:
+          emitTwo(handler, isFn, this, arguments[1], arguments[2]);
+          break;
+        case 4:
+          emitThree(handler, isFn, this, arguments[1], arguments[2], arguments[3]);
+          break;
+        default:
+          args = new Array(len - 1);
+          for (i = 1; i < len; i++)
+            args[i - 1] = arguments[i];
+          emitMany(handler, isFn, this, args);
       }
       return true;
     };
-    EventEmitter.prototype.addListener = function(type, listener) {
+    function _addListener(target, type, listener, prepend) {
       var m;
-      if (!isFunction(listener))
-        throw TypeError('listener must be a function');
-      if (!this._events)
-        this._events = {};
-      if (this._events.newListener)
-        this.emit('newListener', type,
-                  isFunction(listener.listener) ?
-                  listener.listener : listener);
-      if (!this._events[type])
-        this._events[type] = listener;
-      else if (isObject(this._events[type]))
-        this._events[type].push(listener);
-      else
-        this._events[type] = [this._events[type], listener];
-      if (isObject(this._events[type]) && !this._events[type].warned) {
-        if (!isUndefined(this._maxListeners)) {
-          m = this._maxListeners;
-        } else {
-          m = EventEmitter.defaultMaxListeners;
+      var events;
+      var existing;
+      if (typeof listener !== 'function')
+        throw new TypeError('"listener" argument must be a function');
+      events = target._events;
+      if (!events) {
+        events = target._events = objectCreate(null);
+        target._eventsCount = 0;
+      } else {
+        if (events.newListener) {
+          target.emit('newListener', type,
+              listener.listener ? listener.listener : listener);
+          events = target._events;
         }
-        if (m && m > 0 && this._events[type].length > m) {
-          this._events[type].warned = true;
-          console.error('(node) warning: possible EventEmitter memory ' +
-                        'leak detected. %d listeners added. ' +
-                        'Use emitter.setMaxListeners() to increase limit.',
-                        this._events[type].length);
-          if (typeof console.trace === 'function') {
-            console.trace();
+        existing = events[type];
+      }
+      if (!existing) {
+        existing = events[type] = listener;
+        ++target._eventsCount;
+      } else {
+        if (typeof existing === 'function') {
+          existing = events[type] =
+              prepend ? [listener, existing] : [existing, listener];
+        } else {
+          if (prepend) {
+            existing.unshift(listener);
+          } else {
+            existing.push(listener);
+          }
+        }
+        if (!existing.warned) {
+          m = $getMaxListeners(target);
+          if (m && m > 0 && existing.length > m) {
+            existing.warned = true;
+            var w = new Error('Possible EventEmitter memory leak detected. ' +
+                existing.length + ' "' + String(type) + '" listeners ' +
+                'added. Use emitter.setMaxListeners() to ' +
+                'increase limit.');
+            w.name = 'MaxListenersExceededWarning';
+            w.emitter = target;
+            w.type = type;
+            w.count = existing.length;
+            if (typeof console === 'object' && console.warn) {
+              console.warn('%s: %s', w.name, w.message);
+            }
           }
         }
       }
-      return this;
+      return target;
+    }
+    EventEmitter.prototype.addListener = function addListener(type, listener) {
+      return _addListener(this, type, listener, false);
     };
     EventEmitter.prototype.on = EventEmitter.prototype.addListener;
-    EventEmitter.prototype.once = function(type, listener) {
-      if (!isFunction(listener))
-        throw TypeError('listener must be a function');
-      var fired = false;
-      function g() {
-        this.removeListener(type, g);
-        if (!fired) {
-          fired = true;
-          listener.apply(this, arguments);
+    EventEmitter.prototype.prependListener =
+        function prependListener(type, listener) {
+          return _addListener(this, type, listener, true);
+        };
+    function onceWrapper() {
+      if (!this.fired) {
+        this.target.removeListener(this.type, this.wrapFn);
+        this.fired = true;
+        switch (arguments.length) {
+          case 0:
+            return this.listener.call(this.target);
+          case 1:
+            return this.listener.call(this.target, arguments[0]);
+          case 2:
+            return this.listener.call(this.target, arguments[0], arguments[1]);
+          case 3:
+            return this.listener.call(this.target, arguments[0], arguments[1],
+                arguments[2]);
+          default:
+            var args = new Array(arguments.length);
+            for (var i = 0; i < args.length; ++i)
+              args[i] = arguments[i];
+            this.listener.apply(this.target, args);
         }
       }
-      g.listener = listener;
-      this.on(type, g);
+    }
+    function _onceWrap(target, type, listener) {
+      var state = { fired: false, wrapFn: undefined, target: target, type: type, listener: listener };
+      var wrapped = bind.call(onceWrapper, state);
+      wrapped.listener = listener;
+      state.wrapFn = wrapped;
+      return wrapped;
+    }
+    EventEmitter.prototype.once = function once(type, listener) {
+      if (typeof listener !== 'function')
+        throw new TypeError('"listener" argument must be a function');
+      this.on(type, _onceWrap(this, type, listener));
       return this;
     };
-    EventEmitter.prototype.removeListener = function(type, listener) {
-      var list, position, length, i;
-      if (!isFunction(listener))
-        throw TypeError('listener must be a function');
-      if (!this._events || !this._events[type])
-        return this;
-      list = this._events[type];
-      length = list.length;
-      position = -1;
-      if (list === listener ||
-          (isFunction(list.listener) && list.listener === listener)) {
-        delete this._events[type];
-        if (this._events.removeListener)
-          this.emit('removeListener', type, listener);
-      } else if (isObject(list)) {
-        for (i = length; i-- > 0;) {
-          if (list[i] === listener ||
-              (list[i].listener && list[i].listener === listener)) {
-            position = i;
-            break;
-          }
-        }
-        if (position < 0)
+    EventEmitter.prototype.prependOnceListener =
+        function prependOnceListener(type, listener) {
+          if (typeof listener !== 'function')
+            throw new TypeError('"listener" argument must be a function');
+          this.prependListener(type, _onceWrap(this, type, listener));
           return this;
-        if (list.length === 1) {
-          list.length = 0;
-          delete this._events[type];
-        } else {
-          list.splice(position, 1);
-        }
-        if (this._events.removeListener)
-          this.emit('removeListener', type, listener);
-      }
-      return this;
+        };
+    EventEmitter.prototype.removeListener =
+        function removeListener(type, listener) {
+          var list, events, position, i, originalListener;
+          if (typeof listener !== 'function')
+            throw new TypeError('"listener" argument must be a function');
+          events = this._events;
+          if (!events)
+            return this;
+          list = events[type];
+          if (!list)
+            return this;
+          if (list === listener || list.listener === listener) {
+            if (--this._eventsCount === 0)
+              this._events = objectCreate(null);
+            else {
+              delete events[type];
+              if (events.removeListener)
+                this.emit('removeListener', type, list.listener || listener);
+            }
+          } else if (typeof list !== 'function') {
+            position = -1;
+            for (i = list.length - 1; i >= 0; i--) {
+              if (list[i] === listener || list[i].listener === listener) {
+                originalListener = list[i].listener;
+                position = i;
+                break;
+              }
+            }
+            if (position < 0)
+              return this;
+            if (position === 0)
+              list.shift();
+            else
+              spliceOne(list, position);
+            if (list.length === 1)
+              events[type] = list[0];
+            if (events.removeListener)
+              this.emit('removeListener', type, originalListener || listener);
+          }
+          return this;
+        };
+    EventEmitter.prototype.removeAllListeners =
+        function removeAllListeners(type) {
+          var listeners, events, i;
+          events = this._events;
+          if (!events)
+            return this;
+          if (!events.removeListener) {
+            if (arguments.length === 0) {
+              this._events = objectCreate(null);
+              this._eventsCount = 0;
+            } else if (events[type]) {
+              if (--this._eventsCount === 0)
+                this._events = objectCreate(null);
+              else
+                delete events[type];
+            }
+            return this;
+          }
+          if (arguments.length === 0) {
+            var keys = objectKeys(events);
+            var key;
+            for (i = 0; i < keys.length; ++i) {
+              key = keys[i];
+              if (key === 'removeListener') continue;
+              this.removeAllListeners(key);
+            }
+            this.removeAllListeners('removeListener');
+            this._events = objectCreate(null);
+            this._eventsCount = 0;
+            return this;
+          }
+          listeners = events[type];
+          if (typeof listeners === 'function') {
+            this.removeListener(type, listeners);
+          } else if (listeners) {
+            for (i = listeners.length - 1; i >= 0; i--) {
+              this.removeListener(type, listeners[i]);
+            }
+          }
+          return this;
+        };
+    function _listeners(target, type, unwrap) {
+      var events = target._events;
+      if (!events)
+        return [];
+      var evlistener = events[type];
+      if (!evlistener)
+        return [];
+      if (typeof evlistener === 'function')
+        return unwrap ? [evlistener.listener || evlistener] : [evlistener];
+      return unwrap ? unwrapListeners(evlistener) : arrayClone(evlistener, evlistener.length);
+    }
+    EventEmitter.prototype.listeners = function listeners(type) {
+      return _listeners(this, type, true);
     };
-    EventEmitter.prototype.removeAllListeners = function(type) {
-      var key, listeners;
-      if (!this._events)
-        return this;
-      if (!this._events.removeListener) {
-        if (arguments.length === 0)
-          this._events = {};
-        else if (this._events[type])
-          delete this._events[type];
-        return this;
-      }
-      if (arguments.length === 0) {
-        for (key in this._events) {
-          if (key === 'removeListener') continue;
-          this.removeAllListeners(key);
-        }
-        this.removeAllListeners('removeListener');
-        this._events = {};
-        return this;
-      }
-      listeners = this._events[type];
-      if (isFunction(listeners)) {
-        this.removeListener(type, listeners);
-      } else if (listeners) {
-        while (listeners.length)
-          this.removeListener(type, listeners[listeners.length - 1]);
-      }
-      delete this._events[type];
-      return this;
-    };
-    EventEmitter.prototype.listeners = function(type) {
-      var ret;
-      if (!this._events || !this._events[type])
-        ret = [];
-      else if (isFunction(this._events[type]))
-        ret = [this._events[type]];
-      else
-        ret = this._events[type].slice();
-      return ret;
-    };
-    EventEmitter.prototype.listenerCount = function(type) {
-      if (this._events) {
-        var evlistener = this._events[type];
-        if (isFunction(evlistener))
-          return 1;
-        else if (evlistener)
-          return evlistener.length;
-      }
-      return 0;
+    EventEmitter.prototype.rawListeners = function rawListeners(type) {
+      return _listeners(this, type, false);
     };
     EventEmitter.listenerCount = function(emitter, type) {
-      return emitter.listenerCount(type);
+      if (typeof emitter.listenerCount === 'function') {
+        return emitter.listenerCount(type);
+      } else {
+        return listenerCount.call(emitter, type);
+      }
     };
-    function isFunction(arg) {
-      return typeof arg === 'function';
+    EventEmitter.prototype.listenerCount = listenerCount;
+    function listenerCount(type) {
+      var events = this._events;
+      if (events) {
+        var evlistener = events[type];
+        if (typeof evlistener === 'function') {
+          return 1;
+        } else if (evlistener) {
+          return evlistener.length;
+        }
+      }
+      return 0;
     }
-    function isNumber(arg) {
-      return typeof arg === 'number';
+    EventEmitter.prototype.eventNames = function eventNames() {
+      return this._eventsCount > 0 ? Reflect.ownKeys(this._events) : [];
+    };
+    function spliceOne(list, index) {
+      for (var i = index, k = i + 1, n = list.length; k < n; i += 1, k += 1)
+        list[i] = list[k];
+      list.pop();
     }
-    function isObject(arg) {
-      return typeof arg === 'object' && arg !== null;
+    function arrayClone(arr, n) {
+      var copy = new Array(n);
+      for (var i = 0; i < n; ++i)
+        copy[i] = arr[i];
+      return copy;
     }
-    function isUndefined(arg) {
-      return arg === void 0;
+    function unwrapListeners(arr) {
+      var ret = new Array(arr.length);
+      for (var i = 0; i < ret.length; ++i) {
+        ret[i] = arr[i].listener || arr[i];
+      }
+      return ret;
     }
-    },{}],35:[function(require,module,exports){
+    function objectCreatePolyfill(proto) {
+      var F = function() {};
+      F.prototype = proto;
+      return new F;
+    }
+    function objectKeysPolyfill(obj) {
+      for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k)) ;
+      return k;
+    }
+    function functionBindPolyfill(context) {
+      var fn = this;
+      return function () {
+        return fn.apply(context, arguments);
+      };
+    }
+    },{}],31:[function(require,module,exports){
     exports.read = function (buffer, offset, isLE, mLen, nBytes) {
       var e, m;
-      var eLen = (nBytes * 8) - mLen - 1;
+      var eLen = nBytes * 8 - mLen - 1;
       var eMax = (1 << eLen) - 1;
       var eBias = eMax >> 1;
       var nBits = -7;
@@ -7724,11 +7447,11 @@ var DjVu = (function () {
       e = s & ((1 << (-nBits)) - 1);
       s >>= (-nBits);
       nBits += eLen;
-      for (; nBits > 0; e = (e * 256) + buffer[offset + i], i += d, nBits -= 8) {}
+      for (; nBits > 0; e = e * 256 + buffer[offset + i], i += d, nBits -= 8) {}
       m = e & ((1 << (-nBits)) - 1);
       e >>= (-nBits);
       nBits += mLen;
-      for (; nBits > 0; m = (m * 256) + buffer[offset + i], i += d, nBits -= 8) {}
+      for (; nBits > 0; m = m * 256 + buffer[offset + i], i += d, nBits -= 8) {}
       if (e === 0) {
         e = 1 - eBias;
       } else if (e === eMax) {
@@ -7741,7 +7464,7 @@ var DjVu = (function () {
     };
     exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
       var e, m, c;
-      var eLen = (nBytes * 8) - mLen - 1;
+      var eLen = nBytes * 8 - mLen - 1;
       var eMax = (1 << eLen) - 1;
       var eBias = eMax >> 1;
       var rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0);
@@ -7771,7 +7494,7 @@ var DjVu = (function () {
           m = 0;
           e = eMax;
         } else if (e + eBias >= 1) {
-          m = ((value * c) - 1) * Math.pow(2, mLen);
+          m = (value * c - 1) * Math.pow(2, mLen);
           e = e + eBias;
         } else {
           m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen);
@@ -7784,13 +7507,33 @@ var DjVu = (function () {
       for (; eLen > 0; buffer[offset + i] = e & 0xff, i += d, e /= 256, eLen -= 8) {}
       buffer[offset + i - d] |= s * 128;
     };
-    },{}],36:[function(require,module,exports){
-    arguments[4][24][0].apply(exports,arguments);
-    },{"dup":24}],37:[function(require,module,exports){
+    },{}],32:[function(require,module,exports){
+    if (typeof Object.create === 'function') {
+      module.exports = function inherits(ctor, superCtor) {
+        ctor.super_ = superCtor;
+        ctor.prototype = Object.create(superCtor.prototype, {
+          constructor: {
+            value: ctor,
+            enumerable: false,
+            writable: true,
+            configurable: true
+          }
+        });
+      };
+    } else {
+      module.exports = function inherits(ctor, superCtor) {
+        ctor.super_ = superCtor;
+        var TempCtor = function () {};
+        TempCtor.prototype = superCtor.prototype;
+        ctor.prototype = new TempCtor();
+        ctor.prototype.constructor = ctor;
+      };
+    }
+    },{}],33:[function(require,module,exports){
     /*!
      * Determine if an object is a Buffer
      *
-     * @author   Feross Aboukhadijeh <feross@feross.org> <http://feross.org>
+     * @author   Feross Aboukhadijeh <https://feross.org>
      * @license  MIT
      */
     module.exports = function (obj) {
@@ -7802,12 +7545,12 @@ var DjVu = (function () {
     function isSlowBuffer (obj) {
       return typeof obj.readFloatLE === 'function' && typeof obj.slice === 'function' && isBuffer(obj.slice(0, 0))
     }
-    },{}],38:[function(require,module,exports){
+    },{}],34:[function(require,module,exports){
     var toString = {}.toString;
     module.exports = Array.isArray || function (arr) {
       return toString.call(arr) == '[object Array]';
     };
-    },{}],39:[function(require,module,exports){
+    },{}],35:[function(require,module,exports){
     var TYPED_OK =  (typeof Uint8Array !== 'undefined') &&
                     (typeof Uint16Array !== 'undefined') &&
                     (typeof Int32Array !== 'undefined');
@@ -7886,7 +7629,7 @@ var DjVu = (function () {
       }
     };
     exports.setTyped(TYPED_OK);
-    },{}],40:[function(require,module,exports){
+    },{}],36:[function(require,module,exports){
     function adler32(adler, buf, len, pos) {
       var s1 = (adler & 0xffff) |0,
           s2 = ((adler >>> 16) & 0xffff) |0,
@@ -7904,7 +7647,7 @@ var DjVu = (function () {
       return (s1 | (s2 << 16)) |0;
     }
     module.exports = adler32;
-    },{}],41:[function(require,module,exports){
+    },{}],37:[function(require,module,exports){
     module.exports = {
       Z_NO_FLUSH:         0,
       Z_PARTIAL_FLUSH:    1,
@@ -7934,7 +7677,7 @@ var DjVu = (function () {
       Z_UNKNOWN:                2,
       Z_DEFLATED:               8
     };
-    },{}],42:[function(require,module,exports){
+    },{}],38:[function(require,module,exports){
     function makeTable() {
       var c, table = [];
       for (var n = 0; n < 256; n++) {
@@ -7957,7 +7700,7 @@ var DjVu = (function () {
       return (crc ^ (-1));
     }
     module.exports = crc32;
-    },{}],43:[function(require,module,exports){
+    },{}],39:[function(require,module,exports){
     var utils   = require('../utils/common');
     var trees   = require('./trees');
     var adler32 = require('./adler32');
@@ -8692,7 +8435,7 @@ var DjVu = (function () {
                         (!s.gzhead.extra ? 0 : 4) +
                         (!s.gzhead.name ? 0 : 8) +
                         (!s.gzhead.comment ? 0 : 16)
-            );
+                    );
             put_byte(s, s.gzhead.time & 0xff);
             put_byte(s, (s.gzhead.time >> 8) & 0xff);
             put_byte(s, (s.gzhead.time >> 16) & 0xff);
@@ -9012,7 +8755,7 @@ var DjVu = (function () {
     exports.deflateEnd = deflateEnd;
     exports.deflateSetDictionary = deflateSetDictionary;
     exports.deflateInfo = 'pako deflate (from Nodeca project)';
-    },{"../utils/common":39,"./adler32":40,"./crc32":42,"./messages":47,"./trees":48}],44:[function(require,module,exports){
+    },{"../utils/common":35,"./adler32":36,"./crc32":38,"./messages":43,"./trees":44}],40:[function(require,module,exports){
     var BAD = 30;
     var TYPE = 12;
     module.exports = function inflate_fast(strm, start) {
@@ -9244,7 +8987,7 @@ var DjVu = (function () {
       state.bits = bits;
       return;
     };
-    },{}],45:[function(require,module,exports){
+    },{}],41:[function(require,module,exports){
     var utils         = require('../utils/common');
     var adler32       = require('./adler32');
     var crc32         = require('./crc32');
@@ -10346,7 +10089,7 @@ var DjVu = (function () {
     exports.inflateGetHeader = inflateGetHeader;
     exports.inflateSetDictionary = inflateSetDictionary;
     exports.inflateInfo = 'pako inflate (from Nodeca project)';
-    },{"../utils/common":39,"./adler32":40,"./crc32":42,"./inffast":44,"./inftrees":46}],46:[function(require,module,exports){
+    },{"../utils/common":35,"./adler32":36,"./crc32":38,"./inffast":40,"./inftrees":42}],42:[function(require,module,exports){
     var utils = require('../utils/common');
     var MAXBITS = 15;
     var ENOUGH_LENS = 852;
@@ -10533,7 +10276,7 @@ var DjVu = (function () {
       opts.bits = root;
       return 0;
     };
-    },{"../utils/common":39}],47:[function(require,module,exports){
+    },{"../utils/common":35}],43:[function(require,module,exports){
     module.exports = {
       2:      'need dictionary',
       1:      'stream end',
@@ -10545,7 +10288,7 @@ var DjVu = (function () {
       '-5':   'buffer error',
       '-6':   'incompatible version'
     };
-    },{}],48:[function(require,module,exports){
+    },{}],44:[function(require,module,exports){
     var utils = require('../utils/common');
     var Z_FIXED               = 4;
     var Z_BINARY              = 0;
@@ -11132,7 +10875,7 @@ var DjVu = (function () {
     exports._tr_flush_block  = _tr_flush_block;
     exports._tr_tally = _tr_tally;
     exports._tr_align = _tr_align;
-    },{"../utils/common":39}],49:[function(require,module,exports){
+    },{"../utils/common":35}],45:[function(require,module,exports){
     function ZStream() {
       this.input = null;
       this.next_in = 0;
@@ -11148,7 +10891,7 @@ var DjVu = (function () {
       this.adler = 0;
     }
     module.exports = ZStream;
-    },{}],50:[function(require,module,exports){
+    },{}],46:[function(require,module,exports){
     (function (process){
     if (!process.version ||
         process.version.indexOf('v0.') === 0 ||
@@ -11191,7 +10934,7 @@ var DjVu = (function () {
       }
     }
     }).call(this,require('_process'));
-    },{"_process":51}],51:[function(require,module,exports){
+    },{"_process":47}],47:[function(require,module,exports){
     var process = module.exports = {};
     var cachedSetTimeout;
     var cachedClearTimeout;
@@ -11341,9 +11084,10 @@ var DjVu = (function () {
         throw new Error('process.chdir is not supported');
     };
     process.umask = function() { return 0; };
-    },{}],52:[function(require,module,exports){
+    },{}],48:[function(require,module,exports){
     module.exports = require('./lib/_stream_duplex.js');
-    },{"./lib/_stream_duplex.js":53}],53:[function(require,module,exports){
+    },{"./lib/_stream_duplex.js":49}],49:[function(require,module,exports){
+    var processNextTick = require('process-nextick-args');
     var objectKeys = Object.keys || function (obj) {
       var keys = [];
       for (var key in obj) {
@@ -11351,7 +11095,6 @@ var DjVu = (function () {
       }return keys;
     };
     module.exports = Duplex;
-    var processNextTick = require('process-nextick-args');
     var util = require('core-util-is');
     util.inherits = require('inherits');
     var Readable = require('./_stream_readable');
@@ -11379,7 +11122,27 @@ var DjVu = (function () {
     function onEndNT(self) {
       self.end();
     }
-    },{"./_stream_readable":55,"./_stream_writable":57,"core-util-is":33,"inherits":36,"process-nextick-args":50}],54:[function(require,module,exports){
+    Object.defineProperty(Duplex.prototype, 'destroyed', {
+      get: function () {
+        if (this._readableState === undefined || this._writableState === undefined) {
+          return false;
+        }
+        return this._readableState.destroyed && this._writableState.destroyed;
+      },
+      set: function (value) {
+        if (this._readableState === undefined || this._writableState === undefined) {
+          return;
+        }
+        this._readableState.destroyed = value;
+        this._writableState.destroyed = value;
+      }
+    });
+    Duplex.prototype._destroy = function (err, cb) {
+      this.push(null);
+      this.end();
+      processNextTick(cb, err);
+    };
+    },{"./_stream_readable":51,"./_stream_writable":53,"core-util-is":29,"inherits":32,"process-nextick-args":46}],50:[function(require,module,exports){
     module.exports = PassThrough;
     var Transform = require('./_stream_transform');
     var util = require('core-util-is');
@@ -11392,10 +11155,10 @@ var DjVu = (function () {
     PassThrough.prototype._transform = function (chunk, encoding, cb) {
       cb(null, chunk);
     };
-    },{"./_stream_transform":56,"core-util-is":33,"inherits":36}],55:[function(require,module,exports){
-    (function (process){
-    module.exports = Readable;
+    },{"./_stream_transform":52,"core-util-is":29,"inherits":32}],51:[function(require,module,exports){
+    (function (process,global){
     var processNextTick = require('process-nextick-args');
+    module.exports = Readable;
     var isArray = require('isarray');
     var Duplex;
     Readable.ReadableState = ReadableState;
@@ -11404,8 +11167,14 @@ var DjVu = (function () {
       return emitter.listeners(type).length;
     };
     var Stream = require('./internal/streams/stream');
-    var Buffer = require('buffer').Buffer;
-    var bufferShim = require('buffer-shims');
+    var Buffer = require('safe-buffer').Buffer;
+    var OurUint8Array = global.Uint8Array || function () {};
+    function _uint8ArrayToBuffer(chunk) {
+      return Buffer.from(chunk);
+    }
+    function _isUint8Array(obj) {
+      return Buffer.isBuffer(obj) || obj instanceof OurUint8Array;
+    }
     var util = require('core-util-is');
     util.inherits = require('inherits');
     var debugUtil = require('util');
@@ -11416,6 +11185,7 @@ var DjVu = (function () {
       debug = function () {};
     }
     var BufferList = require('./internal/streams/BufferList');
+    var destroyImpl = require('./internal/streams/destroy');
     var StringDecoder;
     util.inherits(Readable, Stream);
     var kProxyEvents = ['error', 'close', 'destroy', 'pause', 'resume'];
@@ -11434,7 +11204,7 @@ var DjVu = (function () {
       var hwm = options.highWaterMark;
       var defaultHwm = this.objectMode ? 16 : 16 * 1024;
       this.highWaterMark = hwm || hwm === 0 ? hwm : defaultHwm;
-      this.highWaterMark = ~~this.highWaterMark;
+      this.highWaterMark = Math.floor(this.highWaterMark);
       this.buffer = new BufferList();
       this.length = 0;
       this.pipes = null;
@@ -11448,8 +11218,8 @@ var DjVu = (function () {
       this.emittedReadable = false;
       this.readableListening = false;
       this.resumeScheduled = false;
+      this.destroyed = false;
       this.defaultEncoding = options.defaultEncoding || 'utf8';
-      this.ranOut = false;
       this.awaitDrain = 0;
       this.readingMore = false;
       this.decoder = null;
@@ -11465,68 +11235,109 @@ var DjVu = (function () {
       if (!(this instanceof Readable)) return new Readable(options);
       this._readableState = new ReadableState(options, this);
       this.readable = true;
-      if (options && typeof options.read === 'function') this._read = options.read;
+      if (options) {
+        if (typeof options.read === 'function') this._read = options.read;
+        if (typeof options.destroy === 'function') this._destroy = options.destroy;
+      }
       Stream.call(this);
     }
+    Object.defineProperty(Readable.prototype, 'destroyed', {
+      get: function () {
+        if (this._readableState === undefined) {
+          return false;
+        }
+        return this._readableState.destroyed;
+      },
+      set: function (value) {
+        if (!this._readableState) {
+          return;
+        }
+        this._readableState.destroyed = value;
+      }
+    });
+    Readable.prototype.destroy = destroyImpl.destroy;
+    Readable.prototype._undestroy = destroyImpl.undestroy;
+    Readable.prototype._destroy = function (err, cb) {
+      this.push(null);
+      cb(err);
+    };
     Readable.prototype.push = function (chunk, encoding) {
       var state = this._readableState;
-      if (!state.objectMode && typeof chunk === 'string') {
-        encoding = encoding || state.defaultEncoding;
-        if (encoding !== state.encoding) {
-          chunk = bufferShim.from(chunk, encoding);
-          encoding = '';
+      var skipChunkCheck;
+      if (!state.objectMode) {
+        if (typeof chunk === 'string') {
+          encoding = encoding || state.defaultEncoding;
+          if (encoding !== state.encoding) {
+            chunk = Buffer.from(chunk, encoding);
+            encoding = '';
+          }
+          skipChunkCheck = true;
         }
+      } else {
+        skipChunkCheck = true;
       }
-      return readableAddChunk(this, state, chunk, encoding, false);
+      return readableAddChunk(this, chunk, encoding, false, skipChunkCheck);
     };
     Readable.prototype.unshift = function (chunk) {
-      var state = this._readableState;
-      return readableAddChunk(this, state, chunk, '', true);
+      return readableAddChunk(this, chunk, null, true, false);
     };
-    Readable.prototype.isPaused = function () {
-      return this._readableState.flowing === false;
-    };
-    function readableAddChunk(stream, state, chunk, encoding, addToFront) {
-      var er = chunkInvalid(state, chunk);
-      if (er) {
-        stream.emit('error', er);
-      } else if (chunk === null) {
+    function readableAddChunk(stream, chunk, encoding, addToFront, skipChunkCheck) {
+      var state = stream._readableState;
+      if (chunk === null) {
         state.reading = false;
         onEofChunk(stream, state);
-      } else if (state.objectMode || chunk && chunk.length > 0) {
-        if (state.ended && !addToFront) {
-          var e = new Error('stream.push() after EOF');
-          stream.emit('error', e);
-        } else if (state.endEmitted && addToFront) {
-          var _e = new Error('stream.unshift() after end event');
-          stream.emit('error', _e);
-        } else {
-          var skipAdd;
-          if (state.decoder && !addToFront && !encoding) {
-            chunk = state.decoder.write(chunk);
-            skipAdd = !state.objectMode && chunk.length === 0;
+      } else {
+        var er;
+        if (!skipChunkCheck) er = chunkInvalid(state, chunk);
+        if (er) {
+          stream.emit('error', er);
+        } else if (state.objectMode || chunk && chunk.length > 0) {
+          if (typeof chunk !== 'string' && !state.objectMode && Object.getPrototypeOf(chunk) !== Buffer.prototype) {
+            chunk = _uint8ArrayToBuffer(chunk);
           }
-          if (!addToFront) state.reading = false;
-          if (!skipAdd) {
-            if (state.flowing && state.length === 0 && !state.sync) {
-              stream.emit('data', chunk);
-              stream.read(0);
+          if (addToFront) {
+            if (state.endEmitted) stream.emit('error', new Error('stream.unshift() after end event'));else addChunk(stream, state, chunk, true);
+          } else if (state.ended) {
+            stream.emit('error', new Error('stream.push() after EOF'));
+          } else {
+            state.reading = false;
+            if (state.decoder && !encoding) {
+              chunk = state.decoder.write(chunk);
+              if (state.objectMode || chunk.length !== 0) addChunk(stream, state, chunk, false);else maybeReadMore(stream, state);
             } else {
-              state.length += state.objectMode ? 1 : chunk.length;
-              if (addToFront) state.buffer.unshift(chunk);else state.buffer.push(chunk);
-              if (state.needReadable) emitReadable(stream);
+              addChunk(stream, state, chunk, false);
             }
           }
-          maybeReadMore(stream, state);
+        } else if (!addToFront) {
+          state.reading = false;
         }
-      } else if (!addToFront) {
-        state.reading = false;
       }
       return needMoreData(state);
+    }
+    function addChunk(stream, state, chunk, addToFront) {
+      if (state.flowing && state.length === 0 && !state.sync) {
+        stream.emit('data', chunk);
+        stream.read(0);
+      } else {
+        state.length += state.objectMode ? 1 : chunk.length;
+        if (addToFront) state.buffer.unshift(chunk);else state.buffer.push(chunk);
+        if (state.needReadable) emitReadable(stream);
+      }
+      maybeReadMore(stream, state);
+    }
+    function chunkInvalid(state, chunk) {
+      var er;
+      if (!_isUint8Array(chunk) && typeof chunk !== 'string' && chunk !== undefined && !state.objectMode) {
+        er = new TypeError('Invalid non-string/buffer chunk');
+      }
+      return er;
     }
     function needMoreData(state) {
       return !state.ended && (state.needReadable || state.length < state.highWaterMark || state.length === 0);
     }
+    Readable.prototype.isPaused = function () {
+      return this._readableState.flowing === false;
+    };
     Readable.prototype.setEncoding = function (enc) {
       if (!StringDecoder) StringDecoder = require('string_decoder/').StringDecoder;
       this._readableState.decoder = new StringDecoder(enc);
@@ -11611,13 +11422,6 @@ var DjVu = (function () {
       if (ret !== null) this.emit('data', ret);
       return ret;
     };
-    function chunkInvalid(state, chunk) {
-      var er = null;
-      if (!Buffer.isBuffer(chunk) && typeof chunk !== 'string' && chunk !== null && chunk !== undefined && !state.objectMode) {
-        er = new TypeError('Invalid non-string/buffer chunk');
-      }
-      return er;
-    }
     function onEofChunk(stream, state) {
       if (state.ended) return;
       if (state.decoder) {
@@ -11680,13 +11484,16 @@ var DjVu = (function () {
       state.pipesCount += 1;
       debug('pipe count=%d opts=%j', state.pipesCount, pipeOpts);
       var doEnd = (!pipeOpts || pipeOpts.end !== false) && dest !== process.stdout && dest !== process.stderr;
-      var endFn = doEnd ? onend : cleanup;
+      var endFn = doEnd ? onend : unpipe;
       if (state.endEmitted) processNextTick(endFn);else src.once('end', endFn);
       dest.on('unpipe', onunpipe);
-      function onunpipe(readable) {
+      function onunpipe(readable, unpipeInfo) {
         debug('onunpipe');
         if (readable === src) {
-          cleanup();
+          if (unpipeInfo && unpipeInfo.hasUnpiped === false) {
+            unpipeInfo.hasUnpiped = true;
+            cleanup();
+          }
         }
       }
       function onend() {
@@ -11704,7 +11511,7 @@ var DjVu = (function () {
         dest.removeListener('error', onerror);
         dest.removeListener('unpipe', onunpipe);
         src.removeListener('end', onend);
-        src.removeListener('end', cleanup);
+        src.removeListener('end', unpipe);
         src.removeListener('data', ondata);
         cleanedUp = true;
         if (state.awaitDrain && (!dest._writableState || dest._writableState.needDrain)) ondrain();
@@ -11766,6 +11573,7 @@ var DjVu = (function () {
     }
     Readable.prototype.unpipe = function (dest) {
       var state = this._readableState;
+      var unpipeInfo = { hasUnpiped: false };
       if (state.pipesCount === 0) return this;
       if (state.pipesCount === 1) {
         if (dest && dest !== state.pipes) return this;
@@ -11773,7 +11581,7 @@ var DjVu = (function () {
         state.pipes = null;
         state.pipesCount = 0;
         state.flowing = false;
-        if (dest) dest.emit('unpipe', this);
+        if (dest) dest.emit('unpipe', this, unpipeInfo);
         return this;
       }
       if (!dest) {
@@ -11783,7 +11591,7 @@ var DjVu = (function () {
         state.pipesCount = 0;
         state.flowing = false;
         for (var i = 0; i < len; i++) {
-          dests[i].emit('unpipe', this);
+          dests[i].emit('unpipe', this, unpipeInfo);
         }return this;
       }
       var index = indexOf(state.pipes, dest);
@@ -11791,7 +11599,7 @@ var DjVu = (function () {
       state.pipes.splice(index, 1);
       state.pipesCount -= 1;
       if (state.pipesCount === 1) state.pipes = state.pipes[0];
-      dest.emit('unpipe', this);
+      dest.emit('unpipe', this, unpipeInfo);
       return this;
     };
     Readable.prototype.on = function (ev, fn) {
@@ -11950,7 +11758,7 @@ var DjVu = (function () {
       return ret;
     }
     function copyFromBuffer(n, list) {
-      var ret = bufferShim.allocUnsafe(n);
+      var ret = Buffer.allocUnsafe(n);
       var p = list.head;
       var c = 1;
       p.data.copy(ret);
@@ -11996,8 +11804,8 @@ var DjVu = (function () {
       }
       return -1;
     }
-    }).call(this,require('_process'));
-    },{"./_stream_duplex":53,"./internal/streams/BufferList":58,"./internal/streams/stream":59,"_process":51,"buffer":32,"buffer-shims":31,"core-util-is":33,"events":34,"inherits":36,"isarray":38,"process-nextick-args":50,"string_decoder/":65,"util":28}],56:[function(require,module,exports){
+    }).call(this,require('_process'),typeof commonjsGlobal !== "undefined" ? commonjsGlobal : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {});
+    },{"./_stream_duplex":49,"./internal/streams/BufferList":54,"./internal/streams/destroy":55,"./internal/streams/stream":56,"_process":47,"core-util-is":29,"events":30,"inherits":32,"isarray":34,"process-nextick-args":46,"safe-buffer":62,"string_decoder/":57,"util":25}],52:[function(require,module,exports){
     module.exports = Transform;
     var Duplex = require('./_stream_duplex');
     var util = require('core-util-is');
@@ -12017,7 +11825,9 @@ var DjVu = (function () {
       var ts = stream._transformState;
       ts.transforming = false;
       var cb = ts.writecb;
-      if (!cb) return stream.emit('error', new Error('no writecb in Transform class'));
+      if (!cb) {
+        return stream.emit('error', new Error('write callback called multiple times'));
+      }
       ts.writechunk = null;
       ts.writecb = null;
       if (data !== null && data !== undefined) stream.push(data);
@@ -12071,6 +11881,13 @@ var DjVu = (function () {
         ts.needTransform = true;
       }
     };
+    Transform.prototype._destroy = function (err, cb) {
+      var _this = this;
+      Duplex.prototype._destroy.call(this, err, function (err2) {
+        cb(err2);
+        _this.emit('close');
+      });
+    };
     function done(stream, er, data) {
       if (er) return stream.emit('error', er);
       if (data !== null && data !== undefined) stream.push(data);
@@ -12080,10 +11897,18 @@ var DjVu = (function () {
       if (ts.transforming) throw new Error('Calling transform done when still transforming');
       return stream.push(null);
     }
-    },{"./_stream_duplex":53,"core-util-is":33,"inherits":36}],57:[function(require,module,exports){
-    (function (process,setImmediate){
-    module.exports = Writable;
+    },{"./_stream_duplex":49,"core-util-is":29,"inherits":32}],53:[function(require,module,exports){
+    (function (process,global){
     var processNextTick = require('process-nextick-args');
+    module.exports = Writable;
+    function CorkedRequest(state) {
+      var _this = this;
+      this.next = null;
+      this.entry = null;
+      this.finish = function () {
+        onCorkedFinish(_this, state);
+      };
+    }
     var asyncWrite = !process.browser && ['v0.10', 'v0.9.'].indexOf(process.version.slice(0, 5)) > -1 ? setImmediate : processNextTick;
     var Duplex;
     Writable.WritableState = WritableState;
@@ -12093,16 +11918,17 @@ var DjVu = (function () {
       deprecate: require('util-deprecate')
     };
     var Stream = require('./internal/streams/stream');
-    var Buffer = require('buffer').Buffer;
-    var bufferShim = require('buffer-shims');
+    var Buffer = require('safe-buffer').Buffer;
+    var OurUint8Array = global.Uint8Array || function () {};
+    function _uint8ArrayToBuffer(chunk) {
+      return Buffer.from(chunk);
+    }
+    function _isUint8Array(obj) {
+      return Buffer.isBuffer(obj) || obj instanceof OurUint8Array;
+    }
+    var destroyImpl = require('./internal/streams/destroy');
     util.inherits(Writable, Stream);
     function nop() {}
-    function WriteReq(chunk, encoding, cb) {
-      this.chunk = chunk;
-      this.encoding = encoding;
-      this.callback = cb;
-      this.next = null;
-    }
     function WritableState(options, stream) {
       Duplex = Duplex || require('./_stream_duplex');
       options = options || {};
@@ -12111,11 +11937,13 @@ var DjVu = (function () {
       var hwm = options.highWaterMark;
       var defaultHwm = this.objectMode ? 16 : 16 * 1024;
       this.highWaterMark = hwm || hwm === 0 ? hwm : defaultHwm;
-      this.highWaterMark = ~~this.highWaterMark;
+      this.highWaterMark = Math.floor(this.highWaterMark);
+      this.finalCalled = false;
       this.needDrain = false;
       this.ending = false;
       this.ended = false;
       this.finished = false;
+      this.destroyed = false;
       var noDecode = options.decodeStrings === false;
       this.decodeStrings = !noDecode;
       this.defaultEncoding = options.defaultEncoding || 'utf8';
@@ -12151,7 +11979,7 @@ var DjVu = (function () {
         Object.defineProperty(WritableState.prototype, 'buffer', {
           get: internalUtil.deprecate(function () {
             return this.getBuffer();
-          }, '_writableState.buffer is deprecated. Use _writableState.getBuffer ' + 'instead.')
+          }, '_writableState.buffer is deprecated. Use _writableState.getBuffer ' + 'instead.', 'DEP0003')
         });
       } catch (_) {}
     })();
@@ -12179,6 +12007,8 @@ var DjVu = (function () {
       if (options) {
         if (typeof options.write === 'function') this._write = options.write;
         if (typeof options.writev === 'function') this._writev = options.writev;
+        if (typeof options.destroy === 'function') this._destroy = options.destroy;
+        if (typeof options.final === 'function') this._final = options.final;
       }
       Stream.call(this);
     }
@@ -12208,7 +12038,10 @@ var DjVu = (function () {
     Writable.prototype.write = function (chunk, encoding, cb) {
       var state = this._writableState;
       var ret = false;
-      var isBuf = Buffer.isBuffer(chunk);
+      var isBuf = _isUint8Array(chunk) && !state.objectMode;
+      if (isBuf && !Buffer.isBuffer(chunk)) {
+        chunk = _uint8ArrayToBuffer(chunk);
+      }
       if (typeof encoding === 'function') {
         cb = encoding;
         encoding = null;
@@ -12240,14 +12073,18 @@ var DjVu = (function () {
     };
     function decodeChunk(state, chunk, encoding) {
       if (!state.objectMode && state.decodeStrings !== false && typeof chunk === 'string') {
-        chunk = bufferShim.from(chunk, encoding);
+        chunk = Buffer.from(chunk, encoding);
       }
       return chunk;
     }
     function writeOrBuffer(stream, state, isBuf, chunk, encoding, cb) {
       if (!isBuf) {
-        chunk = decodeChunk(state, chunk, encoding);
-        if (Buffer.isBuffer(chunk)) encoding = 'buffer';
+        var newChunk = decodeChunk(state, chunk, encoding);
+        if (chunk !== newChunk) {
+          isBuf = true;
+          encoding = 'buffer';
+          chunk = newChunk;
+        }
       }
       var len = state.objectMode ? 1 : chunk.length;
       state.length += len;
@@ -12255,7 +12092,13 @@ var DjVu = (function () {
       if (!ret) state.needDrain = true;
       if (state.writing || state.corked) {
         var last = state.lastBufferedRequest;
-        state.lastBufferedRequest = new WriteReq(chunk, encoding, cb);
+        state.lastBufferedRequest = {
+          chunk: chunk,
+          encoding: encoding,
+          isBuf: isBuf,
+          callback: cb,
+          next: null
+        };
         if (last) {
           last.next = state.lastBufferedRequest;
         } else {
@@ -12277,9 +12120,17 @@ var DjVu = (function () {
     }
     function onwriteError(stream, state, sync, er, cb) {
       --state.pendingcb;
-      if (sync) processNextTick(cb, er);else cb(er);
-      stream._writableState.errorEmitted = true;
-      stream.emit('error', er);
+      if (sync) {
+        processNextTick(cb, er);
+        processNextTick(finishMaybe, stream, state);
+        stream._writableState.errorEmitted = true;
+        stream.emit('error', er);
+      } else {
+        cb(er);
+        stream._writableState.errorEmitted = true;
+        stream.emit('error', er);
+        finishMaybe(stream, state);
+      }
     }
     function onwriteStateUpdate(state) {
       state.writing = false;
@@ -12325,11 +12176,14 @@ var DjVu = (function () {
         var holder = state.corkedRequestsFree;
         holder.entry = entry;
         var count = 0;
+        var allBuffers = true;
         while (entry) {
           buffer[count] = entry;
+          if (!entry.isBuf) allBuffers = false;
           entry = entry.next;
           count += 1;
         }
+        buffer.allBuffers = allBuffers;
         doWrite(stream, state, true, state.length, buffer, '', holder.finish);
         state.pendingcb++;
         state.lastBufferedRequest = null;
@@ -12381,21 +12235,36 @@ var DjVu = (function () {
     function needFinish(state) {
       return state.ending && state.length === 0 && state.bufferedRequest === null && !state.finished && !state.writing;
     }
-    function prefinish(stream, state) {
-      if (!state.prefinished) {
+    function callFinal(stream, state) {
+      stream._final(function (err) {
+        state.pendingcb--;
+        if (err) {
+          stream.emit('error', err);
+        }
         state.prefinished = true;
         stream.emit('prefinish');
+        finishMaybe(stream, state);
+      });
+    }
+    function prefinish(stream, state) {
+      if (!state.prefinished && !state.finalCalled) {
+        if (typeof stream._final === 'function') {
+          state.pendingcb++;
+          state.finalCalled = true;
+          processNextTick(callFinal, stream, state);
+        } else {
+          state.prefinished = true;
+          stream.emit('prefinish');
+        }
       }
     }
     function finishMaybe(stream, state) {
       var need = needFinish(state);
       if (need) {
+        prefinish(stream, state);
         if (state.pendingcb === 0) {
-          prefinish(stream, state);
           state.finished = true;
           stream.emit('finish');
-        } else {
-          prefinish(stream, state);
         }
       }
       return need;
@@ -12409,169 +12278,158 @@ var DjVu = (function () {
       state.ended = true;
       stream.writable = false;
     }
-    function CorkedRequest(state) {
-      var _this = this;
-      this.next = null;
-      this.entry = null;
-      this.finish = function (err) {
-        var entry = _this.entry;
-        _this.entry = null;
-        while (entry) {
-          var cb = entry.callback;
-          state.pendingcb--;
-          cb(err);
-          entry = entry.next;
+    function onCorkedFinish(corkReq, state, err) {
+      var entry = corkReq.entry;
+      corkReq.entry = null;
+      while (entry) {
+        var cb = entry.callback;
+        state.pendingcb--;
+        cb(err);
+        entry = entry.next;
+      }
+      if (state.corkedRequestsFree) {
+        state.corkedRequestsFree.next = corkReq;
+      } else {
+        state.corkedRequestsFree = corkReq;
+      }
+    }
+    Object.defineProperty(Writable.prototype, 'destroyed', {
+      get: function () {
+        if (this._writableState === undefined) {
+          return false;
         }
-        if (state.corkedRequestsFree) {
-          state.corkedRequestsFree.next = _this;
-        } else {
-          state.corkedRequestsFree = _this;
+        return this._writableState.destroyed;
+      },
+      set: function (value) {
+        if (!this._writableState) {
+          return;
         }
+        this._writableState.destroyed = value;
+      }
+    });
+    Writable.prototype.destroy = destroyImpl.destroy;
+    Writable.prototype._undestroy = destroyImpl.undestroy;
+    Writable.prototype._destroy = function (err, cb) {
+      this.end();
+      cb(err);
+    };
+    }).call(this,require('_process'),typeof commonjsGlobal !== "undefined" ? commonjsGlobal : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {});
+    },{"./_stream_duplex":49,"./internal/streams/destroy":55,"./internal/streams/stream":56,"_process":47,"core-util-is":29,"inherits":32,"process-nextick-args":46,"safe-buffer":62,"util-deprecate":64}],54:[function(require,module,exports){
+    function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+    var Buffer = require('safe-buffer').Buffer;
+    function copyBuffer(src, target, offset) {
+      src.copy(target, offset);
+    }
+    module.exports = function () {
+      function BufferList() {
+        _classCallCheck(this, BufferList);
+        this.head = null;
+        this.tail = null;
+        this.length = 0;
+      }
+      BufferList.prototype.push = function push(v) {
+        var entry = { data: v, next: null };
+        if (this.length > 0) this.tail.next = entry;else this.head = entry;
+        this.tail = entry;
+        ++this.length;
       };
-    }
-    }).call(this,require('_process'),require("timers").setImmediate);
-    },{"./_stream_duplex":53,"./internal/streams/stream":59,"_process":51,"buffer":32,"buffer-shims":31,"core-util-is":33,"inherits":36,"process-nextick-args":50,"timers":66,"util-deprecate":67}],58:[function(require,module,exports){
-    var Buffer = require('buffer').Buffer;
-    var bufferShim = require('buffer-shims');
-    module.exports = BufferList;
-    function BufferList() {
-      this.head = null;
-      this.tail = null;
-      this.length = 0;
-    }
-    BufferList.prototype.push = function (v) {
-      var entry = { data: v, next: null };
-      if (this.length > 0) this.tail.next = entry;else this.head = entry;
-      this.tail = entry;
-      ++this.length;
-    };
-    BufferList.prototype.unshift = function (v) {
-      var entry = { data: v, next: this.head };
-      if (this.length === 0) this.tail = entry;
-      this.head = entry;
-      ++this.length;
-    };
-    BufferList.prototype.shift = function () {
-      if (this.length === 0) return;
-      var ret = this.head.data;
-      if (this.length === 1) this.head = this.tail = null;else this.head = this.head.next;
-      --this.length;
-      return ret;
-    };
-    BufferList.prototype.clear = function () {
-      this.head = this.tail = null;
-      this.length = 0;
-    };
-    BufferList.prototype.join = function (s) {
-      if (this.length === 0) return '';
-      var p = this.head;
-      var ret = '' + p.data;
-      while (p = p.next) {
-        ret += s + p.data;
-      }return ret;
-    };
-    BufferList.prototype.concat = function (n) {
-      if (this.length === 0) return bufferShim.alloc(0);
-      if (this.length === 1) return this.head.data;
-      var ret = bufferShim.allocUnsafe(n >>> 0);
-      var p = this.head;
-      var i = 0;
-      while (p) {
-        p.data.copy(ret, i);
-        i += p.data.length;
-        p = p.next;
+      BufferList.prototype.unshift = function unshift(v) {
+        var entry = { data: v, next: this.head };
+        if (this.length === 0) this.tail = entry;
+        this.head = entry;
+        ++this.length;
+      };
+      BufferList.prototype.shift = function shift() {
+        if (this.length === 0) return;
+        var ret = this.head.data;
+        if (this.length === 1) this.head = this.tail = null;else this.head = this.head.next;
+        --this.length;
+        return ret;
+      };
+      BufferList.prototype.clear = function clear() {
+        this.head = this.tail = null;
+        this.length = 0;
+      };
+      BufferList.prototype.join = function join(s) {
+        if (this.length === 0) return '';
+        var p = this.head;
+        var ret = '' + p.data;
+        while (p = p.next) {
+          ret += s + p.data;
+        }return ret;
+      };
+      BufferList.prototype.concat = function concat(n) {
+        if (this.length === 0) return Buffer.alloc(0);
+        if (this.length === 1) return this.head.data;
+        var ret = Buffer.allocUnsafe(n >>> 0);
+        var p = this.head;
+        var i = 0;
+        while (p) {
+          copyBuffer(p.data, ret, i);
+          i += p.data.length;
+          p = p.next;
+        }
+        return ret;
+      };
+      return BufferList;
+    }();
+    },{"safe-buffer":62}],55:[function(require,module,exports){
+    var processNextTick = require('process-nextick-args');
+    function destroy(err, cb) {
+      var _this = this;
+      var readableDestroyed = this._readableState && this._readableState.destroyed;
+      var writableDestroyed = this._writableState && this._writableState.destroyed;
+      if (readableDestroyed || writableDestroyed) {
+        if (cb) {
+          cb(err);
+        } else if (err && (!this._writableState || !this._writableState.errorEmitted)) {
+          processNextTick(emitErrorNT, this, err);
+        }
+        return;
       }
-      return ret;
-    };
-    },{"buffer":32,"buffer-shims":31}],59:[function(require,module,exports){
-    module.exports = require('events').EventEmitter;
-    },{"events":34}],60:[function(require,module,exports){
-    module.exports = require('./readable').PassThrough;
-    },{"./readable":61}],61:[function(require,module,exports){
-    exports = module.exports = require('./lib/_stream_readable.js');
-    exports.Stream = exports;
-    exports.Readable = exports;
-    exports.Writable = require('./lib/_stream_writable.js');
-    exports.Duplex = require('./lib/_stream_duplex.js');
-    exports.Transform = require('./lib/_stream_transform.js');
-    exports.PassThrough = require('./lib/_stream_passthrough.js');
-    },{"./lib/_stream_duplex.js":53,"./lib/_stream_passthrough.js":54,"./lib/_stream_readable.js":55,"./lib/_stream_transform.js":56,"./lib/_stream_writable.js":57}],62:[function(require,module,exports){
-    module.exports = require('./readable').Transform;
-    },{"./readable":61}],63:[function(require,module,exports){
-    module.exports = require('./lib/_stream_writable.js');
-    },{"./lib/_stream_writable.js":57}],64:[function(require,module,exports){
-    module.exports = Stream;
-    var EE = require('events').EventEmitter;
-    var inherits = require('inherits');
-    inherits(Stream, EE);
-    Stream.Readable = require('readable-stream/readable.js');
-    Stream.Writable = require('readable-stream/writable.js');
-    Stream.Duplex = require('readable-stream/duplex.js');
-    Stream.Transform = require('readable-stream/transform.js');
-    Stream.PassThrough = require('readable-stream/passthrough.js');
-    Stream.Stream = Stream;
-    function Stream() {
-      EE.call(this);
-    }
-    Stream.prototype.pipe = function(dest, options) {
-      var source = this;
-      function ondata(chunk) {
-        if (dest.writable) {
-          if (false === dest.write(chunk) && source.pause) {
-            source.pause();
+      if (this._readableState) {
+        this._readableState.destroyed = true;
+      }
+      if (this._writableState) {
+        this._writableState.destroyed = true;
+      }
+      this._destroy(err || null, function (err) {
+        if (!cb && err) {
+          processNextTick(emitErrorNT, _this, err);
+          if (_this._writableState) {
+            _this._writableState.errorEmitted = true;
           }
+        } else if (cb) {
+          cb(err);
         }
+      });
+    }
+    function undestroy() {
+      if (this._readableState) {
+        this._readableState.destroyed = false;
+        this._readableState.reading = false;
+        this._readableState.ended = false;
+        this._readableState.endEmitted = false;
       }
-      source.on('data', ondata);
-      function ondrain() {
-        if (source.readable && source.resume) {
-          source.resume();
-        }
+      if (this._writableState) {
+        this._writableState.destroyed = false;
+        this._writableState.ended = false;
+        this._writableState.ending = false;
+        this._writableState.finished = false;
+        this._writableState.errorEmitted = false;
       }
-      dest.on('drain', ondrain);
-      if (!dest._isStdio && (!options || options.end !== false)) {
-        source.on('end', onend);
-        source.on('close', onclose);
-      }
-      var didOnEnd = false;
-      function onend() {
-        if (didOnEnd) return;
-        didOnEnd = true;
-        dest.end();
-      }
-      function onclose() {
-        if (didOnEnd) return;
-        didOnEnd = true;
-        if (typeof dest.destroy === 'function') dest.destroy();
-      }
-      function onerror(er) {
-        cleanup();
-        if (EE.listenerCount(this, 'error') === 0) {
-          throw er;
-        }
-      }
-      source.on('error', onerror);
-      dest.on('error', onerror);
-      function cleanup() {
-        source.removeListener('data', ondata);
-        dest.removeListener('drain', ondrain);
-        source.removeListener('end', onend);
-        source.removeListener('close', onclose);
-        source.removeListener('error', onerror);
-        dest.removeListener('error', onerror);
-        source.removeListener('end', cleanup);
-        source.removeListener('close', cleanup);
-        dest.removeListener('close', cleanup);
-      }
-      source.on('end', cleanup);
-      source.on('close', cleanup);
-      dest.on('close', cleanup);
-      dest.emit('pipe', source);
-      return dest;
+    }
+    function emitErrorNT(self, err) {
+      self.emit('error', err);
+    }
+    module.exports = {
+      destroy: destroy,
+      undestroy: undestroy
     };
-    },{"events":34,"inherits":36,"readable-stream/duplex.js":52,"readable-stream/passthrough.js":60,"readable-stream/readable.js":61,"readable-stream/transform.js":62,"readable-stream/writable.js":63}],65:[function(require,module,exports){
-    var Buffer = require('buffer').Buffer;
-    var bufferShim = require('buffer-shims');
+    },{"process-nextick-args":46}],56:[function(require,module,exports){
+    module.exports = require('events').EventEmitter;
+    },{"events":30}],57:[function(require,module,exports){
+    var Buffer = require('safe-buffer').Buffer;
     var isEncoding = Buffer.isEncoding || function (encoding) {
       encoding = '' + encoding;
       switch (encoding && encoding.toLowerCase()) {
@@ -12638,7 +12496,7 @@ var DjVu = (function () {
       }
       this.lastNeed = 0;
       this.lastTotal = 0;
-      this.lastChar = bufferShim.allocUnsafe(nb);
+      this.lastChar = Buffer.allocUnsafe(nb);
     }
     StringDecoder.prototype.write = function (buf) {
       if (buf.length === 0) return '';
@@ -12787,68 +12645,143 @@ var DjVu = (function () {
     function simpleEnd(buf) {
       return buf && buf.length ? this.write(buf) : '';
     }
-    },{"buffer":32,"buffer-shims":31}],66:[function(require,module,exports){
-    (function (setImmediate,clearImmediate){
-    var nextTick = require('process/browser.js').nextTick;
-    var apply = Function.prototype.apply;
-    var slice = Array.prototype.slice;
-    var immediateIds = {};
-    var nextImmediateId = 0;
-    exports.setTimeout = function() {
-      return new Timeout(apply.call(setTimeout, window, arguments), clearTimeout);
-    };
-    exports.setInterval = function() {
-      return new Timeout(apply.call(setInterval, window, arguments), clearInterval);
-    };
-    exports.clearTimeout =
-    exports.clearInterval = function(timeout) { timeout.close(); };
-    function Timeout(id, clearFn) {
-      this._id = id;
-      this._clearFn = clearFn;
-    }
-    Timeout.prototype.unref = Timeout.prototype.ref = function() {};
-    Timeout.prototype.close = function() {
-      this._clearFn.call(window, this._id);
-    };
-    exports.enroll = function(item, msecs) {
-      clearTimeout(item._idleTimeoutId);
-      item._idleTimeout = msecs;
-    };
-    exports.unenroll = function(item) {
-      clearTimeout(item._idleTimeoutId);
-      item._idleTimeout = -1;
-    };
-    exports._unrefActive = exports.active = function(item) {
-      clearTimeout(item._idleTimeoutId);
-      var msecs = item._idleTimeout;
-      if (msecs >= 0) {
-        item._idleTimeoutId = setTimeout(function onTimeout() {
-          if (item._onTimeout)
-            item._onTimeout();
-        }, msecs);
+    },{"safe-buffer":62}],58:[function(require,module,exports){
+    module.exports = require('./readable').PassThrough;
+    },{"./readable":59}],59:[function(require,module,exports){
+    exports = module.exports = require('./lib/_stream_readable.js');
+    exports.Stream = exports;
+    exports.Readable = exports;
+    exports.Writable = require('./lib/_stream_writable.js');
+    exports.Duplex = require('./lib/_stream_duplex.js');
+    exports.Transform = require('./lib/_stream_transform.js');
+    exports.PassThrough = require('./lib/_stream_passthrough.js');
+    },{"./lib/_stream_duplex.js":49,"./lib/_stream_passthrough.js":50,"./lib/_stream_readable.js":51,"./lib/_stream_transform.js":52,"./lib/_stream_writable.js":53}],60:[function(require,module,exports){
+    module.exports = require('./readable').Transform;
+    },{"./readable":59}],61:[function(require,module,exports){
+    module.exports = require('./lib/_stream_writable.js');
+    },{"./lib/_stream_writable.js":53}],62:[function(require,module,exports){
+    var buffer = require('buffer');
+    var Buffer = buffer.Buffer;
+    function copyProps (src, dst) {
+      for (var key in src) {
+        dst[key] = src[key];
       }
+    }
+    if (Buffer.from && Buffer.alloc && Buffer.allocUnsafe && Buffer.allocUnsafeSlow) {
+      module.exports = buffer;
+    } else {
+      copyProps(buffer, exports);
+      exports.Buffer = SafeBuffer;
+    }
+    function SafeBuffer (arg, encodingOrOffset, length) {
+      return Buffer(arg, encodingOrOffset, length)
+    }
+    copyProps(Buffer, SafeBuffer);
+    SafeBuffer.from = function (arg, encodingOrOffset, length) {
+      if (typeof arg === 'number') {
+        throw new TypeError('Argument must not be a number')
+      }
+      return Buffer(arg, encodingOrOffset, length)
     };
-    exports.setImmediate = typeof setImmediate === "function" ? setImmediate : function(fn) {
-      var id = nextImmediateId++;
-      var args = arguments.length < 2 ? false : slice.call(arguments, 1);
-      immediateIds[id] = true;
-      nextTick(function onNextTick() {
-        if (immediateIds[id]) {
-          if (args) {
-            fn.apply(null, args);
-          } else {
-            fn.call(null);
-          }
-          exports.clearImmediate(id);
+    SafeBuffer.alloc = function (size, fill, encoding) {
+      if (typeof size !== 'number') {
+        throw new TypeError('Argument must be a number')
+      }
+      var buf = Buffer(size);
+      if (fill !== undefined) {
+        if (typeof encoding === 'string') {
+          buf.fill(fill, encoding);
+        } else {
+          buf.fill(fill);
         }
-      });
-      return id;
+      } else {
+        buf.fill(0);
+      }
+      return buf
     };
-    exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate : function(id) {
-      delete immediateIds[id];
+    SafeBuffer.allocUnsafe = function (size) {
+      if (typeof size !== 'number') {
+        throw new TypeError('Argument must be a number')
+      }
+      return Buffer(size)
     };
-    }).call(this,require("timers").setImmediate,require("timers").clearImmediate);
-    },{"process/browser.js":51,"timers":66}],67:[function(require,module,exports){
+    SafeBuffer.allocUnsafeSlow = function (size) {
+      if (typeof size !== 'number') {
+        throw new TypeError('Argument must be a number')
+      }
+      return buffer.SlowBuffer(size)
+    };
+    },{"buffer":28}],63:[function(require,module,exports){
+    module.exports = Stream;
+    var EE = require('events').EventEmitter;
+    var inherits = require('inherits');
+    inherits(Stream, EE);
+    Stream.Readable = require('readable-stream/readable.js');
+    Stream.Writable = require('readable-stream/writable.js');
+    Stream.Duplex = require('readable-stream/duplex.js');
+    Stream.Transform = require('readable-stream/transform.js');
+    Stream.PassThrough = require('readable-stream/passthrough.js');
+    Stream.Stream = Stream;
+    function Stream() {
+      EE.call(this);
+    }
+    Stream.prototype.pipe = function(dest, options) {
+      var source = this;
+      function ondata(chunk) {
+        if (dest.writable) {
+          if (false === dest.write(chunk) && source.pause) {
+            source.pause();
+          }
+        }
+      }
+      source.on('data', ondata);
+      function ondrain() {
+        if (source.readable && source.resume) {
+          source.resume();
+        }
+      }
+      dest.on('drain', ondrain);
+      if (!dest._isStdio && (!options || options.end !== false)) {
+        source.on('end', onend);
+        source.on('close', onclose);
+      }
+      var didOnEnd = false;
+      function onend() {
+        if (didOnEnd) return;
+        didOnEnd = true;
+        dest.end();
+      }
+      function onclose() {
+        if (didOnEnd) return;
+        didOnEnd = true;
+        if (typeof dest.destroy === 'function') dest.destroy();
+      }
+      function onerror(er) {
+        cleanup();
+        if (EE.listenerCount(this, 'error') === 0) {
+          throw er;
+        }
+      }
+      source.on('error', onerror);
+      dest.on('error', onerror);
+      function cleanup() {
+        source.removeListener('data', ondata);
+        dest.removeListener('drain', ondrain);
+        source.removeListener('end', onend);
+        source.removeListener('close', onclose);
+        source.removeListener('error', onerror);
+        dest.removeListener('error', onerror);
+        source.removeListener('end', cleanup);
+        source.removeListener('close', cleanup);
+        dest.removeListener('close', cleanup);
+      }
+      source.on('end', cleanup);
+      source.on('close', cleanup);
+      dest.on('close', cleanup);
+      dest.emit('pipe', source);
+      return dest;
+    };
+    },{"events":30,"inherits":32,"readable-stream/duplex.js":48,"readable-stream/passthrough.js":58,"readable-stream/readable.js":59,"readable-stream/transform.js":60,"readable-stream/writable.js":61}],64:[function(require,module,exports){
     (function (global){
     module.exports = deprecate;
     function deprecate (fn, msg) {
@@ -12882,11 +12815,446 @@ var DjVu = (function () {
       return String(val).toLowerCase() === 'true';
     }
     }).call(this,typeof commonjsGlobal !== "undefined" ? commonjsGlobal : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {});
-    },{}],68:[function(require,module,exports){
-    arguments[4][25][0].apply(exports,arguments);
-    },{"dup":25}],69:[function(require,module,exports){
-    arguments[4][26][0].apply(exports,arguments);
-    },{"./support/isBuffer":68,"_process":51,"dup":26,"inherits":36}]},{},[20])(20)
+    },{}],65:[function(require,module,exports){
+    arguments[4][32][0].apply(exports,arguments);
+    },{"dup":32}],66:[function(require,module,exports){
+    module.exports = function isBuffer(arg) {
+      return arg && typeof arg === 'object'
+        && typeof arg.copy === 'function'
+        && typeof arg.fill === 'function'
+        && typeof arg.readUInt8 === 'function';
+    };
+    },{}],67:[function(require,module,exports){
+    (function (process,global){
+    var formatRegExp = /%[sdj%]/g;
+    exports.format = function(f) {
+      if (!isString(f)) {
+        var objects = [];
+        for (var i = 0; i < arguments.length; i++) {
+          objects.push(inspect(arguments[i]));
+        }
+        return objects.join(' ');
+      }
+      var i = 1;
+      var args = arguments;
+      var len = args.length;
+      var str = String(f).replace(formatRegExp, function(x) {
+        if (x === '%%') return '%';
+        if (i >= len) return x;
+        switch (x) {
+          case '%s': return String(args[i++]);
+          case '%d': return Number(args[i++]);
+          case '%j':
+            try {
+              return JSON.stringify(args[i++]);
+            } catch (_) {
+              return '[Circular]';
+            }
+          default:
+            return x;
+        }
+      });
+      for (var x = args[i]; i < len; x = args[++i]) {
+        if (isNull(x) || !isObject(x)) {
+          str += ' ' + x;
+        } else {
+          str += ' ' + inspect(x);
+        }
+      }
+      return str;
+    };
+    exports.deprecate = function(fn, msg) {
+      if (isUndefined(global.process)) {
+        return function() {
+          return exports.deprecate(fn, msg).apply(this, arguments);
+        };
+      }
+      if (process.noDeprecation === true) {
+        return fn;
+      }
+      var warned = false;
+      function deprecated() {
+        if (!warned) {
+          if (process.throwDeprecation) {
+            throw new Error(msg);
+          } else if (process.traceDeprecation) {
+            console.trace(msg);
+          } else {
+            console.error(msg);
+          }
+          warned = true;
+        }
+        return fn.apply(this, arguments);
+      }
+      return deprecated;
+    };
+    var debugs = {};
+    var debugEnviron;
+    exports.debuglog = function(set) {
+      if (isUndefined(debugEnviron))
+        debugEnviron = process.env.NODE_DEBUG || '';
+      set = set.toUpperCase();
+      if (!debugs[set]) {
+        if (new RegExp('\\b' + set + '\\b', 'i').test(debugEnviron)) {
+          var pid = process.pid;
+          debugs[set] = function() {
+            var msg = exports.format.apply(exports, arguments);
+            console.error('%s %d: %s', set, pid, msg);
+          };
+        } else {
+          debugs[set] = function() {};
+        }
+      }
+      return debugs[set];
+    };
+    function inspect(obj, opts) {
+      var ctx = {
+        seen: [],
+        stylize: stylizeNoColor
+      };
+      if (arguments.length >= 3) ctx.depth = arguments[2];
+      if (arguments.length >= 4) ctx.colors = arguments[3];
+      if (isBoolean(opts)) {
+        ctx.showHidden = opts;
+      } else if (opts) {
+        exports._extend(ctx, opts);
+      }
+      if (isUndefined(ctx.showHidden)) ctx.showHidden = false;
+      if (isUndefined(ctx.depth)) ctx.depth = 2;
+      if (isUndefined(ctx.colors)) ctx.colors = false;
+      if (isUndefined(ctx.customInspect)) ctx.customInspect = true;
+      if (ctx.colors) ctx.stylize = stylizeWithColor;
+      return formatValue(ctx, obj, ctx.depth);
+    }
+    exports.inspect = inspect;
+    inspect.colors = {
+      'bold' : [1, 22],
+      'italic' : [3, 23],
+      'underline' : [4, 24],
+      'inverse' : [7, 27],
+      'white' : [37, 39],
+      'grey' : [90, 39],
+      'black' : [30, 39],
+      'blue' : [34, 39],
+      'cyan' : [36, 39],
+      'green' : [32, 39],
+      'magenta' : [35, 39],
+      'red' : [31, 39],
+      'yellow' : [33, 39]
+    };
+    inspect.styles = {
+      'special': 'cyan',
+      'number': 'yellow',
+      'boolean': 'yellow',
+      'undefined': 'grey',
+      'null': 'bold',
+      'string': 'green',
+      'date': 'magenta',
+      'regexp': 'red'
+    };
+    function stylizeWithColor(str, styleType) {
+      var style = inspect.styles[styleType];
+      if (style) {
+        return '\u001b[' + inspect.colors[style][0] + 'm' + str +
+               '\u001b[' + inspect.colors[style][1] + 'm';
+      } else {
+        return str;
+      }
+    }
+    function stylizeNoColor(str, styleType) {
+      return str;
+    }
+    function arrayToHash(array) {
+      var hash = {};
+      array.forEach(function(val, idx) {
+        hash[val] = true;
+      });
+      return hash;
+    }
+    function formatValue(ctx, value, recurseTimes) {
+      if (ctx.customInspect &&
+          value &&
+          isFunction(value.inspect) &&
+          value.inspect !== exports.inspect &&
+          !(value.constructor && value.constructor.prototype === value)) {
+        var ret = value.inspect(recurseTimes, ctx);
+        if (!isString(ret)) {
+          ret = formatValue(ctx, ret, recurseTimes);
+        }
+        return ret;
+      }
+      var primitive = formatPrimitive(ctx, value);
+      if (primitive) {
+        return primitive;
+      }
+      var keys = Object.keys(value);
+      var visibleKeys = arrayToHash(keys);
+      if (ctx.showHidden) {
+        keys = Object.getOwnPropertyNames(value);
+      }
+      if (isError(value)
+          && (keys.indexOf('message') >= 0 || keys.indexOf('description') >= 0)) {
+        return formatError(value);
+      }
+      if (keys.length === 0) {
+        if (isFunction(value)) {
+          var name = value.name ? ': ' + value.name : '';
+          return ctx.stylize('[Function' + name + ']', 'special');
+        }
+        if (isRegExp(value)) {
+          return ctx.stylize(RegExp.prototype.toString.call(value), 'regexp');
+        }
+        if (isDate(value)) {
+          return ctx.stylize(Date.prototype.toString.call(value), 'date');
+        }
+        if (isError(value)) {
+          return formatError(value);
+        }
+      }
+      var base = '', array = false, braces = ['{', '}'];
+      if (isArray(value)) {
+        array = true;
+        braces = ['[', ']'];
+      }
+      if (isFunction(value)) {
+        var n = value.name ? ': ' + value.name : '';
+        base = ' [Function' + n + ']';
+      }
+      if (isRegExp(value)) {
+        base = ' ' + RegExp.prototype.toString.call(value);
+      }
+      if (isDate(value)) {
+        base = ' ' + Date.prototype.toUTCString.call(value);
+      }
+      if (isError(value)) {
+        base = ' ' + formatError(value);
+      }
+      if (keys.length === 0 && (!array || value.length == 0)) {
+        return braces[0] + base + braces[1];
+      }
+      if (recurseTimes < 0) {
+        if (isRegExp(value)) {
+          return ctx.stylize(RegExp.prototype.toString.call(value), 'regexp');
+        } else {
+          return ctx.stylize('[Object]', 'special');
+        }
+      }
+      ctx.seen.push(value);
+      var output;
+      if (array) {
+        output = formatArray(ctx, value, recurseTimes, visibleKeys, keys);
+      } else {
+        output = keys.map(function(key) {
+          return formatProperty(ctx, value, recurseTimes, visibleKeys, key, array);
+        });
+      }
+      ctx.seen.pop();
+      return reduceToSingleString(output, base, braces);
+    }
+    function formatPrimitive(ctx, value) {
+      if (isUndefined(value))
+        return ctx.stylize('undefined', 'undefined');
+      if (isString(value)) {
+        var simple = '\'' + JSON.stringify(value).replace(/^"|"$/g, '')
+                                                 .replace(/'/g, "\\'")
+                                                 .replace(/\\"/g, '"') + '\'';
+        return ctx.stylize(simple, 'string');
+      }
+      if (isNumber(value))
+        return ctx.stylize('' + value, 'number');
+      if (isBoolean(value))
+        return ctx.stylize('' + value, 'boolean');
+      if (isNull(value))
+        return ctx.stylize('null', 'null');
+    }
+    function formatError(value) {
+      return '[' + Error.prototype.toString.call(value) + ']';
+    }
+    function formatArray(ctx, value, recurseTimes, visibleKeys, keys) {
+      var output = [];
+      for (var i = 0, l = value.length; i < l; ++i) {
+        if (hasOwnProperty(value, String(i))) {
+          output.push(formatProperty(ctx, value, recurseTimes, visibleKeys,
+              String(i), true));
+        } else {
+          output.push('');
+        }
+      }
+      keys.forEach(function(key) {
+        if (!key.match(/^\d+$/)) {
+          output.push(formatProperty(ctx, value, recurseTimes, visibleKeys,
+              key, true));
+        }
+      });
+      return output;
+    }
+    function formatProperty(ctx, value, recurseTimes, visibleKeys, key, array) {
+      var name, str, desc;
+      desc = Object.getOwnPropertyDescriptor(value, key) || { value: value[key] };
+      if (desc.get) {
+        if (desc.set) {
+          str = ctx.stylize('[Getter/Setter]', 'special');
+        } else {
+          str = ctx.stylize('[Getter]', 'special');
+        }
+      } else {
+        if (desc.set) {
+          str = ctx.stylize('[Setter]', 'special');
+        }
+      }
+      if (!hasOwnProperty(visibleKeys, key)) {
+        name = '[' + key + ']';
+      }
+      if (!str) {
+        if (ctx.seen.indexOf(desc.value) < 0) {
+          if (isNull(recurseTimes)) {
+            str = formatValue(ctx, desc.value, null);
+          } else {
+            str = formatValue(ctx, desc.value, recurseTimes - 1);
+          }
+          if (str.indexOf('\n') > -1) {
+            if (array) {
+              str = str.split('\n').map(function(line) {
+                return '  ' + line;
+              }).join('\n').substr(2);
+            } else {
+              str = '\n' + str.split('\n').map(function(line) {
+                return '   ' + line;
+              }).join('\n');
+            }
+          }
+        } else {
+          str = ctx.stylize('[Circular]', 'special');
+        }
+      }
+      if (isUndefined(name)) {
+        if (array && key.match(/^\d+$/)) {
+          return str;
+        }
+        name = JSON.stringify('' + key);
+        if (name.match(/^"([a-zA-Z_][a-zA-Z_0-9]*)"$/)) {
+          name = name.substr(1, name.length - 2);
+          name = ctx.stylize(name, 'name');
+        } else {
+          name = name.replace(/'/g, "\\'")
+                     .replace(/\\"/g, '"')
+                     .replace(/(^"|"$)/g, "'");
+          name = ctx.stylize(name, 'string');
+        }
+      }
+      return name + ': ' + str;
+    }
+    function reduceToSingleString(output, base, braces) {
+      var length = output.reduce(function(prev, cur) {
+        if (cur.indexOf('\n') >= 0) ;
+        return prev + cur.replace(/\u001b\[\d\d?m/g, '').length + 1;
+      }, 0);
+      if (length > 60) {
+        return braces[0] +
+               (base === '' ? '' : base + '\n ') +
+               ' ' +
+               output.join(',\n  ') +
+               ' ' +
+               braces[1];
+      }
+      return braces[0] + base + ' ' + output.join(', ') + ' ' + braces[1];
+    }
+    function isArray(ar) {
+      return Array.isArray(ar);
+    }
+    exports.isArray = isArray;
+    function isBoolean(arg) {
+      return typeof arg === 'boolean';
+    }
+    exports.isBoolean = isBoolean;
+    function isNull(arg) {
+      return arg === null;
+    }
+    exports.isNull = isNull;
+    function isNullOrUndefined(arg) {
+      return arg == null;
+    }
+    exports.isNullOrUndefined = isNullOrUndefined;
+    function isNumber(arg) {
+      return typeof arg === 'number';
+    }
+    exports.isNumber = isNumber;
+    function isString(arg) {
+      return typeof arg === 'string';
+    }
+    exports.isString = isString;
+    function isSymbol(arg) {
+      return typeof arg === 'symbol';
+    }
+    exports.isSymbol = isSymbol;
+    function isUndefined(arg) {
+      return arg === void 0;
+    }
+    exports.isUndefined = isUndefined;
+    function isRegExp(re) {
+      return isObject(re) && objectToString(re) === '[object RegExp]';
+    }
+    exports.isRegExp = isRegExp;
+    function isObject(arg) {
+      return typeof arg === 'object' && arg !== null;
+    }
+    exports.isObject = isObject;
+    function isDate(d) {
+      return isObject(d) && objectToString(d) === '[object Date]';
+    }
+    exports.isDate = isDate;
+    function isError(e) {
+      return isObject(e) &&
+          (objectToString(e) === '[object Error]' || e instanceof Error);
+    }
+    exports.isError = isError;
+    function isFunction(arg) {
+      return typeof arg === 'function';
+    }
+    exports.isFunction = isFunction;
+    function isPrimitive(arg) {
+      return arg === null ||
+             typeof arg === 'boolean' ||
+             typeof arg === 'number' ||
+             typeof arg === 'string' ||
+             typeof arg === 'symbol' ||
+             typeof arg === 'undefined';
+    }
+    exports.isPrimitive = isPrimitive;
+    exports.isBuffer = require('./support/isBuffer');
+    function objectToString(o) {
+      return Object.prototype.toString.call(o);
+    }
+    function pad(n) {
+      return n < 10 ? '0' + n.toString(10) : n.toString(10);
+    }
+    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep',
+                  'Oct', 'Nov', 'Dec'];
+    function timestamp() {
+      var d = new Date();
+      var time = [pad(d.getHours()),
+                  pad(d.getMinutes()),
+                  pad(d.getSeconds())].join(':');
+      return [d.getDate(), months[d.getMonth()], time].join(' ');
+    }
+    exports.log = function() {
+      console.log('%s - %s', timestamp(), exports.format.apply(exports, arguments));
+    };
+    exports.inherits = require('inherits');
+    exports._extend = function(origin, add) {
+      if (!add || !isObject(add)) return origin;
+      var keys = Object.keys(add);
+      var i = keys.length;
+      while (i--) {
+        origin[keys[i]] = add[keys[i]];
+      }
+      return origin;
+    };
+    function hasOwnProperty(obj, prop) {
+      return Object.prototype.hasOwnProperty.call(obj, prop);
+    }
+    }).call(this,require('_process'),typeof commonjsGlobal !== "undefined" ? commonjsGlobal : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {});
+    },{"./support/isBuffer":66,"_process":47,"inherits":65}]},{},[20])(20)
     });
     });
 
@@ -13015,7 +13383,7 @@ var DjVu = (function () {
                 } else if (id === "CIDa") {
                     try {
                         chunk = new CIDaChunk(chunkBs);
-                    } catch(e) {
+                    } catch (e) {
                         chunk = new ErrorChunk('CIDa', e);
                     }
                 } else if (id === 'Djbz') {
@@ -13050,7 +13418,7 @@ var DjVu = (function () {
                     for (var i = 0; i < width; i++) {
                         var rowOffset = (width - i - 1) * height;
                         var to = height + rowOffset;
-                        for (var newIndex = rowOffset, oldIndex = i; newIndex < to; newIndex++ , oldIndex += width) {
+                        for (var newIndex = rowOffset, oldIndex = i; newIndex < to; newIndex++, oldIndex += width) {
                             newPixelArray[newIndex] = oldPixelArray[oldIndex];
                         }
                     }
@@ -13058,7 +13426,7 @@ var DjVu = (function () {
                     for (var i = 0; i < width; i++) {
                         var rowOffset = i * height;
                         var from = height + rowOffset - 1;
-                        for (var newIndex = from, oldIndex = i; newIndex >= rowOffset; newIndex-- , oldIndex += width) {
+                        for (var newIndex = from, oldIndex = i; newIndex >= rowOffset; newIndex--, oldIndex += width) {
                             newPixelArray[newIndex] = oldPixelArray[oldIndex];
                         }
                     }
@@ -14132,7 +14500,7 @@ var DjVu = (function () {
         cancelTask(promise) {
             if (!this.promiseMap.delete(promise)) {
                 if (this.currentPromise === promise) {
-                    this. dropCurrentTask();
+                    this.dropCurrentTask();
                 }
             }
         }
@@ -14145,7 +14513,7 @@ var DjVu = (function () {
         }
         cancelAllTasks() {
             this.emptyTaskQueue();
-            this. dropCurrentTask();
+            this.dropCurrentTask();
         }
         createNewPromise(commandObj, transferList) {
             var callbacks;
