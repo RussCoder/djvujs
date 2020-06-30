@@ -5,7 +5,7 @@ var DjVu = (function () {
     'use strict;'
 
     var DjVu = {
-        VERSION: '0.4.1',
+        VERSION: '0.4.2',
         IS_DEBUG: false,
         setDebugMode: (flag) => DjVu.IS_DEBUG = flag
     };
@@ -14068,8 +14068,8 @@ var DjVu = (function () {
                 if (this.baseUrl[this.baseUrl.length - 1] !== '/') {
                     this.baseUrl += '/';
                 }
-                if (!/^http/.test(this.baseUrl)) {
-                    this.baseUrl = new URL(this.baseUrl, location.origin).href;
+                if (!/^[A-Za-z]+:\/\//.test(this.baseUrl)) {
+                    this.baseUrl = location.origin && (new URL(this.baseUrl, location.origin).href);
                 }
             }
             this.memoryLimit = memoryLimit;
@@ -14281,7 +14281,7 @@ var DjVu = (function () {
                 if (xhr.status && xhr.status !== 200) {
                     throw new UnsuccessfulRequestDjVuError(xhr, { pageNumber: pageNumber, dependencyId: id });
                 }
-                var componentBuffer =  xhr.response;
+                var componentBuffer = xhr.response;
                 var bs = new ByteStream(componentBuffer);
                 if (bs.readStr4() !== 'AT&T') {
                     throw new CorruptedFileDjVuError(
