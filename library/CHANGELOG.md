@@ -1,5 +1,9 @@
 # DjVu.js Library Changelog
 
+## v.0.4.2 (30.06.2020)
+
+- Fixed an error, which took place when there is no location.origin (when a web page is opened directly in a browser).
+
 ## v.0.4.1 (22.04.2020)
 
 - Wrapped some loop's bodies into functions to avoid code deoptimizations in Chrome in some cases.

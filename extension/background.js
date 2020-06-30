@@ -97,7 +97,9 @@ chrome.webRequest.onBeforeRequest.addListener(details => {
 }, {
     urls: [
         'file:///*/*.djvu',
+        'file:///*/*.djvu?*',
         'file:///*/*.djv',
+        'file:///*/*.djv?*',
     ],
     types: ['main_frame']
 },
@@ -116,9 +118,13 @@ const enableHttpIntercepting = () => {
     !isHttpInterceptingEnabled && chrome.webRequest.onBeforeRequest.addListener(requestInterceptor, {
         urls: [
             'http://*/*.djvu',
-            'http://*/*.djv',
+            'http://*/*.djvu?*',
             'https://*/*.djvu',
+            'https://*/*.djvu?*',
+            'http://*/*.djv',
+            'http://*/*.djv?*',
             'https://*/*.djv',
+            'https://*/*.djv?*',
         ],
         types: ['main_frame']
     },

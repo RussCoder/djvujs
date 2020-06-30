@@ -25,8 +25,10 @@ export default class DjVuDocument {
             if (this.baseUrl[this.baseUrl.length - 1] !== '/') {
                 this.baseUrl += '/';
             }
-            if (!/^http/.test(this.baseUrl)) { // a relative URL
-                this.baseUrl = new URL(this.baseUrl, location.origin).href; // all URL in a worker should be absolute
+            if (!/^[A-Za-z]+:\/\//.test(this.baseUrl)) { // a relative URL
+                // all URL in a worker should be absolute
+                // in case of a local web page opened as file:/// there is no location.origin.
+                this.baseUrl = location.origin && (new URL(this.baseUrl, location.origin).href);
             }
         }
         this.memoryLimit = memoryLimit; // required to limit the size of cache in case of indirect djvu
@@ -281,7 +283,7 @@ export default class DjVuDocument {
                 throw new UnsuccessfulRequestDjVuError(xhr, { pageNumber: pageNumber, dependencyId: id });
             }
 
-            var componentBuffer =  xhr.response;
+            var componentBuffer = xhr.response;
             var bs = new ByteStream(componentBuffer);
             if (bs.readStr4() !== 'AT&T') {
                 throw new CorruptedFileDjVuError(
