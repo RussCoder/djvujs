@@ -15,7 +15,14 @@ function promisify(func) {
     };
 }
 
-const getViewerUrl = (djvuUrl = null) => chrome.runtime.getURL("viewer.html" + (djvuUrl ? "#" + djvuUrl : ''));
+const getViewerUrl = (djvuUrl = null, djvuName = null) => {
+    const extensionUrl = chrome.runtime.getURL("viewer.html");
+    const params = new URLSearchParams();
+    djvuUrl && params.set('url', djvuUrl);
+    djvuName && params.set('name', djvuName);
+    const queryString = params.toString();
+    return extensionUrl + (queryString ? '?' + queryString : '');
+};
 
 const tabIds = new Set();
 let unregisterTimeouts = {};
@@ -112,10 +119,10 @@ const requestInterceptor = details => {
     return { redirectUrl: getViewerUrl(details.url) };
 }
 
-let isHttpInterceptingEnabled = false;
+const onBeforeRequest = chrome.webRequest.onBeforeRequest;
 
 const enableHttpIntercepting = () => {
-    !isHttpInterceptingEnabled && chrome.webRequest.onBeforeRequest.addListener(requestInterceptor, {
+    !onBeforeRequest.hasListener(requestInterceptor) && onBeforeRequest.addListener(requestInterceptor, {
         urls: [
             'http://*/*.djvu',
             'http://*/*.djvu?*',
@@ -130,32 +137,78 @@ const enableHttpIntercepting = () => {
     },
         ["blocking"]
     );
-    isHttpInterceptingEnabled = true;
 };
 
 const disableHttpIntercepting = () => {
-    isHttpInterceptingEnabled && chrome.webRequest.onBeforeRequest.removeListener(requestInterceptor);
-    isHttpInterceptingEnabled = false;
+    onBeforeRequest.hasListener(requestInterceptor) && onBeforeRequest.removeListener(requestInterceptor);
 };
 
-chrome.storage.local.get('djvu_js_options', options => {
+const headersAnalyzer = details => {
+    const getFileName = () => {
+        const contentDisposition = details.responseHeaders.find(item => item.name.toLowerCase() === 'content-disposition');
+        if (contentDisposition) {
+            // In fact, there may be also filename*= in the header, so perhaps, it will be needed for someone in the future
+            const matches = /(?:attachment|inline);\s+filename="(.+\.djvu?)"/.exec(contentDisposition.value);
+            return matches && matches[1];
+        }
+    };
+
+    const contentType = details.responseHeaders.find(item => item.name.toLowerCase() === 'content-type');
+    if (contentType) {
+        if (contentType.value === 'image/vnd.djvu' || contentType.value === 'image/x.djvu') {
+            // analyse Content-Disposition only if there is no filename in the URL
+            return { redirectUrl: getViewerUrl(details.url, /\.djvu?(?:\?.*)?$/.test(details.url) ? null : getFileName()) };
+        } else if (contentType.value === 'application/octet-stream') {
+            const fileName = getFileName();
+            if (fileName) {
+                return { redirectUrl: getViewerUrl(details.url, fileName) };
+            }
+        }
+    }
+};
+
+const onHeadersReceived = chrome.webRequest.onHeadersReceived;
+
+const enableHeadersAnalysis = () => {
+    !onHeadersReceived.hasListener(headersAnalyzer) && onHeadersReceived.addListener(headersAnalyzer, {
+        urls: [
+            'http://*/*',
+            'https://*/*',
+        ],
+        types: ['main_frame'],
+    }, ['blocking', 'responseHeaders']);
+};
+
+const disableHeadersAnalysis = () => {
+    onHeadersReceived.hasListener(headersAnalyzer) && onHeadersReceived.removeListener(headersAnalyzer)
+};
+
+const onOptionsChanged = json => {
     try {
-        options = JSON.parse(options['djvu_js_options']);
+        const options = JSON.parse(json);
         if (options.interceptHttpRequests) {
             enableHttpIntercepting();
+        } else {
+            disableHttpIntercepting();
         }
-    } catch (e) { }
-});
+
+        if (options.interceptHttpRequests && options.analyzeHeaders) {
+            enableHeadersAnalysis();
+        } else {
+            disableHeadersAnalysis();
+        }
+    } catch (e) {
+        console.error('DjVu.js Extension: Error on attempt to read and apply options. The json: ', json);
+        console.error(e);
+    }
+};
+
+chrome.storage.local.get('djvu_js_options', options => onOptionsChanged(options['djvu_js_options']));
 
 chrome.storage.onChanged.addListener((changes, area) => {
     if (area === 'local' && changes['djvu_js_options']) {
         if (changes['djvu_js_options'].newValue) {
-            const options = JSON.parse(changes['djvu_js_options'].newValue);
-            if (options.interceptHttpRequests) {
-                enableHttpIntercepting();
-            } else {
-                disableHttpIntercepting();
-            }
+            onOptionsChanged(changes['djvu_js_options'].newValue);
         }
     }
 });

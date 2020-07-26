@@ -17,14 +17,9 @@ window.onload = () => {
             document.title = 'DjVu.js Viewer';
         });
 
-        hashChangeHandler();
-        window.onhashchange = hashChangeHandler;
+        const params = new URLSearchParams(location.search.slice(1));
+        if (params.get('url')) {
+            viewer.loadDocumentByUrl(params.get('url'), params.get('name') ? { name: params.get('name') } : undefined);
+        }
     });
 };
-
-function hashChangeHandler() {
-    if (location.hash) {
-        var url = location.hash.substr(1);
-        viewer.loadDocumentByUrl(url);
-    }
-}

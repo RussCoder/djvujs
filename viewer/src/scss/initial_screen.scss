@@ -24,7 +24,7 @@
             margin: 0;
             margin-right: 0.5em;
             flex: 0 0 auto;
-            max-width: 20em;
+            max-width: 25em;
             float: left;
             border: 2px solid gray;
             border-radius: 0.2em;
@@ -40,6 +40,7 @@
                 display: flex;
                 align-items: center;
                 cursor: pointer;
+                font-size: 0.8em;
 
                 input[type=checkbox] {
                     transform: scale(1.5);

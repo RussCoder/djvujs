@@ -124,7 +124,7 @@ export default class DjVuViewer extends EventEmitter {
 
             var baseUrl = new URL('./', url).href;
             config.djvuOptions = { baseUrl: baseUrl };
-            await this.loadDocument(buffer, this._getFileNameFromUrl(url), config);
+            await this.loadDocument(buffer, config.name || this._getFileNameFromUrl(url), config);
             // now we should process #page=some_number case
             const hash = new URL(url.toLowerCase()).hash;
             if (hash) {

@@ -2,10 +2,13 @@
  * A server used for debugging.
  */
 
+'use strict';
+
 const http = require('http');
 const fs = require('fs');
 const WebSocket = require('ws');
-const colors = require('colors');
+require('colors');
+const path = require('path');
 const rollup = require('rollup');
 const express = require('express');
 const rollupConfig = require('./rollup.config.js');
@@ -18,6 +21,17 @@ const app = express();
 app.use(express.static(__dirname));
 app.use(express.static(__dirname + '/debug'));
 app.use('/tests', express.static('./tests', { index: 'tests.html' }));
+
+// used to debug the request interception in the extension according to the headers
+app.get('/file_without_extension', (req, res) => {
+    res.sendFile(path.resolve('./assets/DjVu3Spec.djvu'), {
+        headers: {
+            'Content-Type': 'application/octet-stream',
+            'Content-Disposition': 'inline; filename="TestFileName.djvu"',
+        }
+    });
+});
+
 app.use((req, res) => {
     res.status(404).end('No such a page! 404 error!');
 });

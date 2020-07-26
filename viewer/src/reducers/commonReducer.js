@@ -24,7 +24,7 @@ export default (state = initialState, action) => {
     const payload = action.payload;
     switch (action.type) {
 
-        case Consts.OPTIONS_UPDATED_ACTION:
+        case Consts.UPDATE_OPTIONS_ACTION:
             return { ...state, options: payload };
 
         case Consts.ENABLE_CONTINUOUS_SCROLL_MODE_ACTION:
