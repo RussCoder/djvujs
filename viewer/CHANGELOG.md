@@ -1,5 +1,9 @@
 # DjVu.js Viewer Changelog
 
+## v.0.3.6 (27.07.2020)
+- An ability to load a file by URL manually in the extension. 
+- An extension option to analyze http headers to detect djvu files.
+
 ## v.0.3.5 (24.04.2020)
 - New DOCUMENT_CLOSED and DOCUMENT_CHANGED events to change the page title dynamically. 
 - decodeURIComponent applied to a file's name derived from a URL.
