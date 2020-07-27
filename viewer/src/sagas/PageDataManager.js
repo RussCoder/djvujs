@@ -1,3 +1,12 @@
+/**
+ * The logic related to page caching in the continuos page mode.
+ * It pre-fetches pages depending on the current page number and a radius
+ * (a number of pages before and after the current one).
+ * All pages outside the radius are removed from the cache in order not to retain 
+ * too much memory, although each page is encoded an PNG DataURL,
+ * so it takes only several kilobytes.
+ */
+
 import { put, select } from 'redux-saga/effects';
 import Actions from "../actions/actions";
 import { get } from '../reducers/rootReducer';

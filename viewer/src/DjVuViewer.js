@@ -4,10 +4,10 @@ import { Provider } from 'react-redux'
 import App from './components/App.jsx';
 import Actions from './actions/actions';
 import configureStore from './store';
-import { loadFile } from './utils';
 import EventEmitter from 'eventemitter3';
 import Consts, { constant } from './constants/consts';
 import { get } from './reducers';
+import { ActionTypes } from './constants/index.js';
 
 const Events = constant({
     PAGE_NUMBER_CHANGED: null,
@@ -17,7 +17,7 @@ const Events = constant({
 
 export default class DjVuViewer extends EventEmitter {
 
-    static VERSION = '0.3.5';
+    static VERSION = '0.3.6';
 
     static Events = Events;
 
@@ -56,6 +56,11 @@ export default class DjVuViewer extends EventEmitter {
                 this.emit(Events.DOCUMENT_CLOSED);
                 break;
 
+            case Consts.END_FILE_LOADING_ACTION: // use in this.loadDocumentByUrl only
+                result = next(action);
+                this.emit(Consts.END_FILE_LOADING_ACTION);
+                break;
+
             default:
                 result = next(action);
                 break;
@@ -83,61 +88,30 @@ export default class DjVuViewer extends EventEmitter {
     }
 
     configure({ pageNumber, pageRotation, pageScale } = {}) {
-        const dispatch = this.store.dispatch.bind(this.store);
-
-        pageNumber && dispatch(Actions.setNewPageNumberAction(pageNumber, true));
-        pageRotation && dispatch(Actions.setPageRotationAction(pageRotation));
-        pageScale && dispatch(Actions.setUserScaleAction(pageScale));
+        this.store.dispatch({
+            type: ActionTypes.CONFIGURE,
+            pageNumber, pageRotation, pageScale
+        });
 
         return this;
     }
 
     loadDocument(buffer, name = "***", config = {}) {
         return new Promise(resolve => {
-            this.store.dispatch(Actions.setApiCallbackAction('document_created', () => {
-                config && this.configure(config);
-                resolve();
-            }));
-            this.store.dispatch(Actions.createDocumentFromArrayBufferAction(buffer, name, config.djvuOptions));
+            this.once(Events.DOCUMENT_CHANGED, () => resolve());
+            // the buffer is transferred to the worker, so we copy it 
+            this.store.dispatch(Actions.createDocumentFromArrayBufferAction(buffer.slice(0), name, config));
         });
     }
 
-    _getFileNameFromUrl(url) {
-        try {
-            const res = /[^/#]*(?=#|$)/.exec(url.trim());
-            return res ? decodeURIComponent(res[0]) : '***';
-        } catch (e) {
-            return '***';
-        }
-    }
-
-    async loadDocumentByUrl(url, config = null) {
-        config = config || {};
-        try {
-            var a = document.createElement('a');
-            a.href = url;
-            url = a.href; // converting of a relative url to an absolute one
-            this.store.dispatch(Actions.startFileLoadingAction());
-            var buffer = await loadFile(url, (e) => {
-                this.store.dispatch(Actions.fileLoadingProgressAction(e.loaded, e.total));
+    loadDocumentByUrl(url, config = null) {
+        return new Promise(resolve => {
+            this.once(Consts.END_FILE_LOADING_ACTION, () => resolve());
+            this.store.dispatch({
+                type: ActionTypes.LOAD_DOCUMENT_BY_URL,
+                url: url,
+                config: config
             });
-
-            var baseUrl = new URL('./', url).href;
-            config.djvuOptions = { baseUrl: baseUrl };
-            await this.loadDocument(buffer, config.name || this._getFileNameFromUrl(url), config);
-            // now we should process #page=some_number case
-            const hash = new URL(url.toLowerCase()).hash;
-            if (hash) {
-                const page = /(?:page=)(\d+)$/.exec(hash);
-                const pageNumber = page ? +page[1] : null;
-                if (pageNumber) {
-                    this.store.dispatch(Actions.setNewPageNumberAction(pageNumber, true));
-                }
-            }
-        } catch (e) {
-            this.store.dispatch(Actions.errorAction(e));
-        } finally {
-            this.store.dispatch(Actions.endFileLoadingAction());
-        }
+        });
     }
 }

@@ -25,12 +25,6 @@ const Actions = {
         });
     },
 
-    setApiCallbackAction: (callbackName, callback) => ({
-        type: Consts.SET_API_CALLBACK_ACTION,
-        callbackName: callbackName,
-        callback: callback
-    }),
-
     setPageRotationAction: rotation => dispatch => {
         if (rotation === 0 || rotation === 90 || rotation === 180 || rotation === 270) {
             dispatch({
@@ -100,11 +94,11 @@ const Actions = {
         return { type: Consts.CLOSE_MODAL_WINDOW_ACTION };
     },
 
-    createDocumentFromArrayBufferAction: (arrayBuffer, fileName = "***", options = {}) => ({
+    createDocumentFromArrayBufferAction: (arrayBuffer, fileName = "***", config = {}) => ({
         type: Consts.CREATE_DOCUMENT_FROM_ARRAY_BUFFER_ACTION,
         arrayBuffer: arrayBuffer,
-        options: options,
-        fileName: fileName
+        fileName: fileName,
+        config: config,
     }),
 
     setNewPageNumberAction: (pageNumber, isPageNumberSetManually = false) => ({

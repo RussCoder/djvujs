@@ -5,7 +5,7 @@ import PropTypes from 'prop-types';
 import { get } from '../reducers/rootReducer';
 import Toolbar from "./Toolbar";
 import ImageBlock from "./ImageBlock";
-import InitialScreen from './InitialScreen';
+import InitialScreen from './InitialScreen/InitialScreen';
 import FileLoadingScreen from './FileLoadingScreen';
 import Footer from './Footer';
 import LeftPanel from './LeftPanel';

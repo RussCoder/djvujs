@@ -10,7 +10,7 @@ export function loadFile(url, progressHandler) {
                     message: `Response status text: ${xhr.statusText}`
                 });
             }
-            resolve(xhr.response);
+            resolve(xhr);
         };
 
         xhr.onerror = (e) => {

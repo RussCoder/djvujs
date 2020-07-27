@@ -13,7 +13,7 @@ const configureStore = (eventMiddleware = undefined) => {
         sagaMiddleware,
         eventMiddleware
     ));
-    sagaMiddleware.run(createRootSaga());
+    sagaMiddleware.run(createRootSaga(store.dispatch));
     initHotkeys(store);
     return store;
 };

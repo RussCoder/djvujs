@@ -1,16 +1,22 @@
+/**
+ * All side-effect logic is here (all logic which isn't related directly to the UI)
+ */
+
 import { put, select, takeLatest } from 'redux-saga/effects';
 import { get } from '../reducers/rootReducer';
 // import { delay } from 'redux-saga';
 
-import Consts from "../constants/consts";
+import Consts, { ActionTypes } from '../constants';
 import Actions from "../actions/actions";
 import PagesCache from './PagesCache';
 import DjVu from '../DjVu';
 import PageDataManager from './PageDataManager';
 import { inExtension } from '../utils';
+import { loadFile } from '../utils';
 
 class RootSaga {
-    constructor() {
+    constructor(dispatch) {
+        this.dispatch = dispatch;
         this.callbacks = {};
 
         // Firefox's extension moderators asked me not to use "content_security_policy": "script-src blob:" permission,
@@ -98,11 +104,17 @@ class RootSaga {
         yield put(Actions.pagesSizesAreGottenAction(pagesSizes));
     }
 
-    * createDocumentFromArrayBufferAction(action) {
+    * configure({ pageNumber, pageRotation, pageScale }) {
+        if (pageNumber) yield put(Actions.setNewPageNumberAction(pageNumber, true));
+        if (pageRotation) yield put(Actions.setPageRotationAction(pageRotation));
+        if (pageScale) yield put(Actions.setUserScaleAction(pageScale));
+    }
+
+    * createDocumentFromArrayBuffer({ arrayBuffer, fileName, config }) {
         this.djvuWorker.cancelAllTasks();
         this.resetWorker();
 
-        yield this.djvuWorker.createDocument(action.arrayBuffer, action.options);
+        yield this.djvuWorker.createDocument(arrayBuffer, config && config.djvuOptions);
         const [pagesQuantity, isBundled] = yield this.djvuWorker.run(
             this.djvuWorker.doc.getPagesQuantity(),
             this.djvuWorker.doc.isBundled(),
@@ -111,13 +123,16 @@ class RootSaga {
         yield put({
             type: Consts.DOCUMENT_CREATED_ACTION,
             pagesQuantity: pagesQuantity,
-            fileName: action.fileName,
+            fileName: fileName,
             isIndirect: !isBundled,
         });
 
-        if (this.callbacks['document_created']) { // for outer API
-            this.callbacks['document_created']();
-            delete this.callbacks['document_created'];
+        // perhaps it's better to configure the viewer before DOCUMENT_CREATED_ACTION 
+        // (since the promise of the viewer.loadDocument is resolved on this action)
+        // But currently DOCUMENT_CREATED_ACTION reset the state of the viewer, it the configuration is done after it.
+        // The optimal variant is to resolve the promise on another action, but I'm not sure is it needed to anybody at all.
+        if (config) {
+            yield* this.configure(config);
         }
 
         const state = yield select();
@@ -239,8 +254,52 @@ class RootSaga {
         } catch (e) { }
     }
 
+    * loadDocumentByUrl({ url, config }) {
+        config = config || {};
+
+        const getFileNameFromUrl = (url) => {
+            try {
+                const res = /[^/#]*(?=#|$)/.exec(url.trim());
+                return res ? decodeURIComponent(res[0]) : '***';
+            } catch (e) {
+                return '***';
+            }
+        };
+
+        try {
+            const a = document.createElement('a');
+            a.href = url;
+            url = a.href; // converting of a relative url to an absolute one
+            yield put(Actions.startFileLoadingAction());
+
+            const { response: buffer, responseURL } = yield loadFile(url, (e) => {
+                this.dispatch(Actions.fileLoadingProgressAction(e.loaded, e.total));
+            });
+            // responseUrl is the URL after all redirects
+            config.djvuOptions = { baseUrl: new URL('./', responseURL).href };
+            yield* this.createDocumentFromArrayBuffer({
+                arrayBuffer: buffer,
+                fileName: config.name || getFileNameFromUrl(url),
+                config: config
+            });
+
+            // now we should process #page=page_number and ?page=page_number
+            const urlObject = new URL(url.toLowerCase());
+            const pageNumber = +urlObject.searchParams.get('page') || +new URLSearchParams(urlObject.hash).get('#page');
+
+            if (pageNumber) {
+                yield put(Actions.setNewPageNumberAction(pageNumber, true));
+            }
+        } catch (e) {
+            console.error(e);
+            yield put(Actions.errorAction(e));
+        } finally {
+            yield put(Actions.endFileLoadingAction());
+        }
+    }
+
     * main() {
-        yield takeLatest(Consts.CREATE_DOCUMENT_FROM_ARRAY_BUFFER_ACTION, this.withErrorHandler(this.createDocumentFromArrayBufferAction));
+        yield takeLatest(Consts.CREATE_DOCUMENT_FROM_ARRAY_BUFFER_ACTION, this.withErrorHandler(this.createDocumentFromArrayBuffer));
         yield takeLatest(Consts.SET_NEW_PAGE_NUMBER_ACTION, this.withErrorHandler(this.fetchPageData));
         yield takeLatest(Consts.SET_PAGE_BY_URL_ACTION, this.withErrorHandler(this.setPageByUrl));
         yield takeLatest(Consts.SAVE_DOCUMENT_ACTION, this.withErrorHandler(this.saveDocument));
@@ -250,10 +309,12 @@ class RootSaga {
         yield takeLatest(Consts.ENABLE_SINGLE_PAGE_MODE_ACTION, this.withErrorHandler(this.switchToSinglePageMode));
         yield takeLatest(Consts.ENABLE_TEXT_MODE_ACTION, this.withErrorHandler(this.switchToTextMode));
         yield takeLatest(Consts.UPDATE_OPTIONS_ACTION, this.withErrorHandler(this.updateOptions));
+        yield takeLatest(ActionTypes.CONFIGURE, this.withErrorHandler(this.configure));
+        yield takeLatest(ActionTypes.LOAD_DOCUMENT_BY_URL, this.loadDocumentByUrl.bind(this));
 
         yield* this.withErrorHandler(this.loadOptions)();
     }
 }
 
 // a new object should be created each time in order to provide an ability to create many independent instances of the viewer
-export default () => RootSaga.prototype.main.bind(new RootSaga());
+export default (dispatch) => RootSaga.prototype.main.bind(new RootSaga(dispatch));

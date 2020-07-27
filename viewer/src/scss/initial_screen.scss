@@ -64,17 +64,6 @@
             max-height: 100%;
         }
 
-        .header {
-            text-align: center;
-            font-size: 2em;
-        }
-
-        .djvujs_version {
-            margin-top: -2em;
-            font-style: italic;
-            font-size: 0.8em;
-        }
-
         .update_message {
             color: brown;
             flex: 1 1;
@@ -83,10 +72,6 @@
 
         .previous_update_message {
             font-size: 0.5em;
-        }
-
-        div {
-            margin: 1em;
         }
 
         .file_zone {

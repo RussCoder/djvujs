@@ -1,9 +1,13 @@
+/**
+ * The logic of extracting and caching pages of a document in the discrete page mode.
+ * The current, the previous and the next pages are fetched (and pre-fetched).
+ * A page in the format of ImageData may take about 30 MB of RAM, 
+ * so it's not good to cache more than 3 ones.
+ */
+
 import { fork } from 'redux-saga/effects';
 //import { delay } from 'redux-saga';
 
-/**
- * An object encapsulating all the logic of extracting and caching pages of a document
- */
 export default class PagesCache {
 
     constructor(djvuWorker) {
