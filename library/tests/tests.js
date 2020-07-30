@@ -211,11 +211,13 @@ var Tests = {
 
     async _imageTestX({ djvuUrl, baseUrl = null, pageNumber, imageUrl = null, hash = null, rotate = 0 }) {
         function checkByHash(data, message) {
-            var isHashTheSame = TestHelper.getHashOfArray(data) === hash;
+            const calculatedHash = TestHelper.getHashOfArray(data);
+            const isHashTheSame = calculatedHash === hash;
             return {
                 isSuccess: isHashTheSame,
                 messages: [
-                    isHashTheSame ? "Hash is the same! Good" : "Hash is different!",
+                    isHashTheSame ? "Hash is the same! Good" :
+                        `Hash is different! Calculated: ${calculatedHash}, required: ${hash}`,
                     message
                 ]
             };
@@ -532,6 +534,16 @@ var Tests = {
         });
     },
 
+    testOpenIndirectDjVuWithEmptyDjVi() {
+        return this._imageTestX({
+            djvuUrl: '/assets/polish_indirect/index.djvu',
+            baseUrl: '/assets/polish_indirect/',
+            imageUrl: '/assets/polish_indirect/sw1-0002.png',
+            pageNumber: 1,
+            hash: -177861879,
+        });
+    },
+
     testPageWithEmptyLastChunk() {
         return this._imageTestX({
             djvuUrl: '/assets/ccitt_2.djvu',
@@ -599,7 +611,7 @@ var Tests = {
         });
     },
 
-    testNewJB2SymbolWithEmptyEdges() { 
+    testNewJB2SymbolWithEmptyEdges() {
         return this._imageTestX({
             djvuUrl: '/assets/vega.djvu',
             imageUrl: '/assets/vega_1.png',
@@ -608,7 +620,7 @@ var Tests = {
         });
     },
 
-    testFileWith2BZZEncodedBlocks() { 
+    testFileWith2BZZEncodedBlocks() {
         return this._imageTestX({
             djvuUrl: '/assets/irish.djvu',
             imageUrl: '/assets/irish_1.png',

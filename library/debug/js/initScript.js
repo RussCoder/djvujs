@@ -16,9 +16,9 @@ var rerunButton = document.querySelector('#rerun');
 rerunButton.onclick = rerun;
 document.querySelector('#redraw').onclick = redrawPage;
 
-var pageNumber = 3;
-var djvuUrl = 'assets/slow.djvu';
-var baseUrl = 'assets/czech_indirect/';
+var pageNumber = 1;
+var djvuUrl = 'assets/polish_indirect/index.djvu';
+var baseUrl = 'assets/polish_indirect/';
 
 document.querySelector('#next').onclick = () => {
     pageNumber++;

@@ -1,5 +1,9 @@
 # DjVu.js Library Changelog
 
+## v.0.4.3 (30.07.2020)
+
+- Fixed a bug due to which an empty DJVI chunk caused an error.
+
 ## v.0.4.2 (30.06.2020)
 
 - Fixed an error, which took place when there is no location.origin (when a web page is opened directly in a browser).

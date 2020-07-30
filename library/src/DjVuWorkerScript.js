@@ -18,6 +18,7 @@ export default function initWorker() {
             var obj = oEvent.data;
             await handlers[obj.command](obj);
         } catch (error) {
+            console.error(error);
             // we can't pass the native Error object between workers, so only several properties are copied
             var errorObj = error instanceof DjVuError ? error : {
                 code: DjVuErrorCodes.UNEXPECTED_ERROR,
@@ -58,18 +59,14 @@ export default function initWorker() {
         async run(obj) {
             //console.log("Got task request", Date.now() - obj.time);
             const results = await Promise.all(obj.data.map(async task => {
-                try {
-                    var res = djvuDocument;
-                    for(var i = 0; i < task.funcs.length; i++) {
-                        res = await res[task.funcs[i]](...task.args[i]);
-                    }
-                    return res;
-                } catch (e) {
-                    if (e instanceof TypeError) {
+                var res = djvuDocument;
+                for (var i = 0; i < task.funcs.length; i++) {
+                    if (typeof res[task.funcs[i]] !== 'function') {
                         throw new IncorrectTaskDjVuError(task);
                     }
-                    throw e;
+                    res = await res[task.funcs[i]](...task.args[i]);
                 }
+                return res;
             }));
 
             //var time = Date.now();
@@ -93,7 +90,7 @@ export default function initWorker() {
 
         revokeObjectURL(obj) {
             URL.revokeObjectURL(obj.url);
-        }, 
+        },
 
         createDocumentUrl() {
             postMessage({

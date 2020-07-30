@@ -10,6 +10,8 @@ export default class DjViChunk extends CompositeChunk {
     }
 
     init() {
+        // In some cases there maybe only DJVI headers and nothing else (assets/polish_indirect/shared_anno.iff),
+        // so the innerChunk can remain null
         while (!this.bs.isEmpty()) {
             var id = this.bs.readStr4();
             var length = this.bs.getInt32();

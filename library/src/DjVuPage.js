@@ -184,7 +184,9 @@ export default class DjVuPage extends CompositeChunk {
             } else if (id === "INCL") {
                 chunk = this.incl = new INCLChunk(chunkBs);
                 var inclChunk = this.getINCLChunkCallback(this.incl.ref);
-                inclChunk.id === "Djbz" ? this.djbz = inclChunk : this.iffchunks.push(inclChunk);
+                if (inclChunk) { // it takes place in case of polish_indirect, where shared_anno.iff is empty
+                    inclChunk.id === "Djbz" ? this.djbz = inclChunk : this.iffchunks.push(inclChunk);
+                }
                 this.dependencies.push(chunk.ref);
             } else if (id === "CIDa") {
                 try {
