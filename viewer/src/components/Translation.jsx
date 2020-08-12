@@ -1,13 +1,7 @@
 import React from 'react';
-import Russian from '../locales/Russian';
-import English from '../locales/English';
 import { useSelector } from "react-redux";
 import { get } from "../reducers";
-
-export const dictionaries = {
-    'en': English,
-    'ru': Russian,
-};
+import dictionaries from '../locales';
 
 export const TranslationContext = React.createContext(text => text);
 
@@ -31,10 +25,10 @@ const escapeRegExp = (string) => string.replace(escapingRegex, '\\$&');
 
 export function createTranslator(dict) {
     return (text, insertions = null) => {
-        const translatedText = dict[text] || English[text] || text;
+        const translatedText = dict[text] || dictionaries.en[text] || text;
 
-        if (!English[text]) {
-            console.warn(`The phrase \n ${text} \n isn't added to the English dictionary!`);
+        if (!dictionaries.en[text]) {
+            console.warn(`The phrase \n-------------\n ${text} \n-------------\n isn't added to the English dictionary!`);
         }
 
         if (!insertions) return translatedText;

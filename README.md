@@ -20,6 +20,10 @@ The library is only being developed and may be noticeably changed in the future.
 
 Библиотека DjVu.js находится в процессе разработки и может быть значительно изменена в будущем. Любое содействие в развитии библиотеки приветствуется :)
 
+## Translation (localization)
+
+If you want to add a new translation to the viewer [read here](TRANSLATION.md) how to do it.
+
 ## How to build it
 
 If you have Node.js (10.x or higher) installed, after you cloned the repository, run 
@@ -36,6 +40,16 @@ npm run make
 ```
 
 The command will clean all git-ignored files, install all the dependencies and build the library and the viewer. However, you should have `git` installed of course and the repository should have the `.git` folder (there is no one in the source code uploaded to the browser extensions websites).
+
+## How to start the viewer in the dev mode
+
+You have to build the library once. You can archive it via `npm run make`.
+Then you can start the viewer:
+
+```
+cd viewer
+npm start
+```
 
 ### How to pack the extension
 

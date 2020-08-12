@@ -13,6 +13,7 @@ import DjVu from '../DjVu';
 import PageDataManager from './PageDataManager';
 import { inExtension } from '../utils';
 import { loadFile } from '../utils';
+import dictionaries from "../locales";
 
 class RootSaga {
     constructor(dispatch) {
@@ -223,7 +224,9 @@ class RootSaga {
         yield* this.fetchPageTextIfRequired();
     }
 
-    * updateOptions() {
+    * updateOptions(action) {
+        if (action.notSave) return;
+
         const state = yield select();
         const options = get.options(state);
 
@@ -236,7 +239,7 @@ class RootSaga {
 
     * loadOptions() {
         try {
-            let options;
+            let options = {};
             if (inExtension) {
                 options = yield new Promise(resolve => window.chrome.storage.local.get('djvu_js_options', resolve));
                 options = options['djvu_js_options'];
@@ -244,11 +247,28 @@ class RootSaga {
                 options = localStorage.getItem('djvu_js_options');
             }
 
-            if (options) {
-                options = JSON.parse(options);
+            try {
+                options = options ? JSON.parse(options) : {};
+            } catch (e) {
+                options = {};
+            }
+
+            if (!options.locale) {
+                for (const code of navigator.languages) {
+                    const shortCode = code.slice(0, 2);
+                    if (shortCode in dictionaries) {
+                        options.locale = shortCode;
+                        console.log(options);
+                        break;
+                    }
+                }
+            }
+
+            if (Object.keys(options).length) {
                 yield put({
                     type: ActionTypes.UPDATE_OPTIONS,
                     payload: options,
+                    notSave: true,
                 })
             }
         } catch (e) { }

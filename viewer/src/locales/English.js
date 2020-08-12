@@ -13,6 +13,17 @@ export default {
 
     "Language": "Language", // not used now, but will be used in options afterwards
 
+    // Translation: tooltips and notification
+    // (to see the notification window, remove several phrases from any dictionary, except for the English one)
+    "Add more":
+        "Add more",
+    "The translation isn't complete.":
+        "The translation isn't complete.",
+    "The following phrases are not translated:":
+        "The following phrases are not translated:",
+    "You can improve the translation here":
+        "You can improve the translation here",
+
     // Initial screen
     "Click the #helpButton button to know more about the app":
         "Click the #helpButton button to know more about the app",
