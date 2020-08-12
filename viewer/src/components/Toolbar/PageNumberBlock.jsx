@@ -4,9 +4,10 @@ import { connect } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowAltCircleRight, faArrowAltCircleLeft } from '@fortawesome/free-regular-svg-icons';
 
-import Actions from '../actions/actions';
+import Actions from '../../actions/actions';
 import PageNumberElement from './PageNumber';
-import { get } from '../reducers/rootReducer';
+import { get } from '../../reducers/rootReducer';
+import { TranslationContext } from "../Translation";
 
 class PageNumberBlock extends React.Component {
 
@@ -14,6 +15,8 @@ class PageNumberBlock extends React.Component {
         pageNumber: PropTypes.number,
         pagesQuantity: PropTypes.number
     };
+
+    static contextType = TranslationContext;
 
     setNewPageNumber(number) {
         if (number >= 1 && number <= this.props.pagesQuantity) {
@@ -34,10 +37,12 @@ class PageNumberBlock extends React.Component {
     };
 
     render() {
+        const t = this.context;
+
         return (
             <div
                 className="page_number_block"
-                title="Click on the number to enter it manually!"
+                title={t("Click on the number to enter it manually")}
             >
                 <FontAwesomeIcon
                     icon={faArrowAltCircleLeft}

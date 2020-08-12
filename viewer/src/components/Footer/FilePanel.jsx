@@ -4,9 +4,10 @@ import { connect } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimesCircle } from '@fortawesome/free-regular-svg-icons';
 
-import Actions from '../actions/actions';
-import { get } from '../reducers/rootReducer';
-import FileBlock from './FileBlock';
+import Actions from '../../actions/actions';
+import { get } from '../../reducers/rootReducer';
+import FileBlock from '../FileBlock';
+import { TranslationContext } from '../Translation';
 
 class FilePanel extends React.Component {
 
@@ -15,11 +16,15 @@ class FilePanel extends React.Component {
         saveDocument: PropTypes.func.isRequired
     };
 
+    static contextType = TranslationContext;
+
     render() {
+        const t = this.context;
+
         return (
             <div className="file_panel">
                 {this.props.fileName ? (
-                    <span title="Close document">
+                    <span title={t("Close document")}>
                         <FontAwesomeIcon
                             className="control_button"
                             onClick={this.props.closeDocument}
@@ -32,9 +37,9 @@ class FilePanel extends React.Component {
                     <button
                         className="text_button"
                         onClick={this.props.saveDocument}
-                        title="Save document"
+                        title={t("Save document")}
                     >
-                        Save
+                        {t('Save')}
                     </button>
                 ) : null}
             </div>
@@ -45,6 +50,6 @@ class FilePanel extends React.Component {
 export default connect(state => ({
     fileName: get.fileName(state),
 }), {
-        saveDocument: Actions.saveDocumentAction,
-        closeDocument: Actions.closeDocumentAction
-    })(FilePanel);
+    saveDocument: Actions.saveDocumentAction,
+    closeDocument: Actions.closeDocumentAction
+})(FilePanel);

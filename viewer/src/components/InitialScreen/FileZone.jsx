@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import cx from 'classnames';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUpload } from '@fortawesome/free-solid-svg-icons';
-
+import { TranslationContext } from '../Translation';
 import Actions from '../../actions/actions';
 
 class FileZone extends React.Component {
@@ -12,6 +12,8 @@ class FileZone extends React.Component {
     static propTypes = {
         createNewDocument: PropTypes.func.isRequired
     };
+
+    static contextType = TranslationContext;
 
     state = {
         isDragOver: false
@@ -62,11 +64,13 @@ class FileZone extends React.Component {
             drag_over: this.state.isDragOver
         };
 
+        const t = this.context;
+
         return (
             <div
                 className={cx(classes)}
                 onClick={this.onClick}
-                title="Open another .djvu file!"
+                title={t("Open another .djvu file")}
                 onDragEnter={this.checkDrag}
                 onDragOver={this.checkDrag}
                 onDragLeave={this.onDragLeave}
@@ -76,7 +80,7 @@ class FileZone extends React.Component {
                     icon={faUpload}
                     className="file_icon"
                 />
-                <span> Drag & Drop a file here or click to choose manually!</span>
+                <span>{t('Drag & Drop a file here or click to choose manually')}</span>
                 <input
                     style={{ display: 'none' }}
                     type="file"

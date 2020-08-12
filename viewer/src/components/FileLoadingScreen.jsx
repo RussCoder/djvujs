@@ -1,41 +1,31 @@
 import React from 'react';
-import { connect } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 
 import { get } from '../reducers/rootReducer';
+import { useTranslation } from "./Translation";
 
-class FileLoadingScreen extends React.Component {
+const FileLoadingScreen = () => {
+    const loaded = useSelector(get.loadedBytes);
+    const total = useSelector(get.totalBytes);
+    const percentage = (loaded && total) ? Math.round(loaded / total * 100) : 0;
+    const t = useTranslation();
 
-    render() {
-        var { loaded, total } = this.props;
-
-        var percentage = 0;
-        if (loaded && total) {
-            percentage = Math.round(loaded / total * 100);
-        }
-
-        return (
-            <div className="file_loading_screen">
-                <div className="message">
-                    <FontAwesomeIcon
-                        icon={faSpinner}
-                        pulse={true}
-                    />
-                    <span> Loading...</span>
-                </div>
-                <div className="bytes" style={(loaded || total) ? null : { visibility: "hidden" }}>
-                    {Math.round(loaded / 1024).toLocaleString('ru-RU')} KB {total ? `/ ${Math.round(total / 1024).toLocaleString('ru-RU')} KB` : ''}
-                </div>
-                <div className="progress_bar" style={total ? null : { visibility: "hidden" }}>
-                    <div className="progress" style={{ width: percentage + "%" }} />
-                </div>
+    return (
+        <div className="file_loading_screen">
+            <div className="message">
+                <FontAwesomeIcon icon={faSpinner} pulse={true} />
+                <span> {t("Loading")}...</span>
             </div>
-        );
-    }
-}
+            <div className="bytes" style={(loaded || total) ? null : { visibility: "hidden" }}>
+                {Math.round(loaded / 1024).toLocaleString('ru-RU')} KB {total ? `/ ${Math.round(total / 1024).toLocaleString('ru-RU')} KB` : ''}
+            </div>
+            <div className="progress_bar" style={total ? null : { visibility: "hidden" }}>
+                <div className="progress" style={{ width: percentage + "%" }} />
+            </div>
+        </div>
+    );
+};
 
-export default connect(state => ({
-    loaded: get.loadedBytes(state),
-    total: get.totalBytes(state)
-}))(FileLoadingScreen);
+export default FileLoadingScreen;

@@ -3,24 +3,29 @@ import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 
 import { get } from '../reducers/rootReducer';
-import Toolbar from "./Toolbar";
+import Toolbar from "./Toolbar/Toolbar";
 import ImageBlock from "./ImageBlock";
 import InitialScreen from './InitialScreen/InitialScreen';
 import FileLoadingScreen from './FileLoadingScreen';
-import Footer from './Footer';
+import Footer from './Footer/Footer';
 import LeftPanel from './LeftPanel';
 import NotificationWindow from './NotificationWindow';
 import HelpWindow from './HelpWindow';
 import ErrorPage from './ErrorPage';
 import LoadingLayer from './LoadingLayer';
+import { TranslationProvider, useTranslation } from './Translation';
 
-const TextBlock = ({ text }) => (
-    <div className="text_block">
-        <pre className="text">
-            {text === null ? "Loading ..." : text || <em>No text provided</em>}
-        </pre>
-    </div>
-);
+const TextBlock = ({ text }) => {
+    const t = useTranslation();
+
+    return (
+        <div className="text_block">
+            <pre className="text">
+                {text === null ? t("Loading") + "..." : text || <em>{t("No text provided")}</em>}
+            </pre>
+        </div>
+    );
+};
 
 class App extends Component {
     static propTypes = {
@@ -32,30 +37,35 @@ class App extends Component {
         const fullPageViewClass = this.props.isFullPageView ? " full_page_view" : "";
 
         return (
-            <div className={"djvu_js_viewer" + fullPageViewClass}>
-                {this.props.isFileLoading ?
-                    <FileLoadingScreen /> :
+            <TranslationProvider>
+                <div className={"djvu_js_viewer" + fullPageViewClass}>
+                    {this.props.isFileLoading ?
+                        <FileLoadingScreen /> :
 
-                    !this.props.isFileLoaded ? <InitialScreen /> :
-                        <React.Fragment>
-                            <div className="central_block">
-                                <LeftPanel />
-                                <div className="page_zone">
-                                    {this.props.pageError ? <ErrorPage pageNumber={this.props.pageNumber} error={this.props.pageError} /> :
-                                        this.props.isContinuousScrollMode ? <ImageBlock /> :
-                                            this.props.isTextMode ? <TextBlock text={this.props.pageText} /> :
-                                                this.props.imageData ? <ImageBlock /> : null}
-                                    {(this.props.isLoading && !this.props.isTextMode && !this.props.isContinuousScrollMode) ? <LoadingLayer /> : null}
+                        !this.props.isFileLoaded ? <InitialScreen /> :
+                            <React.Fragment>
+                                <div className="central_block">
+                                    <LeftPanel />
+                                    <div className="page_zone">
+                                        {this.props.pageError ? <ErrorPage pageNumber={this.props.pageNumber}
+                                                                           error={this.props.pageError} /> :
+                                            this.props.isContinuousScrollMode ? <ImageBlock /> :
+                                                this.props.isTextMode ? <TextBlock text={this.props.pageText} /> :
+                                                    this.props.imageData ? <ImageBlock /> : null}
+                                        {(this.props.isLoading && !this.props.isTextMode && !this.props.isContinuousScrollMode) ?
+                                            <LoadingLayer /> : null}
+                                    </div>
                                 </div>
-                            </div>
-                            <Toolbar />
-                        </React.Fragment>
-                }
-                {this.props.isFileLoading ? null : <Footer />}
+                                <Toolbar />
+                            </React.Fragment>
+                    }
+                    {this.props.isFileLoading ? null : <Footer />}
 
-                <NotificationWindow header={this.props.errorHeader} message={this.props.errorMessage} type={"error"} />
-                <HelpWindow />
-            </div>
+                    <NotificationWindow header={this.props.errorHeader} message={this.props.errorMessage}
+                                        type={"error"} />
+                    <HelpWindow />
+                </div>
+            </TranslationProvider>
         );
     }
 }

@@ -1,10 +1,11 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import Actions from '../actions/actions';
+import Actions from '../../actions/actions';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faMinus } from '@fortawesome/free-solid-svg-icons';
-import { get } from '../reducers/rootReducer';
+import { get } from '../../reducers/rootReducer';
+import { TranslationContext } from "../Translation";
 
 class ScaleGizmo extends React.Component {
 
@@ -17,6 +18,8 @@ class ScaleGizmo extends React.Component {
         scale: PropTypes.number.isRequired,
         setUserScale: PropTypes.func.isRequired
     };
+
+    static contextType = TranslationContext;
 
     increaseScale = (e) => {
         e.preventDefault();
@@ -55,10 +58,12 @@ class ScaleGizmo extends React.Component {
 
     render() {
         const currentValue = Math.round(this.props.scale * 100);
+        const t = this.context;
+
         return (
             <div
                 className="scale_gizmo"
-                title="You also can scale the image via Ctrl+MouseWheel"
+                title={t("You also can scale the page via Ctrl+MouseWheel")}
             >
                 <FontAwesomeIcon
                     icon={faMinus}
@@ -88,8 +93,6 @@ export default connect(state => {
     return {
         scale: get.userScale(state),
     };
-},
-    {
-        setUserScale: Actions.setUserScaleAction
-    }
-)(ScaleGizmo);
+}, {
+    setUserScale: Actions.setUserScaleAction
+})(ScaleGizmo);

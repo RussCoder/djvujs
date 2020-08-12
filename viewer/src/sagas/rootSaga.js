@@ -247,7 +247,7 @@ class RootSaga {
             if (options) {
                 options = JSON.parse(options);
                 yield put({
-                    type: Consts.UPDATE_OPTIONS_ACTION,
+                    type: ActionTypes.UPDATE_OPTIONS,
                     payload: options,
                 })
             }
@@ -308,7 +308,7 @@ class RootSaga {
         yield takeLatest(Consts.ENABLE_CONTINUOUS_SCROLL_MODE_ACTION, this.withErrorHandler(this.switchToContinuosScrollMode));
         yield takeLatest(Consts.ENABLE_SINGLE_PAGE_MODE_ACTION, this.withErrorHandler(this.switchToSinglePageMode));
         yield takeLatest(Consts.ENABLE_TEXT_MODE_ACTION, this.withErrorHandler(this.switchToTextMode));
-        yield takeLatest(Consts.UPDATE_OPTIONS_ACTION, this.withErrorHandler(this.updateOptions));
+        yield takeLatest(ActionTypes.UPDATE_OPTIONS, this.withErrorHandler(this.updateOptions));
         yield takeLatest(ActionTypes.CONFIGURE, this.withErrorHandler(this.configure));
         yield takeLatest(ActionTypes.LOAD_DOCUMENT_BY_URL, this.loadDocumentByUrl.bind(this));
 

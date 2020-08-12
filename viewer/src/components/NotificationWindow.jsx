@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 
 import ModalWindow from './ModalWindow';
 import Actions from '../actions/actions';
+import { TranslationContext } from "./Translation";
 
 class NotificationWindow extends React.Component {
 
@@ -14,6 +15,8 @@ class NotificationWindow extends React.Component {
         closeNotificationWindow: PropTypes.func.isRequired
     };
 
+    static contextType = TranslationContext;
+
     render() {
         const { header, message, closeNotificationWindow } = this.props;
 
@@ -21,12 +24,13 @@ class NotificationWindow extends React.Component {
             return null;
         }
         const isError = this.props.type === 'error';
+        const t = this.context;
 
         return (
             <ModalWindow isError={isError} onClose={closeNotificationWindow}>
                 <div className="notification_window">
                     <div className="header">
-                        {isError ? "Error: " + header : header}
+                        {isError ? t("Error") + ": " + header : header}
                     </div>
                     <div className="body">{message}</div>
                 </div>

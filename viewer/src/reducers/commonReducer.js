@@ -1,5 +1,6 @@
 import { createGetObjectByState } from '../utils';
 import Consts from '../constants/consts';
+import { ActionTypes } from "../constants";
 
 const initialState = Object.freeze({
     fileName: null,
@@ -17,6 +18,8 @@ const initialState = Object.freeze({
     isIndirect: false,
     options: {
         interceptHttpRequests: false,
+        analyzeHeaders: false,
+        locale: 'en',
     },
 });
 
@@ -24,8 +27,8 @@ export default (state = initialState, action) => {
     const payload = action.payload;
     switch (action.type) {
 
-        case Consts.UPDATE_OPTIONS_ACTION:
-            return { ...state, options: payload };
+        case ActionTypes.UPDATE_OPTIONS:
+            return { ...state, options: { ...state.options, ...payload } };
 
         case Consts.ENABLE_CONTINUOUS_SCROLL_MODE_ACTION:
             return { ...state, isContinuousScrollMode: true, isTextMode: false };

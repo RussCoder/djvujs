@@ -1,11 +1,14 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { TranslationContext } from "./Translation";
 
 export default class ErrorPage extends React.Component {
     static propTypes = {
         error: PropTypes.object.isRequired,
         pageNumber: PropTypes.number.isRequired,
     };
+
+    static contextType = TranslationContext;
 
     formErrorDetails() {
         return (
@@ -25,14 +28,16 @@ export default class ErrorPage extends React.Component {
     }
 
     render() {
+        const t = this.context;
+
         return (
             <div className="error_page">
-                <div className="header">{`Error on Page №${this.props.pageNumber}`}</div>
+                <div className="header">{`${t("Error on page")} №${this.props.pageNumber}`}</div>
                 <div className="body">
-                    <div className="message">Error details: </div>                
-                        {this.formErrorDetails()}  
+                    <div className="message">{t("Error details")}:</div>
+                    {this.formErrorDetails()}
                 </div>
             </div>
-        )
+        );
     }
 }

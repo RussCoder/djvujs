@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUpload } from '@fortawesome/free-solid-svg-icons';
 
 import Actions from '../actions/actions';
+import { TranslationContext } from './Translation';
 
 class FileBlock extends React.Component {
 
@@ -12,6 +13,8 @@ class FileBlock extends React.Component {
         fileName: PropTypes.string,
         createNewDocument: PropTypes.func.isRequired
     };
+
+    static contextType = TranslationContext;
 
     onChange = (e) => {
         if (!e.target.files.length) {
@@ -31,17 +34,19 @@ class FileBlock extends React.Component {
     };
 
     render() {
+        const t = this.context;
+
         return (
             <div
                 className="file_block"
                 onClick={this.onClick}
-                title="Open another .djvu file!"
+                title={t("Open another .djvu file")}
             >
                 <FontAwesomeIcon
                     icon={faUpload}
                     className="file_icon"
                 />
-                <span className="file_name">{this.props.fileName || "Choose a file"}</span>
+                <span className="file_name">{this.props.fileName || t("Choose a file")}</span>
                 <input
                     style={{ display: 'none' }}
                     type="file"
@@ -54,8 +59,6 @@ class FileBlock extends React.Component {
     }
 }
 
-export default connect(null,
-    {
-        createNewDocument: Actions.createDocumentFromArrayBufferAction,
-    }
-)(FileBlock);
+export default connect(null, {
+    createNewDocument: Actions.createDocumentFromArrayBufferAction,
+})(FileBlock);

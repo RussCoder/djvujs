@@ -6,11 +6,12 @@
     height: 100%;
     overflow: auto;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
 
     .content {
         max-height: 100%;
+        margin: auto;
 
         .central {
             margin-bottom: 2em;
@@ -47,7 +48,7 @@
                     flex: 0 0 auto;
                     cursor: pointer;
                     display: inline-block;
-                    margin-right: 1em; 
+                    margin-right: 1em;
                     outline: none;
                 }
             }

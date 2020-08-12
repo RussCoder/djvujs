@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 
 import Actions from '../actions/actions';
 import TreeItem from './TreeItem';
+import { TranslationContext } from "./Translation";
 
 class ContentsPanel extends React.Component {
 
@@ -11,6 +12,8 @@ class ContentsPanel extends React.Component {
         contents: PropTypes.array,
         setPageByUrl: PropTypes.func.isRequired
     };
+
+    static contextType = TranslationContext;
 
     onTreeItemClick = (url) => {
         this.props.setPageByUrl(url);
@@ -31,14 +34,16 @@ class ContentsPanel extends React.Component {
 
     render() {
         const contents = this.props.contents;
+        const t = this.context;
+
         return (
             <div className="contents_panel">
-                <div className="header">Contents</div>
+                <div className="header">{t("Contents")}</div>
                 {contents && contents.map((bookmark, i) => {
                     return <TreeItem key={i} {...this.makeTreeItemDataByBookmark(bookmark)} />
                 })}
                 {contents ? null :
-                    <div className="no_contents_message">No contents provided</div>
+                    <div className="no_contents_message">{t("No contents provided")}</div>
                 }
             </div>
         );

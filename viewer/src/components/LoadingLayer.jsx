@@ -1,8 +1,11 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { TranslationContext } from "./Translation";
 
 export default class LoadingLayer extends React.Component {
+    static contextType = TranslationContext;
+
     constructor(props) {
         super(props);
         this.showTimeout = null;
@@ -21,6 +24,8 @@ export default class LoadingLayer extends React.Component {
     }
 
     render() {
+        const t = this.context;
+
         return (
             <div
                 className="loading_layer"
@@ -33,7 +38,7 @@ export default class LoadingLayer extends React.Component {
                         icon={faSpinner}
                         pulse={true}
                     />
-                    <span className="message">Loading...</span>
+                    <span className="message">{t("Loading")}...</span>
                 </div>
             </div>
         );

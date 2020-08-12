@@ -3,6 +3,7 @@ import React from 'react';
 import styled from 'styled-components';
 import { useDispatch } from 'react-redux';
 import { ActionTypes } from '../../constants';
+import { useTranslation } from "../Translation";
 
 const LinkBlockRoot = styled.form`
     max-width: 20em;
@@ -33,6 +34,7 @@ const LinkBlockRoot = styled.form`
 const LinkBlock = () => {
     const [url, setUrl] = React.useState('');
     const dispatch = useDispatch();
+    const t = useTranslation();
 
     return (
         <LinkBlockRoot onSubmit={(e) => {
@@ -43,17 +45,17 @@ const LinkBlock = () => {
                     url: url,
                 });
             } else {
-                alert('Enter a valid URL to a djvu into the field');
+                alert(t('Enter a valid URL to a djvu into the field'));
             }
         }}>
             <input
                 value={url}
-                placeholder="Paste a URL to a djvu file here"
+                placeholder={t("Paste a URL to a djvu file here")}
                 onChange={e => setUrl(e.target.value)}
             />
-            <button type="submit">Open URL</button>
+            <button type="submit">{t("Open URL")}</button>
         </LinkBlockRoot>
     );
-}
+};
 
 export default LinkBlock;
