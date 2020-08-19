@@ -5,7 +5,7 @@ var DjVu = (function () {
     'use strict;'
 
     var DjVu = {
-        VERSION: '0.4.2',
+        VERSION: '0.4.3',
         IS_DEBUG: false,
         setDebugMode: (flag) => DjVu.IS_DEBUG = flag
     };
@@ -13378,7 +13378,9 @@ var DjVu = (function () {
                 } else if (id === "INCL") {
                     chunk = this.incl = new INCLChunk(chunkBs);
                     var inclChunk = this.getINCLChunkCallback(this.incl.ref);
-                    inclChunk.id === "Djbz" ? this.djbz = inclChunk : this.iffchunks.push(inclChunk);
+                    if (inclChunk) {
+                        inclChunk.id === "Djbz" ? this.djbz = inclChunk : this.iffchunks.push(inclChunk);
+                    }
                     this.dependencies.push(chunk.ref);
                 } else if (id === "CIDa") {
                     try {
@@ -15220,6 +15222,7 @@ var DjVu = (function () {
                 var obj = oEvent.data;
                 await handlers[obj.command](obj);
             } catch (error) {
+                console.error(error);
                 var errorObj = error instanceof DjVuError ? error : {
                     code: DjVuErrorCodes.UNEXPECTED_ERROR,
                     name: error.name,
@@ -15254,18 +15257,14 @@ var DjVu = (function () {
         var handlers = {
             async run(obj) {
                 const results = await Promise.all(obj.data.map(async task => {
-                    try {
-                        var res = djvuDocument;
-                        for(var i = 0; i < task.funcs.length; i++) {
-                            res = await res[task.funcs[i]](...task.args[i]);
-                        }
-                        return res;
-                    } catch (e) {
-                        if (e instanceof TypeError) {
+                    var res = djvuDocument;
+                    for (var i = 0; i < task.funcs.length; i++) {
+                        if (typeof res[task.funcs[i]] !== 'function') {
                             throw new IncorrectTaskDjVuError(task);
                         }
-                        throw e;
+                        res = await res[task.funcs[i]](...task.args[i]);
                     }
+                    return res;
                 }));
                 var transferList = [];
                 var processedResults = results.map(result => processValueBeforeTransfer(result, transferList));
