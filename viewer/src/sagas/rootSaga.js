@@ -1,7 +1,7 @@
 /**
  * All side-effect logic is here (all logic which isn't related directly to the UI)
  */
-
+import contentDisposition from 'content-disposition';
 import { put, select, takeLatest } from 'redux-saga/effects';
 import { get } from '../reducers/rootReducer';
 // import { delay } from 'redux-saga';
@@ -296,9 +296,20 @@ class RootSaga {
             url = a.href; // converting of a relative url to an absolute one
             yield put(Actions.startFileLoadingAction());
 
-            const { response: buffer, responseURL } = yield loadFile(url, (e) => {
+            const xhr = yield loadFile(url, (e) => {
                 this.dispatch(Actions.fileLoadingProgressAction(e.loaded, e.total));
             });
+            const { response: buffer, responseURL } = xhr;
+
+            // Try to get file name from Content-Disposition header if it's there
+            const cdHeader = xhr.getResponseHeader('Content-Disposition');
+            if (cdHeader) {
+                const parsedCd = contentDisposition.parse(cdHeader);
+                if (parsedCd.parameters.filename) {
+                    config.name = parsedCd.parameters.filename;
+                }
+            }
+
             // responseUrl is the URL after all redirects
             config.djvuOptions = { baseUrl: new URL('./', responseURL).href };
             yield* this.createDocumentFromArrayBuffer({
