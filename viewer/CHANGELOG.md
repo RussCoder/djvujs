@@ -1,5 +1,9 @@
 # DjVu.js Viewer Changelog
 
+## v.0.4.0 (19.08.2020)
+- Multi-Language support.
+- Russian and English languages.
+
 ## v.0.3.6 (27.07.2020)
 - An ability to load a file by URL manually in the extension. 
 - An extension option to analyze http headers to detect djvu files.

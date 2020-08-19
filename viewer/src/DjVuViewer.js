@@ -8,6 +8,7 @@ import EventEmitter from 'eventemitter3';
 import Consts, { constant } from './constants/consts';
 import { get } from './reducers';
 import { ActionTypes } from './constants/index.js';
+import dictionaries from './locales';
 
 const Events = constant({
     PAGE_NUMBER_CHANGED: null,
@@ -17,13 +18,21 @@ const Events = constant({
 
 export default class DjVuViewer extends EventEmitter {
 
-    static VERSION = '0.3.6';
+    static VERSION = '0.4.0';
 
     static Events = Events;
 
-    constructor() {
+    static getAvailableLanguages() {
+        return Object.keys(dictionaries);
+    };
+
+    constructor({ language = null } = {}) {
         super();
         this.store = configureStore(this.eventMiddleware);
+
+        if (language) {
+            this.configure({ language: language });
+        }
 
         if (process.env.NODE_ENV === 'development') {
             if (module.hot) {
@@ -87,10 +96,10 @@ export default class DjVuViewer extends EventEmitter {
         );
     }
 
-    configure({ pageNumber, pageRotation, pageScale } = {}) {
+    configure({ pageNumber, pageRotation, pageScale, language } = {}) {
         this.store.dispatch({
             type: ActionTypes.CONFIGURE,
-            pageNumber, pageRotation, pageScale
+            pageNumber, pageRotation, pageScale, language
         });
 
         return this;

@@ -105,10 +105,15 @@ class RootSaga {
         yield put(Actions.pagesSizesAreGottenAction(pagesSizes));
     }
 
-    * configure({ pageNumber, pageRotation, pageScale }) {
+    * configure({ pageNumber, pageRotation, pageScale, language }) {
         if (pageNumber) yield put(Actions.setNewPageNumberAction(pageNumber, true));
         if (pageRotation) yield put(Actions.setPageRotationAction(pageRotation));
         if (pageScale) yield put(Actions.setUserScaleAction(pageScale));
+        if (language && (language in dictionaries)) yield put({
+            type: ActionTypes.UPDATE_OPTIONS,
+            payload: { locale: language },
+            notSave: true,
+        });
     }
 
     * createDocumentFromArrayBuffer({ arrayBuffer, fileName, config }) {
@@ -258,7 +263,6 @@ class RootSaga {
                     const shortCode = code.slice(0, 2);
                     if (shortCode in dictionaries) {
                         options.locale = shortCode;
-                        console.log(options);
                         break;
                     }
                 }
@@ -269,7 +273,7 @@ class RootSaga {
                     type: ActionTypes.UPDATE_OPTIONS,
                     payload: options,
                     notSave: true,
-                })
+                });
             }
         } catch (e) { }
     }
