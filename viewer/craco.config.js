@@ -1,13 +1,12 @@
 /**
  * Overriding standard build config of Create React App (react-scripts).
- * 
+ *
  * See https://github.com/gsoft-inc/craco/blob/master/packages/craco/README.md#configuration-overview
  */
 
 'use strict';
 
-const resolve = require('path').resolve
-const send = require('send')
+const resolve = require('path').resolve;
 const contentDisposition = require('content-disposition');
 
 module.exports = {
@@ -19,12 +18,12 @@ module.exports = {
             ...array,
             '../library/assets',
         ];
-        
+
         //config.watchContentBase = true;
 
         // Ensure proper "404 Not Found" responses for invalid URLs without fallback to index page
         config.historyApiFallback = false;
-        
+
         // Serve djvu files with specific headers at /djvufile URL. Pass options as query arguments.
         // Available options:
         // fname : file name you want to get (set as filename part of Content-Disposition header).
@@ -33,16 +32,14 @@ module.exports = {
         // Example:
         //  http://localhost:3000/djvufile?fname=FileNameAsIWantItBack.djvu&type=attachment
         //
-        config.before = function(app /*, server, compiler*/) {
-            app.get('/djvufile', function(req, res) {
+        config.before = function (app /*, server, compiler*/) {
+            app.get('/djvufile', function (req, res) {
                 const contentDispositionType = req.query.cd || 'inline';
                 let filename = req.query.fname || 'TheMap.djvu';
                 const cdHeader = contentDisposition(filename, { type: contentDispositionType });
                 res.setHeader('Content-Disposition', cdHeader);
-                
-                const pathToDjVuFile = resolve('../library/assets/carte.djvu');
-                const stream = send(req, pathToDjVuFile, {})
-                stream.pipe(res);
+
+                res.sendFile(resolve('../library/assets/carte.djvu'));
             });
         };
 

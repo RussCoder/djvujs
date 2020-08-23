@@ -1,5 +1,10 @@
 # DjVu.js Viewer Changelog
 
+## v.0.4.1 (23.08.2020)
+- Swedish translation.
+- File name is extracted from the Content-Disposition header, if it's present.
+- Russian translation was corrected.
+
 ## v.0.4.0 (19.08.2020)
 - Multi-Language support.
 - Russian and English languages.

@@ -93,7 +93,7 @@ export default {
     "save the document":
         "сохранить документ",
     "go to the previous page":
-        "перейти к прейти к предыдущей странице",
+        "прейти к предыдущей странице",
     "go to the next page":
         "перейти к следующей странице",
     "Controls":
