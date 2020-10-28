@@ -1,13 +1,19 @@
 import IWDecoder from './IWDecoder';
-import { Pixelmap } from './IWStructures';
+import { LazyPixelmap, Pixelmap } from './IWStructures';
 import DjVu from '../DjVu';
 
 export default class IWImage {
     constructor() {
-        this.ycodec = new IWDecoder();
-        this.cslice = 0; // current slice
         this.info = null;
         this.pixelmap = null;
+        this.resetCodecs();
+    }
+
+    resetCodecs() {
+        this.ycodec = new IWDecoder();
+        this.crcodec = this.crcodec ? new IWDecoder() : null;
+        this.cbcodec = this.cbcodec ? new IWDecoder() : null;
+        this.cslice = 0; // current slice
     }
 
     decodeChunk(zp, header) {
@@ -40,10 +46,15 @@ export default class IWImage {
 
         var pixelMapTime = performance.now();
 
-        this.pixelmap = new Pixelmap(ybitmap, cbbitmap, crbitmap);
+        this.pixelmap = new LazyPixelmap(ybitmap, cbbitmap, crbitmap);
 
         DjVu.IS_DEBUG && console.log('Pixelmap constructor time = ', performance.now() - pixelMapTime);
         DjVu.IS_DEBUG && console.log('IWImage.createPixelmap time = ', performance.now() - time);
+
+        // do it just to release RAM retained by IWBlocks
+        // In practice, this function is never called twice without full reset of the page.
+        // So technically we could just remove codecs (without create new objects)
+        this.resetCodecs();
     }
 
     /**
@@ -51,9 +62,7 @@ export default class IWImage {
      */
     getImage() {
         const time = performance.now();
-        if (!this.pixelmap) {
-            this.createPixelmap();
-        }
+        if (!this.pixelmap) this.createPixelmap();
 
         const width = this.info.width;
         const height = this.info.height;

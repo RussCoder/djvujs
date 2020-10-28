@@ -256,8 +256,20 @@ export default class DjVuPage extends CompositeChunk {
     }
 
     getImageData(rotate = true) {
-        var image = this._getImageData();
-        return rotate ? this.rotateIfRequired(image) : image;
+        const image = this._getImageData();
+        const rotatedImage = rotate ? this.rotateIfRequired(image) : image;
+
+        // In the decoding phase, each pixel is stored in 6 bytes in YCbCr 
+        // and converted to 4 bytes RGBA ImageData, that means that in this moment about
+        // (4 + 6) * width * height bytes of RAM are used.
+        // 10 000 000 pixels corresponds to about 95 MB of RAM. If more we should
+        // reset the page to free all the memory retained by YCbCr pixels.
+        // (however this very measure doesn't help reduce the peak memory usage)
+        if (image.width * image.height > 10000000) {
+            this.reset();
+        }
+
+        return rotatedImage;
     }
 
     /**
@@ -364,8 +376,8 @@ export default class DjVuPage extends CompositeChunk {
         return image;
     }
 
-    createImageFromMaskImageAndBackgroundPixelMap(maskImage, bgpixelmap, bgscale) {
-        var pixelArray = maskImage.data;
+    createImageFromMaskImageAndBackgroundPixelMap(coloredMaskImage, bgpixelmap, bgscale) {
+        var pixelArray = coloredMaskImage.data;
         //набираем изображение по пикселям
         var rowOffset = (this.info.height - 1) * this.info.width << 2;
         var width4 = this.info.width << 2;
@@ -383,7 +395,7 @@ export default class DjVuPage extends CompositeChunk {
             rowOffset -= width4;
         }
 
-        return maskImage;
+        return coloredMaskImage;
     }
 
     decodeForeground() {
@@ -397,6 +409,10 @@ export default class DjVuPage extends CompositeChunk {
         }
     }
 
+    /**
+     * Decoding of the only first chunk was an experimental feature.
+     * Now it's not used at all.
+     */
     decodeBackground(isOnlyFirstChunk = false) {
         if (this.isBackgroundCompletelyDecoded || this.isFirstBgChunkDecoded && isOnlyFirstChunk) {
             return;

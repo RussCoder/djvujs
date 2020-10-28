@@ -1,5 +1,10 @@
 # DjVu.js Library Changelog
 
+## v.0.4.4 (28.10.2020)
+
+- Significant reduction of memory consumption in IWDecoder (LazyBlock).
+- Automatic reset of temporary IW structures after the decoding phase, if the image is big.
+
 ## v.0.4.3 (30.07.2020)
 
 - Fixed a bug due to which an empty DJVI chunk caused an error.

@@ -17,7 +17,7 @@ rerunButton.onclick = rerun;
 document.querySelector('#redraw').onclick = redrawPage;
 
 var pageNumber = 1;
-var djvuUrl = 'assets/polish_indirect/index.djvu';
+var djvuUrl = 'assets/colorbook.djvu';
 var baseUrl = 'assets/polish_indirect/';
 
 document.querySelector('#next').onclick = () => {
@@ -157,10 +157,12 @@ async function redrawPage() {
     var time = performance.now();
     var page = await djvuDocument.getPage(pageNumber);
     var imageData = page.getImageData();
+    const dpi = page.getDpi();
+    //page.reset();
     //saveImage(imageData);
     Globals.drawImage(
         imageData,
-        page.getDpi() * 1
+        dpi * 4
     );
     //console.log(doc.pages[pageNumber].getText());
     time = performance.now() - time;

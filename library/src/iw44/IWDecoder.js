@@ -1,5 +1,5 @@
 import IWCodecBaseClass from './IWCodecBaseClass';
-import { LinearBytemap, Block } from './IWStructures';
+import { LinearBytemap, Block, LazyBlock } from './IWStructures';
 import DjVu from '../DjVu';
 
 export default class IWDecoder extends IWCodecBaseClass {
@@ -12,7 +12,7 @@ export default class IWDecoder extends IWCodecBaseClass {
         // инициализируем на первой порции данных
         this.info = imageinfo;
         var blockCount = Math.ceil(this.info.width / 32) * Math.ceil(this.info.height / 32);
-        this.blocks = Block.createBlockArray(blockCount);
+        this.blocks = LazyBlock.createBlockArray(blockCount);
     }
 
     decodeSlice(zp, imageinfo) {
@@ -41,7 +41,7 @@ export default class IWDecoder extends IWCodecBaseClass {
         var boff = 0;
         var step = this.quant_hi[this.curband];
         var indices = this.getBandBuckets(this.curband);
-        for (var i = indices.from; i <= indices.to; i++ , boff++) {
+        for (var i = indices.from; i <= indices.to; i++, boff++) {
             for (var j = 0; j < 16; j++) {
                 if (this.coeffstate[boff][j] & 2 /*ACTIVE*/) {
                     if (!this.curband) {
@@ -73,7 +73,7 @@ export default class IWDecoder extends IWCodecBaseClass {
         var indices = this.getBandBuckets(band);
         //проверка на 0 группу позже
         var step = this.quant_hi[this.curband];
-        for (var i = indices.from; i <= indices.to; i++ , boff++) {
+        for (var i = indices.from; i <= indices.to; i++, boff++) {
             if (this.bucketstate[boff] & 4/*NEW*/) {
                 var shift = 0;
                 if (this.bucketstate[boff] & 2/*ACTIVE*/) {
@@ -112,7 +112,7 @@ export default class IWDecoder extends IWCodecBaseClass {
         var indices = this.getBandBuckets(band);
         // смещение сегмента
         var boff = 0;
-        for (var i = indices.from; i <= indices.to; i++ , boff++) {
+        for (var i = indices.from; i <= indices.to; i++, boff++) {
             // проверка потенциального флага сегмента         
             if (!(this.bucketstate[boff] & 8/*UNK*/)) {
                 continue;
@@ -160,7 +160,7 @@ export default class IWDecoder extends IWCodecBaseClass {
         if (this.curband) {
             //смещение сегмента в массиве флагов
             var boff = 0;
-            for (var j = indices.from; j <= indices.to; j++ , boff++) {
+            for (var j = indices.from; j <= indices.to; j++, boff++) {
                 bstatetmp = 0;
                 for (var k = 0; k < 16; k++) {
                     if (block.getBucketCoef(j, k) === 0) {
@@ -199,6 +199,10 @@ export default class IWDecoder extends IWCodecBaseClass {
         var blockRows = Math.ceil(this.info.height / 32);
         var blockCols = Math.ceil(this.info.width / 32);
 
+        // (this.blocks[0] instanceof LazyBlock) && console.log('Memory usage ',
+        //     this.blocks[0].mm.retainedMemory / 1024 / 1024,
+        //     this.blocks[0].mm.usedMemory / 1024 / 1024);
+
         var bm = new LinearBytemap(fullWidth, fullHeight);
         for (var r = 0; r < blockRows; r++) {
             for (var c = 0; c < blockCols; c++) {
@@ -211,7 +215,7 @@ export default class IWDecoder extends IWCodecBaseClass {
                     var row = 16 * bits[1] + 8 * bits[3] + 4 * bits[5] + 2 * bits[7] + bits[9];
                     var col = 16 * bits[0] + 8 * bits[2] + 4 * bits[4] + 2 * bits[6] + bits[8];*/
                     // bitmap[this.zigzagRow[i] + 32 * r][this.zigzagCol[i] + 32 * c] = block.getCoef(i);
-                    bm.set(this.zigzagRow[i] + 32 * r, this.zigzagCol[i] + 32 * c, block.getCoef(i));
+                    bm.set(this.zigzagRow[i] + (r << 5), this.zigzagCol[i] + (c << 5), block.getCoef(i));
                 }
             }
         }
@@ -228,6 +232,12 @@ export default class IWDecoder extends IWCodecBaseClass {
     /**
      * Алгоритм для строк и для столбцов по сути один и тот же. Разница в том,
      * что индексы переставлены местами.
+     * 
+     * The variant when the algorithm is extracted as a separate function 
+     * and used both for columns with the bytemap object and for rows via a shim object 
+     * (which swaps i and j in all methods' of the Bytemap, even 
+     * an optimized version working with the inner array directly)
+     * works slower than the current variant. 
      */
     inverseWaveletTransform(bitmap) {
         var height = this.info.height;

@@ -8,9 +8,39 @@ function _normalize(val) {
     return val;
 }
 
+export class LazyPixelmap {
+    constructor(ybytemap, cbbytemap, crbytemap) {
+        this.width = ybytemap.width; // required as outer property
+        this.yArray = ybytemap.array;
+        this.cbArray = cbbytemap ? cbbytemap.array : null;
+        this.crArray = crbytemap ? crbytemap.array : null;
+        this.writePixel = cbbytemap ? this.writeColoredPixel : this.writeGrayScalePixel;
+    }
+
+    writeGrayScalePixel(index, pixelArray, pixelIndex) {
+        const value = 127 - _normalize(this.yArray[index]);
+        pixelArray[pixelIndex] = value;
+        pixelArray[pixelIndex | 1] = value;
+        pixelArray[pixelIndex | 2] = value;
+    }
+
+    writeColoredPixel(index, pixelArray, pixelIndex) {
+        const y = _normalize(this.yArray[index]);
+        const b = _normalize(this.cbArray[index]);
+        const r = _normalize(this.crArray[index]);
+
+        const t2 = r + (r >> 1);
+        const t3 = y + 128 - (b >> 2);
+
+        pixelArray[pixelIndex] = y + 128 + t2;
+        pixelArray[pixelIndex | 1] = t3 - (t2 >> 1);
+        pixelArray[pixelIndex | 2] = t3 + (b << 1);
+    }
+}
+
 export class Pixelmap {
     constructor(ybytemap, cbbytemap, crbytemap) {
-        this.width = ybytemap.width;
+        this.width = ybytemap.width; // required as outer property
 
         var length = ybytemap.array.length;
         this.r = new Uint8ClampedArray(length);
@@ -87,6 +117,11 @@ export class Pixelmap {
     // }
 }
 
+
+/**
+ * A square variant (extends Array and keep an array of rows)
+ * works about 15-20% slower (in case of inverse transform)
+ */
 export class LinearBytemap {
     constructor(width, height) {
         this.width = width;
@@ -110,6 +145,7 @@ export class LinearBytemap {
     }
 }
 
+/** Needed for IWImageWriter - should be replaced there with the LinearBytemap too */
 export class Bytemap extends Array {
     constructor(width, height) {
         super(height);
@@ -160,6 +196,71 @@ export class Block {
         var buffer = new ArrayBuffer(length << 11);  // выделяем память под все блоки
         for (var i = 0; i < length; i++) {
             blocks[i] = new Block(buffer, i << 11);
+        }
+        return blocks;
+    }
+}
+
+class BlockMemoryManager {
+    constructor() {
+        this.buffer = null;
+        this.offset = 0;
+        this.retainedMemory = 0;
+        this.usedMemory = 0;
+    }
+
+    ensureBuffer() {
+        if (!this.buffer || this.offset >= this.buffer.byteLength) {
+            this.buffer = new ArrayBuffer(10 << 20); // 10MB
+            this.offset = 0;
+            this.retainedMemory += this.buffer.byteLength;
+        }
+        return this.buffer;
+    }
+
+    allocateBucket() {
+        this.ensureBuffer();
+        const array = new Int16Array(this.buffer, this.offset, 16);
+        this.offset += 32;
+        this.usedMemory += 32;
+        return array;
+    }
+}
+
+export class LazyBlock {
+    constructor(memoryManager) {
+        this.buckets = new Array(64);
+        this.mm = memoryManager;
+    }
+
+    setBucketCoef(bucketNumber, index, value) {
+        if (!this.buckets[bucketNumber]) {
+            this.buckets[bucketNumber] = this.mm.allocateBucket();
+        }
+        this.buckets[bucketNumber][index] = value; // index from 0 to 15
+    }
+
+    getBucketCoef(bucketNumber, index) {
+        return this.buckets[bucketNumber] ? this.buckets[bucketNumber][index] : 0;
+    }
+
+    getCoef(n) {
+        return this.getBucketCoef(n >> 4, n & 15);
+    }
+
+    setCoef(n, val) {
+        return this.setBucketCoef(n >> 4, n & 15, val);
+    }
+
+    /**
+     * Функция создания массива блоков на основе одного буфера, более быстрого выделения памяти
+     * @returns {Array<LazyBlock>}
+     */
+    static createBlockArray(length) {
+        const mm = new BlockMemoryManager();
+        const blocks = new Array(length);
+        for (var i = 0; i < length; i++) {
+            blocks[i] = new LazyBlock(mm);
         }
         return blocks;
     }
