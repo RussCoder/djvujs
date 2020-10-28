@@ -5,7 +5,7 @@ var DjVu = (function () {
     'use strict;'
 
     var DjVu = {
-        VERSION: '0.4.3',
+        VERSION: '0.4.4',
         IS_DEBUG: false,
         setDebugMode: (flag) => DjVu.IS_DEBUG = flag
     };
@@ -1842,40 +1842,29 @@ var DjVu = (function () {
         }
         return val;
     }
-    class Pixelmap {
+    class LazyPixelmap {
         constructor(ybytemap, cbbytemap, crbytemap) {
             this.width = ybytemap.width;
-            var length = ybytemap.array.length;
-            this.r = new Uint8ClampedArray(length);
-            this.g = new Uint8ClampedArray(length);
-            this.b = new Uint8ClampedArray(length);
-            if (cbbytemap) {
-                this._constructColorfulPixelMap(ybytemap.array, cbbytemap.array, crbytemap.array);
-            } else {
-                this._constructGrayScalePixelMap(ybytemap.array);
-            }
+            this.yArray = ybytemap.array;
+            this.cbArray = cbbytemap ? cbbytemap.array : null;
+            this.crArray = crbytemap ? crbytemap.array : null;
+            this.writePixel = cbbytemap ? this.writeColoredPixel : this.writeGrayScalePixel;
         }
-        _constructGrayScalePixelMap(yArray) {
-            yArray.forEach((v, i) => {
-                this.r[i] = this.g[i] = this.b[i] = 127 - _normalize(v);
-            });
+        writeGrayScalePixel(index, pixelArray, pixelIndex) {
+            const value = 127 - _normalize(this.yArray[index]);
+            pixelArray[pixelIndex] = value;
+            pixelArray[pixelIndex | 1] = value;
+            pixelArray[pixelIndex | 2] = value;
         }
-        _constructColorfulPixelMap(yArray, cbArray, crArray) {
-            yArray.forEach((val, i) => {
-                const y = _normalize(val);
-                const b = _normalize(cbArray[i]);
-                const r = _normalize(crArray[i]);
-                const t2 = r + (r >> 1);
-                const t3 = y + 128 - (b >> 2);
-                this.r[i] = y + 128 + t2;
-                this.g[i] = t3 - (t2 >> 1);
-                this.b[i] = t3 + (b << 1);
-            });
-        }
-        writePixel(index, pixelArray, pixelIndex) {
-            pixelArray[pixelIndex] = this.r[index];
-            pixelArray[pixelIndex | 1] = this.g[index];
-            pixelArray[pixelIndex | 2] = this.b[index];
+        writeColoredPixel(index, pixelArray, pixelIndex) {
+            const y = _normalize(this.yArray[index]);
+            const b = _normalize(this.cbArray[index]);
+            const r = _normalize(this.crArray[index]);
+            const t2 = r + (r >> 1);
+            const t3 = y + 128 - (b >> 2);
+            pixelArray[pixelIndex] = y + 128 + t2;
+            pixelArray[pixelIndex | 1] = t3 - (t2 >> 1);
+            pixelArray[pixelIndex | 2] = t3 + (b << 1);
         }
     }
     class LinearBytemap {
@@ -1938,6 +1927,58 @@ var DjVu = (function () {
             return blocks;
         }
     }
+    class BlockMemoryManager {
+        constructor() {
+            this.buffer = null;
+            this.offset = 0;
+            this.retainedMemory = 0;
+            this.usedMemory = 0;
+        }
+        ensureBuffer() {
+            if (!this.buffer || this.offset >= this.buffer.byteLength) {
+                this.buffer = new ArrayBuffer(10 << 20);
+                this.offset = 0;
+                this.retainedMemory += this.buffer.byteLength;
+            }
+            return this.buffer;
+        }
+        allocateBucket() {
+            this.ensureBuffer();
+            const array = new Int16Array(this.buffer, this.offset, 16);
+            this.offset += 32;
+            this.usedMemory += 32;
+            return array;
+        }
+    }
+    class LazyBlock {
+        constructor(memoryManager) {
+            this.buckets = new Array(64);
+            this.mm = memoryManager;
+        }
+        setBucketCoef(bucketNumber, index, value) {
+            if (!this.buckets[bucketNumber]) {
+                this.buckets[bucketNumber] = this.mm.allocateBucket();
+            }
+            this.buckets[bucketNumber][index] = value;
+        }
+        getBucketCoef(bucketNumber, index) {
+            return this.buckets[bucketNumber] ? this.buckets[bucketNumber][index] : 0;
+        }
+        getCoef(n) {
+            return this.getBucketCoef(n >> 4, n & 15);
+        }
+        setCoef(n, val) {
+            return this.setBucketCoef(n >> 4, n & 15, val);
+        }
+        static createBlockArray(length) {
+            const mm = new BlockMemoryManager();
+            const blocks = new Array(length);
+            for (var i = 0; i < length; i++) {
+                blocks[i] = new LazyBlock(mm);
+            }
+            return blocks;
+        }
+    }
 
     class IWDecoder extends IWCodecBaseClass {
         constructor() {
@@ -1946,7 +1987,7 @@ var DjVu = (function () {
         init(imageinfo) {
             this.info = imageinfo;
             var blockCount = Math.ceil(this.info.width / 32) * Math.ceil(this.info.height / 32);
-            this.blocks = Block.createBlockArray(blockCount);
+            this.blocks = LazyBlock.createBlockArray(blockCount);
         }
         decodeSlice(zp, imageinfo) {
             if (!this.info) {
@@ -1969,7 +2010,7 @@ var DjVu = (function () {
             var boff = 0;
             var step = this.quant_hi[this.curband];
             var indices = this.getBandBuckets(this.curband);
-            for (var i = indices.from; i <= indices.to; i++ , boff++) {
+            for (var i = indices.from; i <= indices.to; i++, boff++) {
                 for (var j = 0; j < 16; j++) {
                     if (this.coeffstate[boff][j] & 2 ) {
                         if (!this.curband) {
@@ -1998,7 +2039,7 @@ var DjVu = (function () {
             var boff = 0;
             var indices = this.getBandBuckets(band);
             var step = this.quant_hi[this.curband];
-            for (var i = indices.from; i <= indices.to; i++ , boff++) {
+            for (var i = indices.from; i <= indices.to; i++, boff++) {
                 if (this.bucketstate[boff] & 4) {
                     var shift = 0;
                     if (this.bucketstate[boff] & 2) {
@@ -2033,7 +2074,7 @@ var DjVu = (function () {
         bucketDecodingPass(block, band) {
             var indices = this.getBandBuckets(band);
             var boff = 0;
-            for (var i = indices.from; i <= indices.to; i++ , boff++) {
+            for (var i = indices.from; i <= indices.to; i++, boff++) {
                 if (!(this.bucketstate[boff] & 8)) {
                     continue;
                 }
@@ -2075,7 +2116,7 @@ var DjVu = (function () {
             var indices = this.getBandBuckets(this.curband);
             if (this.curband) {
                 var boff = 0;
-                for (var j = indices.from; j <= indices.to; j++ , boff++) {
+                for (var j = indices.from; j <= indices.to; j++, boff++) {
                     bstatetmp = 0;
                     for (var k = 0; k < 16; k++) {
                         if (block.getBucketCoef(j, k) === 0) {
@@ -2114,7 +2155,7 @@ var DjVu = (function () {
                 for (var c = 0; c < blockCols; c++) {
                     var block = this.blocks[r * blockCols + c];
                     for (var i = 0; i < 1024; i++) {
-                        bm.set(this.zigzagRow[i] + 32 * r, this.zigzagCol[i] + 32 * c, block.getCoef(i));
+                        bm.set(this.zigzagRow[i] + (r << 5), this.zigzagCol[i] + (c << 5), block.getCoef(i));
                     }
                 }
             }
@@ -2219,10 +2260,15 @@ var DjVu = (function () {
 
     class IWImage {
         constructor() {
-            this.ycodec = new IWDecoder();
-            this.cslice = 0;
             this.info = null;
             this.pixelmap = null;
+            this.resetCodecs();
+        }
+        resetCodecs() {
+            this.ycodec = new IWDecoder();
+            this.crcodec = this.crcodec ? new IWDecoder() : null;
+            this.cbcodec = this.cbcodec ? new IWDecoder() : null;
+            this.cslice = 0;
         }
         decodeChunk(zp, header) {
             if (!this.info) {
@@ -2249,15 +2295,14 @@ var DjVu = (function () {
             var cbbitmap = this.cbcodec ? this.cbcodec.getBytemap() : null;
             var crbitmap = this.crcodec ? this.crcodec.getBytemap() : null;
             var pixelMapTime = performance.now();
-            this.pixelmap = new Pixelmap(ybitmap, cbbitmap, crbitmap);
+            this.pixelmap = new LazyPixelmap(ybitmap, cbbitmap, crbitmap);
             DjVu.IS_DEBUG && console.log('Pixelmap constructor time = ', performance.now() - pixelMapTime);
             DjVu.IS_DEBUG && console.log('IWImage.createPixelmap time = ', performance.now() - time);
+            this.resetCodecs();
         }
         getImage() {
             const time = performance.now();
-            if (!this.pixelmap) {
-                this.createPixelmap();
-            }
+            if (!this.pixelmap) this.createPixelmap();
             const width = this.info.width;
             const height = this.info.height;
             const image = new ImageData(width, height);
@@ -13442,8 +13487,12 @@ var DjVu = (function () {
             return imageData;
         }
         getImageData(rotate = true) {
-            var image = this._getImageData();
-            return rotate ? this.rotateIfRequired(image) : image;
+            const image = this._getImageData();
+            const rotatedImage = rotate ? this.rotateIfRequired(image) : image;
+            if (image.width * image.height > 10000000) {
+                this.reset();
+            }
+            return rotatedImage;
         }
         _getImageData() {
             this.decode();
@@ -13529,8 +13578,8 @@ var DjVu = (function () {
             }
             return image;
         }
-        createImageFromMaskImageAndBackgroundPixelMap(maskImage, bgpixelmap, bgscale) {
-            var pixelArray = maskImage.data;
+        createImageFromMaskImageAndBackgroundPixelMap(coloredMaskImage, bgpixelmap, bgscale) {
+            var pixelArray = coloredMaskImage.data;
             var rowOffset = (this.info.height - 1) * this.info.width << 2;
             var width4 = this.info.width << 2;
             for (var i = 0; i < this.info.height; i++) {
@@ -13546,7 +13595,7 @@ var DjVu = (function () {
                 }
                 rowOffset -= width4;
             }
-            return maskImage;
+            return coloredMaskImage;
         }
         decodeForeground() {
             if (this.fg44) {

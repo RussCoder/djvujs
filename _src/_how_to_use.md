@@ -61,7 +61,9 @@ serve -p 5000
 
 in order to start the local server (you may change the port as you wish). Then just open [http://localhost:5000/](http://localhost:5000/) and you will see the viewer.
 
-Furthermore, the viewer has a program API, which allows to open djvu files programmatically:
+## Programmatic API
+
+Furthermore, the viewer has an API, which allows to open djvu files programmatically:
 
 - `loadDocument(buffer, name = "***", config = null)` - accepts the `ArrayBuffer` and a name of a document which should be shown at footer (it's optional).
 - `async loadDocumentByUrl(url, config = null)` - loads the documents as an `ArrayBuffer` and then invokes the previous method.
@@ -77,6 +79,7 @@ The `config` is an object containing options for the viewer. It's an optional pa
     pageNumber: 10,
     pageRotation: 90,
     pageScale: 2,
+    language: 'ru',
     djvuOptions: {
         baseUrl: "/url/to/directory/with/indirect/djvu/"
     }
@@ -87,18 +90,26 @@ The `config` is an object containing options for the viewer. It's an optional pa
   total number of pages in a document, then the last page number will be used.
 - `pageRotation` - the rotation of a page, it can be 0, 90, 180, 270.
 - `pageScale` - the scale of a page, it is a number from 0.1 to 6 (~ 10% to 600%). Numbers less/greater than the limits are replaced by the limits themselves, to wit, 8 will be treated as 6, and 0.001 as 0.1, 0 will be ignored at all and the default scale value (which is 1) will be used.  
-- `djvuOptions` - an object which is passed to the library. Now there is only one option - the base url, which is the url to a directory which contains the files of an indirect djvu. For bundled djvu this parameter is not required. The base url is extracted automatically from a url to the index.djvu, when the `loadDocumentByUrl` is called, but in case of `loadDocument` method, this parameter should be provided manually.
+- `language` - 2-character language code like `ru`, `en`, `sv` etc.
+Use `DjVu.Viewer.getAvailableLanguages()`to get the full list of languages which can be used.
+Note, you also can [add your own language](https://github.com/RussCoder/djvujs/blob/master/TRANSLATION.md).
+- `djvuOptions` - an object which is passed to the library. Now there is only one option - the base url, which is the url to the directory containing the files of an indirect djvu. For bundled djvu this parameter is not required. The base url is extracted automatically from a url to the index.djvu, when the `loadDocumentByUrl` is called, but in case of `loadDocument` method, this parameter should be provided manually.
 
-Also there are `DjVu.Viewer.Events`:
+There are several static methods and properties:
 
-- `PAGE_NUMBER_CHANGED` - fired when the number of a currently opened page is changed. The event handler receives no arguments.
+- `DjVu.Viewer.VERSION` - the current version of the viewer.
+- `DjVu.Viewer.getAvailableLanguages()` - a method to get the list of languages added to the viewer.
+- `DjVu.Viewer.Events` - an object containing events which are fired by the viewer (see further examples):
+  - `PAGE_NUMBER_CHANGED` - fired when the number of a currently opened page is changed. The event handler receives no arguments.
 
-Thus, to load a document programmatically you can do the following:
+## More examples
+
+If you want to load file, select the page number and keep track of what page is currently open, you can do the following:
 
 ```js
 async function loadDocument {
     const viewer = new DjVu.Viewer();
-    viewer = render(document.getElementById('for_viewer'));
+    viewer.render(document.getElementById('for_viewer'));
     await viewer.loadDocumentByUrl('assets/my-djvu-file.djvu');
 
     viewer.configure({ // you also can pass the same object as a second parameter to .loadDocumentByUrl()
@@ -111,7 +122,7 @@ async function loadDocument {
 }
 ```
 
-Also you can load the file by your own and then use the `loadDocument` method. However, in case of the `loadDocumentByUrl` you will see a progress bar of loading, if your file is rather big.
+Also you can load the file by your own (as an `ArrayBuffer`) and then use the `loadDocument` method. However, in case of the `loadDocumentByUrl` you will see the progress bar of loading, if your file is rather big.
 
 You can create several links to djvu files and open them in the viewer, when a user clicks on them. Here is the complete example:
 
