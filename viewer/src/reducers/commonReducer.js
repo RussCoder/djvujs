@@ -20,6 +20,7 @@ const initialState = Object.freeze({
         interceptHttpRequests: false,
         analyzeHeaders: false,
         locale: 'en',
+        theme: 'light',
     },
 });
 

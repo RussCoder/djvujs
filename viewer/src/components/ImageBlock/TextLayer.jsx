@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import Consts from '../constants/consts';
+import Consts from '../../constants/consts';
 
 class TextLayer extends React.Component {
 

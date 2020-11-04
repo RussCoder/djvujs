@@ -6,6 +6,38 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUpload } from '@fortawesome/free-solid-svg-icons';
 import { TranslationContext } from '../Translation';
 import Actions from '../../actions/actions';
+import { css } from 'styled-components';
+
+const style = css`
+    border: 0.1em dashed var(--border-color);
+    background: var(--alternative-background-color);
+    padding: 0.5em;
+    max-width: 20em;
+    min-height: 5em;
+    margin: auto;
+    border-radius: 0.5em;
+    cursor: pointer;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    .file_icon {
+        font-size: 1.5em;
+    }
+
+    &:hover {
+        .file_icon {
+            transform: scale(1.1);
+        }
+    }
+
+    &.drag_over {
+        opacity: 0.8;
+        border-color: var(--highlight-color);
+    }
+`;
 
 class FileZone extends React.Component {
 
@@ -58,17 +90,12 @@ class FileZone extends React.Component {
     };
 
     render() {
-
-        const classes = {
-            file_zone: true,
-            drag_over: this.state.isDragOver
-        };
-
         const t = this.context;
 
         return (
             <div
-                className={cx(classes)}
+                css={style}
+                className={this.state.isDragOver ? 'drag_over' : ''}
                 onClick={this.onClick}
                 title={t("Open another .djvu file")}
                 onDragEnter={this.checkDrag}

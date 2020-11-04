@@ -3,6 +3,26 @@ import PropTypes from 'prop-types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMinusSquare, faPlusSquare } from '@fortawesome/free-regular-svg-icons';
 import { faCircle } from '@fortawesome/free-solid-svg-icons';
+import { css } from 'styled-components';
+
+const style = css`
+    display: flex;
+
+    .content {
+        .name {
+            cursor: pointer;
+            margin-left: 0.5em;
+
+            &:hover {
+                text-decoration: underline;
+            }
+        }
+
+        .children {
+            padding-left: 0.5em;
+        }
+    }
+`;
 
 export default class TreeItem extends React.Component {
 
@@ -41,7 +61,7 @@ export default class TreeItem extends React.Component {
 
     render() {
         return (
-            <div className="tree_item">
+            <div css={style}>
                 {this.props.children ?
                     <FontAwesomeIcon
                         icon={this.state.isCollapsed ? faPlusSquare : faMinusSquare}

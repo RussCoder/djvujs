@@ -3,6 +3,91 @@ import PropTypes from 'prop-types';
 import cx from 'classnames';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimesCircle } from '@fortawesome/free-regular-svg-icons';
+import { css } from 'styled-components';
+import { iconButton } from './cssMixins';
+
+const style = css`
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    .modal_window {
+        box-shadow: 0 0 2px black;
+        background: var(--modal-window-background-color);
+        border-radius: 0.5em;
+        font-size: 1.5em;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translateX(-50%) translateY(-50%);
+        max-width: 80%;
+        max-height: 80%;
+        z-index: 2;
+        padding: 0;
+        overflow: hidden;
+
+        &.fixed_size {
+            height: 80%;
+            width: 80%;
+        }
+
+        &.error {
+            background: rgb(255, 209, 212);
+            color: black;
+        }
+
+        .close_button {
+            ${iconButton};
+            float: right;
+            padding: 0.2em;
+        }
+
+        .content {
+            overflow: auto;
+
+            .notification_window {
+
+                .header {
+                    text-align: center;
+                    padding: 0.5em;
+                    border-bottom: 1px solid gray;
+                }
+
+                .body {
+                    padding: 0.5em;
+                    padding-right: 0;
+                }
+            }
+
+            .help_window {
+                padding: 0.5em;
+        
+                .header {
+                    font-size: 1.2em;
+                    width: 100%;
+                    font-weight: 600;
+                    border-bottom: 1px solid var(--border-color);
+                    margin: 0.5em 0;
+                }
+            }
+        }
+    }
+
+    .dark_layer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: var(--alternative-background-color);
+        backdrop-filter: blur(2px);
+        opacity: 0.8;
+        z-index: 1;
+    }
+`;
+
 
 export default class ModalWindow extends React.Component {
 
@@ -23,7 +108,7 @@ export default class ModalWindow extends React.Component {
         };
 
         return (
-            <div className="modal_window_wrapper">
+            <div css={style}>
                 <div className="dark_layer" onClick={onClose} />
                 <div className={`${cx(classes)} ${additionalClasses || ''}`}>
                     <FontAwesomeIcon

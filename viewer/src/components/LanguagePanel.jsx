@@ -16,27 +16,24 @@ const LanguagePanelRoot = styled.div`
 `;
 
 const selectedLanguageItem = css`
-    border-bottom: 3px solid black;
-    color: black;
+    border-bottom: 3px solid var(--highlight-color);
+    color: var(--highlight-color);
 `;
 
 const LanguageItem = styled.div`
     margin-left: 0.5em;
     cursor: pointer;
-    color: gray;
     
     ${p => p.$selected ? selectedLanguageItem : `
         :hover {
-            border-bottom: 1px solid black;
+            border-bottom: 1px solid var(--color);
         }
     `};
 `;
 
 const Warning = styled.span`
-    color: gray;
-
     :hover {
-        color: black;
+        color: var(--highlight-color);
     }
 `;
 
@@ -64,24 +61,24 @@ const AddMoreButton = ({ t }) => (
         title={t("Add more")}
         css={`
             margin: 0 1em;
-            color: black;
-            border: 2px solid black;
+            color: var(--color) !important;
+            border: 2px solid var(--color);
             border-radius: 100px;
             padding: 2px;
-            height: 21px;
-            width: 21px;
+            height: 20px;
+            width: 20px;
             display: flex;
             justify-content: center;
             align-items: center;
             
             :hover {
-                transform: scale(1.1);
+                transform: scale(1.2);
             }
         `}
     >
         <FontAwesomeIcon
             icon={faPlus}
-            css="height: 18px; width: 18px"
+            css="height: 16px; width: 16px"
         />
     </a>
 );

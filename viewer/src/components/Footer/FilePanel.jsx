@@ -8,6 +8,31 @@ import Actions from '../../actions/actions';
 import { get } from '../../reducers/rootReducer';
 import FileBlock from '../FileBlock';
 import { TranslationContext } from '../Translation';
+import styled, { css } from 'styled-components';
+
+const style = css`
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+`;
+
+const TextButton = styled.button`
+    background: inherit;
+    color: var(--color);
+    border: 1px solid var(--color);
+    border-radius: 3px;
+    padding: 0.2em;
+    cursor: pointer;
+
+    &:hover {
+        background: var(--alternative-background-color);
+    }
+
+    &:focus {
+        outline: none;
+    }
+`;
 
 class FilePanel extends React.Component {
 
@@ -22,7 +47,7 @@ class FilePanel extends React.Component {
         const t = this.context;
 
         return (
-            <div className="file_panel">
+            <div css={style}>
                 {this.props.fileName ? (
                     <span title={t("Close document")}>
                         <FontAwesomeIcon
@@ -34,13 +59,12 @@ class FilePanel extends React.Component {
                 ) : null}
                 <FileBlock fileName={this.props.fileName} />
                 {this.props.fileName ? (
-                    <button
-                        className="text_button"
+                    <TextButton
                         onClick={this.props.saveDocument}
                         title={t("Save document")}
                     >
                         {t('Save')}
-                    </button>
+                    </TextButton>
                 ) : null}
             </div>
         );

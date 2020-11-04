@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import memoize from 'memoize-one';
-import { createDeferredHandler } from './helpers';
+import { createDeferredHandler } from '../helpers';
 
 export default class VirtualList extends React.PureComponent {
     static propTypes = {

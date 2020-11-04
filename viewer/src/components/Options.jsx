@@ -3,6 +3,40 @@ import { useSelector, useDispatch } from 'react-redux';
 import { get } from '../reducers';
 import { useTranslation } from "./Translation";
 import { ActionTypes } from "../constants";
+import styled from 'styled-components';
+
+const Root = styled.div`
+    margin: 0;
+    margin-right: 0.5em;
+    flex: 0 0 auto;
+    max-width: 25em;
+    float: left;
+    border: 2px solid gray;
+    border-radius: 0.2em;
+    padding: 0.5em;
+
+    .header {
+        font-size: 1em;
+        font-weight: bold;
+        margin: 0.5em 0;
+    }
+
+    .option {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        font-size: 0.8em;
+
+        input[type=checkbox] {
+            transform: scale(1.5);
+            flex: 0 0 auto;
+            cursor: pointer;
+            display: inline-block;
+            margin-right: 1em;
+            outline: none;
+        }
+    }
+`;
 
 export default () => {
     const options = useSelector(get.options);
@@ -10,7 +44,7 @@ export default () => {
     const t = useTranslation();
 
     return (
-        <div className="options">
+        <Root>
             <div className="header">Options</div>
             <label
                 className="option"
@@ -39,6 +73,6 @@ export default () => {
                     })}
                 />{t("Detect .djvu files by means of http headers")}
             </label>
-        </div>
+        </Root>
     )
 };

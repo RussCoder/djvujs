@@ -6,7 +6,7 @@ import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 
 import CanvasImage from './CanvasImage';
 import TextLayer from './TextLayer';
-import Consts from '../constants/consts';
+import Consts from '../../constants/consts';
 
 /**
  * A component encapsulating the text layer, the canvas image, and adding additional wrapper to fix the size of the block,

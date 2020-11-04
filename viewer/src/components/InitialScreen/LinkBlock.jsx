@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import { useDispatch } from 'react-redux';
 import { ActionTypes } from '../../constants';
 import { useTranslation } from "../Translation";
+import { styledInput } from '../cssMixins';
 
 const LinkBlockRoot = styled.form`
     max-width: 20em;
@@ -12,21 +13,22 @@ const LinkBlockRoot = styled.form`
     margin: 1em auto;
 
     input {
+        ${styledInput};
         flex: 1 1 auto;
         height: 2em;
         font-style: italic;
-        border: 1px solid;
     }
 
     button {
+        color: var(--color);
         margin-left: 1em;
         border-radius: 0.5em;
         background: none;
-        border: 1px solid;
+        border: 1px solid var(--border-color);
         cursor: pointer;
 
         &:hover {
-            background: lightgray;
+            background: var(--alternative-background-color);
         }
     }
 `;

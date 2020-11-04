@@ -4,12 +4,12 @@ import { connect } from 'react-redux';
 import cx from 'classnames';
 import memoize from 'memoize-one';
 
-import Actions from '../actions/actions';
-import { get } from '../reducers/rootReducer';
-import Consts from '../constants/consts';
+import Actions from '../../actions/actions';
+import { get } from '../../reducers/rootReducer';
+import Consts from '../../constants/consts';
 import ComplexImage from './ComplexImage';
 import VirtualList from './VirtualList';
-import { createDeferredHandler } from './helpers';
+import { createDeferredHandler } from '../helpers';
 
 /**
  * CanvasImage wrapper. Handles user scaling of the image and grabbing.
@@ -40,8 +40,8 @@ class ImageBlock extends React.Component {
     }
 
     scrollCurrentPageIntoViewIfRequired() {
-        if (this.props.isContinuousScrollMode 
-            && this.props.isPageNumberSetManually 
+        if (this.props.isContinuousScrollMode
+            && this.props.isPageNumberSetManually
             && this.virtualList
             && !this.virtualList.isItemVisible(this.props.currentPageNumber - 1)) {
             this.virtualList.scrollToItem(this.props.currentPageNumber - 1);

@@ -6,6 +6,27 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faMinus } from '@fortawesome/free-solid-svg-icons';
 import { get } from '../../reducers/rootReducer';
 import { TranslationContext } from "../Translation";
+import styled from 'styled-components';
+import { iconButton, styledInput } from '../cssMixins';
+
+const Root = styled.div`
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: center;
+
+    svg {
+        ${iconButton};
+        font-size: 1.2em;
+    }
+
+    input {
+        ${styledInput};
+        display: inline-block;
+        width: 3em;
+        margin: 0.5em;
+    }
+`;
 
 class ScaleGizmo extends React.Component {
 
@@ -61,20 +82,15 @@ class ScaleGizmo extends React.Component {
         const t = this.context;
 
         return (
-            <div
-                className="scale_gizmo"
-                title={t("You also can scale the page via Ctrl+MouseWheel")}
-            >
+            <Root title={t("You also can scale the page via Ctrl+MouseWheel")}>
                 <FontAwesomeIcon
                     icon={faMinus}
                     onClick={this.decreaseScale}
-                    className="scale_button"
                 />
                 <input
                     onFocus={this.startEditing}
                     onKeyPress={this.onKeyPress}
                     onBlur={this.finishEditing}
-                    className="scale"
                     type="text"
                     value={this.state.tempValue === null ? currentValue + '%' : this.state.tempValue}
                     onChange={this.onChange}
@@ -82,9 +98,8 @@ class ScaleGizmo extends React.Component {
                 <FontAwesomeIcon
                     icon={faPlus}
                     onClick={this.increaseScale}
-                    className="scale_button"
                 />
-            </div>
+            </Root>
         );
     }
 }

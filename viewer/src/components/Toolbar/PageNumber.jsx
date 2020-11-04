@@ -1,5 +1,20 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import styled, { css } from 'styled-components';
+import { styledInput } from '../cssMixins';
+
+const style = css`
+    flex: 1 1 auto;
+    min-width: 1em;
+    max-width: 8em;
+    white-space: nowrap;
+`;
+
+const Input = styled.input`
+    ${style};
+    ${styledInput};
+    max-width: 4em;
+`;
 
 export default class PageNumber extends React.Component {
 
@@ -76,10 +91,9 @@ export default class PageNumber extends React.Component {
     render() {
         if (this.state.isEditing) {
             return (
-                <input
+                <Input
                     onKeyPress={this.onKeyPress}
                     onBlur={this.finishPageNumberEditing}
-                    className="page_number"
                     type="number"
                     onChange={this.onChange}
                     value={this.state.tempValue === null ? this.props.pageNumber : this.state.tempValue}
@@ -91,7 +105,7 @@ export default class PageNumber extends React.Component {
             return (
                 <span
                     onClick={this.startPageNumberEditing}
-                    className="page_number"
+                    css={style}
                 >
                     {this.props.pageNumber + st}
                 </span>

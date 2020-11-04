@@ -8,6 +8,33 @@ import Actions from '../../actions/actions';
 import PageNumberElement from './PageNumber';
 import { get } from '../../reducers/rootReducer';
 import { TranslationContext } from "../Translation";
+import styled, { css } from 'styled-components';
+
+const Root = styled.div`
+    margin: 0 0.5em;
+    flex: 0 0 auto;
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: center;
+`;
+
+const navButtonStyle = css`
+    font-size: 2em;
+    margin: 0 0.1em;
+    border-radius: 100%;
+    cursor: pointer;
+
+    &:hover {
+        transform: scale(1.1);
+        box-shadow: 0 0 1px gray;
+    }
+
+    &:active {
+        background: #555;
+        color: white;
+    }
+`;
 
 class PageNumberBlock extends React.Component {
 
@@ -40,14 +67,11 @@ class PageNumberBlock extends React.Component {
         const t = this.context;
 
         return (
-            <div
-                className="page_number_block"
-                title={t("Click on the number to enter it manually")}
-            >
+            <Root title={t("Click on the number to enter it manually")}>
                 <FontAwesomeIcon
                     icon={faArrowAltCircleLeft}
                     onClick={this.goToPrevPage}
-                    className="navbut"
+                    css={navButtonStyle}
                 />
 
                 <PageNumberElement {...this.props} />
@@ -55,9 +79,9 @@ class PageNumberBlock extends React.Component {
                 <FontAwesomeIcon
                     icon={faArrowAltCircleRight}
                     onClick={this.goToNextPage}
-                    className="navbut"
+                    css={navButtonStyle}
                 />
-            </div>
+            </Root>
         );
     }
 }

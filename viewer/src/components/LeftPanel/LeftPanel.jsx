@@ -2,7 +2,31 @@ import React from 'react';
 import { connect } from 'react-redux';
 
 import ContentsPanel from './ContentsPanel';
-import { get } from '../reducers/rootReducer';
+import { get } from '../../reducers/rootReducer';
+import styled, { css } from 'styled-components';
+
+const style = css`
+    flex: 0 0 auto;
+    border: 1px solid var(--border-color);
+    border-radius: 1em 0 1em 0;
+    overflow: hidden;
+    box-sizing: border-box;
+    width: 20%;
+    max-width: 90%;
+    min-width: 0.4em;
+`;
+
+const Border = styled.div`
+    box-sizing: border-box;
+    float: right;
+    opacity: 0.7;
+    width: 4px;
+    height: 100%;
+
+    &:hover {
+        cursor: col-resize;
+    }
+`;
 
 class LeftPanel extends React.Component {
 
@@ -40,15 +64,12 @@ class LeftPanel extends React.Component {
         const contents = this.props.contents;
         return (
             <div
-                className="left_panel"
+                css={style}
                 ref={this.ref}
                 style={contents ? null : { width: "0.4em" }} // use the min-width from styles
             >
-                <div
-                    onMouseDown={this.onBeginResizing}
-                    className="border"
-                />
-                <div className="content">
+                <Border onMouseDown={this.onBeginResizing} />
+                <div style={{ height: '100%' }}>
                     <ContentsPanel contents={contents} />
                 </div>
             </div>

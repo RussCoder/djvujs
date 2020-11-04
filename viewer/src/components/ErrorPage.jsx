@@ -1,6 +1,33 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { TranslationContext } from "./Translation";
+import styled from 'styled-components';
+
+const Root = styled.div`
+    background: pink;
+    color: black;
+    padding: 1em;
+    font-family: monospace;
+    border: 1px solid gray;
+    overflow: auto;
+    height: 100%;
+    box-sizing: border-box;
+`;
+
+const Header = styled.div`
+    text-align: center;
+    font-weight: 600;
+    font-size: 2em;
+    margin: 0.5em;
+`;
+
+const ErrorDetails = styled.ul`
+    list-style-position: inside;
+    white-space: pre-wrap;
+    margin: 0.5em;
+    padding: 0.5em;
+    border: 1px solid gray;
+`;
 
 export default class ErrorPage extends React.Component {
     static propTypes = {
@@ -12,18 +39,18 @@ export default class ErrorPage extends React.Component {
 
     formErrorDetails() {
         return (
-            <ul className="error_details">
+            <ErrorDetails>
                 {Object.keys(this.props.error).filter(key => {
-                    var type = typeof this.props.error[key];
+                    const type = typeof this.props.error[key];
                     return type === 'number' || type === 'string';
                 }).map((key, i) => {
                     return (
                         <li key={i}>
-                            <span className="key">{key}:</span>{this.props.error[key]}
+                            <span css={`font-weight: 600; margin: 0 0.5em;`}>{key}:</span>{this.props.error[key]}
                         </li>
                     );
                 })}
-            </ul>
+            </ErrorDetails>
         );
     }
 
@@ -31,13 +58,13 @@ export default class ErrorPage extends React.Component {
         const t = this.context;
 
         return (
-            <div className="error_page">
-                <div className="header">{`${t("Error on page")} №${this.props.pageNumber}`}</div>
-                <div className="body">
-                    <div className="message">{t("Error details")}:</div>
+            <Root>
+                <Header>{`${t("Error on page")} №${this.props.pageNumber}`}</Header>
+                <div>
+                    <div css={`font-size: 1.2em; margin: 0.2em;`}>{t("Error details")}:</div>
                     {this.formErrorDetails()}
                 </div>
-            </div>
+            </Root>
         );
     }
 }

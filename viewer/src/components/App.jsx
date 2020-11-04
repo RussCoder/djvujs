@@ -1,31 +1,64 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
+import { css } from 'styled-components';
 
 import { get } from '../reducers/rootReducer';
 import Toolbar from "./Toolbar/Toolbar";
-import ImageBlock from "./ImageBlock";
+import ImageBlock from "./ImageBlock/ImageBlock";
 import InitialScreen from './InitialScreen/InitialScreen';
 import FileLoadingScreen from './FileLoadingScreen';
 import Footer from './Footer/Footer';
-import LeftPanel from './LeftPanel';
+import LeftPanel from './LeftPanel/LeftPanel';
 import NotificationWindow from './NotificationWindow';
 import HelpWindow from './HelpWindow';
 import ErrorPage from './ErrorPage';
 import LoadingLayer from './LoadingLayer';
-import { TranslationProvider, useTranslation } from './Translation';
+import TextBlock from './TextBlock';
+import { TranslationProvider } from './Translation';
 
-const TextBlock = ({ text }) => {
-    const t = useTranslation();
+const lightTheme = css`
+    --background-color: #fcfcfc;
+    --alternative-background-color: #eee;
+    --modal-window-background-color: var(--background-color);
+    --color: #000;
+    --border-color: #555;
+    --highlight-color: #084475;
+    --scrollbar-track-color: var(--alternative-background-color);
+    --scrollbar-thumb-color: #cccccc;
+`;
 
-    return (
-        <div className="text_block">
-            <pre className="text">
-                {text === null ? t("Loading") + "..." : text || <em>{t("No text provided")}</em>}
-            </pre>
-        </div>
-    );
-};
+const darkTheme = css`
+    --background-color: #1e1e1e;
+    --alternative-background-color: #333333;
+    --modal-window-background-color: var(--alternative-background-color);
+    --color: #CCCCCC;
+    --border-color: #999999;
+    --highlight-color: #d89416;
+    --scrollbar-track-color: var(--alternative-background-color);
+    --scrollbar-thumb-color: #858585;
+`;
+
+const style = css`
+    background: var(--background-color);
+    color: var(--color);
+
+    a {
+        color: var(--highlight-color);
+    }
+
+    *::-webkit-scrollbar {
+        background-color: var(--scrollbar-track-color);
+    }
+
+    *::-webkit-scrollbar-thumb {
+        background-color: var(--scrollbar-thumb-color);
+    }
+    
+    *::-webkit-scrollbar-corner {
+        background-color: var(--background-color);
+    }
+`;
 
 class App extends Component {
     static propTypes = {
@@ -35,10 +68,17 @@ class App extends Component {
 
     render() {
         const fullPageViewClass = this.props.isFullPageView ? " full_page_view" : "";
+        const theme = this.props.options.theme;
 
         return (
             <TranslationProvider>
-                <div className={"djvu_js_viewer" + fullPageViewClass}>
+                <div
+                    className={"djvu_js_viewer " + fullPageViewClass}
+                    css={`
+                        ${theme === 'dark' ? darkTheme : lightTheme};
+                        ${style};
+                    `}
+                >
                     {this.props.isFileLoading ?
                         <FileLoadingScreen /> :
 
@@ -48,7 +88,7 @@ class App extends Component {
                                     <LeftPanel />
                                     <div className="page_zone">
                                         {this.props.pageError ? <ErrorPage pageNumber={this.props.pageNumber}
-                                                                           error={this.props.pageError} /> :
+                                            error={this.props.pageError} /> :
                                             this.props.isContinuousScrollMode ? <ImageBlock /> :
                                                 this.props.isTextMode ? <TextBlock text={this.props.pageText} /> :
                                                     this.props.imageData ? <ImageBlock /> : null}
@@ -61,8 +101,11 @@ class App extends Component {
                     }
                     {this.props.isFileLoading ? null : <Footer />}
 
-                    <NotificationWindow header={this.props.errorHeader} message={this.props.errorMessage}
-                                        type={"error"} />
+                    <NotificationWindow
+                        header={this.props.errorHeader}
+                        message={this.props.errorMessage}
+                        type={"error"}
+                    />
                     <HelpWindow />
                 </div>
             </TranslationProvider>
@@ -84,5 +127,6 @@ export default connect(
         errorHeader: get.errorHeader(state),
         errorMessage: get.errorMessage(state),
         isContinuousScrollMode: get.isContinuousScrollMode(state),
+        options: get.options(state),
     })
 )(App);

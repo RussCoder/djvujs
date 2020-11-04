@@ -7,29 +7,12 @@
     box-sizing: border-box;
     overflow: hidden;
 
-    @import "left_panel";
-
     .page_zone {
         flex: 1 1 auto;
         overflow: hidden;
         position: relative;
         padding: 0.5em;
 
-        @import "image_block";
-
-        .text_block {
-            overflow: auto;
-            max-height: 100%;
-            padding: 0.5em;
-            box-sizing: border-box;
-
-            .text {
-                width: fit-content;
-                margin: auto;
-                background: inherit;
-                border: 1px solid lightgray;
-                padding: 0.5em;
-            }
-        }      
+        @import "image_block";     
     }
 }
