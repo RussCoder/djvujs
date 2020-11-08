@@ -53,7 +53,7 @@ module.exports = {
                 config.optimization.runtimeChunk = false;
                 // make names of output files the same on each build
                 config.output.filename = 'static/js/djvu_viewer.js';
-                config.plugins[5].options.filename = 'static/css/djvu_viewer.css';
+                // config.plugins[5].options.filename = 'static/css/djvu_viewer.css'; // isn't needed since all css is in js now
                 config.plugins[5].options.moduleFilename = () => 'static/css/djvu_viewer.css';
             }
 

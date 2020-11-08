@@ -1,7 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import cx from 'classnames';
 import memoize from 'memoize-one';
 
 import Actions from '../../actions/actions';
@@ -67,7 +66,7 @@ class ImageBlock extends React.Component {
     }
 
     scrollCurrentPageIntoViewIfRequired() {
-        if (this.props.isContinuousScrollMode
+        if (this.props.viewMode === Consts.CONTINUOUS_SCROLL_MODE
             && this.props.isPageNumberSetManually
             && this.virtualList
             && !this.virtualList.isItemVisible(this.props.currentPageNumber - 1)) {
@@ -189,7 +188,7 @@ class ImageBlock extends React.Component {
             node.removeEventListener('wheel', this.onWheel);
             node.addEventListener('wheel', this.onWheel);
 
-            if (this.props.isContinuousScrollMode) {
+            if (this.props.viewMode === Consts.CONTINUOUS_SCROLL_MODE) {
                 node.removeEventListener('scroll', this.onScroll);
                 node.addEventListener('scroll', this.onScroll);
             }

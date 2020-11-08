@@ -4,20 +4,35 @@ import { faCheck, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { get } from '../../reducers/rootReducer';
 import { useTranslation } from '../Translation';
 import { useSelector } from 'react-redux';
+import styled from 'styled-components';
+import Consts from '../../constants/index';
+
+const Root = styled.div`
+    flex: 0 0 auto;
+    font-size: 1em;
+    padding-left: 0.5em;
+    text-align: left;
+    font-style: italic;
+    align-self: flex-end;
+    white-space: nowrap;
+    width: 7em;
+`;
 
 const StatusBar = () => {
-    const isContinuousScrollMode = useSelector(get.isContinuousScrollMode);
-    const isLoading = useSelector(get.isLoading) && !isContinuousScrollMode;
+    const inContinuosScroll = useSelector(get.viewMode) === Consts.CONTINUOUS_SCROLL_MODE;
+    const isLoading = useSelector(get.isLoading) && !inContinuosScroll;
     const t = useTranslation();
 
     return (
-        <div className="status_bar">
+        <Root>
             <FontAwesomeIcon
                 icon={isLoading ? faSpinner : faCheck}
                 pulse={isLoading ? true : false}
             />
-            <span className="message">{isLoading ? t("Loading") + "..." : t("Ready")}</span>
-        </div>
+            <span css={`margin-left: 0.5em`}>
+                {isLoading ? t("Loading") + "..." : t("Ready")}
+            </span>
+        </Root>
     );
 };
 

@@ -6,6 +6,39 @@ import { faUpload } from '@fortawesome/free-solid-svg-icons';
 
 import Actions from '../actions/actions';
 import { TranslationContext } from './Translation';
+import styled from 'styled-components';
+
+const FileIcon = styled(FontAwesomeIcon)`
+    flex: 0 0 auto;
+    font-size: 1.5em;
+`;
+
+const FileName = styled.span`
+    overflow: hidden;
+    flex: 0 1 auto;
+    max-width: 20em;
+    text-align: left;
+    text-overflow: ellipsis;
+    margin: 0 0.5em;
+`;
+
+const Root = styled.div`
+    flex: 0 1 auto;
+    cursor: pointer;
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-start;
+    white-space: nowrap;
+    overflow: hidden;
+    padding: 0.15em;
+
+    &:hover {
+        ${FileIcon} {
+            transform: scale(1.1)
+        }
+    }
+`;
 
 class FileBlock extends React.Component {
 
@@ -37,16 +70,13 @@ class FileBlock extends React.Component {
         const t = this.context;
 
         return (
-            <div
+            <Root
                 className="file_block"
                 onClick={this.onClick}
                 title={t("Open another .djvu file")}
             >
-                <FontAwesomeIcon
-                    icon={faUpload}
-                    className="file_icon"
-                />
-                <span className="file_name">{this.props.fileName || t("Choose a file")}</span>
+                <FileIcon icon={faUpload} />
+                <FileName>{this.props.fileName || t("Choose a file")}</FileName>
                 <input
                     style={{ display: 'none' }}
                     type="file"
@@ -54,7 +84,7 @@ class FileBlock extends React.Component {
                     accept=".djvu, .djv"
                     ref={node => this.input = node}
                 />
-            </div>
+            </Root>
         );
     }
 }

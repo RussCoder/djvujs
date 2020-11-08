@@ -2,6 +2,18 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import memoize from 'memoize-one';
 import { createDeferredHandler } from '../helpers';
+import styled from 'styled-components';
+
+const Root = styled.div`
+    overflow: auto;
+    width: 100%;
+    height: 100%;
+
+    &>div {
+        min-width: 100%;
+        position: relative;
+    }
+`;
 
 /**
  * This component doesn't reset its state when the document change, so it should be recreated
@@ -159,9 +171,9 @@ export default class VirtualList extends React.PureComponent {
         const itemList = this.props.data;
 
         return (
-            <div
+            <Root
                 ref={this.ref}
-                className={"virtual_list " + this.props.className}
+                className={this.props.className}
                 onScroll={this.onScroll}
             >
                 {itemList && itemList.length ?
@@ -170,7 +182,7 @@ export default class VirtualList extends React.PureComponent {
                     </div>
                     : null
                 }
-            </div>
+            </Root>
         );
     }
 }

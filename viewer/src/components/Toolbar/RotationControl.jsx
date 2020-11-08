@@ -6,6 +6,29 @@ import { faUndo } from '@fortawesome/free-solid-svg-icons';
 import Actions from '../../actions/actions';
 import { get } from '../../reducers/rootReducer';
 import { useTranslation } from "../Translation";
+import styled from 'styled-components';
+
+const Root = styled.div`
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    margin: 0 0.5em;
+
+    svg:first-child {
+        font-size: 1.2em;
+        &:hover {
+            transform: scale(1.1);
+        }
+    }
+
+    svg:last-child {
+        font-size: 1.2em;
+        transform: scale(-1, 1);
+        &:hover {
+            transform: scale(-1.1, 1.1);
+        }
+    }
+`;
 
 const RotationControl = () => {
     const dispatch = useDispatch();
@@ -21,11 +44,11 @@ const RotationControl = () => {
     };
 
     return (
-        <div className="rotation_control" title={t("Rotate the page")}>
-            <FontAwesomeIcon icon={faUndo} className="rotate_left_button" onClick={rotateLeft} />
-            <span className="rotation_value">{rotation}&deg;</span>
-            <FontAwesomeIcon icon={faUndo} className="rotate_right_button" onClick={rotateRight} />
-        </div>
+        <Root className="rotation_control" title={t("Rotate the page")}>
+            <FontAwesomeIcon icon={faUndo} onClick={rotateLeft} />
+            <span css={`width: 2.5em;`}>{rotation}&deg;</span>
+            <FontAwesomeIcon icon={faUndo} onClick={rotateRight} />
+        </Root>
     );
 };
 

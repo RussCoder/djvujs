@@ -1,10 +1,10 @@
 import React from 'react';
 import { useDispatch } from 'react-redux';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faQuestionCircle } from '@fortawesome/free-regular-svg-icons';
 
 import Actions from '../../actions/actions';
 import { useTranslation } from "../Translation";
+import { ControlButton } from '../StyledPrimitives';
 
 const HelpButton = () => {
     const dispatch = useDispatch();
@@ -12,8 +12,7 @@ const HelpButton = () => {
 
     return (
         <span title={t("Show help window")}>
-            <FontAwesomeIcon
-                className="control_button"
+            <ControlButton
                 icon={faQuestionCircle}
                 onClick={() => dispatch(Actions.showHelpWindowAction())}
             />

@@ -5,6 +5,7 @@ import ViewModeButtons from './ViewModeButtons';
 import CursorModeButtonGroup from './CursorModeButtonGroup';
 import RotationControl from './RotationControl';
 import styled from 'styled-components';
+import { ControlButton } from '../StyledPrimitives';
 
 const Root = styled.div`
     flex: 0 0 auto;
@@ -21,7 +22,7 @@ const Root = styled.div`
     text-align: center;
     max-width: 45em;
 
-    .control_button {
+    ${ControlButton} {
         font-size: 2em;
     }
 
@@ -42,26 +43,7 @@ const Root = styled.div`
     }
 
     .view_mode_group {
-        display: flex;
-        align-items: center;
-        height: 100%;
 
-        span {
-            opacity: 0.5;
-
-            &.active {
-                opacity: 1;
-            }
-        }
-
-        .continuous_scroll_button {
-            display: inline-flex;
-            flex-direction: column;
-            flex-wrap: nowrap;
-            justify-content: center;
-            overflow: hidden;
-            max-height: 100%;
-        }
     }
 `;
 

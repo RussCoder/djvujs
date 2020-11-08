@@ -68,7 +68,7 @@ async function main() {
     // // }
 
     await Promise.all([
-        processFile(viewerBuildDir + 'css/', 'djvu_viewer.css'),
+        //processFile(viewerBuildDir + 'css/', 'djvu_viewer.css'),
         processFile(viewerBuildDir + 'js/', 'djvu_viewer.js'),
         processFile('library/dist/', 'djvu.js'),
     ]);

@@ -40,7 +40,7 @@ export default (state = initialState, action) => {
             return { ...state, isContinuousScrollMode: false, isTextMode: false };
 
         case Consts.ENABLE_TEXT_MODE_ACTION:
-            return { ...state, isContinuousScrollMode: false, isTextMode: true };
+            return { ...state, isContinuousScrollMode: false, isTextMode: true, isLoading: false };
 
         case Consts.PAGES_SIZES_ARE_GOTTEN:
             return {
@@ -74,6 +74,7 @@ export default (state = initialState, action) => {
             }
 
         case Consts.IMAGE_DATA_RECEIVED_ACTION:
+        case Consts.PAGE_TEXT_FETCHED_ACTION:
         case Consts.PAGE_ERROR_ACTION:
             return {
                 ...state,

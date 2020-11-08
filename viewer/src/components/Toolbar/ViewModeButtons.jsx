@@ -7,6 +7,27 @@ import { faFileAlt, faFileImage } from '@fortawesome/free-regular-svg-icons';
 import { get } from '../../reducers/rootReducer';
 import Consts from '../../constants/consts';
 import { TranslationContext } from '../Translation';
+import { ControlButton } from '../StyledPrimitives';
+import styled, { css } from 'styled-components';
+
+const continuousScrollButtonStyle = css`
+    display: inline-flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: center;
+    overflow: hidden;
+    max-height: 100%;
+`;
+
+const Root = styled.div`
+    display: flex;
+    align-items: center;
+    height: 100%;
+
+    span {
+        opacity: 0.5;
+    }
+`;
 
 class ViewModeButtons extends React.Component {
 
@@ -34,32 +55,38 @@ class ViewModeButtons extends React.Component {
         const t = this.context;
 
         return (
-            <div className="view_mode_group">
+            <Root>
                 {isIndirect ? null :
-                    <span
-                        className={`continuous_scroll_button control_button ${viewMode === Consts.CONTINUOUS_SCROLL_MODE ? 'active' : ''}`}
+                    <ControlButton
+                        as="span"
+                        css={continuousScrollButtonStyle}
+                        style={viewMode === Consts.CONTINUOUS_SCROLL_MODE ? { opacity: 1 } : null}
                         title={t("Continuous scroll view mode")}
                         onClick={this.enableContinuousScrollMode}
                     >
                         <FontAwesomeIcon icon={faFileImage} />
                         <FontAwesomeIcon icon={faFileImage} />
-                    </span>
+                    </ControlButton>
                 }
-                <span title={t("Single page view mode")} className={viewMode === Consts.SINGLE_PAGE_MODE ? 'active' : ''}>
-                    <FontAwesomeIcon
-                        className="control_button"
+                <span
+                    title={t("Single page view mode")}
+                    style={viewMode === Consts.SINGLE_PAGE_MODE ? { opacity: 1 } : null}
+                >
+                    <ControlButton
                         icon={faFileImage}
                         onClick={this.enableSinglePageMode}
                     />
                 </span>
-                <span title={t("Text view mode")} className={viewMode === Consts.TEXT_MODE ? 'active' : ''}>
-                    <FontAwesomeIcon
-                        className="control_button"
+                <span
+                    title={t("Text view mode")}
+                    style={viewMode === Consts.TEXT_MODE ? { opacity: 1 } : null}
+                >
+                    <ControlButton
                         icon={faFileAlt}
                         onClick={this.enableTextMode}
                     />
                 </span>
-            </div>
+            </Root>
         );
     }
 }

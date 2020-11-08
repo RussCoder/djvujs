@@ -1,7 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimesCircle } from '@fortawesome/free-regular-svg-icons';
 
 import Actions from '../../actions/actions';
@@ -9,6 +8,7 @@ import { get } from '../../reducers/rootReducer';
 import FileBlock from '../FileBlock';
 import { TranslationContext } from '../Translation';
 import styled, { css } from 'styled-components';
+import { ControlButton } from '../StyledPrimitives';
 
 const style = css`
     width: 100%;
@@ -50,8 +50,7 @@ class FilePanel extends React.Component {
             <div css={style}>
                 {this.props.fileName ? (
                     <span title={t("Close document")}>
-                        <FontAwesomeIcon
-                            className="control_button"
+                        <ControlButton
                             onClick={this.props.closeDocument}
                             icon={faTimesCircle}
                         />
