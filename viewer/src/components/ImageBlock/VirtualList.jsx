@@ -3,6 +3,10 @@ import PropTypes from 'prop-types';
 import memoize from 'memoize-one';
 import { createDeferredHandler } from '../helpers';
 
+/**
+ * This component doesn't reset its state when the document change, so it should be recreated
+ * (a unique key must be provided for each new document in the parent component)
+ */
 export default class VirtualList extends React.PureComponent {
     static propTypes = {
         itemSizes: PropTypes.array.isRequired,
@@ -24,7 +28,7 @@ export default class VirtualList extends React.PureComponent {
         stopIndex: -1,
     }
 
-    get viewportHeight () {
+    get viewportHeight() {
         return this.topNode.getBoundingClientRect().height;
     }
 
@@ -41,7 +45,7 @@ export default class VirtualList extends React.PureComponent {
             sum += value;
             return sum;
         }, 0);
-        return {itemTops, itemStyles, contentHeight};
+        return { itemTops, itemStyles, contentHeight };
     });
 
     get itemTops() {
@@ -106,6 +110,7 @@ export default class VirtualList extends React.PureComponent {
         const { startIndex, stopIndex } = this.state;
         const items = new Array(stopIndex - startIndex + 1);
         const Item = this.props.itemRenderer;
+
         for (let i = startIndex; i <= stopIndex; i++) {
             items[i] = <Item
                 index={i}
@@ -151,16 +156,20 @@ export default class VirtualList extends React.PureComponent {
     }
 
     render() {
-        //console.log('RENDER', Date.now());
+        const itemList = this.props.data;
+
         return (
             <div
                 ref={this.ref}
                 className={"virtual_list " + this.props.className}
                 onScroll={this.onScroll}
             >
-                <div style={{ height: this.contentHeight + 'px' }}>
-                    {this.renderItems()}
-                </div>
+                {itemList && itemList.length ?
+                    <div style={{ height: this.contentHeight + 'px' }}>
+                        {this.renderItems()}
+                    </div>
+                    : null
+                }
             </div>
         );
     }

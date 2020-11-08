@@ -10,6 +10,33 @@ import Consts from '../../constants/consts';
 import ComplexImage from './ComplexImage';
 import VirtualList from './VirtualList';
 import { createDeferredHandler } from '../helpers';
+import styled, { css } from 'styled-components';
+
+const grabbingCursor = css`
+    &.djvujs_grabbing {
+        cursor: grabbing;
+    }
+`;
+
+const style = css`
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    box-sizing: border-box;
+    ${p => p.$grab ? 'cursor: grab' : ''};
+
+    ${grabbingCursor};
+`;
+
+const ContinuousScrollItem = styled.div`
+    box-sizing: border-box;
+    min-width: 100%;
+    padding: 2px 0;
+    transform: translate3d(0, 0, 0); // just for performance optimization when continuos mode is enabled
+`;
 
 /**
  * CanvasImage wrapper. Handles user scaling of the image and grabbing.
@@ -135,7 +162,7 @@ class ImageBlock extends React.Component {
             scrollLeft: this.wrapper.scrollLeft,
             scrollTop: this.wrapper.scrollTop
         };
-        this.wrapper.classList.add('grabbing');
+        this.wrapper.classList.add('djvujs_grabbing');
         this.wrapper.addEventListener('mousemove', this.handleMoving);
     };
 
@@ -145,7 +172,7 @@ class ImageBlock extends React.Component {
         }
         e.preventDefault();
         this.initialGrabbingState = null;
-        this.wrapper.classList.remove('grabbing');
+        this.wrapper.classList.remove('djvujs_grabbing');
         this.wrapper.removeEventListener('mousemove', this.handleMoving);
     };
 
@@ -200,7 +227,7 @@ class ImageBlock extends React.Component {
 
     itemRenderer = React.memo(({ index, style, data: pageData }) => {
         return (
-            <div style={style} className="continuous_scroll_item" key={index}>
+            <ContinuousScrollItem style={style} key={index}>
                 <ComplexImage
                     imageUrl={pageData.url}
                     imageDpi={pageData.dpi}
@@ -210,35 +237,33 @@ class ImageBlock extends React.Component {
                     rotation={this.props.rotation}
                     textZones={pageData.textZones}
                 />
-            </div>
+            </ContinuousScrollItem>
         )
     });
 
     render() {
         const isGrabMode = this.props.cursorMode === Consts.GRAB_CURSOR_MODE;
-        const classes = {
-            image_block: true,
-            grab: isGrabMode
-        };
 
-        const { pageSizeList, pageList, userScale, rotation } = this.props;
-        return this.props.isContinuousScrollMode && pageList.length ?
+        const { documentId, pageSizeList, pageList, userScale, rotation } = this.props;
+        return this.props.viewMode === Consts.CONTINUOUS_SCROLL_MODE ?
             <VirtualList
                 ref={this.virtualListRef}
                 outerRef={this.wrapperRef}
-                className={cx({ grab: isGrabMode })}
+                css={`${grabbingCursor}; ${isGrabMode ? 'cursor: grab;' : ''}`}
                 itemSizes={this.getItemSizes(pageSizeList, userScale, rotation)}
                 data={pageList}
                 itemRenderer={this.itemRenderer}
+                key={documentId}
             />
             : this.props.imageData ?
                 <div
-                    className={cx(classes)}
+                    css={style}
+                    $grab={isGrabMode}
                     ref={this.wrapperRef}
                 >
                     <div
-                        className="complex_image_wrapper"
                         ref={this.complexImageRef}
+                        css={`padding: 1em, margin: auto`}
                         style={{ opacity: 0 }} // is changed in the ComponentDidUpdate
                     >
                         <ComplexImage {...this.props} />
@@ -249,9 +274,10 @@ class ImageBlock extends React.Component {
 
 export default connect(
     state => ({
+        documentId: get.documentId(state),
         currentPageNumber: get.currentPageNumber(state),
         isPageNumberSetManually: get.isPageNumberSetManually(state),
-        isContinuousScrollMode: get.isContinuousScrollMode(state),
+        viewMode: get.viewMode(state),
         pageList: get.pageList(state),
         pageSizeList: get.pageSizeList(state),
         imageData: get.imageData(state),

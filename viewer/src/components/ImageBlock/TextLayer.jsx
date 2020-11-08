@@ -1,7 +1,31 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-
 import Consts from '../../constants/consts';
+import styled from 'styled-components';
+
+const Root = styled.div`
+    overflow: hidden;
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    & > div:first-child {
+        top: 0;
+        left: 0;
+        position: absolute;
+    }
+`;
+
+const TextZone = styled.div`
+    line-height: initial;
+    color: rgba(0, 0, 0, 0);
+    white-space: nowrap;
+    text-align-last: justify;
+    text-align: justify;
+    position: absolute;
+    box-sizing: border-box;
+    font-family: 'Times New Roman', Times, serif;
+`;
 
 class TextLayer extends React.Component {
 
@@ -21,14 +45,13 @@ class TextLayer extends React.Component {
         const scaledHeight = Math.floor(imageHeight * scaleFactor);
 
         return (
-            <div className="text_layer_wrapper"
+            <Root
                 style={{
                     width: scaledWidth + 'px',
                     height: scaledHeight + 'px'
                 }}
             >
                 <div
-                    className="text_layer"
                     style={{
                         left: (-(imageWidth - scaledWidth) / 2) + 'px',
                         top: (-(imageHeight - scaledHeight) / 2) + 'px',
@@ -38,9 +61,8 @@ class TextLayer extends React.Component {
                     }}
                 >
                     {textZones.map((zone, i) => (
-                        <div
+                        <TextZone
                             key={i}
-                            className="text_zone"
                             style={{
                                 left: zone.x + 'px',
                                 bottom: zone.y + 'px',
@@ -50,10 +72,10 @@ class TextLayer extends React.Component {
                             }}
                         >
                             {zone.text}
-                        </div>
+                        </TextZone>
                     ))}
                 </div>
-            </div>
+            </Root>
         );
     }
 }

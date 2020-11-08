@@ -23,7 +23,9 @@ export default ({ text }) => {
     return (
         <Root>
             <pre>
-                {text === null ? t("Loading") + "..." : text || <em>{t("No text provided")}</em>}
+                {text === null ?
+                    t("Loading") + "..." :
+                    text || <em>{t("No text on this page")}</em>}
             </pre>
         </Root>
     );

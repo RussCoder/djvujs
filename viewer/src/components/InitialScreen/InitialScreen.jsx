@@ -51,7 +51,7 @@ export default () => {
                 <div style={{ clear: 'both', margin: '1em' }}>
                     {t('Click the #helpButton button to know more about the app', { '#helpButton': <HelpButton /> })}
                 </div>
-                {inExtension || 1 ? <LinkBlock /> : null}
+                {inExtension ? <LinkBlock /> : null}
                 <FileZone />
             </div>
         </Root>

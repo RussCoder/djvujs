@@ -52,7 +52,7 @@ class RootSaga {
     * fetchPageData() {
         const state = yield select();
 
-        if (get.isContinuousScrollMode(state)) {
+        if (get.viewMode(state) === Consts.CONTINUOUS_SCROLL_MODE) {
             yield* this.pageDataManager.startDataFetching(Date.now());
         } else {
             const isTextMode = get.isTextMode(state);
@@ -135,7 +135,7 @@ class RootSaga {
 
         // perhaps it's better to configure the viewer before DOCUMENT_CREATED_ACTION 
         // (since the promise of the viewer.loadDocument is resolved on this action)
-        // But currently DOCUMENT_CREATED_ACTION reset the state of the viewer, it the configuration is done after it.
+        // But currently DOCUMENT_CREATED_ACTION reset the state of the viewer, so the configuration is done after it.
         // The optimal variant is to resolve the promise on another action, but I'm not sure is it needed to anybody at all.
         if (config) {
             yield* this.configure(config);
@@ -143,7 +143,7 @@ class RootSaga {
 
         const state = yield select();
         this.pageDataManager = null; // we don't have to reset it, since the worker was recreated and all memory was release in any case
-        if (get.isContinuousScrollMode(state)) {
+        if (get.viewMode(state) === Consts.CONTINUOUS_SCROLL_MODE) {
             yield* this.prepareForContinuousMode();
         }
 
@@ -211,6 +211,7 @@ class RootSaga {
         }
         this.pagesCache.resetPagesCache();
         yield* this.resetCurrentPageNumber();
+        yield put({ type: ActionTypes.UPDATE_OPTIONS, payload: { preferContinuousScroll: true } });
     }
 
     * switchToSinglePageMode() {
@@ -219,6 +220,7 @@ class RootSaga {
             yield* this.pageDataManager.reset();
         }
         yield* this.resetCurrentPageNumber();
+        yield put({ type: ActionTypes.UPDATE_OPTIONS, payload: { preferContinuousScroll: false } });
     }
 
     * switchToTextMode() {

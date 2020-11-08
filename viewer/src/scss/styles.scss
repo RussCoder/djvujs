@@ -23,15 +23,6 @@ body.disable_scroll_djvujs {
     @import "central_block";
     @import "footer";
     @import "rotation_control";
-    @import "complex_image";
-
-    .grab {
-        cursor: grab;
-    }
-
-    .grabbing {
-        cursor: grabbing;
-    }
 
     &.full_page_view {
         top: 0;
@@ -55,13 +46,6 @@ body.disable_scroll_djvujs {
         &>div {
             min-width: 100%;
             position: relative;
-        }
-
-        .continuous_scroll_item {
-            box-sizing: border-box;
-            min-width: 100%;
-            padding: 2px 0;
-            transform: translate3d(0, 0, 0); // just for performance optimization when continuos mode is enabled
         }
     }
 }

@@ -11,8 +11,8 @@ import { TranslationContext } from '../Translation';
 class ViewModeButtons extends React.Component {
 
     static propTypes = {
-        isTextMode: PropTypes.bool.isRequired,
-        isContinuousScrollMode: PropTypes.bool.isRequired,
+        viewMode: PropTypes.string.isRequired,
+        isIndirect: PropTypes.bool.isRequired,
     };
 
     static contextType = TranslationContext;
@@ -30,13 +30,14 @@ class ViewModeButtons extends React.Component {
     };
 
     render() {
-        const { isContinuousScrollMode, isTextMode, isIndirect } = this.props;
+        const { viewMode, isIndirect } = this.props;
         const t = this.context;
+
         return (
             <div className="view_mode_group">
                 {isIndirect ? null :
                     <span
-                        className={`continuous_scroll_button control_button ${isContinuousScrollMode && !isTextMode ? 'active' : ''}`}
+                        className={`continuous_scroll_button control_button ${viewMode === Consts.CONTINUOUS_SCROLL_MODE ? 'active' : ''}`}
                         title={t("Continuous scroll view mode")}
                         onClick={this.enableContinuousScrollMode}
                     >
@@ -44,14 +45,14 @@ class ViewModeButtons extends React.Component {
                         <FontAwesomeIcon icon={faFileImage} />
                     </span>
                 }
-                <span title={t("Single page view mode")} className={!isTextMode && !isContinuousScrollMode ? 'active' : ''}>
+                <span title={t("Single page view mode")} className={viewMode === Consts.SINGLE_PAGE_MODE ? 'active' : ''}>
                     <FontAwesomeIcon
                         className="control_button"
                         icon={faFileImage}
                         onClick={this.enableSinglePageMode}
                     />
                 </span>
-                <span title={t("Text view mode")} className={isTextMode ? 'active' : ''}>
+                <span title={t("Text view mode")} className={viewMode === Consts.TEXT_MODE ? 'active' : ''}>
                     <FontAwesomeIcon
                         className="control_button"
                         icon={faFileAlt}
@@ -64,7 +65,6 @@ class ViewModeButtons extends React.Component {
 }
 
 export default connect(state => ({
-    isTextMode: get.isTextMode(state),
-    isContinuousScrollMode: get.isContinuousScrollMode(state),
+    viewMode: get.viewMode(state),
     isIndirect: get.isIndirect(state),
 }))(ViewModeButtons);

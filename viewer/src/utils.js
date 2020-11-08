@@ -26,6 +26,12 @@ export function loadFile(url, progressHandler) {
     });
 }
 
+
+/**
+ * This function was designed to quickly create a set of selectors (the "get" object)
+ * and not to address to the state object directly in the components.
+ * However, in some reducers "get" object is augmented with manual-written selectors too.
+ */
 export function createGetObjectByState(state) {
     var get = {};
     for (const key in state) {
@@ -34,6 +40,12 @@ export function createGetObjectByState(state) {
     return get;
 }
 
+/**
+ * Because we have to export one "get" object with selectors accepting the whole state,
+ * we have to wrap local selectors (which expect only a nested part of the state)
+ * with a function which accept the whole state or its bigger part 
+ * (depends on how the reducers are nested within each other).
+ */
 export function composeHighOrderGet(statePartToGetMap) {
     var newGet = {};
     Object.keys(statePartToGetMap).forEach(statePart => {

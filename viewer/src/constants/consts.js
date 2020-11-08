@@ -3,6 +3,10 @@ const Consts = {
     TEXT_CURSOR_MODE: null,
     GRAB_CURSOR_MODE: null,
 
+    TEXT_MODE: null,
+    CONTINUOUS_SCROLL_MODE: null,
+    SINGLE_PAGE_MODE: null,
+
     SET_CURSOR_MODE_ACTION: null,
     ERROR_ACTION: null,
     CLOSE_MODAL_WINDOW_ACTION: null,

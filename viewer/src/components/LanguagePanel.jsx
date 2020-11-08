@@ -18,6 +18,7 @@ const LanguagePanelRoot = styled.div`
 const selectedLanguageItem = css`
     border-bottom: 3px solid var(--highlight-color);
     color: var(--highlight-color);
+    cursor: default;
 `;
 
 const LanguageItem = styled.div`
@@ -32,6 +33,9 @@ const LanguageItem = styled.div`
 `;
 
 const Warning = styled.span`
+    color: var(--color);
+    cursor: pointer;
+
     :hover {
         color: var(--highlight-color);
     }
@@ -47,8 +51,8 @@ const NotCompleteTranslationWindow = styled.div`
 const NotTranslatedList = styled.ul`
     max-height: 15em;
     overflow: auto;
-    background: #dfdfdf;
     padding: 1em 2em;
+    font-style: italic;
 `;
 
 const URL = "https://github.com/RussCoder/djvujs/blob/master/TRANSLATION.md";

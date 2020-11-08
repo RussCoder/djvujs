@@ -116,4 +116,7 @@ export default {
     // Contents
     "Contents": "Contents",
     "No contents provided": "No contents provided",
+
+    // Text Block (shown in the text view mode)
+    "No text on this page": "No text on this page",
 };

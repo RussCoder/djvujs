@@ -7,6 +7,41 @@ import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 import CanvasImage from './CanvasImage';
 import TextLayer from './TextLayer';
 import Consts from '../../constants/consts';
+import styled from 'styled-components';
+
+const Root = styled.div`
+    position: relative;
+    border: 1px solid darkgray;
+    overflow: hidden;
+    margin: 0 auto;
+
+    .complex_image_content {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translateX(-50%) translateY(-50%);
+
+        img {
+            display: block;
+        }
+
+        &>canvas {
+            display: block;
+        }
+
+        &.rotate90 {
+            transform: translateX(-50%) translateY(-50%) rotate(90deg);
+        }
+
+        &.rotate180 {
+            transform: translateX(-50%) translateY(-50%) rotate(180deg);
+        }
+
+        &.rotate270 {
+            transform: translateX(-50%) translateY(-50%) rotate(270deg);
+        }
+    }
+`;
 
 /**
  * A component encapsulating the text layer, the canvas image, and adding additional wrapper to fix the size of the block,
@@ -48,8 +83,7 @@ class ComplexImage extends React.PureComponent {
         };
 
         return (
-            <div
-                className="complex_image"
+            <Root
                 style={{
                     width: width + "px",
                     height: height + "px"
@@ -80,15 +114,16 @@ class ComplexImage extends React.PureComponent {
                                 <span> Loading...</span>
                             </div>
                     }
-                    {this.props.textZones ? <TextLayer
-                        textZones={this.props.textZones}
-                        imageHeight={initialHeight}
-                        imageWidth={initialWidth}
-                        imageDpi={this.props.imageDpi}
-                        userScale={this.props.userScale}
-                    /> : null}
+                    {this.props.textZones ?
+                        <TextLayer
+                            textZones={this.props.textZones}
+                            imageHeight={initialHeight}
+                            imageWidth={initialWidth}
+                            imageDpi={this.props.imageDpi}
+                            userScale={this.props.userScale}
+                        /> : null}
                 </div>
-            </div>
+            </Root>
         );
     }
 }

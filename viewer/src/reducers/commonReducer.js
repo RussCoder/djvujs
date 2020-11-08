@@ -3,6 +3,7 @@ import Consts from '../constants/consts';
 import { ActionTypes } from "../constants";
 
 const initialState = Object.freeze({
+    documentId: 0, // required to detect the document change in the UI components
     fileName: null,
     userScale: 1,
     pageRotation: 0,
@@ -21,6 +22,7 @@ const initialState = Object.freeze({
         analyzeHeaders: false,
         locale: 'en',
         theme: 'light',
+        preferContinuousScroll: false,
     },
 });
 
@@ -81,9 +83,10 @@ export default (state = initialState, action) => {
         case Consts.DOCUMENT_CREATED_ACTION:
             return {
                 ...initialState,
+                documentId: state.documentId + 1,
                 isLoading: true,
                 isFullPageView: state.isFullPageView,
-                isContinuousScrollMode: state.isContinuousScrollMode,
+                isContinuousScrollMode: state.options.preferContinuousScroll ? true : state.isContinuousScrollMode,
                 pagesQuantity: action.pagesQuantity,
                 fileName: action.fileName,
                 isIndirect: action.isIndirect,
@@ -137,5 +140,14 @@ export default (state = initialState, action) => {
 
 export const get = {
     ...createGetObjectByState(initialState),
-    isDocumentLoaded: state => !!state.fileName
+    isDocumentLoaded: state => !!state.fileName,
+    viewMode: state => {
+        if (!state.isIndirect && state.isContinuousScrollMode) {
+            return Consts.CONTINUOUS_SCROLL_MODE;
+        }
+        if (state.isTextMode) {
+            return Consts.TEXT_MODE;
+        }
+        return Consts.SINGLE_PAGE_MODE;
+    }
 };

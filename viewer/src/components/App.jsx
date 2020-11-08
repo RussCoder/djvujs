@@ -31,7 +31,7 @@ const lightTheme = css`
 const darkTheme = css`
     --background-color: #1e1e1e;
     --alternative-background-color: #333333;
-    --modal-window-background-color: var(--alternative-background-color);
+    --modal-window-background-color: var(--background-color);
     --color: #CCCCCC;
     --border-color: #999999;
     --highlight-color: #d89416;

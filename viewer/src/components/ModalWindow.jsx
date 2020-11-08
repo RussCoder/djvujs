@@ -14,7 +14,7 @@ const style = css`
     height: 100%;
 
     .modal_window {
-        box-shadow: 0 0 2px black;
+        box-shadow: 0 0 2px var(--color);
         background: var(--modal-window-background-color);
         border-radius: 0.5em;
         font-size: 1.5em;
@@ -40,6 +40,7 @@ const style = css`
 
         .close_button {
             ${iconButton};
+            font-size: 25px;
             float: right;
             padding: 0.2em;
         }
