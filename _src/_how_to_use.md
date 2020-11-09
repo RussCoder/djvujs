@@ -1,6 +1,6 @@
 ## How to use it
 
-Create a folder with all 3 files, that you have downloaded here (`djvu.js`, `djvu_viewer.js` and `djvu_viewer.css`). Then in the same folder create an .html file (let's say `index.html`) with the following content.
+Create a folder with files that you downloaded from here (`djvu.js`, `djvu_viewer.js`). Then in the same folder create an .html file (let's say `index.html`) with the following content.
 
 ```html
 <!DOCTYPE html>
@@ -10,7 +10,6 @@ Create a folder with all 3 files, that you have downloaded here (`djvu.js`, `djv
     <meta charset="utf-8">
     <script src="djvu.js"></script>
     <script src="djvu_viewer.js"></script>
-    <link href="djvu_viewer.css" rel="stylesheet">
 
     <style>
         #for_viewer {
@@ -80,6 +79,7 @@ The `config` is an object containing options for the viewer. It's an optional pa
     pageRotation: 90,
     pageScale: 2,
     language: 'ru',
+    theme: 'dark',
     djvuOptions: {
         baseUrl: "/url/to/directory/with/indirect/djvu/"
     }
@@ -93,6 +93,7 @@ The `config` is an object containing options for the viewer. It's an optional pa
 - `language` - 2-character language code like `ru`, `en`, `sv` etc.
 Use `DjVu.Viewer.getAvailableLanguages()`to get the full list of languages which can be used.
 Note, you also can [add your own language](https://github.com/RussCoder/djvujs/blob/master/TRANSLATION.md).
+- `theme` - the color theme. Either `light` or `dark`. By default the browser's color scheme is used (or the value save in the local storage).
 - `djvuOptions` - an object which is passed to the library. Now there is only one option - the base url, which is the url to the directory containing the files of an indirect djvu. For bundled djvu this parameter is not required. The base url is extracted automatically from a url to the index.djvu, when the `loadDocumentByUrl` is called, but in case of `loadDocument` method, this parameter should be provided manually.
 
 There are several static methods and properties:
@@ -134,7 +135,6 @@ You can create several links to djvu files and open them in the viewer, when a u
     <meta charset="utf-8">
     <script id="djvu_js_lib" src="djvu.js"></script>
     <script src="djvu_viewer.js"></script>
-    <link href="djvu_viewer.css" rel="stylesheet">
     <script src="reloader.js"></script>
 
     <script>
