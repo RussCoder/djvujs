@@ -1,8 +1,7 @@
 import React from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { TranslationContext } from "./Translation";
 import styled from 'styled-components';
+import LoadingPhrase from './LoadingPhrase';
 
 const DarkLayer = styled.div`
     position: absolute;
@@ -56,13 +55,7 @@ export default class LoadingLayer extends React.Component {
                 ref={this.rootRef}
             >
                 <DarkLayer />
-                <MessageWrapper>
-                    <FontAwesomeIcon
-                        icon={faSpinner}
-                        pulse={true}
-                    />
-                    <span style={{ marginLeft: '0.5em' }}>{t("Loading")}...</span>
-                </MessageWrapper>
+                <MessageWrapper><LoadingPhrase /></MessageWrapper>
             </div>
         );
     }

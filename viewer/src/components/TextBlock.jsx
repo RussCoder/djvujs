@@ -1,5 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
+import LoadingPhrase from './LoadingPhrase';
 import { useTranslation } from './Translation';
 
 const Root = styled.div`
@@ -24,7 +25,7 @@ export default ({ text }) => {
         <Root>
             <pre>
                 {text === null ?
-                    t("Loading") + "..." :
+                    <LoadingPhrase /> :
                     text || <em>{t("No text on this page")}</em>}
             </pre>
         </Root>

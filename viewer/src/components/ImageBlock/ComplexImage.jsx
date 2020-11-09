@@ -1,13 +1,12 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import cx from 'classnames';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 
 import CanvasImage from './CanvasImage';
 import TextLayer from './TextLayer';
 import Consts from '../../constants/consts';
 import styled from 'styled-components';
+import LoadingPhrase from '../LoadingPhrase';
 
 const Root = styled.div`
     position: relative;
@@ -103,16 +102,12 @@ class ComplexImage extends React.PureComponent {
                                 alt="djvu_page"
                             />
                             :
-                            <div style={{
-                                fontSize: Math.min(scaledWidth * 0.1, scaledHeight * 0.1) + 'px',
-                                whiteSpace: 'nowrap',
-                            }}>
-                                <FontAwesomeIcon
-                                    icon={faSpinner}
-                                    pulse={true}
-                                />
-                                <span> Loading...</span>
-                            </div>
+                            <LoadingPhrase
+                                style={{
+                                    fontSize: Math.min(scaledWidth * 0.1, scaledHeight * 0.1) + 'px',
+                                    whiteSpace: 'nowrap',
+                                }}
+                            />
                     }
                     {this.props.textZones ?
                         <TextLayer

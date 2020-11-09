@@ -105,15 +105,34 @@ class RootSaga {
         yield put(Actions.pagesSizesAreGottenAction(pagesSizes));
     }
 
-    * configure({ pageNumber, pageRotation, pageScale, language }) {
+    * configure({ pageNumber, pageRotation, pageScale, language, theme }) {
         if (pageNumber) yield put(Actions.setNewPageNumberAction(pageNumber, true));
         if (pageRotation) yield put(Actions.setPageRotationAction(pageRotation));
         if (pageScale) yield put(Actions.setUserScaleAction(pageScale));
-        if (language && (language in dictionaries)) yield put({
-            type: ActionTypes.UPDATE_OPTIONS,
-            payload: { locale: language },
-            notSave: true,
-        });
+
+        const options = {};
+        if (language) {
+            if (language in dictionaries) {
+                options.locale = language;
+            } else {
+                console.warn(`DjVu.js Viewer: only ${Object.keys(dictionaries)} languages are available! Got ${language}`);
+            }
+        }
+        if (theme) {
+            if (theme === 'dark' || theme === 'light') {
+                options.theme = theme;
+            } else {
+                console.warn('DjVu.js Viewer: only "dark" or "light" themes are supported! Got ' + theme);
+            }
+        }
+
+        if (Object.keys(options).length) {
+            yield put({
+                type: ActionTypes.UPDATE_OPTIONS,
+                payload: options,
+                notSave: true,
+            });
+        }
     }
 
     * createDocumentFromArrayBuffer({ arrayBuffer, fileName, config }) {

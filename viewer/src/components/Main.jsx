@@ -7,6 +7,7 @@ import LeftPanel from './LeftPanel/LeftPanel';
 import LoadingLayer from './LoadingLayer';
 import ImageBlock from './ImageBlock/ImageBlock';
 import TextBlock from './TextBlock';
+import ErrorPage from './ErrorPage';
 
 const Root = styled.div`
     flex: 1 1 auto;

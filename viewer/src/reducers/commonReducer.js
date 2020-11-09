@@ -21,7 +21,7 @@ const initialState = Object.freeze({
         interceptHttpRequests: false,
         analyzeHeaders: false,
         locale: 'en',
-        theme: 'light',
+        theme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
         preferContinuousScroll: false,
     },
 });

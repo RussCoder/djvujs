@@ -105,7 +105,6 @@ export const LanguagePanel = () => {
                 return (
                     <React.Fragment key={code}>
                         <LanguageItem
-
                             $selected={locale === code}
                             onClick={() => dispatch({
                                 type: ActionTypes.UPDATE_OPTIONS,
@@ -114,7 +113,10 @@ export const LanguagePanel = () => {
                         >
                             {dict.nativeName}
                             {notTranslatedPhrases.length ?
-                                <Warning onClick={() => setMissedPhrases(notTranslatedPhrases)}>
+                                <Warning onClick={e => {
+                                    e.stopPropagation();
+                                    setMissedPhrases(notTranslatedPhrases);
+                                }}>
                                     <FontAwesomeIcon icon={faExclamationTriangle} transform={'shrink-4'} />
                                 </Warning>
                                 : null}

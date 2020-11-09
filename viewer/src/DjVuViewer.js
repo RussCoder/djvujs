@@ -18,7 +18,7 @@ const Events = constant({
 
 export default class DjVuViewer extends EventEmitter {
 
-    static VERSION = '0.4.1';
+    static VERSION = '0.5.0';
 
     static Events = Events;
 
@@ -96,10 +96,10 @@ export default class DjVuViewer extends EventEmitter {
         );
     }
 
-    configure({ pageNumber, pageRotation, pageScale, language } = {}) {
+    configure({ pageNumber, pageRotation, pageScale, language, theme } = {}) {
         this.store.dispatch({
             type: ActionTypes.CONFIGURE,
-            pageNumber, pageRotation, pageScale, language
+            pageNumber, pageRotation, pageScale, language, theme,
         });
 
         return this;

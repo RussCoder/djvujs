@@ -1,5 +1,11 @@
 # DjVu.js Viewer Changelog
 
+## v.0.5.0 (09.11.2020)
+- Dark and light color themes.
+- All CSS is built into the JS file.
+- Preference for the continuous-scroll view mode is saved in the options now.
+- Bug fixes and style improvements.
+
 ## v.0.4.1 (23.08.2020)
 - Swedish translation.
 - File name is extracted from the Content-Disposition header, if it's present.
