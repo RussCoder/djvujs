@@ -3,6 +3,27 @@ import BZZDecoder from '../bzz/BZZDecoder';
 import { createStringFromUtf8Array } from '../DjVu';
 
 /**
+ * @typedef {Object} TextZone
+ * @property {number} x - top left corner x coordinate relative to the page
+ * @property {number} y - top left corner y coordinate relative to the page
+ * @property {number} width
+ * @property {number} height
+ * @property {string} text
+ */
+
+/**
+ * @typedef {Object} RawTextZone
+ * @property {number} type
+ * @property {number} x - top left corner x coordinate relative to the page
+ * @property {number} y - top left corner y coordinate relative to the page
+ * @property {number} width
+ * @property {number} height
+ * @property {number} textStart - offset of text in bytes in the raw UTF8 array.
+ * @property {number} textLength - length of text in bytes in the raw UTF8 array.
+ * @property {Array<RawTextZone>} [children] - nested raw text zones.
+ */
+
+/**
  * Класс для порций TXTa и TXTz.
  */
 export default class DjVuText extends IFFChunk {
@@ -34,6 +55,7 @@ export default class DjVuText extends IFFChunk {
         this.isDecoded = true;
     }
 
+    /** @returns {RawTextZone} */
     decodeZone(parent = null, prev = null) {
 
         var type = this.dbs.getUint8();
@@ -76,17 +98,20 @@ export default class DjVuText extends IFFChunk {
         return zone;
     }
 
+    /** @returns {string} */
     getText() {
         this.decode();
         this.text = this.text || createStringFromUtf8Array(this.utf8array);
         return this.text;
     }
 
+    /** @returns {?RawTextZone} */
     getPageZone() {
         this.decode();
         return this.pageZone;
     }
 
+    /** @returns {?Array<TextZone} */
     getNormalizedZones() {
         this.decode();
 

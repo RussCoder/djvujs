@@ -183,7 +183,7 @@ export default class DjVuWorker {
         });
     }
 
-    revokeObjectURL(url) { // if an an ObjectURL was created inside a worker it can be revoked only inside this very worker
+    revokeObjectURL(url) { // if an ObjectURL was created inside a worker it can be revoked only inside this very worker
         this.worker.postMessage({
             command: this.revokeObjectURL.name,
             url: url,
@@ -288,6 +288,9 @@ export default class DjVuWorker {
 
 class DjVuWorkerTask {
 
+    /**
+     * @param {DjVuWorker} worker
+     */
     static instance(worker, funcs = [], args = []) {
         var proxy = new Proxy(DjVuWorkerTask.emptyFunc, {
             get: (target, key) => {

@@ -1,5 +1,7 @@
 import { createStringFromUtf8Array } from './DjVu'
 
+/** @typedef {ByteStream} ByteStream */
+
 /**
  * Объект байтового потока. Предоставляет API для чтения сырого ArrayBuffer как потока байт.
  * После вызова каждого метода чтения, внутренний указатель смещается автоматически.

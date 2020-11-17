@@ -29,8 +29,10 @@ async function createBlobFromImageData(imageData) {
  * Страница документа
  */
 export default class DjVuPage extends CompositeChunk {
+
     /**
-     * Принимает байтовый поток и id из машинного оглавления документа. 
+     * @param {import('./ByteStream').ByteStream} bs
+     * @param {Function} getINCLChunkCallback
      */
     constructor(bs, getINCLChunkCallback) {
         super(bs);
@@ -45,23 +47,23 @@ export default class DjVuPage extends CompositeChunk {
         this.fg44 = null;
 
         /**
-         * @type {IWImage}
+         * @type {?IWImage}
          */
         this.bgimage = null;
         /**
-         * @type {IWImage}
+         * @type {?IWImage}
          */
         this.fgimage = null;
         /**
-         * @type {JB2Image}
+         * @type {?JB2Image}
          */
         this.sjbz = null;
         /**
-         * @type {DjvuPallete}
+         * @type {?DjVuPalette}
          */
         this.fgbz = null;
 
-        /** @type {DjvuText} */
+        /** @type {?DjVuText} */
         this.text = null;
 
         this.decoded = false;
@@ -513,11 +515,13 @@ export default class DjVuPage extends CompositeChunk {
         return this.text ? this.text.getText() : "";
     }
 
+    /** @returns {?import('./chunks/DjVuText').RawTextZone} */
     getPageTextZone() { // returns the top text zone of the whole page (which contains nested zones)
         this.init();
         return this.text ? this.text.getPageZone() : null;
     }
 
+    /** @returns {?Array<import('./chunks/DjVuText').TextZoneF} */
     getNormalizedTextZones() { // returns a flat array of zones without nested zones
         this.init();
         return this.text ? this.text.getNormalizedZones() : null;

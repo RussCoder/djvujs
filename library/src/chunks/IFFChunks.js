@@ -1,7 +1,11 @@
 import { CorruptedFileDjVuError } from '../DjVuErrors';
 
+/** @typedef {import('../ByteStream').ByteStream} ByteStream */
+
 // простейший шаблон порции данных
 export class IFFChunk {
+
+    /** @param {ByteStream} bs */
     constructor(bs) {
         this.id = bs.readStr4();
         this.length = bs.getInt32();
@@ -13,6 +17,8 @@ export class IFFChunk {
 }
 
 export class CompositeChunk extends IFFChunk {
+
+    /** @param {ByteStream} bs */
     constructor(bs) {
         super(bs);
         this.id += ':' + bs.readStr4(); // read secondary id
@@ -24,6 +30,8 @@ export class CompositeChunk extends IFFChunk {
 }
 
 export class ColorChunk extends IFFChunk {
+
+    /** @param {ByteStream} bs */
     constructor(bs) {
         super(bs);
         this.header = new ColorChunkDataHeader(bs);
@@ -37,6 +45,8 @@ export class ColorChunk extends IFFChunk {
  * Порция данных содержащая в себе параметры изображения (всей страницы)
  */
 export class INFOChunk extends IFFChunk {
+
+    /** @param {ByteStream} bs */
     constructor(bs) {
         super(bs);
         if (this.length < 5) {  // the cases when there are less than 10 bytes are not mentioned in the specification, but they are handled in DjVuLibre
@@ -86,6 +96,8 @@ export class INFOChunk extends IFFChunk {
  * Предоставляет основную информацию о порции данных.
  */
 class ColorChunkDataHeader {
+
+    /** @param {ByteStream} bs */
     constructor(bs) {
         this.serial = bs.getUint8(); // номер порции 
         this.slices = bs.getUint8(); // количество кусочков данных
@@ -113,6 +125,8 @@ class ColorChunkDataHeader {
 }
 
 export class INCLChunk extends IFFChunk {
+
+    /** @param {ByteStream} bs */
     constructor(bs) {
         super(bs);
         this.ref = this.bs.readStrUTF();

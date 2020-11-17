@@ -128,6 +128,9 @@ export default class DjVuDocument {
         }
     }
 
+    /**
+     * @returns {Array<{ width: number, height: number, dpi: number }>} 
+     */
     getPagesSizes() {
         var sizes = this.pages.map(page => {
             return {
@@ -148,6 +151,7 @@ export default class DjVuDocument {
         return this.dirm ? this.dirm.getPagesQuantity() : 1;
     }
 
+    /** @returns {import('./chunks/NavmChunk').Contents} */
     getContents() {
         return this.navm ? this.navm.getContents() : null;
     }

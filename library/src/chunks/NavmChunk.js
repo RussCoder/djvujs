@@ -2,6 +2,15 @@ import { IFFChunk } from './IFFChunks';
 import BZZDecoder from '../bzz/BZZDecoder';
 
 /**
+ * @typedef {Object} Bookmark
+ * @property {string} description
+ * @property {string} url
+ * @property {Array<Bookmark>} [children]
+ */
+
+/** @typedef {Array<Bookmark>} Contents */
+
+/**
  * Оглавление человеко-читаемое
  */
 export default class NAVMChunk extends IFFChunk {
@@ -12,12 +21,14 @@ export default class NAVMChunk extends IFFChunk {
         this.decodedBookmarkCounter = 0;
     }
 
+    /**
+     * @returns {Contents}
+     */
     getContents() {
         this.decode();
         return this.contents;
     }
 
-    // returns Array<Bookmark> where Bookmark is {description: string, url: string, children: ?array<Bookmark>}
     decode() {
         if (this.isDecoded) {
             return;
@@ -30,7 +41,10 @@ export default class NAVMChunk extends IFFChunk {
         this.isDecoded = true;
     }
 
-    /** @param {ByteStream} bs */
+    /** 
+     * @param {import('../ByteStream').ByteStream} bs
+     * @returns {Bookmark}
+     */
     decodeBookmark(bs) {
         var childrenCount = bs.getUint8();
         var descriptionLength = bs.getInt24();

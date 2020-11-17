@@ -4,6 +4,10 @@ The file contains some information about the inner structure of the project and 
 
 It's implied that you have run `npm install` and all dependencies are installed correctly.
 
+## Documentation
+
+If you are interested only in the library's API [read it here](./API.md).
+
 ## How to use it
 
 There is no classic documentation of the library's API, but there is a good example script with many comments, which can give you a rather good understanding how to use the library.
