@@ -4,6 +4,13 @@ var djvuWorker = new DjVu.Worker();
 
 var outputBlock = $('#test_results_wrapper');
 
+function createBaseUrl(url) {
+    const a = document.createElement('a');
+    a.href = url;
+    const absoluteUrl = a.href;
+    return new URL('./', absoluteUrl).href
+}
+
 // test invocations 
 
 async function runAllTests() {
@@ -255,7 +262,7 @@ var Tests = {
 
     async _testText(djvuUrl, pageNumber, txtUrl) {
         const buffer = await (await fetch(djvuUrl)).arrayBuffer();
-        await djvuWorker.createDocument(buffer);
+        await djvuWorker.createDocument(buffer, { baseUrl: createBaseUrl(djvuUrl) });
 
         const [resultString, binText] = await Promise.all([
             pageNumber ? djvuWorker.doc.getPage(pageNumber).getText().run() : djvuWorker.doc.toString().run(),
@@ -269,6 +276,22 @@ var Tests = {
             }
         }
         return canonicCharCodesArray.length ? null : "No canonic text!";
+    },
+
+    async _testTextUtf8(djvuUrl, pageNumber, txtUrl) {
+        const buffer = await (await fetch(djvuUrl)).arrayBuffer();
+        await djvuWorker.createDocument(buffer, { baseUrl: createBaseUrl(djvuUrl) });
+
+        const [resultString, binText] = await Promise.all([
+            djvuWorker.doc.getPage(pageNumber).getText().run(),
+            (await fetch(txtUrl)).arrayBuffer()
+        ]);
+
+        if (resultString !== new TextDecoder().decode(binText)) {
+            return 'Text is incorrect!';
+        }
+
+        return null;
     },
 
     async _testTextZones(djvuUrl, pageNumber, txtUrl, isNormalized = false) {
@@ -431,6 +454,10 @@ var Tests = {
 
     testGetCzechText() {
         return this._testText('/assets/czech.djvu', 6, '/assets/czech_6_text.bin');
+    },
+
+    testGetIncorrectlyEncodedUtf8Text() {
+        return this._testTextUtf8('/assets/century_dict/index08.djvu', 475, '/assets/century_dict/page475_text.bin');
     },
 
     testCreateDocumentFromPictures() {

@@ -16,9 +16,9 @@ var rerunButton = document.querySelector('#rerun');
 rerunButton.onclick = rerun;
 document.querySelector('#redraw').onclick = redrawPage;
 
-var pageNumber = 1;
-var djvuUrl = 'assets/colorbook.djvu';
-var baseUrl = 'assets/polish_indirect/';
+var pageNumber = 490;
+var djvuUrl = 'assets/century_dict/index08.djvu';
+var baseUrl = 'assets/century_dict/';
 
 document.querySelector('#next').onclick = () => {
     pageNumber++;
@@ -144,7 +144,9 @@ async function readDjvu(buf) {
     //return;
     //saveStringAsFile(JSON.stringify(djvuDocument.getContents()));
 
-    //writeln(djvuDocument.pages[pageNumber].getText());
+    // const text = (await djvuDocument.getPage(pageNumber)).getText();
+    // console.log(text.length, text);
+    // writeln(text);
     await redrawPage();
     //saveStringAsBinFile(djvuDocument.toString());
     // doc.countFiles();

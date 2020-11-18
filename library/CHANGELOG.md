@@ -1,5 +1,9 @@
 # DjVu.js Library Changelog
 
+## v.0.4.5 (18.11.2020)
+
+- Use standard TextDecoder API to handle ill-formed utf-8 arrays.
+
 ## v.0.4.4 (28.10.2020)
 
 - Significant reduction of memory consumption in IWDecoder (LazyBlock).

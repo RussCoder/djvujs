@@ -211,7 +211,7 @@ export default class BZZDecoder {
         /////////////////////////////////
         ////////// Reconstruct the string
         if ((markerpos < 1) || (markerpos >= this.size)) {
-            throw new Error("ByteStream.corrupt");
+            throw new Error("BZZ byte stream is corrupted");
         }
 
         // Allocate poleters
@@ -259,7 +259,7 @@ export default class BZZDecoder {
 
         // Free and check
         if (j != markerpos) {
-            throw new Error("ByteStream.corrupt");
+            throw new Error("BZZ byte stream is corrupted");
         }
 
         return this.size;

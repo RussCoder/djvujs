@@ -30,7 +30,7 @@ export default class DjVuText extends IFFChunk {
     constructor(bs) {
         super(bs);
         this.isDecoded = false;
-        /** @type {ByteStream} */
+        /** @type {import('../ByteStream').ByteStream} */
         this.dbs = this.id === 'TXTz' ? null : this.bs; // decoded byte stream
     }
 

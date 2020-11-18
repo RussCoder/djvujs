@@ -108,7 +108,7 @@ export default class ByteStream {
             array.push(byte);
             byte = this.getUint8();
         }
-        return createStringFromUtf8Array(array);
+        return createStringFromUtf8Array(new Uint8Array(array));
     }
 
     readStrUTF(byteLength) {

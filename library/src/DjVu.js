@@ -1,5 +1,5 @@
 var DjVu = {
-    VERSION: '0.4.4',
+    VERSION: '0.4.5',
     IS_DEBUG: false,
     setDebugMode: (flag) => DjVu.IS_DEBUG = flag
 };
@@ -18,13 +18,25 @@ export function loadFileViaXHR(url, responseType = 'arraybuffer') {
     });
 }
 
+const utf8Decoder = self.TextDecoder ? new self.TextDecoder() : {
+    decode(utf8array) {
+        const codePoints = utf8ToCodePoints(utf8array);
+        return String.fromCodePoint(...codePoints);
+    }
+};
+
 export function createStringFromUtf8Array(utf8array) {
-    var codePoints = utf8ToCodePoints(utf8array);
-    return String.fromCodePoint ? String.fromCodePoint(...codePoints) : String.fromCharCode(...codePoints);
+    return utf8Decoder.decode(utf8array);
 }
 
 /**
  * Creates an array of Unicode code points from an array, representing a utf8 encoded string
+ * The code assumes that the utf-8 input is well formed. Otherwise, can produce illegal code 
+ * points. As the practice has shown, there are ill-formed utf-8 arrays in some djvu files.
+ * 
+ * This function should be removed in the future. The standard TextDecoder/TextEncoder should
+ * be used instead. Its was initially written only for the old Edge browser 
+ * which didn't support TextDecoder.
  */
 export function utf8ToCodePoints(utf8array) {
     var i, c;
@@ -61,7 +73,9 @@ export function utf8ToCodePoints(utf8array) {
                 break;
         }
     }
-    return codePoints;
+    return codePoints.map(codePoint => {
+        return codePoint > 0x10FFFF ? 120 : codePoint; // replace all bad code points with "x"
+    });
 }
 
 export function codePointsToUtf8(codePoints) {
