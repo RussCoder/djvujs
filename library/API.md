@@ -277,6 +277,6 @@ If you want more practical examples of the library usage, you can take a look at
 `viewer/src/sagas` files. There are real examples of the async API usage.
 
 If you want to know more about the inner DjVu structure, it's worth reading the
-[DjVu Specification](./assets/DjVu3Spec.djvu).
+[DjVu Specification](./assets/DjVu3Spec.djvu?raw=true).
 
 If something isn't intelligible enough, feel free to create an issue.

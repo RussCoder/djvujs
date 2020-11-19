@@ -4,7 +4,12 @@ chrome.contextMenus.create({
     id: "open_with",
     title: "Open with DjVu.js Viewer",
     contexts: ["link"],
-    targetUrlPatterns: ['*://*/*.djvu', '*://*/*.djv']
+    targetUrlPatterns: [
+        '*://*/*.djvu',
+        '*://*/*.djv',
+        '*://*/*.djvu?*',
+        '*://*/*.djv?*',
+    ]
 });
 
 function promisify(func) {
@@ -121,6 +126,7 @@ const requestInterceptor = details => {
 
 const onBeforeRequest = chrome.webRequest.onBeforeRequest;
 
+// Detect djvu only by URL
 const enableHttpIntercepting = () => {
     !onBeforeRequest.hasListener(requestInterceptor) && onBeforeRequest.addListener(requestInterceptor, {
         urls: [
@@ -133,7 +139,7 @@ const enableHttpIntercepting = () => {
             'https://*/*.djv',
             'https://*/*.djv?*',
         ],
-        types: ['main_frame']
+        types: ['main_frame', 'sub_frame'],
     },
         ["blocking"]
     );
@@ -175,7 +181,7 @@ const enableHeadersAnalysis = () => {
             'http://*/*',
             'https://*/*',
         ],
-        types: ['main_frame'],
+        types: ['main_frame', 'sub_frame'],
     }, ['blocking', 'responseHeaders']);
 };
 
