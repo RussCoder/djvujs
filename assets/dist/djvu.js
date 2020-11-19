@@ -5,7 +5,7 @@ var DjVu = (function () {
     'use strict;'
 
     var DjVu = {
-        VERSION: '0.4.4',
+        VERSION: '0.4.5',
         IS_DEBUG: false,
         setDebugMode: (flag) => DjVu.IS_DEBUG = flag
     };
@@ -19,9 +19,14 @@ var DjVu = (function () {
             xhr.send();
         });
     }
+    const utf8Decoder = self.TextDecoder ? new self.TextDecoder() : {
+        decode(utf8array) {
+            const codePoints = utf8ToCodePoints(utf8array);
+            return String.fromCodePoint(...codePoints);
+        }
+    };
     function createStringFromUtf8Array(utf8array) {
-        var codePoints = utf8ToCodePoints(utf8array);
-        return String.fromCodePoint ? String.fromCodePoint(...codePoints) : String.fromCharCode(...codePoints);
+        return utf8Decoder.decode(utf8array);
     }
     function utf8ToCodePoints(utf8array) {
         var i, c;
@@ -53,7 +58,9 @@ var DjVu = (function () {
                     break;
             }
         }
-        return codePoints;
+        return codePoints.map(codePoint => {
+            return codePoint > 0x10FFFF ? 120 : codePoint;
+        });
     }
     function codePointsToUtf8(codePoints) {
         var utf8array = [];
@@ -1485,7 +1492,7 @@ var DjVu = (function () {
                 array.push(byte);
                 byte = this.getUint8();
             }
-            return createStringFromUtf8Array(array);
+            return createStringFromUtf8Array(new Uint8Array(array));
         }
         readStrUTF(byteLength) {
             return createStringFromUtf8Array(this.getUint8Array(byteLength));
@@ -1655,7 +1662,7 @@ var DjVu = (function () {
                 freq[k] = fc;
             }
             if ((markerpos < 1) || (markerpos >= this.size)) {
-                throw new Error("ByteStream.corrupt");
+                throw new Error("BZZ byte stream is corrupted");
             }
             var pos = new Uint32Array(this.size);
             for (var j = 0; j < this.size; pos[j++] = 0);
@@ -1686,7 +1693,7 @@ var DjVu = (function () {
                 j = count[0xff & c] + (n & 0xffffff);
             }
             if (j != markerpos) {
-                throw new Error("ByteStream.corrupt");
+                throw new Error("BZZ byte stream is corrupted");
             }
             return this.size;
         }
