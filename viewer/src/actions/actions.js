@@ -1,18 +1,18 @@
-import Consts from '../constants/consts.js';
+import Constants from '../constants';
 import { get } from '../reducers/rootReducer';
 import DjVu from '../DjVu';
 
 const Actions = {
 
-    dropPageAction: pageNumber => ({ type: Consts.DROP_PAGE_ACTION, pageNumber: pageNumber }),
+    dropPageAction: pageNumber => ({ type: Constants.DROP_PAGE_ACTION, pageNumber: pageNumber }),
 
     pagesSizesAreGottenAction: (pagesSizes) => ({
-        type: Consts.PAGES_SIZES_ARE_GOTTEN,
+        type: Constants.PAGES_SIZES_ARE_GOTTEN,
         sizes: pagesSizes,
     }),
 
     pageIsLoadedAction: (pageData, pageNumber) => ({
-        type: Consts.PAGE_IS_LOADED_ACTION,
+        type: Constants.PAGE_IS_LOADED_ACTION,
         pageNumber: pageNumber,
         pageData: pageData,
     }),
@@ -20,7 +20,7 @@ const Actions = {
     pageErrorAction: error => {
         //console.error(error);
         return ({
-            type: Consts.PAGE_ERROR_ACTION,
+            type: Constants.PAGE_ERROR_ACTION,
             error: error,
         });
     },
@@ -28,25 +28,25 @@ const Actions = {
     setPageRotationAction: rotation => dispatch => {
         if (rotation === 0 || rotation === 90 || rotation === 180 || rotation === 270) {
             dispatch({
-                type: Consts.SET_PAGE_ROTATION_ACTION,
+                type: Constants.SET_PAGE_ROTATION_ACTION,
                 pageRotation: rotation
             });
         }
     },
 
-    closeDocumentAction: () => ({ type: Consts.CLOSE_DOCUMENT_ACTION }),
+    closeDocumentAction: () => ({ type: Constants.CLOSE_DOCUMENT_ACTION }),
 
-    setCursorModeAction: cursorMode => ({ type: Consts.SET_CURSOR_MODE_ACTION, cursorMode: cursorMode }),
+    setCursorModeAction: cursorMode => ({ type: Constants.SET_CURSOR_MODE_ACTION, cursorMode: cursorMode }),
 
-    closeHelpWindowAction: () => ({ type: Consts.CLOSE_HELP_WINDOW_ACTION }),
+    closeHelpWindowAction: () => ({ type: Constants.CLOSE_HELP_WINDOW_ACTION }),
 
-    showHelpWindowAction: () => ({ type: Consts.SHOW_HELP_WINDOW_ACTION }),
+    showHelpWindowAction: () => ({ type: Constants.SHOW_HELP_WINDOW_ACTION }),
 
-    saveDocumentAction: () => ({ type: Consts.SAVE_DOCUMENT_ACTION }),
+    saveDocumentAction: () => ({ type: Constants.SAVE_DOCUMENT_ACTION }),
 
-    startFileLoadingAction: () => ({ type: Consts.START_FILE_LOADING_ACTION }),
+    startFileLoadingAction: () => ({ type: Constants.START_FILE_LOADING_ACTION }),
 
-    endFileLoadingAction: () => ({ type: Consts.END_FILE_LOADING_ACTION }),
+    endFileLoadingAction: () => ({ type: Constants.END_FILE_LOADING_ACTION }),
 
     goToNextPageAction: () => (dispatch, getState) => {
         const state = getState();
@@ -63,7 +63,7 @@ const Actions = {
     },
 
     fileLoadingProgressAction: (loaded, total) => ({
-        type: Consts.FILE_LOADING_PROGRESS_ACTION,
+        type: Constants.FILE_LOADING_PROGRESS_ACTION,
         loaded: loaded,
         total: total
     }),
@@ -84,38 +84,38 @@ const Actions = {
         }
 
         return {
-            type: Consts.ERROR_ACTION,
+            type: Constants.ERROR_ACTION,
             errorHeader: header,
             errorMessage: message
         }
     },
 
     closeModalWindowAction() {
-        return { type: Consts.CLOSE_MODAL_WINDOW_ACTION };
+        return { type: Constants.CLOSE_MODAL_WINDOW_ACTION };
     },
 
     createDocumentFromArrayBufferAction: (arrayBuffer, fileName = "***", config = {}) => ({
-        type: Consts.CREATE_DOCUMENT_FROM_ARRAY_BUFFER_ACTION,
+        type: Constants.CREATE_DOCUMENT_FROM_ARRAY_BUFFER_ACTION,
         arrayBuffer: arrayBuffer,
         fileName: fileName,
         config: config,
     }),
 
     setNewPageNumberAction: (pageNumber, isPageNumberSetManually = false) => ({
-        type: Consts.SET_NEW_PAGE_NUMBER_ACTION,
+        type: Constants.SET_NEW_PAGE_NUMBER_ACTION,
         pageNumber: pageNumber,
         isPageNumberSetManually: isPageNumberSetManually,
     }),
 
     setPageByUrlAction(url) {
         return {
-            type: Consts.SET_PAGE_BY_URL_ACTION,
+            type: Constants.SET_PAGE_BY_URL_ACTION,
             url: url
         };
     },
 
     setUserScaleAction: (scale) => ({
-        type: Consts.SET_USER_SCALE_ACTION,
+        type: Constants.SET_USER_SCALE_ACTION,
         scale: scale < 0.1 ? 0.1 : scale > 6 ? 6 : scale
     }),
 
@@ -135,7 +135,7 @@ const Actions = {
         }
 
         dispatch({
-            type: Consts.TOGGLE_FULL_PAGE_VIEW_ACTION,
+            type: Constants.TOGGLE_FULL_PAGE_VIEW_ACTION,
             isFullPageView: isFullPageView
         });
     },

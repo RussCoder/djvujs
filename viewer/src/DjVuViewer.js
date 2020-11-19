@@ -5,7 +5,7 @@ import App from './components/App.jsx';
 import Actions from './actions/actions';
 import configureStore from './store';
 import EventEmitter from 'eventemitter3';
-import Consts, { constant } from './constants/consts';
+import Constants, { constant } from './constants';
 import { get } from './reducers';
 import { ActionTypes } from './constants/index.js';
 import dictionaries from './locales';
@@ -46,7 +46,7 @@ export default class DjVuViewer extends EventEmitter {
     eventMiddleware = store => next => action => {
         let result;
         switch (action.type) {
-            case Consts.SET_NEW_PAGE_NUMBER_ACTION:
+            case Constants.SET_NEW_PAGE_NUMBER_ACTION:
                 const oldPageNumber = this.getPageNumber();
                 result = next(action);
                 const newPageNumber = this.getPageNumber();
@@ -55,19 +55,19 @@ export default class DjVuViewer extends EventEmitter {
                 }
                 break;
 
-            case Consts.DOCUMENT_CREATED_ACTION:
+            case Constants.DOCUMENT_CREATED_ACTION:
                 result = next(action);
                 this.emit(Events.DOCUMENT_CHANGED);
                 break;
 
-            case Consts.CLOSE_DOCUMENT_ACTION:
+            case Constants.CLOSE_DOCUMENT_ACTION:
                 result = next(action);
                 this.emit(Events.DOCUMENT_CLOSED);
                 break;
 
-            case Consts.END_FILE_LOADING_ACTION: // use in this.loadDocumentByUrl only
+            case Constants.END_FILE_LOADING_ACTION: // use in this.loadDocumentByUrl only
                 result = next(action);
-                this.emit(Consts.END_FILE_LOADING_ACTION);
+                this.emit(Constants.END_FILE_LOADING_ACTION);
                 break;
 
             default:
@@ -115,7 +115,7 @@ export default class DjVuViewer extends EventEmitter {
 
     loadDocumentByUrl(url, config = null) {
         return new Promise(resolve => {
-            this.once(Consts.END_FILE_LOADING_ACTION, () => resolve());
+            this.once(Constants.END_FILE_LOADING_ACTION, () => resolve());
             this.store.dispatch({
                 type: ActionTypes.LOAD_DOCUMENT_BY_URL,
                 url: url,

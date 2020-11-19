@@ -1,4 +1,4 @@
-import Consts from '../constants/consts';
+import Constants from '../constants';
 import { createGetObjectByState } from '../utils';
 
 const initialState = Object.freeze({
@@ -7,7 +7,7 @@ const initialState = Object.freeze({
     imageDpi: null,
     pageText: null,
     textZones: null,
-    cursorMode: Consts.GRAB_CURSOR_MODE,
+    cursorMode: Constants.GRAB_CURSOR_MODE,
     currentPageNumber: 1,
     isPageNumberSetManually: false,
     pageError: null,
@@ -18,7 +18,7 @@ const initialState = Object.freeze({
 export default function pageReducer(state = initialState, action) {
     switch (action.type) {
 
-        case Consts.DROP_PAGE_ACTION: {
+        case Constants.DROP_PAGE_ACTION: {
             const newPagesList = [...state.pageList];
             const index = action.pageNumber - 1;
             if (newPagesList[index]) { // some pages (loaded as "last pages" of the previous saga) can not be in the state, but only in the registry in the saga class
@@ -31,13 +31,13 @@ export default function pageReducer(state = initialState, action) {
             return { ...state, pageList: newPagesList };
         }
 
-        case Consts.DROP_ALL_PAGES_ACTION:
+        case Constants.DROP_ALL_PAGES_ACTION:
             return {
                 ...state,
                 pageList: [...state.pageSizeList],
             }
         
-        case Consts.PAGES_SIZES_ARE_GOTTEN:
+        case Constants.PAGES_SIZES_ARE_GOTTEN:
             return {
                 ...state,
                 isLoading: false,
@@ -45,7 +45,7 @@ export default function pageReducer(state = initialState, action) {
                 pageList: action.sizes,
             };
 
-        case Consts.PAGE_IS_LOADED_ACTION:
+        case Constants.PAGE_IS_LOADED_ACTION:
             if (state.pageList[action.pageNumber - 1].url) { // if it has been already loaded we should avoid unnecessary updates
                 return state;
             }
@@ -56,13 +56,13 @@ export default function pageReducer(state = initialState, action) {
                 pageList: newPagesList
             };
 
-        case Consts.SET_CURSOR_MODE_ACTION:
+        case Constants.SET_CURSOR_MODE_ACTION:
             return {
                 ...state,
                 cursorMode: action.cursorMode
             };
 
-        case Consts.IMAGE_DATA_RECEIVED_ACTION:
+        case Constants.IMAGE_DATA_RECEIVED_ACTION:
             return {
                 ...state,
                 imageData: action.imageData,
@@ -77,7 +77,7 @@ export default function pageReducer(state = initialState, action) {
         //         imageData: null
         //     }
 
-        case Consts.SET_NEW_PAGE_NUMBER_ACTION:
+        case Constants.SET_NEW_PAGE_NUMBER_ACTION:
             if (state.pageError) {
                 return {
                     ...initialState,
@@ -92,14 +92,14 @@ export default function pageReducer(state = initialState, action) {
                 };
             }
 
-        case Consts.PAGE_TEXT_FETCHED_ACTION:
+        case Constants.PAGE_TEXT_FETCHED_ACTION:
             return {
                 ...state,
                 pageText: action.pageText,
                 textZones: action.textZones
             };
 
-        case Consts.PAGE_ERROR_ACTION:
+        case Constants.PAGE_ERROR_ACTION:
             return {
                 ...state,
                 pageError: action.error,

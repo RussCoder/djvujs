@@ -10,7 +10,7 @@
 import { put, select } from 'redux-saga/effects';
 import Actions from "../actions/actions";
 import { get } from '../reducers/rootReducer';
-import Consts from '../constants/consts';
+import Constants from '../constants';
 
 const radius = 15;
 
@@ -70,7 +70,7 @@ export default class PageDataManager {
     }
 
     * dropAllPages() {
-        yield put({ type: Consts.DROP_ALL_PAGES_ACTION });
+        yield put({ type: Constants.DROP_ALL_PAGES_ACTION });
         for (const pageNumber of Object.keys(this.allPages)) {
             this.djvuWorker.revokeObjectURL(this.allPages[pageNumber].url);
         }

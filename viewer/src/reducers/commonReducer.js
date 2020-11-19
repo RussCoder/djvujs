@@ -1,5 +1,5 @@
 import { createGetObjectByState } from '../utils';
-import Consts from '../constants/consts';
+import Constants from '../constants';
 import { ActionTypes } from "../constants";
 
 const initialState = Object.freeze({
@@ -33,55 +33,55 @@ export default (state = initialState, action) => {
         case ActionTypes.UPDATE_OPTIONS:
             return { ...state, options: { ...state.options, ...payload } };
 
-        case Consts.ENABLE_CONTINUOUS_SCROLL_MODE_ACTION:
+        case Constants.ENABLE_CONTINUOUS_SCROLL_MODE_ACTION:
             return { ...state, isContinuousScrollMode: true, isTextMode: false };
 
-        case Consts.ENABLE_SINGLE_PAGE_MODE_ACTION:
+        case Constants.ENABLE_SINGLE_PAGE_MODE_ACTION:
             return { ...state, isContinuousScrollMode: false, isTextMode: false };
 
-        case Consts.ENABLE_TEXT_MODE_ACTION:
+        case Constants.ENABLE_TEXT_MODE_ACTION:
             return { ...state, isContinuousScrollMode: false, isTextMode: true, isLoading: false };
 
-        case Consts.PAGES_SIZES_ARE_GOTTEN:
+        case Constants.PAGES_SIZES_ARE_GOTTEN:
             return {
                 ...state,
                 isLoading: false,
             };
 
-        case Consts.SET_PAGE_ROTATION_ACTION:
+        case Constants.SET_PAGE_ROTATION_ACTION:
             return {
                 ...state,
                 pageRotation: action.pageRotation
             };
 
-        case Consts.SHOW_HELP_WINDOW_ACTION:
+        case Constants.SHOW_HELP_WINDOW_ACTION:
             return {
                 ...state,
                 isHelpWindowShown: true
             }
 
-        case Consts.CLOSE_HELP_WINDOW_ACTION:
+        case Constants.CLOSE_HELP_WINDOW_ACTION:
             return {
                 ...state,
                 isHelpWindowShown: false
             }
 
-        case Consts.SET_NEW_PAGE_NUMBER_ACTION:
-        case Consts.CREATE_DOCUMENT_FROM_ARRAY_BUFFER_ACTION:
+        case Constants.SET_NEW_PAGE_NUMBER_ACTION:
+        case Constants.CREATE_DOCUMENT_FROM_ARRAY_BUFFER_ACTION:
             return {
                 ...state,
                 isLoading: true
             }
 
-        case Consts.IMAGE_DATA_RECEIVED_ACTION:
-        case Consts.PAGE_TEXT_FETCHED_ACTION:
-        case Consts.PAGE_ERROR_ACTION:
+        case Constants.IMAGE_DATA_RECEIVED_ACTION:
+        case Constants.PAGE_TEXT_FETCHED_ACTION:
+        case Constants.PAGE_ERROR_ACTION:
             return {
                 ...state,
                 isLoading: false,
             };
 
-        case Consts.DOCUMENT_CREATED_ACTION:
+        case Constants.DOCUMENT_CREATED_ACTION:
             return {
                 ...initialState,
                 documentId: state.documentId + 1,
@@ -94,32 +94,32 @@ export default (state = initialState, action) => {
                 options: state.options,
             };
 
-        case Consts.CLOSE_DOCUMENT_ACTION:
+        case Constants.CLOSE_DOCUMENT_ACTION:
             return {
                 ...initialState,
                 isFullPageView: state.isFullPageView,
                 options: state.options,
             };
 
-        case Consts.CONTENTS_IS_GOTTEN_ACTION:
+        case Constants.CONTENTS_IS_GOTTEN_ACTION:
             return {
                 ...state,
                 contents: action.contents
             };
 
-        case Consts.SET_USER_SCALE_ACTION:
+        case Constants.SET_USER_SCALE_ACTION:
             return {
                 ...state,
                 userScale: action.scale
             }
 
-        case Consts.TOGGLE_FULL_PAGE_VIEW_ACTION:
+        case Constants.TOGGLE_FULL_PAGE_VIEW_ACTION:
             return {
                 ...state,
                 isFullPageView: action.isFullPageView
             }
 
-        case Consts.ERROR_ACTION:
+        case Constants.ERROR_ACTION:
             return {
                 ...state,
                 isLoading: false,
@@ -127,7 +127,7 @@ export default (state = initialState, action) => {
                 errorMessage: action.errorMessage,
             }
 
-        case Consts.CLOSE_MODAL_WINDOW_ACTION:
+        case Constants.CLOSE_MODAL_WINDOW_ACTION:
             return {
                 ...state,
                 errorHeader: null,
@@ -144,11 +144,11 @@ export const get = {
     isDocumentLoaded: state => !!state.fileName,
     viewMode: state => {
         if (!state.isIndirect && state.isContinuousScrollMode) {
-            return Consts.CONTINUOUS_SCROLL_MODE;
+            return Constants.CONTINUOUS_SCROLL_MODE;
         }
         if (state.isTextMode) {
-            return Consts.TEXT_MODE;
+            return Constants.TEXT_MODE;
         }
-        return Consts.SINGLE_PAGE_MODE;
+        return Constants.SINGLE_PAGE_MODE;
     }
 };

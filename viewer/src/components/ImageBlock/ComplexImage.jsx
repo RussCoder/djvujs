@@ -4,7 +4,7 @@ import cx from 'classnames';
 
 import CanvasImage from './CanvasImage';
 import TextLayer from './TextLayer';
-import Consts from '../../constants/consts';
+import Constants from '../../constants';
 import styled from 'styled-components';
 import LoadingPhrase from '../LoadingPhrase';
 
@@ -64,7 +64,7 @@ class ComplexImage extends React.PureComponent {
         const initialWidth = this.props.imageWidth || this.props.imageData.width;
         const initialHeight = this.props.imageHeight || this.props.imageData.height;
 
-        const scaleFactor = Consts.DEFAULT_DPI / this.props.imageDpi * this.props.userScale;
+        const scaleFactor = Constants.DEFAULT_DPI / this.props.imageDpi * this.props.userScale;
 
         let width, height;
         let scaledWidth = width = Math.floor(initialWidth * scaleFactor);

@@ -1,4 +1,4 @@
-import { constant } from './consts';
+import { constant } from './Constants';
 
 export const ActionTypes = constant({
     LOAD_DOCUMENT_BY_URL: null,

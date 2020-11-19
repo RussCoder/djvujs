@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import Consts from '../../constants/consts';
+import Constants from '../../constants';
 
 /**
  * A component containing logic of rendering ImageData on canvas element.
@@ -38,7 +38,7 @@ export default class CanvasImage extends React.Component {
     }
 
     getScaleFactor() {
-        return (this.props.imageDpi ? this.props.imageDpi / Consts.DEFAULT_DPI : 1) / this.props.userScale;
+        return (this.props.imageDpi ? this.props.imageDpi / Constants.DEFAULT_DPI : 1) / this.props.userScale;
     }
 
     getScaledImageWidth() {
@@ -69,7 +69,7 @@ export default class CanvasImage extends React.Component {
         var tmpH, tmpW, tmpH2, tmpW2;
 
         var image = imageData;
-        var scale = imageDpi ? imageDpi / Consts.DEFAULT_DPI : 1;
+        var scale = imageDpi ? imageDpi / Constants.DEFAULT_DPI : 1;
         scale /= userScale; // current scale factor compared with the initial size of the image
 
         if (scale <= 1) {

@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFileAlt, faFileImage } from '@fortawesome/free-regular-svg-icons';
 
 import { get } from '../../reducers/rootReducer';
-import Consts from '../../constants/consts';
+import Constants from '../../constants';
 import { TranslationContext } from '../Translation';
 import { ControlButton } from '../StyledPrimitives';
 import styled, { css } from 'styled-components';
@@ -39,15 +39,15 @@ class ViewModeButtons extends React.Component {
     static contextType = TranslationContext;
 
     enableContinuousScrollMode = () => {
-        this.props.dispatch({ type: Consts.ENABLE_CONTINUOUS_SCROLL_MODE_ACTION });
+        this.props.dispatch({ type: Constants.ENABLE_CONTINUOUS_SCROLL_MODE_ACTION });
     };
 
     enableSinglePageMode = () => {
-        this.props.dispatch({ type: Consts.ENABLE_SINGLE_PAGE_MODE_ACTION });
+        this.props.dispatch({ type: Constants.ENABLE_SINGLE_PAGE_MODE_ACTION });
     };
 
     enableTextMode = () => {
-        this.props.dispatch({ type: Consts.ENABLE_TEXT_MODE_ACTION });
+        this.props.dispatch({ type: Constants.ENABLE_TEXT_MODE_ACTION });
     };
 
     render() {
@@ -60,7 +60,7 @@ class ViewModeButtons extends React.Component {
                     <ControlButton
                         as="span"
                         css={continuousScrollButtonStyle}
-                        style={viewMode === Consts.CONTINUOUS_SCROLL_MODE ? { opacity: 1 } : null}
+                        style={viewMode === Constants.CONTINUOUS_SCROLL_MODE ? { opacity: 1 } : null}
                         title={t("Continuous scroll view mode")}
                         onClick={this.enableContinuousScrollMode}
                     >
@@ -70,7 +70,7 @@ class ViewModeButtons extends React.Component {
                 }
                 <span
                     title={t("Single page view mode")}
-                    style={viewMode === Consts.SINGLE_PAGE_MODE ? { opacity: 1 } : null}
+                    style={viewMode === Constants.SINGLE_PAGE_MODE ? { opacity: 1 } : null}
                 >
                     <ControlButton
                         icon={faFileImage}
@@ -79,7 +79,7 @@ class ViewModeButtons extends React.Component {
                 </span>
                 <span
                     title={t("Text view mode")}
-                    style={viewMode === Consts.TEXT_MODE ? { opacity: 1 } : null}
+                    style={viewMode === Constants.TEXT_MODE ? { opacity: 1 } : null}
                 >
                     <ControlButton
                         icon={faFileAlt}

@@ -1,3 +1,3 @@
-export { default } from './consts';
-export * from './consts';
+export { default } from './Constants';
+export * from './Constants';
 export * from './actionTypes';

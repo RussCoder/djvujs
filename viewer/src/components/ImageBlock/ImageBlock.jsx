@@ -5,7 +5,7 @@ import memoize from 'memoize-one';
 
 import Actions from '../../actions/actions';
 import { get } from '../../reducers/rootReducer';
-import Consts from '../../constants/consts';
+import Constants from '../../constants';
 import ComplexImage from './ComplexImage';
 import VirtualList from './VirtualList';
 import { createDeferredHandler } from '../helpers';
@@ -66,7 +66,7 @@ class ImageBlock extends React.Component {
     }
 
     scrollCurrentPageIntoViewIfRequired() {
-        if (this.props.viewMode === Consts.CONTINUOUS_SCROLL_MODE
+        if (this.props.viewMode === Constants.CONTINUOUS_SCROLL_MODE
             && this.props.isPageNumberSetManually
             && this.virtualList
             && !this.virtualList.isItemVisible(this.props.currentPageNumber - 1)) {
@@ -188,7 +188,7 @@ class ImageBlock extends React.Component {
             node.removeEventListener('wheel', this.onWheel);
             node.addEventListener('wheel', this.onWheel);
 
-            if (this.props.viewMode === Consts.CONTINUOUS_SCROLL_MODE) {
+            if (this.props.viewMode === Constants.CONTINUOUS_SCROLL_MODE) {
                 node.removeEventListener('scroll', this.onScroll);
                 node.addEventListener('scroll', this.onScroll);
             }
@@ -196,7 +196,7 @@ class ImageBlock extends React.Component {
     }
 
     isGrabMode() {
-        return this.props.cursorMode === Consts.GRAB_CURSOR_MODE;
+        return this.props.cursorMode === Constants.GRAB_CURSOR_MODE;
     }
 
     complexImageRef = node => this.complexImage = node;
@@ -217,7 +217,7 @@ class ImageBlock extends React.Component {
     getItemSizes = memoize((pageList, userScale, rotation) => {
         const isRotated = rotation === 90 || rotation === 270;
         return this.props.pageList.map(page => {
-            const scaleFactor = Consts.DEFAULT_DPI / page.dpi * userScale;
+            const scaleFactor = Constants.DEFAULT_DPI / page.dpi * userScale;
             return Math.floor((isRotated ? page.width : page.height) * scaleFactor) + 6; // 2px for top and bottom image borders, 4px for vertical paddings of the wrapper element
         })
     });
@@ -241,10 +241,10 @@ class ImageBlock extends React.Component {
     });
 
     render() {
-        const isGrabMode = this.props.cursorMode === Consts.GRAB_CURSOR_MODE;
+        const isGrabMode = this.props.cursorMode === Constants.GRAB_CURSOR_MODE;
 
         const { documentId, pageSizeList, pageList, userScale, rotation } = this.props;
-        return this.props.viewMode === Consts.CONTINUOUS_SCROLL_MODE ?
+        return this.props.viewMode === Constants.CONTINUOUS_SCROLL_MODE ?
             <VirtualList
                 ref={this.virtualListRef}
                 outerRef={this.wrapperRef}

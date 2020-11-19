@@ -1,4 +1,4 @@
-const Consts = {
+const Constants = {
     DEFAULT_DPI: 100,
     TEXT_CURSOR_MODE: null,
     GRAB_CURSOR_MODE: null,
@@ -50,4 +50,4 @@ export function constant(obj) {
     return Object.freeze(obj);
 }
 
-export default constant(Consts);
+export default constant(Constants);

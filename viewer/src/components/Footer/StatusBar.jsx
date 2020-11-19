@@ -5,7 +5,7 @@ import { get } from '../../reducers/rootReducer';
 import { useTranslation } from '../Translation';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
-import Consts from '../../constants/index';
+import Constants from '../../constants/index';
 
 const Root = styled.div`
     flex: 0 0 auto;
@@ -19,7 +19,7 @@ const Root = styled.div`
 `;
 
 const StatusBar = () => {
-    const inContinuosScroll = useSelector(get.viewMode) === Consts.CONTINUOUS_SCROLL_MODE;
+    const inContinuosScroll = useSelector(get.viewMode) === Constants.CONTINUOUS_SCROLL_MODE;
     const isLoading = useSelector(get.isLoading) && !inContinuosScroll;
     const t = useTranslation();
 

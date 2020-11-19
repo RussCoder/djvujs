@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import Consts from '../../constants/consts';
+import Constants from '../../constants';
 import styled from 'styled-components';
 
 const Root = styled.div`
@@ -40,7 +40,7 @@ class TextLayer extends React.Component {
         if (!textZones) {
             return null;
         }
-        const scaleFactor = Consts.DEFAULT_DPI / this.props.imageDpi * this.props.userScale;
+        const scaleFactor = Constants.DEFAULT_DPI / this.props.imageDpi * this.props.userScale;
         const scaledWidth = Math.floor(imageWidth * scaleFactor);
         const scaledHeight = Math.floor(imageHeight * scaleFactor);
 
