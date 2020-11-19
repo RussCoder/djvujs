@@ -5,4 +5,6 @@ export const ActionTypes = constant({
     CONFIGURE: null,
     LOAD_DOCUMENT: null,
     UPDATE_OPTIONS: null,
+    SET_IMAGE_PAGE_ERROR: null,
+    SET_TEXT_PAGE_ERROR: null,
 });

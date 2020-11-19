@@ -38,7 +38,7 @@ class RootSaga {
         const currentPageData = yield* this.pagesCache.fetchCurrentPageByNumber(currentPageNumber, pagesQuantity);
 
         if (currentPageData.error) {
-            yield put(Actions.pageErrorAction(currentPageData.error));
+            yield put({ type: ActionTypes.SET_IMAGE_PAGE_ERROR, payload: currentPageData.error });
         } else {
             //console.log('put Consts.IMAGE_DATA_RECEIVED_ACTION');
             yield put({
@@ -53,7 +53,7 @@ class RootSaga {
         const state = yield select();
 
         if (get.viewMode(state) === Consts.CONTINUOUS_SCROLL_MODE) {
-            yield* this.pageDataManager.startDataFetching(Date.now());
+            yield* this.pageDataManager.startDataFetching();
         } else {
             const isTextMode = get.isTextMode(state);
             const pageNumber = get.currentPageNumber(state);
@@ -83,7 +83,7 @@ class RootSaga {
                 textZones: textZones
             });
         } catch (e) {
-            yield put(Actions.pageErrorAction(e));
+            yield put({ type: ActionTypes.SET_TEXT_PAGE_ERROR, payload: e });
         }
     }
 

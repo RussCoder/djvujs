@@ -116,7 +116,7 @@ export default class PageDataManager {
         yield put(Actions.pageIsLoadedAction(this.allPages[pageNumber], pageNumber));
     }
 
-    * startDataFetching(time) {
+    * startDataFetching() {
         // the process of loading can't be stopped so it's by all means better
         // to save the page to the registry, even if it will not be used soon
         if (this.lastLoadPagePromise) {

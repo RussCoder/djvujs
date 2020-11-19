@@ -17,14 +17,6 @@ const Actions = {
         pageData: pageData,
     }),
 
-    pageErrorAction: error => {
-        //console.error(error);
-        return ({
-            type: Constants.PAGE_ERROR_ACTION,
-            error: error,
-        });
-    },
-
     setPageRotationAction: rotation => dispatch => {
         if (rotation === 0 || rotation === 90 || rotation === 180 || rotation === 270) {
             dispatch({

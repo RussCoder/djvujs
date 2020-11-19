@@ -42,12 +42,6 @@ export default (state = initialState, action) => {
         case Constants.ENABLE_TEXT_MODE_ACTION:
             return { ...state, isContinuousScrollMode: false, isTextMode: true, isLoading: false };
 
-        case Constants.PAGES_SIZES_ARE_GOTTEN:
-            return {
-                ...state,
-                isLoading: false,
-            };
-
         case Constants.SET_PAGE_ROTATION_ACTION:
             return {
                 ...state,
@@ -68,18 +62,14 @@ export default (state = initialState, action) => {
 
         case Constants.SET_NEW_PAGE_NUMBER_ACTION:
         case Constants.CREATE_DOCUMENT_FROM_ARRAY_BUFFER_ACTION:
-            return {
-                ...state,
-                isLoading: true
-            }
+            return { ...state, isLoading: true }
 
         case Constants.IMAGE_DATA_RECEIVED_ACTION:
         case Constants.PAGE_TEXT_FETCHED_ACTION:
         case Constants.PAGE_ERROR_ACTION:
-            return {
-                ...state,
-                isLoading: false,
-            };
+        case Constants.PAGES_SIZES_ARE_GOTTEN:
+        case ActionTypes.SET_IMAGE_PAGE_ERROR:
+            return { ...state, isLoading: false, };
 
         case Constants.DOCUMENT_CREATED_ACTION:
             return {

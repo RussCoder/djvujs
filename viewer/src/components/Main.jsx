@@ -2,7 +2,7 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 import { get } from '../reducers';
-import Consts from '../constants';
+import Constants from '../constants';
 import LeftPanel from './LeftPanel/LeftPanel';
 import LoadingLayer from './LoadingLayer';
 import ImageBlock from './ImageBlock/ImageBlock';
@@ -32,16 +32,20 @@ export default () => {
     const isLoading = useSelector(get.isLoading);
     const pageText = useSelector(get.pageText);
     const imageData = useSelector(get.imageData);
-    const pageError = useSelector(get.pageError);
+    const imagePageError = useSelector(get.imagePageError);
+    const textPageError = useSelector(get.textPageError);
 
     const renderMainElement = () => {
-        if (pageError) {
-            return <ErrorPage pageNumber={pageNumber} error={pageError} />;
+        if (imagePageError && viewMode === Constants.SINGLE_PAGE_MODE) {
+            return <ErrorPage pageNumber={pageNumber} error={imagePageError} />;
         }
-        if (viewMode === Consts.TEXT_MODE) {
+        if (viewMode === Constants.TEXT_MODE) {
+            if (textPageError) {
+                return <ErrorPage pageNumber={pageNumber} error={textPageError} />;
+            }
             return <TextBlock text={pageText} />
         }
-        if (viewMode === Consts.CONTINUOUS_SCROLL_MODE || imageData) {
+        if (viewMode === Constants.CONTINUOUS_SCROLL_MODE || imageData) {
             return <ImageBlock />;
         }
     };
@@ -51,7 +55,7 @@ export default () => {
             <LeftPanel />
             <PageZone>
                 {renderMainElement()}
-                {(isLoading && viewMode === Consts.SINGLE_PAGE_MODE) ? <LoadingLayer /> : null}
+                {(isLoading && viewMode === Constants.SINGLE_PAGE_MODE) ? <LoadingLayer /> : null}
             </PageZone>
         </Root>
     );

@@ -1,5 +1,10 @@
 # DjVu.js Viewer Changelog
 
+## v.0.5.1 (19.11.2020)
+- Separate image and text errors for a page in order to show the part of data which is available.
+  (Former behavior: if the text couldn't be decoded, an error page was shown, even if the image had been gotten)
+  It's related only to the single-page view mode.
+
 ## v.0.5.0 (09.11.2020)
 - Dark and light color themes.
 - All CSS is built into the JS file.
