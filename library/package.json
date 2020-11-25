@@ -8,11 +8,11 @@
   "devDependencies": {
     "colors": "^1.4.0",
     "express": "^4.17.1",
-    "rollup": "^2.7.1",
-    "rollup-plugin-cleanup": "^3.1.1",
+    "rollup": "^2.33.3",
+    "rollup-plugin-cleanup": "^3.2.1",
     "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-node-resolve": "^5.2.0",
-    "ws": "^7.2.3"
+    "ws": "^7.4.0"
   },
   "dependencies": {
     "pngjs": "^5.0.0"
