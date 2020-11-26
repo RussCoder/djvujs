@@ -18,7 +18,6 @@ export default class DjVuWriter {
             .jump(4).writeStr('DJVM');
     }
 
-    //выполняет предварительную запись dirm без записи его длины и смещений
     writeDirmChunk(dirm) {
         this.dirm = dirm;
         this.bsw.writeStr('DIRM').saveOffsetMark('DIRMsize').jump(4);

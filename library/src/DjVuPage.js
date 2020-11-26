@@ -119,7 +119,8 @@ export default class DjVuPage extends CompositeChunk {
     }
 
     // метод поиска зависимостей, то есть INCLChunk
-    // возвращает массив id 
+    // возвращает массив id
+    /** @returns {Array<string>} */
     getDependencies() {
         //чтобы не вызывалось более 1 раза
         if (this.info || this.dependencies) {

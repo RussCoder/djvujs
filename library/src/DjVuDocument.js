@@ -3,16 +3,15 @@ import DjVuPage from './DjVuPage';
 import DIRMChunk from './chunks/DirmChunk';
 import NAVMChunk from './chunks/NavmChunk';
 import DjVuWriter from './DjVuWriter';
-import DjVu, { loadFileViaXHR } from './DjVu';
+import DjVu from './DjVu';
 import ThumChunk from './chunks/ThumChunk';
 import ByteStream from './ByteStream';
+import { loadPageDependency, loadPage } from './methods/load';
 import {
     IncorrectFileFormatDjVuError,
     NoSuchPageDjVuError,
     CorruptedFileDjVuError,
     NoBaseUrlDjVuError,
-    UnsuccessfulRequestDjVuError,
-    NetworkDjVuError,
 } from './DjVuErrors';
 
 const MEMORY_LIMIT = 50 * 1024 * 1024; // 50 MB
@@ -21,7 +20,7 @@ export default class DjVuDocument {
     constructor(arraybuffer, { baseUrl = null, memoryLimit = MEMORY_LIMIT } = {}) {
         this.buffer = arraybuffer;
         this.baseUrl = baseUrl && baseUrl.trim();
-        if (this.baseUrl !== null && this.baseUrl) {
+        if (typeof this.baseUrl === 'string') {
             if (this.baseUrl[this.baseUrl.length - 1] !== '/') {
                 this.baseUrl += '/';
             }
@@ -50,7 +49,9 @@ export default class DjVuDocument {
             this.bs.jump(-12);
             this.pages = [new DjVuPage(this.bs.fork(this.length + 8), this.getINCLChunkCallback)];
         } else {
-            throw new CorruptedFileDjVuError(`The id of the first chunk of the document should be either FORMDJVM or FORMDJVU, but there is ${this.id}!`);
+            throw new CorruptedFileDjVuError(
+                `The id of the first chunk of the document should be either FORMDJVM or FORMDJVU, but there is ${this.id}`
+            );
         }
     }
 
@@ -230,27 +231,13 @@ export default class DjVuDocument {
                 if (this.baseUrl === null) {
                     throw new NoBaseUrlDjVuError();
                 }
-                var pageName = this.dirm.getPageNameByItsNumber(number);
-                var url = this.baseUrl + pageName;
+                const bs = await loadPage(
+                    number,
+                    this.baseUrl + this.dirm.getPageNameByItsNumber(number)
+                );
 
-                try {
-                    var xhr = await loadFileViaXHR(url);
-                } catch (e) {
-                    throw new NetworkDjVuError({ pageNumber: number, url: url });
-                }
-
-                if (xhr.status && xhr.status !== 200) {
-                    throw new UnsuccessfulRequestDjVuError(xhr, { pageNumber: number });
-                }
-
-                var pageBuffer = xhr.response;
-                var bs = new ByteStream(pageBuffer);
-                if (bs.readStr4() !== 'AT&T') {
-                    throw new CorruptedFileDjVuError(`The file gotten as the page number ${number} isn't a djvu file!`);
-                }
-
-                var page = new DjVuPage(bs.fork(), this.getINCLChunkCallback);
-                this.memoryUsage += pageBuffer.byteLength;
+                const page = new DjVuPage(bs, this.getINCLChunkCallback);
+                this.memoryUsage += bs.buffer.byteLength;
                 await this._loadDependencies(page.getDependencies(), number);
 
                 this.releaseMemoryIfRequired(page.getDependencies()); // should be called before the page are added to the pages array
@@ -275,36 +262,15 @@ export default class DjVuDocument {
             return;
         }
         await Promise.all(unloadedDependencies.map(async id => {
-            var url = this.baseUrl + (this.dirm ? this.dirm.getComponentNameByItsId(id) : id);
+            const bs = await loadPageDependency(
+                id,
+                this.dirm ? this.dirm.getComponentNameByItsId(id) : id,
+                this.baseUrl,
+                pageNumber
+            );
 
-            try {
-                var xhr = await loadFileViaXHR(url);
-            } catch (e) {
-                throw new NetworkDjVuError({ pageNumber: pageNumber, dependencyId: id, url: url });
-            }
-
-            if (xhr.status && xhr.status !== 200) {
-                throw new UnsuccessfulRequestDjVuError(xhr, { pageNumber: pageNumber, dependencyId: id });
-            }
-
-            var componentBuffer = xhr.response;
-            var bs = new ByteStream(componentBuffer);
-            if (bs.readStr4() !== 'AT&T') {
-                throw new CorruptedFileDjVuError(
-                    `The file gotten as a dependency ${id} ${pageNumber ? `for the page number ${pageNumber}` : ''} isn't a djvu file!`
-                );
-            }
-
-            var chunkId = bs.readStr4();
-            var length = bs.getInt32();
-            chunkId += bs.readStr4();
-            if (chunkId !== "FORMDJVI") {
-                throw new CorruptedFileDjVuError(
-                    `The file gotten as a dependency ${id} ${pageNumber ? `for the page number ${pageNumber}` : ''} isn't a djvu file with shared data!`
-                );
-            }
-            this.djvi[id] = new DjViChunk(bs.jump(-12).fork(length + 8));
-            this.memoryUsage += componentBuffer.byteLength;
+            this.djvi[id] = new DjViChunk(bs);
+            this.memoryUsage += bs.buffer.byteLength;
         }));
     }
 
@@ -317,19 +283,16 @@ export default class DjVuDocument {
         this.lastRequestedPage = null;
     }
 
+    /** A debug function, isn't actually used */
     countFiles() {
         var count = 0;
         var bs = this.bs.clone();
         bs.jump(16);
         while (!bs.isEmpty()) {
-            var chunk;
             var id = bs.readStr4();
             var length = bs.getInt32();
-            bs.jump(-8);
-            // вернулись назад
-            var chunkBs = bs.fork(length + 8);
             // перепрыгнули к следующей порции
-            bs.jump(8 + length + (length & 1 ? 1 : 0));
+            bs.jump(length + (length & 1 ? 1 : 0));
             if (id === 'FORM') {
                 count++;
             }
@@ -371,57 +334,54 @@ export default class DjVuDocument {
      *  Creates a new DjVuDocument with pages from "from" to "to", including first and last pages.
      */
     slice(from = 1, to = this.pages.length) {
-        //Globals.Timer.start('sliceTime');
-        var djvuWriter = new DjVuWriter();
+        const djvuWriter = new DjVuWriter();
         djvuWriter.startDJVM();
-        var dirm = {};
-        dirm.dflags = this.dirm.dflags;
-        var pageNumber = to - from + 1;
-        dirm.flags = [];
-        dirm.names = [];
-        dirm.titles = [];
-        dirm.sizes = [];
-        dirm.ids = [];
-        var chunkBS = [];
-        var pageIndex = 0;
-        var addedPageCount = 0;
+        const dirm = {
+            dflags: this.dirm.dflags,
+            flags: [],
+            names: [],
+            titles: [],
+            sizes: [],
+            ids: [],
+        };
+        const chunkByteStreams = [];
+        const totalPageCount = to - from + 1;
         // все зависимости страниц в новом документе
         // нужно чтобы не копировать лишние словари
-        var dependencies = {};
+        const dependencies = {};
 
         // находим все зависимости в первом проходе
-        for (var i = 0; i < this.dirm.nfiles && addedPageCount < pageNumber; i++) {
-            var isPage = (this.dirm.flags[i] & 63) === 1;
-            if (isPage) {
-                pageIndex++;
-                if (pageIndex < from) {
-                    continue;
-                }
-                else {
-                    addedPageCount++;
-                    var cbs = new ByteStream(this.buffer, this.dirm.offsets[i], this.dirm.sizes[i]);
-                    var deps = new DjVuPage(cbs).getDependencies();
-                    cbs.reset();
-                    for (var j = 0; j < deps.length; j++) {
-                        dependencies[deps[j]] = 1;
-                    }
-                }
+        for (
+            let i = 0, pageIndex = 0, addedPageCount = 0;
+            i < this.dirm.nfiles && addedPageCount < totalPageCount;
+            i++
+        ) {
+            const isPage = (this.dirm.flags[i] & 63) === 1;
+            if (!isPage) continue;
+            pageIndex++;
+            if (pageIndex < from) continue;
+
+            addedPageCount++;
+            const pageByteStream = new ByteStream(this.buffer, this.dirm.offsets[i], this.dirm.sizes[i]);
+            const deps = new DjVuPage(pageByteStream).getDependencies();
+            for (const dependencyId of deps) {
+                dependencies[dependencyId] = 1;
             }
         }
 
-        pageIndex = 0;
-        addedPageCount = 0;
         // теперь все словари и страницы, которые нужны
-        for (var i = 0; i < this.dirm.nfiles && addedPageCount < pageNumber; i++) {
-            var isPage = (this.dirm.flags[i] & 63) === 1;
+        for (
+            let i = 0, pageIndex = 0, addedPageCount = 0;
+            // ?? maybe dicts can go after pages and we should check all chunks (remove addedPageCount < totalPageCount)
+            i < this.dirm.nfiles && addedPageCount < totalPageCount;
+            i++
+        ) {
+            const isPage = (this.dirm.flags[i] & 63) === 1;
             if (isPage) {
                 pageIndex++;
-                //если она не входит в заданный дапазон
-                if (pageIndex < from) {
-                    continue;
-                } else {
-                    addedPageCount++;
-                }
+                //если она не входит в заданный диапазон
+                if (pageIndex < from) continue;
+                addedPageCount++;
             }
 
 
@@ -432,8 +392,9 @@ export default class DjVuDocument {
                 dirm.ids.push(this.dirm.ids[i]);
                 dirm.names.push(this.dirm.names[i]);
                 dirm.titles.push(this.dirm.titles[i]);
-                var cbs = new ByteStream(this.buffer, this.dirm.offsets[i], this.dirm.sizes[i]);
-                chunkBS.push(cbs);
+                chunkByteStreams.push(
+                    new ByteStream(this.buffer, this.dirm.offsets[i], this.dirm.sizes[i])
+                );
             }
         }
 
@@ -442,14 +403,13 @@ export default class DjVuDocument {
             djvuWriter.writeChunk(this.navm);
         }
 
-        for (var i = 0; i < chunkBS.length; i++) {
-            djvuWriter.writeFormChunkBS(chunkBS[i]);
+        for (const chunkByteStream of chunkByteStreams) {
+            djvuWriter.writeFormChunkBS(chunkByteStream);
         }
-        var newbuffer = djvuWriter.getBuffer();
-        DjVu.IS_DEBUG && console.log("New Buffer size = ", newbuffer.byteLength);
-        var doc = new DjVuDocument(newbuffer);
-        //Globals.Timer.end('sliceTime');
-        return doc;
+        const newBuffer = djvuWriter.getBuffer();
+        DjVu.IS_DEBUG && console.log("New Buffer size = ", newBuffer.byteLength);
+
+        return new DjVuDocument(newBuffer);
     }
 
     /**
@@ -518,6 +478,5 @@ export default class DjVuDocument {
         }
 
         return new DjVuDocument(dw.getBuffer());
-
     }
 }

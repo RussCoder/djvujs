@@ -9,7 +9,7 @@ import { createStringFromUtf8Array } from './DjVu'
  */
 export default class ByteStream {
     constructor(buffer, offsetx, length) {
-        this.buffer = buffer;
+        this._buffer = buffer;
         this.offsetx = offsetx || 0;
         this.offset = 0;
         this.length = length || buffer.byteLength;
@@ -17,19 +17,24 @@ export default class ByteStream {
             this.length = buffer.byteLength - offsetx;
             console.error("Incorrect length in ByteStream!");
         }
-        this.viewer = new DataView(this.buffer, this.offsetx, this.length);
+        this.viewer = new DataView(this._buffer, this.offsetx, this.length);
+    }
+
+    /** @returns {ArrayBuffer} */
+    get buffer() {
+        return this._buffer;
     }
 
     // "читает" следующие length байт в массив, возвращает массив основанный на том же ArrayBuffer
     getUint8Array(length = this.remainingLength()) {
         var off = this.offset;
         this.offset += length;
-        return new Uint8Array(this.buffer, this.offsetx + off, length);
+        return new Uint8Array(this._buffer, this.offsetx + off, length);
     }
 
     // возвращает массив полностью представляющий весь поток
     toUint8Array() {
-        return new Uint8Array(this.buffer, this.offsetx, this.length);
+        return new Uint8Array(this._buffer, this.offsetx, this.length);
     }
 
     remainingLength() {
@@ -88,17 +93,8 @@ export default class ByteStream {
         this.offset = offset;
     }
 
-    readChunkName() {
-        return this.readStr4();
-    }
-
-    readStr4() {
-        var str = "";
-        for (var i = 0; i < 4; i++) {
-            var byte = this.viewer.getUint8(this.offset++);
-            str += String.fromCharCode(byte);
-        }
-        return str;
+    readStr4() { // used to read chunk names, just ASCII characters
+        return String.fromCharCode(...this.getUint8Array(4));
     }
 
     readStrNT() {
@@ -116,11 +112,11 @@ export default class ByteStream {
     }
 
     fork(length = this.remainingLength()) {
-        return new ByteStream(this.buffer, this.offsetx + this.offset, length);
+        return new ByteStream(this._buffer, this.offsetx + this.offset, length);
     }
 
     clone() {
-        return new ByteStream(this.buffer, this.offsetx, this.length);
+        return new ByteStream(this._buffer, this.offsetx, this.length);
     }
 
     isEmpty() {
