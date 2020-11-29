@@ -16,9 +16,10 @@ var rerunButton = document.querySelector('#rerun');
 rerunButton.onclick = rerun;
 document.querySelector('#redraw').onclick = redrawPage;
 
-var pageNumber = 490;
-var djvuUrl = 'assets/century_dict/index08.djvu';
-var baseUrl = 'assets/century_dict/';
+var pageNumber = 1;
+var djvuUrl = 'assets/DjVu3Spec_indirect/index.djvu';
+// var djvuUrl = 'assets/carte.djvu';
+var baseUrl = 'assets/DjVu3Spec_indirect/';
 
 document.querySelector('#next').onclick = () => {
     pageNumber++;
@@ -138,9 +139,20 @@ async function readDjvu(buf) {
     var time = performance.now();
     console.log("Buffer length = " + buf.byteLength);
     djvuDocument = new DjVu.Document(buf, { baseUrl: baseUrl });
+    //console.log(djvuDocument.toString());
     Globals.counter = 0;
 
+    // console.time('Document bundle');
+    // const bundle = await djvuDocument.bundle(p => {
+    //     console.log(p  * 100);
+    // });
+    // console.timeEnd('Document bundle');
+
+    // link.href = bundle.createObjectURL();
+
     //writeln(djvuDocument.toString(true));
+
+    //saveStringAsFile(djvuDocument.toString())
     //return;
     //saveStringAsFile(JSON.stringify(djvuDocument.getContents()));
 

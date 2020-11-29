@@ -14,6 +14,8 @@ import {
     NoBaseUrlDjVuError,
 } from './DjVuErrors';
 
+/** @typedef {DjVuDocument} DjVuDocument */
+
 const MEMORY_LIMIT = 50 * 1024 * 1024; // 50 MB
 
 export default class DjVuDocument {
@@ -217,6 +219,10 @@ export default class DjVuDocument {
         //console.log(`%c Memory was released ${was}, ${this.memoryUsage}, ${this.loadedPageNumbers.length}, ${Object.keys(this.djvi).length}`, "color: red");
     }
 
+    _getUrlByPageNumber(number) {
+        return this.baseUrl + this.dirm.getPageNameByItsNumber(number);
+    }
+
     async getPage(number) {
         var page = this.pages[number - 1];
         if (this.lastRequestedPage && this.lastRequestedPage !== page) {
@@ -233,7 +239,7 @@ export default class DjVuDocument {
                 }
                 const bs = await loadPage(
                     number,
-                    this.baseUrl + this.dirm.getPageNameByItsNumber(number)
+                    this._getUrlByPageNumber(number)
                 );
 
                 const page = new DjVuPage(bs, this.getINCLChunkCallback);
@@ -311,9 +317,15 @@ export default class DjVuDocument {
             str += this.id + " " + this.length + '\n\n';
             str += this.dirm.toString();
             str += this.navm ? this.navm.toString() : '';
-            this.dirmOrderedChunks.forEach((chunk, i) => {
-                str += this.dirm.getMetadataStringByIndex(i) + chunk.toString();
-            });
+            if (this.isBundled()) {
+                this.dirmOrderedChunks.forEach((chunk, i) => {
+                    str += this.dirm.getMetadataStringByIndex(i) + chunk.toString();
+                });
+            } else {
+                for (let i = 0; i < this.dirm.getFilesQuantity(); i++) {
+                    str += this.dirm.getMetadataStringByIndex(i);
+                }
+            }
         } else { // single page document
             str += this.pages[0].toString();
         }
@@ -349,11 +361,12 @@ export default class DjVuDocument {
         // все зависимости страниц в новом документе
         // нужно чтобы не копировать лишние словари
         const dependencies = {};
+        const filesQuantity = this.dirm.getFilesQuantity();
 
         // находим все зависимости в первом проходе
         for (
             let i = 0, pageIndex = 0, addedPageCount = 0;
-            i < this.dirm.nfiles && addedPageCount < totalPageCount;
+            i < filesQuantity && addedPageCount < totalPageCount;
             i++
         ) {
             const isPage = (this.dirm.flags[i] & 63) === 1;
@@ -373,7 +386,7 @@ export default class DjVuDocument {
         for (
             let i = 0, pageIndex = 0, addedPageCount = 0;
             // ?? maybe dicts can go after pages and we should check all chunks (remove addedPageCount < totalPageCount)
-            i < this.dirm.nfiles && addedPageCount < totalPageCount;
+            i < filesQuantity && addedPageCount < totalPageCount;
             i++
         ) {
             const isPage = (this.dirm.flags[i] & 63) === 1;
@@ -480,3 +493,9 @@ export default class DjVuDocument {
         return new DjVuDocument(dw.getBuffer());
     }
 }
+
+import bundle from './methods/bundle';
+
+Object.assign(DjVuDocument.prototype, {
+    bundle,
+});

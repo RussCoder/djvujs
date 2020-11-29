@@ -31,6 +31,7 @@ async function runAllTests() {
         try {
             var result = await Tests[testName]();
         } catch (e) {
+            console.error(e);
             result = e;
         }
 
@@ -283,7 +284,7 @@ var Tests = {
         await djvuWorker.createDocument(buffer, { baseUrl: createBaseUrl(djvuUrl) });
 
         const [resultString, binText] = await Promise.all([
-            djvuWorker.doc.getPage(pageNumber).getText().run(),
+            pageNumber ? djvuWorker.doc.getPage(pageNumber).getText().run() : djvuWorker.doc.toString().run(),
             (await fetch(txtUrl)).arrayBuffer()
         ]);
 
@@ -347,7 +348,7 @@ var Tests = {
     },
 
     async testMetaDataOfDocWithShortINFOChunk() {
-        return this._testText('/assets/carte.djvu', null, '/assets/carte_metadata.bin');
+        return this._testTextUtf8('/assets/carte.djvu', null, '/assets/carte_metadata.bin');
     },
 
     testPageTextZone() {
@@ -475,6 +476,14 @@ var Tests = {
         }).then(arrayBuffers => {
             return TestHelper.compareArrayBuffers(...arrayBuffers);
         });
+    },
+
+    async testBundleDocument() {
+        const buffer = await (await fetch('/assets/DjVu3Spec_indirect/index.djvu')).arrayBuffer();
+        await djvuWorker.createDocument(buffer, { baseUrl: '/assets/DjVu3Spec_indirect' });
+        const resultBuffer = await djvuWorker.doc.bundle().run();
+        const canonicBuffer = await (await fetch('/assets/DjVu3Spec_bundled.djvu')).arrayBuffer();
+        return TestHelper.compareArrayBuffers(canonicBuffer, resultBuffer);
     },
 
     testSliceDocument() {

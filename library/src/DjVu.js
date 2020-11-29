@@ -4,6 +4,29 @@ var DjVu = {
     setDebugMode: (flag) => DjVu.IS_DEBUG = flag
 };
 
+export function pLimit(limit = 4) {
+    const queue = [];
+    let running = 0;
+
+    const runNext = async () => {
+        if (!queue.length || running >= limit) return;
+        const func = queue.shift();
+
+        try {
+            running++;
+            await func();
+        } finally {
+            running--;
+            runNext();
+        }
+    };
+
+    return func => new Promise((resolve, reject) => {
+        queue.push(() => func().then(resolve, reject));
+        runNext();
+    });
+}
+
 /**
  *  @returns {Promise<ArrayBuffer>}
  */

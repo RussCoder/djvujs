@@ -12,18 +12,19 @@ export default class ByteStream {
         this._buffer = buffer;
         this.offsetx = offsetx || 0;
         this.offset = 0;
-        this.length = length || buffer.byteLength;
-        if (this.length + offsetx > buffer.byteLength) {
-            this.length = buffer.byteLength - offsetx;
+        this._length = length || buffer.byteLength;
+        if (this._length + offsetx > buffer.byteLength) {
+            this._length = buffer.byteLength - offsetx;
             console.error("Incorrect length in ByteStream!");
         }
-        this.viewer = new DataView(this._buffer, this.offsetx, this.length);
+        this.viewer = new DataView(this._buffer, this.offsetx, this._length);
     }
 
+    /** @returns {number} */
+    get length() { return this._length; }
+
     /** @returns {ArrayBuffer} */
-    get buffer() {
-        return this._buffer;
-    }
+    get buffer() { return this._buffer; }
 
     // "читает" следующие length байт в массив, возвращает массив основанный на том же ArrayBuffer
     getUint8Array(length = this.remainingLength()) {
@@ -34,11 +35,11 @@ export default class ByteStream {
 
     // возвращает массив полностью представляющий весь поток
     toUint8Array() {
-        return new Uint8Array(this._buffer, this.offsetx, this.length);
+        return new Uint8Array(this._buffer, this.offsetx, this._length);
     }
 
     remainingLength() {
-        return this.length - this.offset;
+        return this._length - this.offset;
     }
 
     reset() {
@@ -46,7 +47,7 @@ export default class ByteStream {
     }
 
     byte() { // the function is used inside other codecs (look at ZPCodec)
-        if (this.offset >= this.length) {
+        if (this.offset >= this._length) {
             this.offset++;
             return 0xff;
         }
@@ -116,10 +117,10 @@ export default class ByteStream {
     }
 
     clone() {
-        return new ByteStream(this._buffer, this.offsetx, this.length);
+        return new ByteStream(this._buffer, this.offsetx, this._length);
     }
 
     isEmpty() {
-        return this.offset >= this.length;
+        return this.offset >= this._length;
     }
 }

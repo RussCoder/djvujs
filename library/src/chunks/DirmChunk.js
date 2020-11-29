@@ -40,12 +40,24 @@ export default class DIRMChunk extends IFFChunk {
             this.names[i] = this.flags[i] & 128 ? bsz.readStrNT() : this.ids[i]; // check hasname flag
             this.titles[i] = this.flags[i] & 64 ? bsz.readStrNT() : this.ids[i]; // check hastitle flag
 
-            if ((this.flags[i] & 63) === 1) {
+            if (this.isPageIndex(i)) {
                 this.pagesIds.push(this.ids[i]);
             }
             this.idToNameRegistry[this.ids[i]] = this.names[i];
         }
     }
+
+    isPageIndex(i) {
+        return (this.flags[i] & 63) === 1;
+    }
+
+    isThumbnailIndex(i) {
+        return (this.flags[i] & 63) === 2;
+    }
+
+    /*isDependencyIndex(i) { // function just for documentation
+        return (this.flags[i] & 63) === 0;
+    }*/
 
     getPageNameByItsNumber(number) {
         return this.getComponentNameByItsId(this.pagesIds[number - 1]);
@@ -64,11 +76,15 @@ export default class DIRMChunk extends IFFChunk {
     }
 
     getMetadataStringByIndex(i) {
-        return `[id: "${this.ids[i]}", flag: ${this.flags[i]}, offset: ${this.offsets[i]}, size: ${this.sizes[i]}]\n`;
+        return (
+            `[id: "${this.ids[i]}", flag: ${this.flags[i]}, ` +
+            `offset: ${this.offsets ? this.offsets[i] : 'indirect'}, size: ${this.sizes[i]}]\n`
+        );
     }
 
     toString() {
         var str = super.toString();
+        str += (this.isBundled ? 'Bundled' : 'Indirect') + '\n';
         str += "FilesCount: " + this.nfiles + '\n';
         return str + '\n';
     }

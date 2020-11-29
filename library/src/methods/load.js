@@ -12,62 +12,58 @@ import {
 } from "../DjVuErrors";
 
 /** @returns {ByteStream} */
-export async function loadPage(number, url) {
+async function loadByteStream(url, errorData = {}) {
     let xhr;
 
     try {
         xhr = await loadFileViaXHR(url);
     } catch (e) {
-        throw new NetworkDjVuError({ pageNumber: number, url: url });
+        throw new NetworkDjVuError({ url: url, ...errorData });
     }
 
     if (xhr.status && xhr.status !== 200) {
-        throw new UnsuccessfulRequestDjVuError(xhr, { pageNumber: number });
+        throw new UnsuccessfulRequestDjVuError(xhr, { ...errorData });
     }
 
-    const pageBuffer = xhr.response;
-    const bs = new ByteStream(pageBuffer);
-    if (bs.readStr4() !== 'AT&T') {
-        throw new CorruptedFileDjVuError(`The file gotten as the page number ${number} isn't a djvu file!`);
-    }
-
-    return bs.fork(); // we should skip format id in the page byte stream
+    return new ByteStream(xhr.response);
 }
 
-/** @returns {ByteStream} */
-export async function loadPageDependency(id, name, baseUrl, pageNumber) {
-    const url = baseUrl + name;
-    let xhr;
-
-    try {
-        xhr = await loadFileViaXHR(url);
-    } catch (e) {
-        throw new NetworkDjVuError({ pageNumber: pageNumber, dependencyId: id, url: url });
-    }
-
-    if (xhr.status && xhr.status !== 200) {
-        throw new UnsuccessfulRequestDjVuError(xhr, { pageNumber: pageNumber, dependencyId: id });
-    }
-
-    const bs = new ByteStream(xhr.response);
+function checkAndCropByteStream(bs, compositeChunkId = null, errorData = null) {
     if (bs.readStr4() !== 'AT&T') {
-        throw new CorruptedFileDjVuError(
-            `The file gotten as a dependency ${id} ` +
-            (pageNumber ? `for the page number ${pageNumber}` : '') +
-            ` isn't a djvu file!`
-        );
+        throw new CorruptedFileDjVuError(`The byte stream isn't a djvu file.`, errorData);
+    }
+
+    if (!compositeChunkId) {
+        return bs.fork(); // we should skip format id in the page byte stream
     }
 
     let chunkId = bs.readStr4();
     const length = bs.getInt32();
     chunkId += bs.readStr4();
-    if (chunkId !== "FORMDJVI") {
+    if (chunkId !== compositeChunkId) {
         throw new CorruptedFileDjVuError(
-            `The file gotten as a dependency ${id} ` +
-            (pageNumber ? `for the page number ${pageNumber}` : '') +
-            ` isn't a djvu file with shared data!`
+            `Unexpected chunk id. Expected "${compositeChunkId}", but got "${chunkId}"`,
+            errorData
         );
     }
 
     return bs.jump(-12).fork(length + 8);
+}
+
+/** @returns {ByteStream} */
+export async function loadPage(number, url) {
+    const errorData = { pageNumber: number };
+    return checkAndCropByteStream(await loadByteStream(url, errorData), null, errorData);
+}
+
+/** @returns {ByteStream} */
+export async function loadPageDependency(id, name, baseUrl, pageNumber = null) {
+    const errorData = { pageNumber: pageNumber, dependencyId: id };
+    return checkAndCropByteStream(await loadByteStream(baseUrl + name, errorData), 'FORMDJVI', errorData);
+}
+
+/** @returns {ByteStream} */
+export async function loadThumbnail(url, id = null) {
+    const errorData = { thumbnailId: id };
+    return checkAndCropByteStream(await loadByteStream(url, errorData), 'FORMTHUM', errorData);
 }

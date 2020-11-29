@@ -25,7 +25,7 @@ export default class DjVuWriter {
 
         this.bsw.writeByte(dirm.dflags)
             .writeInt16(dirm.flags.length)
-            .saveOffsetMark('DIRMoffsets')
+            .saveOffsetMark('DIRMoffsets') // will be written in getBuffer() method
             .jump(4 * dirm.flags.length);
 
         //начинаем фазу кодирования bzz;

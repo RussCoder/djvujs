@@ -3,9 +3,10 @@
  * между потоками в сообщениях
  */
 export class DjVuError {
-    constructor(code, message) {
+    constructor(code, message, additionalData = null) {
         this.code = code;
         this.message = message;
+        if (additionalData) this.additionalData = additionalData;
     }
 }
 
@@ -23,8 +24,8 @@ export class NoSuchPageDjVuError extends DjVuError {
 }
 
 export class CorruptedFileDjVuError extends DjVuError {
-    constructor(message = "") {
-        super(DjVuErrorCodes.FILE_IS_CORRUPTED, "The file is corrupted! " + message);
+    constructor(message = "", data = null) {
+        super(DjVuErrorCodes.FILE_IS_CORRUPTED, "The file is corrupted! " + message, data);
     }
 }
 
