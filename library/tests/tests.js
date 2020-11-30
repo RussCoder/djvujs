@@ -233,8 +233,7 @@ var Tests = {
 
         var buffer = await (await fetch(djvuUrl)).arrayBuffer();
         await djvuWorker.createDocument(buffer, baseUrl ? { baseUrl } : undefined);
-        var obj = await djvuWorker.getPageImageDataWithDpi(pageNumber);
-        var resultImageData = obj.imageData;
+        const resultImageData = await djvuWorker.doc.getPage(pageNumber).getImageData().run();
         if (imageUrl === null) {
             var result = checkByHash(resultImageData.data);
             return result.isSuccess ? null : result.messages[0];
@@ -336,7 +335,7 @@ var Tests = {
         await djvuWorker.createDocument(buffer);
         try {
             var pageNumber = 100;
-            await djvuWorker.getPageImageDataWithDpi(pageNumber);
+            await djvuWorker.doc.getPage(pageNumber).getImageData().run();
         } catch (e) {
             if (e.code === DjVu.ErrorCodes.NO_SUCH_PAGE && e.pageNumber === pageNumber) {
                 return null;
@@ -362,7 +361,7 @@ var Tests = {
     async testContents() {
         const buffer = await (await fetch(`/assets/DjVu3Spec.djvu`)).arrayBuffer();
         await djvuWorker.createDocument(buffer);
-        const contents = await djvuWorker.getContents();
+        const contents = await djvuWorker.doc.getContents().run();
         var res = await fetch('/assets/DjVu3Spec_contents.json');
         var canonicContents = await res.json();
 
@@ -377,7 +376,7 @@ var Tests = {
     async testPageUrlWithLeadingZero() {
         const buffer = await (await fetch(`/assets/djvu3spec+.djvu`)).arrayBuffer();
         await djvuWorker.createDocument(buffer);
-        const contents = await djvuWorker.getContents();
+        const contents = await await djvuWorker.doc.getContents().run();
         const url = contents[2].url;
         if (url !== '#002') {
             return `Incorrect url of a page! Got ${url}, while expected #002`;
@@ -392,15 +391,15 @@ var Tests = {
     async testGetPageNumberByUrl() {
         const buffer = await (await fetch(`/assets/DjVu3Spec.djvu`)).arrayBuffer();
         await djvuWorker.createDocument(buffer);
-        var pageNum = await djvuWorker.getPageNumberByUrl('#p0069.djvu');
+        var pageNum = await djvuWorker.doc.getPageNumberByUrl('#p0069.djvu').run();
         if (pageNum !== 69) {
             return `The url #p0069.djvu is targeted at 69 page but we got ${pageNum} !`;
         }
-        pageNum = await djvuWorker.getPageNumberByUrl('#57');
+        pageNum = await djvuWorker.doc.getPageNumberByUrl('#57').run();
         if (pageNum !== 57) {
             return `The url #57 is targeted at 57 page but we got ${pageNum} !`;
         }
-        pageNum = await djvuWorker.getPageNumberByUrl('#900');
+        pageNum = await djvuWorker.doc.getPageNumberByUrl('#900').run();
         if (pageNum !== null) {
             return `There is no page with the url #900, but we got ${pageNum} !`;
         }
@@ -413,10 +412,10 @@ var Tests = {
         try {
             var promises = [];
             for (var i = 2; i < 4; i++) {
-                promises.push(djvuWorker.getPageImageDataWithDpi(i));
+                promises.push(djvuWorker.doc.getPage(i).getImageData().run());
             }
             djvuWorker.cancelAllTasks();
-            promises.push(djvuWorker.getPageImageDataWithDpi(i));
+            promises.push(djvuWorker.doc.getPage(i).getImageData().run());
             await Promise.race(promises);
         } catch (e) {
             if (e.code === DjVu.ErrorCodes.NO_SUCH_PAGE && e.pageNumber === i) {
@@ -434,10 +433,10 @@ var Tests = {
         try {
             var promises = [];
             for (var i = 2; i < 4; i++) {
-                promises.push(djvuWorker.getPageImageDataWithDpi(i));
+                promises.push(djvuWorker.doc.getPage(i).getImageData().run());
             }
             djvuWorker.cancelTask(promises[0]);
-            promises.push(djvuWorker.getPageImageDataWithDpi(i));
+            promises.push(djvuWorker.doc.getPage(i).getImageData().run());
             await Promise.race(promises);
         } catch (e) {
             if (e.code === DjVu.ErrorCodes.NO_SUCH_PAGE && e.pageNumber === 3) {
@@ -481,9 +480,15 @@ var Tests = {
     async testBundleDocument() {
         const buffer = await (await fetch('/assets/DjVu3Spec_indirect/index.djvu')).arrayBuffer();
         await djvuWorker.createDocument(buffer, { baseUrl: '/assets/DjVu3Spec_indirect' });
-        const resultBuffer = await djvuWorker.doc.bundle().run();
+        let counter = 88;
+        let progress = 0;
+        const resultBuffer = await djvuWorker.doc.bundle(p => {
+            progress = p;
+            counter--;
+        }).run();
         const canonicBuffer = await (await fetch('/assets/DjVu3Spec_bundled.djvu')).arrayBuffer();
-        return TestHelper.compareArrayBuffers(canonicBuffer, resultBuffer);
+        const progressCheck = counter === 0 && progress === 1 ? null : "Проблемы с отслеживанием прогресса";
+        return progressCheck || TestHelper.compareArrayBuffers(canonicBuffer, resultBuffer);
     },
 
     testSliceDocument() {
@@ -632,8 +637,8 @@ var Tests = {
     async testEmptyPage() {
         var buffer = await (await fetch(`/assets/malliavin.djvu`)).arrayBuffer();
         await djvuWorker.createDocument(buffer);
-        var obj = await djvuWorker.getPageImageDataWithDpi(6);
-        if (!obj.imageData.data.every(byte => byte === 255)) {
+        const imageData = await djvuWorker.doc.getPage(6).getImageData().run();
+        if (!imageData.data.every(byte => byte === 255)) {
             return "The page must be empty, but it isn't!";
         }
     },

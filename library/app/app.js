@@ -57,7 +57,7 @@ function metaDataFunc() {
 
                 .then(() => {
                     $("#procmess").text('Задание выполняется ...');
-                    return djvuWorker.getDocumentMetaData(true);
+                    return djvuWorker.doc.toString(true).run();
                 })
 
                 .then(str => {
@@ -119,7 +119,7 @@ function readImagesAndCreateDocument() {
                     djvuWorker.endMultyPageDocument()
                         .then((buffer) => {
                             $("#procmess").text("Задание выполненено !!!");
-                            $('#filehref').prop('href', DjVu.Worker.createArrayBufferURL(buffer)).show(400);
+                            $('#filehref').prop('href', URL.createObjectURL(new Blob([buffer]))).show(400);
                         });
                 }
             });
@@ -136,7 +136,7 @@ function createPicDocument(imageArray) {
     djvuWorker.createDocumentFromPictures(imageArray, slices, delayInit, grayscale)
         .then((buffer) => {
             $("#procmess").text("Задание выполненено !!!");
-            $('#filehref').prop('href', DjVu.Worker.createArrayBufferURL(buffer)).show(400);
+            $('#filehref').prop('href', URL.createObjectURL(new Blob([buffer]))).show(400);
         },
             () => {
                 $("#procmess").text("Ошибка при обработке файла !!!");
@@ -166,7 +166,7 @@ function sliceFuncPrepare() {
             fr.onload = () => {
                 var buf = fr.result;
                 djvuWorker.createDocument(buf)
-                    .then(() => djvuWorker.getPageCount())
+                    .then(() => djvuWorker.doc.getPagesQuantity().run())
                     .then(pageCount => {
                         $("#procmess").text('');
                         sliceblock.find('.info').text('Документ содержит ' + pageCount
@@ -192,7 +192,7 @@ function sliceFunc() {
     djvuWorker.slice(from, to)
         .then((buffer) => {
             $("#procmess").text("Задание выполненено !!!");
-            $('#filehref').prop('href', DjVu.Worker.createArrayBufferURL(buffer)).show(400);
+            $('#filehref').prop('href', URL.createObjectURL(new Blob([buffer]))).show(400);
         },
             (e) => { // reject
                 console.error(e);

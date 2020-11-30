@@ -13,10 +13,20 @@ export default function initWorker() {
     var iwiw; // объект записи документов
 
     // обработчик приема событий
-    onmessage = async function (oEvent) {
+    onmessage = async function ({ data: obj }) {
+        if (obj.action) return handlers[obj.action](obj); // action that doesn't require response
+
         try { // отлавливаем все исключения
-            var obj = oEvent.data;
-            await handlers[obj.command](obj);
+            const { data, transferList } = await handlers[obj.command](obj) || {};
+            try {
+                postMessage({
+                    command: obj.command,
+                    ...data,
+                    ...(obj.sendBackData ? { sendBackData: obj.sendBackData } : null),
+                }, transferList && transferList.length ? transferList : undefined);
+            } catch (e) {
+                throw new UnableToTransferDataDjVuError(obj.data);
+            }
         } catch (error) {
             console.error(error);
             // we can't pass the native Error object between workers, so only several properties are copied
@@ -25,10 +35,11 @@ export default function initWorker() {
                 name: error.name,
                 message: error.message
             };
-            errorObj.lastCommandObject = obj;
+            errorObj.commandObject = obj;
             postMessage({
                 command: 'Error',
-                error: errorObj
+                error: errorObj,
+                ...(obj.sendBackData ? { sendBackData: obj.sendBackData } : null),
             });
         }
     };
@@ -53,6 +64,21 @@ export default function initWorker() {
         return value;
     }
 
+    function restoreHyperCallbacks(args) {
+        for (let i = 0; i < args.length; i++) {
+            const arg = args[i];
+            if (typeof arg === 'object' && arg.hyperCallback) {
+                args[i] = (...params) => postMessage({
+                    action: 'hyperCallback',
+                    id: arg.id,
+                    args: params
+                });
+            }
+        }
+
+        return args;
+    }
+
     var handlers = {
 
         /* A universal command which handles all tasks created via doc proxy property of the DjVuWorker class */
@@ -64,7 +90,7 @@ export default function initWorker() {
                     if (typeof res[task.funcs[i]] !== 'function') {
                         throw new IncorrectTaskDjVuError(task);
                     }
-                    res = await res[task.funcs[i]](...task.args[i]);
+                    res = await res[task.funcs[i]](...restoreHyperCallbacks(task.args[i]));
                 }
                 return res;
             }));
@@ -73,96 +99,34 @@ export default function initWorker() {
             var transferList = [];
             var processedResults = results.map(result => processValueBeforeTransfer(result, transferList));
 
-            try {
-                transferList.length ? postMessage({
-                    command: 'run',
-                    //time: time,
+            return {
+                data: {
                     result: processedResults.length === 1 ? processedResults[0] : processedResults
-                }, transferList) : postMessage({
-                    command: 'run',
-                    //time: time,
-                    result: processedResults.length === 1 ? processedResults[0] : processedResults
-                });
-            } catch (e) {
-                throw new UnableToTransferDataDjVuError(obj.data);
-            }
+                },
+                transferList
+            };
         },
 
         revokeObjectURL(obj) {
             URL.revokeObjectURL(obj.url);
         },
 
-        createDocumentUrl() {
-            postMessage({
-                command: 'createDocumentUrl',
-                url: djvuDocument.createObjectURL()
-            });
-        },
-
-        getContents() {
-            postMessage({
-                command: 'getContents',
-                contents: djvuDocument.getContents()
-            });
-        },
-
-        getPageNumberByUrl(obj) {
-            postMessage({
-                command: 'getPageNumberByUrl',
-                pageNumber: djvuDocument.getPageNumberByUrl(obj.url)
-            });
-        },
-
-        async getPageText(obj) {
-            var pagenum = +obj.pagenumber;
-            var text = await djvuDocument.getPage(pagenum).getText();
-            postMessage({
-                command: 'getPageText',
-                text: text
-            });
-        },
-
-        async getPageImageDataWithDpi(obj) {
-            var pagenum = +obj.pagenumber;
-            var page = await djvuDocument.getPage(pagenum);
-            var imageData = page.getImageData();
-            var dpi = page.getDpi();
-            postMessage({
-                command: 'getPageImageDataWithDpi',
-                buffer: imageData.data.buffer,
-                width: imageData.width,
-                height: imageData.height,
-                dpi: dpi
-            }, [imageData.data.buffer]);
-        },
-
-        getPageCount(obj) {
-            postMessage({
-                command: 'getPageCount',
-                pageNumber: djvuDocument.pages.length
-            });
-        },
-
-        getDocumentMetaData(obj) {
-            var str = djvuDocument.toString(obj.html);
-            postMessage({ command: 'getDocumentMetaData', str: str });
-        },
-
         startMultiPageDocument(obj) {
             iwiw = new IWImageWriter(obj.slicenumber, obj.delayInit, obj.grayscale);
             iwiw.startMultiPageDocument();
-            postMessage({ command: 'startMultiPageDocument' });
         },
 
         addPageToDocument(obj) {
             var imageData = new ImageData(new Uint8ClampedArray(obj.simpleImage.buffer), obj.simpleImage.width, obj.simpleImage.height);
             iwiw.addPageToDocument(imageData);
-            postMessage({ command: 'addPageToDocument' });
         },
 
         endMultiPageDocument(obj) {
             var buffer = iwiw.endMultiPageDocument();
-            postMessage({ command: 'endMultiPageDocument', buffer: buffer }, [buffer]);
+            return {
+                data: { buffer: buffer },
+                transferList: [buffer]
+            };
         },
 
         createDocumentFromPictures(obj) {
@@ -174,24 +138,17 @@ export default function initWorker() {
             }
             var iw = new IWImageWriter(obj.slicenumber, obj.delayInit, obj.grayscale);
             iw.onprocess = (percent) => {
-                postMessage({ command: 'Process', percent: percent });
+                postMessage({ action: 'Process', percent: percent });
             };
             var ndoc = iw.createMultyPageDocument(imageArray);
-            postMessage({ command: 'createDocumentFromPictures', buffer: ndoc.buffer }, [ndoc.buffer]);
-        },
-
-        slice(obj) {
-            var ndoc = djvuDocument.slice(obj.from, obj.to);
-            postMessage({ command: 'slice', buffer: ndoc.buffer }, [ndoc.buffer]);
+            return {
+                data: { buffer: ndoc.buffer },
+                transferList: [ndoc.buffer]
+            };
         },
 
         createDocument(obj) {
             djvuDocument = new DjVuDocument(obj.buffer, obj.options);
-            postMessage({ command: 'createDocument', pagenumber: djvuDocument.pages.length });
         },
-
-        reloadDocument() {
-            djvuDocument = new DjVuDocument(djvuDocument.buffer);
-        }
     };
 }

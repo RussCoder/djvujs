@@ -166,7 +166,7 @@ class RootSaga {
             yield* this.prepareForContinuousMode();
         }
 
-        const contents = yield this.djvuWorker.getContents();
+        const contents = yield this.djvuWorker.doc.getContents().run();
         yield put({
             type: Consts.CONTENTS_IS_GOTTEN_ACTION,
             contents: contents
@@ -183,7 +183,7 @@ class RootSaga {
     }
 
     * setPageByUrl(action) {
-        const pageNumber = yield this.djvuWorker.getPageNumberByUrl(action.url);
+        const pageNumber = yield this.djvuWorker.doc.getPageNumberByUrl(action.url).run();
         if (pageNumber !== null) {
             yield put(Actions.setNewPageNumberAction(pageNumber, true));
         }
@@ -206,7 +206,7 @@ class RootSaga {
         const fileName = get.fileName(state);
 
         if (fileName) {
-            const url = yield this.djvuWorker.createDocumentUrl();
+            const url = yield this.djvuWorker.doc.createObjectURL().run();
             const a = document.createElement('a');
             a.href = url;
             a.download = /\.(djv|djvu)$/.test(fileName) ? fileName : (fileName + '.djvu');

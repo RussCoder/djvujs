@@ -16,14 +16,34 @@ export default class DjVuWorker {
     }
 
     reset() {
-        this.worker && this.worker.terminate();
+        this.terminate();
         this.worker = new Worker(this.path);
         this.worker.onmessage = (e) => this.messageHandler(e);
         this.worker.onerror = (e) => this.errorHandler(e);
-        this.callbacks = null;
+        this.promiseCallbacks = null;
         this.currentPromise = null;
         this.promiseMap = new Map();
-        this.isTaskInProcess = false;
+        this.isWorking = false;
+        this.commandCounter = 0;
+        this.currentCommandId = null;
+
+        // Hyper callback is a callback working even from inside the Worker :)
+        this.hyperCallbacks = {};
+        this.hyperCallbackCounter = 0;
+    }
+
+    registerHyperCallback(func) {
+        const id = this.hyperCallbackCounter++;
+        this.hyperCallbacks[id] = func;
+        return { hyperCallback: true, id: id };
+    }
+
+    unregisterHyperCallback(id) {
+        delete this.hyperCallbacks[id];
+    }
+
+    terminate() {
+        this.worker && this.worker.terminate();
     }
 
     get doc() {
@@ -44,7 +64,8 @@ export default class DjVuWorker {
 
     dropCurrentTask() {
         this.currentPromise = null;
-        this.callbacks = null;
+        this.promiseCallbacks = null;
+        this.currentCommandId = null;
     }
 
     emptyTaskQueue() {
@@ -56,7 +77,11 @@ export default class DjVuWorker {
         this.dropCurrentTask();
     }
 
-    createNewPromise(commandObj, transferList) {
+    /** 
+     * @param {Array<Transferable>} transferList - the list of objects to transfer
+     * ownership of the the Web Worker (like ArrayBuffer).
+     */
+    createNewPromise(commandObj, transferList = undefined) {
         var callbacks;
         var promise = new Promise((resolve, reject) => {
             callbacks = { resolve, reject };
@@ -66,22 +91,52 @@ export default class DjVuWorker {
         return promise;
     }
 
+    /** @param {{command: string, data: Array<{{funcs: function[], args: any[]}}>}} commandObj */
+    prepareCommandObject(commandObj) {
+        if (!(commandObj.data instanceof Array)) return commandObj;
+
+        const hyperCallbackIds = [];
+
+        for (const { args: argsList } of commandObj.data) {
+            for (const args of argsList) {
+                for (let i = 0; i < args.length; i++) {
+                    if (typeof args[i] === 'function') {
+                        const hyperCallback = this.registerHyperCallback(args[i]);
+                        args[i] = hyperCallback;
+                        hyperCallbackIds.push(hyperCallback.id);
+                    }
+                }
+            }
+        }
+
+        if (hyperCallbackIds.length) {
+            commandObj.sendBackData = {
+                ...commandObj.sendBackData,
+                hyperCallbackIds
+            };
+        }
+
+        return commandObj;
+    }
+
     runNextTask() {
-        if (this.isTaskInProcess) {
+        if (this.isWorking) {
             return;
         }
         var next = this.promiseMap.entries().next().value;
         if (next) {
-            var obj = next[1];
-            var key = next[0];
-            this.callbacks = obj.callbacks;
-            this.currentPromise = key;
-            this.worker.postMessage(obj.commandObj, obj.transferList);
-            this.isTaskInProcess = true;
-            this.promiseMap.delete(key);
+            const [promise, { callbacks, commandObj, transferList }] = next;
+            this.promiseCallbacks = callbacks;
+            this.currentPromise = promise;
+            this.currentCommandId = this.commandCounter++;
+            commandObj.sendBackData = {
+                commandId: this.currentCommandId,
+            };
+            this.worker.postMessage(this.prepareCommandObject(commandObj), transferList);
+            this.isWorking = true;
+            this.promiseMap.delete(promise);
         } else {
-            this.currentPromise = null;
-            this.callbacks = null;
+            this.dropCurrentTask();
         }
     }
 
@@ -93,75 +148,63 @@ export default class DjVuWorker {
         return this.promiseMap.has(promise) || this.isTaskInProcess(promise);
     }
 
-    messageHandler(event) {
-        this.isTaskInProcess = false;
-        var callbacks = this.callbacks;
-        this.runNextTask();
-
-        if (!callbacks) {
-            return;
-        }
-
-        var obj = event.data;
-        switch (obj.command) {
-            case 'Error':
-                callbacks.reject(obj.error);
-                break;
+    processAction(obj) { // usually progress messages, not the commands' finish
+        switch (obj.action) {
             case 'Process':
                 this.onprocess ? this.onprocess(obj.percent) : 0;
                 break;
-            case 'getPageImageDataWithDpi':
-                callbacks.resolve({
-                    // производим "сборку" ImageData
-                    imageData: new ImageData(new Uint8ClampedArray(obj.buffer), obj.width, obj.height),
-                    dpi: obj.dpi
-                });
+            case 'hyperCallback':
+                if (this.hyperCallbacks[obj.id]) this.hyperCallbacks[obj.id](...obj.args);
+                break;
+        }
+    }
+
+    messageHandler({ data: obj }) {
+        if (obj.action) return this.processAction(obj);
+
+        this.isWorking = false;
+        const callbacks = this.promiseCallbacks;
+        const commandId = obj.sendBackData && obj.sendBackData.commandId;
+        if (commandId === this.currentCommandId || this.currentCommandId === null) {
+            // in fact, this invocation is essential, since this.isWorking 
+            // isn't reset when all tasks are cancelled. 
+            // So we still wait for a cancelled task to finish.
+            // commandIds only prevent us from forgetting current task 
+            // in case when something comes from the worker and it's not an action 
+            // (it shouldn't happen, just an additional measure)
+            this.runNextTask();
+        } else {
+            return; // in case if we cancel a task, but its result came afterwards
+        }
+
+        if (!callbacks) return; // in case of all tasks cancellation
+
+        const { resolve, reject } = callbacks;
+        switch (obj.command) {
+            case 'Error':
+                reject(obj.error);
                 break;
             case 'createDocument':
-                callbacks.resolve();
-                break;
-            case 'slice':
-                callbacks.resolve(obj.buffer);
+            case 'startMultiPageDocument':
+            case 'addPageToDocument':
+                resolve();
                 break;
             case 'createDocumentFromPictures':
-                callbacks.resolve(obj.buffer);
-                break;
-            case 'startMultiPageDocument':
-                callbacks.resolve();
-                break;
-            case 'addPageToDocument':
-                callbacks.resolve();
-                break;
             case 'endMultiPageDocument':
-                callbacks.resolve(obj.buffer);
-                break;
-            case 'getDocumentMetaData':
-                callbacks.resolve(obj.str);
-                break;
-            case 'getPageCount':
-                callbacks.resolve(obj.pageNumber);
-                break;
-            case 'getPageText':
-                callbacks.resolve(obj.text);
-                break;
-            case 'getContents':
-                callbacks.resolve(obj.contents);
-                break;
-            case 'getPageNumberByUrl':
-                callbacks.resolve(obj.pageNumber);
-                break;
-            case 'createDocumentUrl':
-                callbacks.resolve(obj.url);
+                resolve(obj.buffer);
                 break;
             case 'run':
                 var restoredResult = !obj.result ? obj.result :
                     obj.result.length && obj.result.map ? obj.result.map(result => this.restoreValueAfterTransfer(result)) :
                         this.restoreValueAfterTransfer(obj.result);
-                //console.log("Got task response", Date.now() - obj.time);
-                callbacks.resolve(restoredResult);
+                resolve(restoredResult);
                 break;
             default:
                 console.error("Unexpected message from DjVuWorker: ", obj);
+        }
+
+        if (obj.sendBackData && obj.sendBackData.hyperCallbackIds) {
+            obj.sendBackData.hyperCallbackIds.forEach(id => this.unregisterHyperCallback(id));
         }
     }
 
@@ -174,6 +217,7 @@ export default class DjVuWorker {
         return value;
     }
 
+    /** @param {Array<DjVuWorkerTask} tasks */
     run(...tasks) {
         const data = tasks.map(task => task._);
         return this.createNewPromise({
@@ -185,31 +229,8 @@ export default class DjVuWorker {
 
     revokeObjectURL(url) { // if an ObjectURL was created inside a worker it can be revoked only inside this very worker
         this.worker.postMessage({
-            command: this.revokeObjectURL.name,
+            action: this.revokeObjectURL.name,
             url: url,
-        })
-    }
-
-    createDocumentUrl() {
-        return this.createNewPromise({ command: 'createDocumentUrl' });
-    }
-
-    getPageCount() {
-        return this.createNewPromise({ command: 'getPageCount' });
-    }
-
-    getContents() {
-        return this.createNewPromise({ command: 'getContents' });
-    }
-
-    getPageNumberByUrl(url) {
-        return this.createNewPromise({ command: 'getPageNumberByUrl', url: url });
-    }
-
-    getDocumentMetaData(html) {
-        return this.createNewPromise({
-            command: 'getDocumentMetaData',
-            html: html
         });
     }
 
@@ -242,21 +263,6 @@ export default class DjVuWorker {
         return this.createNewPromise({ command: 'createDocument', buffer: buffer, options: options }, [buffer]);
     }
 
-    getPageImageDataWithDpi(pagenumber) {
-        return this.createNewPromise({
-            command: 'getPageImageDataWithDpi',
-            pagenumber: pagenumber
-        });
-    }
-
-    getPageText(pagenumber) {
-        return this.createNewPromise({ command: 'getPageText', pagenumber: pagenumber });
-    }
-
-    slice(_from, _to) {
-        return this.createNewPromise({ command: 'slice', from: _from, to: _to });
-    }
-
     createDocumentFromPictures(imageArray, slicenumber, delayInit, grayscale) {
         var simpleImages = new Array(imageArray.length);
         var buffers = new Array(imageArray.length);
@@ -278,12 +284,6 @@ export default class DjVuWorker {
             grayscale: grayscale
         }, buffers);
     }
-
-    static createArrayBufferURL(buffer) {
-        var blob = new Blob([buffer]);
-        var url = URL.createObjectURL(blob);
-        return url;
-    }
 }
 
 class DjVuWorkerTask {
@@ -303,7 +303,7 @@ class DjVuWorkerTask {
                         return DjVuWorkerTask.instance(worker, [...funcs, key], args);
                 }
             },
-            apply: (target, that, _args) => {
+            apply: (target, that, _args) => { // when method is called, just add args to the array
                 return DjVuWorkerTask.instance(worker, funcs, [...args, _args]);
             }
         });

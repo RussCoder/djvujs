@@ -6,7 +6,7 @@
 
 var fileSize = 0;
 var output;
-var djvuWorker;
+var worker;
 
 var timeOutput = document.querySelector('#time_output');
 var renderTimeOutput = document.querySelector('#render_time_output');
@@ -15,8 +15,8 @@ rerunButton.onclick = rerun;
 document.querySelector('#redraw').onclick = redrawPage;
 
 var pageNumber = 1;
-var djvuUrl = 'assets/slow.djvu';
-var baseUrl = 'http://localhost:9000/assets/';
+var djvuUrl = '/assets/DjVu3Spec_indirect/index.djvu';
+var baseUrl = '/assets/DjVu3Spec_indirect/';
 
 document.querySelector('#next').onclick = () => {
     pageNumber++;
@@ -51,20 +51,25 @@ function initViewer() {
     viewer.loadDjVu('samples/csl.djvu');
 }
 
-function renderDjVu() {
+async function renderDjVu() {
     /** @type {DjVuWorker} */
-    djvuWorker = new DjVu.Worker();
-    Globals.loadFile(djvuUrl)
-        .then(buffer => djvuWorker.createDocument(buffer, {baseUrl}))
-        .then(() => redrawPage());
+    worker = new DjVu.Worker();
+    const buffer = await fetch(djvuUrl).then(r => r.arrayBuffer());
+    await worker.createDocument(buffer, { baseUrl });
+
+    // const bundle = await worker.doc.bundle(progress => {
+    //     console.log(progress);
+    // }).run();
+
+    await redrawPage();
 }
 
 async function redrawPage() {
     console.log('**** Render Page ****');
     var time = performance.now();
-    var [imageData, dpi] = await djvuWorker.run(
-        djvuWorker.doc.getPage(pageNumber).getImageData(),
-        djvuWorker.doc.getPage(pageNumber).getDpi()
+    var [imageData, dpi] = await worker.run(
+        worker.doc.getPage(pageNumber).getImageData(),
+        worker.doc.getPage(pageNumber).getDpi()
     );
     Globals.drawImage(imageData, dpi * 1.5);
     time = performance.now() - time;
@@ -136,7 +141,7 @@ function readDjvu(buf) {
                 return worker.getDocumentMetaData(true);
             })
             .then((str) => {
-                //link.href = DjVuWorker.createArrayBufferURL(buffer)
+                //link.href = URL.createObjectURL(new Blob([buffer]))
                 writeln(str);
                 Globals.Timer.end('TotalTime', true);
             });

@@ -124,7 +124,7 @@ function readPicture(buffer) {
         // var doc = iwiw.createOnePageDocument(imageData);
         console.log('docCreateTime = ', performance.now() - pictureTotalTime);
         var link = document.querySelector('#dochref');
-        link.href = DjVuWorker.createArrayBufferURL(buffer);
+        link.href = URL.createObjectURL(new Blob([buffer]));
 
         // c.putImageData(doc.pages[0].getImage(), 0, 0);
         console.log('Counter', Globals.counter);
