@@ -1,4 +1,3 @@
-import { createGetObjectByState } from '../utils';
 import Constants from '../constants';
 import { ActionTypes } from "../constants";
 
@@ -130,7 +129,19 @@ export default (state = initialState, action) => {
 }
 
 export const get = {
-    ...createGetObjectByState(initialState),
+    documentId: state => state.documentId,
+    userScale: state => state.userScale,
+    pageRotation: state => state.pageRotation,
+    pagesQuantity: state => state.pagesQuantity,
+    contents: state => state.contents,
+    isIndirect: state => state.isIndirect,
+    isHelpWindowShown: state => state.isHelpWindowShown,
+    fileName: state => state.fileName,
+    errorMessage: state => state.errorMessage,
+    errorHeader: state => state.errorHeader,
+    options: state => state.options,
+    isFullPageView: state => state.isFullPageView,
+    isLoading: state => state.isLoading,
     isDocumentLoaded: state => !!state.fileName,
     viewMode: state => {
         if (!state.isIndirect && state.isContinuousScrollMode) {

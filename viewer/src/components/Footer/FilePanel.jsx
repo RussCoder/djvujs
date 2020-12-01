@@ -1,14 +1,13 @@
 import React from 'react';
-import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
 import { faTimesCircle } from '@fortawesome/free-regular-svg-icons';
 
 import Actions from '../../actions/actions';
 import { get } from '../../reducers/rootReducer';
 import FileBlock from '../FileBlock';
-import { TranslationContext } from '../Translation';
 import styled, { css } from 'styled-components';
 import { ControlButton } from '../StyledPrimitives';
+import { useTranslation } from '../Translation';
+import { useDispatch, useSelector } from 'react-redux';
 
 const style = css`
     width: 100%;
@@ -34,45 +33,30 @@ const TextButton = styled.button`
     }
 `;
 
-class FilePanel extends React.Component {
+export default () => {
+    const t = useTranslation();
+    const dispatch = useDispatch();
+    const fileName = useSelector(get.fileName);
 
-    static propTypes = {
-        fileName: PropTypes.string,
-        saveDocument: PropTypes.func.isRequired
-    };
-
-    static contextType = TranslationContext;
-
-    render() {
-        const t = this.context;
-
-        return (
-            <div css={style}>
-                {this.props.fileName ? (
-                    <span title={t("Close document")}>
-                        <ControlButton
-                            onClick={this.props.closeDocument}
-                            icon={faTimesCircle}
-                        />
-                    </span>
-                ) : null}
-                <FileBlock fileName={this.props.fileName} />
-                {this.props.fileName ? (
-                    <TextButton
-                        onClick={this.props.saveDocument}
-                        title={t("Save document")}
-                    >
-                        {t('Save')}
-                    </TextButton>
-                ) : null}
-            </div>
-        );
-    }
+    return (
+        <div css={style}>
+            {fileName ? (
+                <span title={t("Close document")}>
+                    <ControlButton
+                        onClick={() => dispatch(Actions.closeDocumentAction())}
+                        icon={faTimesCircle}
+                    />
+                </span>
+            ) : null}
+            <FileBlock fileName={fileName} />
+            {fileName ? (
+                <TextButton
+                    onClick={() => dispatch(Actions.saveDocumentAction())}
+                    title={t("Save document")}
+                >
+                    {t('Save')}
+                </TextButton>
+            ) : null}
+        </div>
+    );
 }
-
-export default connect(state => ({
-    fileName: get.fileName(state),
-}), {
-    saveDocument: Actions.saveDocumentAction,
-    closeDocument: Actions.closeDocumentAction
-})(FilePanel);

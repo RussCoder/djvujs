@@ -1,6 +1,6 @@
+import { createSelector } from 'reselect';
 import Constants from '../constants';
 import { ActionTypes } from '../constants/index';
-import { createGetObjectByState } from '../utils';
 
 const initialState = Object.freeze({
     imageData: null,
@@ -95,4 +95,19 @@ export default function pageReducer(state = initialState, action) {
     }
 }
 
-export const get = createGetObjectByState(initialState);
+/** @returns {function} */
+const $ = selector => createSelector(state => state.pageState, selector);
+
+export const get = {
+    cursorMode: $(s => s.cursorMode),
+    pageText: $(s => s.pageText),
+    imageData: $(s => s.imageData),
+    imageDpi: $(s => s.imageDpi),
+    textZones: $(s => s.textZones),
+    currentPageNumber: $(s => s.currentPageNumber),
+    isPageNumberSetManually: $(s => s.isPageNumberSetManually),
+    imagePageError: $(s => s.imagePageError),
+    textPageError: $(s => s.textPageError),
+    pageList: $(s => s.pageList),
+    pageSizeList: $(s => s.pageSizeList),
+};

@@ -15,6 +15,7 @@ const Root = styled.div`
         background: inherit;
         border: 1px solid var(--border-color);
         padding: 0.5em;
+        white-space: pre-wrap;
     } 
 `;
 

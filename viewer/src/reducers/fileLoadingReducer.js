@@ -1,5 +1,5 @@
+import { createSelector } from 'reselect';
 import Constants from '../constants';
-import { createGetObjectByState } from '../utils';
 
 const initialState = Object.freeze({
     isFileLoading: false,
@@ -31,4 +31,10 @@ export default function fileLoadingReducer(state = initialState, action) {
     }
 }
 
-export const get = createGetObjectByState(initialState);
+const $ = selector => createSelector(state => state.fileLoadingState, selector);
+
+export const get = {
+    isFileLoading: $(s => s.isFileLoading),
+    loadedBytes: $(s => s.loadedBytes),
+    totalBytes: $(s => s.totalBytes),
+};

@@ -96,6 +96,7 @@ class App extends Component {
 
         return (
             <TranslationProvider>
+                <GlobalStyle />
                 <div
                     css={`
                         ${theme === 'dark' ? darkTheme : lightTheme};

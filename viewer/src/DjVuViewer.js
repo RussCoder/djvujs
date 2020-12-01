@@ -33,14 +33,6 @@ export default class DjVuViewer extends EventEmitter {
         if (language) {
             this.configure({ language: language });
         }
-
-        if (process.env.NODE_ENV === 'development') {
-            if (module.hot) {
-                module.hot.accept('./components/App', () => {
-                    this.render(this.htmlElement);
-                });
-            }
-        }
     }
 
     eventMiddleware = store => next => action => {

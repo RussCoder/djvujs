@@ -6,7 +6,7 @@ DjVu.Viewer = DjVuViewer;
 if (process.env.NODE_ENV !== 'production') {
     window.addEventListener('load', () => {
         //window.DjVuViewerInstance.loadDocumentByUrl("/DjVu3Spec.djvu#page=10");
-        window.DjVuViewerInstance.loadDocumentByUrl("/century_dict/index08.djvu#page=490");
+        window.DjVuViewerInstance.loadDocumentByUrl("/DjVu3Spec_indirect/index.djvu");
 
         //window.DjVuViewerInstance.loadDocumentByUrl("/czech_indirect/index.djvu", { pageRotation: 0, djvuOptions: {baseUrl: '/czech_indirect/'} });
         //window.DjVuViewerInstance.loadDocumentByUrl("/tmp/DjVu3Spec.djvu").then(() => window.DjVuViewerInstance.configure({pageRotation: 270}));
