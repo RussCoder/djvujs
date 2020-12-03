@@ -3,8 +3,8 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 
 import ModalWindow from './ModalWindow';
-import Actions from '../actions/actions';
-import { TranslationContext } from "./Translation";
+import Actions from '../../actions/actions';
+import { TranslationContext } from "../Translation";
 
 class NotificationWindow extends React.Component {
 

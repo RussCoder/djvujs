@@ -6,7 +6,7 @@ import { faArrowAltCircleRight, faArrowAltCircleLeft } from '@fortawesome/free-r
 
 import Actions from '../../actions/actions';
 import PageNumberElement from './PageNumber';
-import { get } from '../../reducers/rootReducer';
+import { get } from '../../reducers';
 import { TranslationContext } from "../Translation";
 import styled, { css } from 'styled-components';
 

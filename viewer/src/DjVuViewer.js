@@ -5,9 +5,8 @@ import App from './components/App.jsx';
 import Actions from './actions/actions';
 import configureStore from './store';
 import EventEmitter from 'eventemitter3';
-import Constants, { constant } from './constants';
+import Constants, { constant, ActionTypes } from './constants';
 import { get } from './reducers';
-import { ActionTypes } from './constants/index.js';
 import dictionaries from './locales';
 
 const Events = constant({

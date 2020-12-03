@@ -1,5 +1,5 @@
 import { createSelector } from 'reselect';
-import Constants from '../constants';
+import Constants, { ActionTypes } from '../constants';
 
 const initialState = Object.freeze({
     isFileLoading: false,
@@ -23,7 +23,7 @@ export default function fileLoadingReducer(state = initialState, action) {
             }
 
         case Constants.END_FILE_LOADING_ACTION:
-        case Constants.ERROR_ACTION:
+        case ActionTypes.ERROR:
             return initialState;
 
         default:

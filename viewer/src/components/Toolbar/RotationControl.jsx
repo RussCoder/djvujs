@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUndo } from '@fortawesome/free-solid-svg-icons';
 
 import Actions from '../../actions/actions';
-import { get } from '../../reducers/rootReducer';
+import { get } from '../../reducers';
 import { useTranslation } from "../Translation";
 import styled from 'styled-components';
 

@@ -108,7 +108,7 @@ export default (state = initialState, action) => {
                 isFullPageView: action.isFullPageView
             }
 
-        case Constants.ERROR_ACTION:
+        case ActionTypes.ERROR:
             return {
                 ...state,
                 isLoading: false,

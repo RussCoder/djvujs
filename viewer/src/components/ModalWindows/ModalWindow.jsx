@@ -3,8 +3,8 @@ import PropTypes from 'prop-types';
 import cx from 'classnames';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimesCircle } from '@fortawesome/free-regular-svg-icons';
-import { css } from 'styled-components';
-import { iconButton } from './cssMixins';
+import styled, { css } from 'styled-components';
+import { iconButton } from '../cssMixins';
 
 const style = css`
     position: absolute;
@@ -61,32 +61,20 @@ const style = css`
                     padding-right: 0;
                 }
             }
-
-            .help_window {
-                padding: 0.5em;
-        
-                .header {
-                    font-size: 1.2em;
-                    width: 100%;
-                    font-weight: 600;
-                    border-bottom: 1px solid var(--border-color);
-                    margin: 0.5em 0;
-                }
-            }
         }
     }
+`;
 
-    .dark_layer {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: var(--alternative-background-color);
-        backdrop-filter: blur(2px);
-        opacity: 0.8;
-        z-index: 1;
-    }
+const DarkLayer = styled.div`
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--alternative-background-color);
+    backdrop-filter: blur(2px);
+    opacity: 0.8;
+    z-index: 1;
 `;
 
 
@@ -100,7 +88,7 @@ export default class ModalWindow extends React.Component {
     };
 
     render() {
-        const { onClose, additionalClasses, isError, isFixedSize } = this.props;
+        const { onClose, isError, isFixedSize, className } = this.props;
 
         const classes = {
             modal_window: true,
@@ -110,8 +98,8 @@ export default class ModalWindow extends React.Component {
 
         return (
             <div css={style}>
-                <div className="dark_layer" onClick={onClose} />
-                <div className={`${cx(classes)} ${additionalClasses || ''}`}>
+                <DarkLayer onClick={onClose} />
+                <div className={`${cx(classes)} ${className || ''}`}>
                     <FontAwesomeIcon
                         className="close_button"
                         icon={faTimesCircle}

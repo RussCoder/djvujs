@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import memoize from 'memoize-one';
 
 import Actions from '../../actions/actions';
-import { get } from '../../reducers/rootReducer';
+import { get } from '../../reducers';
 import Constants from '../../constants';
 import ComplexImage from './ComplexImage';
 import VirtualList from './VirtualList';
@@ -262,7 +262,7 @@ class ImageBlock extends React.Component {
                 >
                     <div
                         ref={this.complexImageRef}
-                        css={`padding: 1em, margin: auto`}
+                        css={`padding: 1em; margin: auto`}
                         style={{ opacity: 0 }} // is changed in the ComponentDidUpdate
                     >
                         <ComplexImage {...this.props} />

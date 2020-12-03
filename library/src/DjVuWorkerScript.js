@@ -3,7 +3,7 @@ import IWImageWriter from './iw44/IWImageWriter';
 import { DjVuError, DjVuErrorCodes, IncorrectTaskDjVuError, UnableToTransferDataDjVuError } from './DjVuErrors';
 
 /**
- * Это скрипт для выполнения в фоновом потоке. 
+ * Это скрипт для выполнения в фоновом потоке.
  */
 export default function initWorker() {
 
@@ -65,18 +65,18 @@ export default function initWorker() {
     }
 
     function restoreHyperCallbacks(args) {
-        for (let i = 0; i < args.length; i++) {
-            const arg = args[i];
+        // we should not change the initial array,
+        // cause it is sent back in case of error, and a function cannot be sent
+        return args.map(arg => {
             if (typeof arg === 'object' && arg.hyperCallback) {
-                args[i] = (...params) => postMessage({
+                return (...params) => postMessage({
                     action: 'hyperCallback',
                     id: arg.id,
                     args: params
                 });
             }
-        }
-
-        return args;
+            return arg;
+        });
     }
 
     var handlers = {

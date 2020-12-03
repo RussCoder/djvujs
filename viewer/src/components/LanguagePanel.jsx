@@ -6,7 +6,7 @@ import { useTranslation } from "./Translation";
 import { ActionTypes } from "../constants";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faExclamationTriangle, faPlus } from "@fortawesome/free-solid-svg-icons";
-import ModalWindow from "./ModalWindow";
+import ModalWindow from "./ModalWindows/ModalWindow";
 import dictionaries from '../locales';
 
 const LanguagePanelRoot = styled.div`

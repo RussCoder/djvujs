@@ -3,15 +3,16 @@ import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { createGlobalStyle, css } from 'styled-components';
 
-import { get } from '../reducers/rootReducer';
+import { get } from '../reducers';
 import Toolbar from "./Toolbar/Toolbar";
 import InitialScreen from './InitialScreen/InitialScreen';
 import FileLoadingScreen from './FileLoadingScreen';
 import Footer from './Footer/Footer';
-import NotificationWindow from './NotificationWindow';
-import HelpWindow from './HelpWindow';
+import NotificationWindow from './ModalWindows/NotificationWindow';
+import HelpWindow from './ModalWindows/HelpWindow';
 import { TranslationProvider } from './Translation';
 import Main from './Main';
+import SaveDialog from "./ModalWindows/SaveDialog";
 
 const GlobalStyle = createGlobalStyle`
     html.disable_scroll_djvujs,
@@ -121,6 +122,7 @@ class App extends Component {
                         type={"error"}
                     />
                     <HelpWindow />
+                    <SaveDialog />
                 </div>
             </TranslationProvider>
         );

@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import Actions from '../../actions/actions';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faMinus } from '@fortawesome/free-solid-svg-icons';
-import { get } from '../../reducers/rootReducer';
+import { get } from '../../reducers';
 import { TranslationContext } from "../Translation";
 import styled from 'styled-components';
 import { iconButton, styledInput } from '../cssMixins';

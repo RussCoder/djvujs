@@ -1,7 +1,7 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faSpinner } from '@fortawesome/free-solid-svg-icons';
-import { get } from '../../reducers/rootReducer';
+import { get } from '../../reducers';
 import { useTranslation } from '../Translation';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';

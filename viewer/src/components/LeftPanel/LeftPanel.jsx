@@ -2,7 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 
 import ContentsPanel from './ContentsPanel';
-import { get } from '../../reducers/rootReducer';
+import { get } from '../../reducers';
 import styled, { css } from 'styled-components';
 
 const style = css`

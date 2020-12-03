@@ -3,7 +3,7 @@
  */
 import contentDisposition from 'content-disposition';
 import { put, select, takeLatest } from 'redux-saga/effects';
-import { get } from '../reducers/rootReducer';
+import { get } from '../reducers';
 // import { delay } from 'redux-saga';
 
 import Constants, { ActionTypes } from '../constants';
@@ -24,7 +24,12 @@ class RootSaga {
         // so just for them on the main page of the extension a script url should be provided manually.
         // In all other cases no libURL is required - a blob URL will be generated automatically for the worker.
         const libURL = inExtension ? document.querySelector('script#djvu_js_lib').src : undefined;
-        this.djvuWorker = new DjVu.Worker(libURL);
+        window.worker = this.djvuWorker = new DjVu.Worker(libURL);
+
+        // it's needed to recreate the worker when the bundle() operation is cancelled (but save the document),
+        // because bundle() may take quite a while, if there are many pages in the document.
+        this.isBundling = false;
+        this.documentContructorData = null;
 
         this.pagesCache = new PagesCache(this.djvuWorker);
         this.pageDataManager = null;
@@ -136,14 +141,20 @@ class RootSaga {
     }
 
     * createDocumentFromArrayBuffer({ arrayBuffer, fileName, config }) {
-        this.djvuWorker.cancelAllTasks();
         this.resetWorker();
 
+        this.documentContructorData = {
+            buffer: arrayBuffer.slice(0),
+            options: config && config.djvuOptions,
+        };
         yield this.djvuWorker.createDocument(arrayBuffer, config && config.djvuOptions);
         const [pagesQuantity, isBundled] = yield this.djvuWorker.run(
             this.djvuWorker.doc.getPagesQuantity(),
             this.djvuWorker.doc.isBundled(),
         );
+        if (isBundled) {
+            this.documentContructorData = null;
+        }
 
         yield put({
             type: Constants.DOCUMENT_CREATED_ACTION,
@@ -217,6 +228,8 @@ class RootSaga {
     resetWorker() {
         this.pagesCache.resetPagesCache();
         this.djvuWorker.reset();
+        this.isBundling = false;
+        this.documentContructorData = null;
     }
 
     setCallback(action) {
@@ -354,6 +367,38 @@ class RootSaga {
         }
     }
 
+    * bundleDocument() {
+        try {
+            this.djvuWorker.cancelAllTasks();
+            this.isBundling = true;
+            const buffer = yield this.djvuWorker.doc.bundle(progress => {
+                this.dispatch({
+                    type: ActionTypes.UPDATE_FILE_PROCESSING_PROGRESS,
+                    payload: progress,
+                });
+            }).run();
+            yield put({
+                type: ActionTypes.FINISH_TO_BUNDLE,
+                payload: buffer,
+            });
+        } finally {
+            this.isBundling = false;
+        }
+    }
+
+    * hardReloadIfRequired() {
+        if (this.isBundling && this.documentContructorData) {
+            this.djvuWorker.reset();
+            this.isBundling = false;
+            yield this.djvuWorker.createDocument(
+                this.documentContructorData.buffer.slice(0),
+                this.documentContructorData.options
+            );
+            //console.warn('HARD RELOAD');
+            yield* this.resetCurrentPageNumber();
+        }
+    }
+
     * main() {
         yield takeLatest(Constants.CREATE_DOCUMENT_FROM_ARRAY_BUFFER_ACTION, this.withErrorHandler(this.createDocumentFromArrayBuffer));
         yield takeLatest(Constants.SET_NEW_PAGE_NUMBER_ACTION, this.withErrorHandler(this.fetchPageData));
@@ -367,6 +412,14 @@ class RootSaga {
         yield takeLatest(ActionTypes.UPDATE_OPTIONS, this.withErrorHandler(this.updateOptions));
         yield takeLatest(ActionTypes.CONFIGURE, this.withErrorHandler(this.configure));
         yield takeLatest(ActionTypes.LOAD_DOCUMENT_BY_URL, this.loadDocumentByUrl.bind(this));
+
+        yield takeLatest(ActionTypes.START_TO_BUNDLE, this.withErrorHandler(this.bundleDocument));
+        yield takeLatest([
+                ActionTypes.ERROR,
+                ActionTypes.CLOSE_SAVE_DIALOG,
+            ],
+            this.withErrorHandler(this.hardReloadIfRequired)
+        );
 
         yield* this.withErrorHandler(this.loadOptions)();
     }

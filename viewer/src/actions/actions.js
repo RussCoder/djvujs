@@ -1,5 +1,5 @@
-import Constants from '../constants';
-import { get } from '../reducers/rootReducer';
+import Constants, { ActionTypes } from '../constants';
+import { get } from '../reducers';
 import DjVu from '../DjVu';
 
 const Actions = {
@@ -61,7 +61,7 @@ const Actions = {
     }),
 
     errorAction: error => {
-        var { header, message } = error;
+        let { header, message } = error;
 
         if (!header || !message) {
             switch (error.code) {
@@ -70,13 +70,13 @@ const Actions = {
                     message = "The provided file isn't a .djvu file!";
                     break;
                 default:
-                    header = "Unexpected error ocurred!";
+                    header = "Unexpected error occurred!";
                     message = JSON.stringify(error);
             }
         }
 
         return {
-            type: Constants.ERROR_ACTION,
+            type: ActionTypes.ERROR,
             errorHeader: header,
             errorMessage: message
         }

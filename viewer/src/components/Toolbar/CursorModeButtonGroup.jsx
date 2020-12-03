@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { faHandPaper } from '@fortawesome/free-regular-svg-icons';
 import { faICursor } from '@fortawesome/free-solid-svg-icons';
 
-import { get } from '../../reducers/rootReducer';
+import { get } from '../../reducers';
 import Constants from '../../constants';
 import Actions from '../../actions/actions';
 import { useTranslation } from "../Translation";

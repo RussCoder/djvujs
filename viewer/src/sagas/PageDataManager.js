@@ -1,5 +1,5 @@
 /**
- * The logic related to page caching in the continuos page mode.
+ * The logic related to page caching in the continuous scroll mode.
  * It pre-fetches pages depending on the current page number and a radius
  * (a number of pages before and after the current one).
  * All pages outside the radius are removed from the cache in order not to retain 
@@ -9,7 +9,7 @@
 
 import { put, select } from 'redux-saga/effects';
 import Actions from "../actions/actions";
-import { get } from '../reducers/rootReducer';
+import { get } from '../reducers';
 import Constants from '../constants';
 
 const radius = 15;

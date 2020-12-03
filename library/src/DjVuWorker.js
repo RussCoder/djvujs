@@ -1,7 +1,7 @@
 /**
- * Объект создающий фоновый поток. Предоставляет интерфейс и инкапсулирует логику связи с 
+ * Объект создающий фоновый поток. Предоставляет интерфейс и инкапсулирует логику связи с
  * объектом DjVuDocument в фоновом потоке выполнения.
- * DjVuScript is a function which containing the whole build of the library. 
+ * DjVuScript is a function which containing the whole build of the library.
  * It's an additional wrapper added in the build process. Look at the build config file.
  */
 export default class DjVuWorker {
@@ -66,6 +66,10 @@ export default class DjVuWorker {
         this.currentPromise = null;
         this.promiseCallbacks = null;
         this.currentCommandId = null;
+        // reset the flag, although the worker doesn't stop. But it's more robust,
+        // than to wait till the forgotten task finishes. Just because the message can not to come from the worker,
+        // e.g. when it contains data which cannot be cloned, like functions ((although it shouldn't happen).
+        this.isWorking = false;
     }
 
     emptyTaskQueue() {
@@ -77,7 +81,7 @@ export default class DjVuWorker {
         this.dropCurrentTask();
     }
 
-    /** 
+    /**
      * @param {Array<Transferable>} transferList - the list of objects to transfer
      * ownership of the the Web Worker (like ArrayBuffer).
      */
@@ -91,7 +95,6 @@ export default class DjVuWorker {
         return promise;
     }
 
-    /** @param {{command: string, data: Array<{{funcs: function[], args: any[]}}>}} commandObj */
     prepareCommandObject(commandObj) {
         if (!(commandObj.data instanceof Array)) return commandObj;
 
@@ -162,16 +165,12 @@ export default class DjVuWorker {
     messageHandler({ data: obj }) {
         if (obj.action) return this.processAction(obj);
 
-        this.isWorking = false;
         const callbacks = this.promiseCallbacks;
         const commandId = obj.sendBackData && obj.sendBackData.commandId;
-        if (commandId === this.currentCommandId || this.currentCommandId === null) {
-            // in fact, this invocation is essential, since this.isWorking 
-            // isn't reset when all tasks are cancelled. 
-            // So we still wait for a cancelled task to finish.
-            // commandIds only prevent us from forgetting current task 
-            // in case when something comes from the worker and it's not an action 
-            // (it shouldn't happen, just an additional measure)
+
+        if (commandId === this.currentCommandId
+            || this.currentCommandId === null) { // technically, we can forget the current task, but still have a task queue
+            this.isWorking = false;
             this.runNextTask();
         } else {
             return; // in case if we cancel a task, but its result came afterwards

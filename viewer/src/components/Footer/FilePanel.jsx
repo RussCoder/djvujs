@@ -2,12 +2,13 @@ import React from 'react';
 import { faTimesCircle } from '@fortawesome/free-regular-svg-icons';
 
 import Actions from '../../actions/actions';
-import { get } from '../../reducers/rootReducer';
+import { get } from '../../reducers';
 import FileBlock from '../FileBlock';
-import styled, { css } from 'styled-components';
-import { ControlButton } from '../StyledPrimitives';
+import { css } from 'styled-components';
+import { ControlButton, TextButton } from '../StyledPrimitives';
 import { useTranslation } from '../Translation';
 import { useDispatch, useSelector } from 'react-redux';
+import { ActionTypes } from "../../constants";
 
 const style = css`
     width: 100%;
@@ -16,27 +17,11 @@ const style = css`
     align-items: center;
 `;
 
-const TextButton = styled.button`
-    background: inherit;
-    color: var(--color);
-    border: 1px solid var(--color);
-    border-radius: 3px;
-    padding: 0.2em;
-    cursor: pointer;
-
-    &:hover {
-        background: var(--alternative-background-color);
-    }
-
-    &:focus {
-        outline: none;
-    }
-`;
-
 export default () => {
     const t = useTranslation();
     const dispatch = useDispatch();
     const fileName = useSelector(get.fileName);
+    const isIndirect = useSelector(get.isIndirect);
 
     return (
         <div css={style}>
@@ -51,7 +36,9 @@ export default () => {
             <FileBlock fileName={fileName} />
             {fileName ? (
                 <TextButton
-                    onClick={() => dispatch(Actions.saveDocumentAction())}
+                    onClick={() => {
+                        dispatch(isIndirect ? { type: ActionTypes.OPEN_SAVE_DIALOG } : Actions.saveDocumentAction());
+                    }}
                     title={t("Save document")}
                 >
                     {t('Save')}

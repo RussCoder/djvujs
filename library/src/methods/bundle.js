@@ -2,9 +2,9 @@ import { loadPage, loadPageDependency, loadThumbnail } from './load';
 import DjVuWriter from '../DjVuWriter';
 import { pLimit } from '../DjVu';
 
-/** 
+/**
  * A method to download and bundle an indirect djvu document
- * @this import('../DjVuDocument').DjVuDocument 
+ * @this import('../DjVuDocument').DjVuDocument
  */
 export default async function bundle(progressCallback = () => { }) {
     const djvuWriter = new DjVuWriter();
@@ -50,6 +50,7 @@ export default async function bundle(progressCallback = () => { }) {
             downloadedNumber++;
             progressCallback(downloadedNumber / totalOperations);
 
+            //await new Promise(resolve => setTimeout(resolve, 1000));
             return {
                 flags: this.dirm.flags[i],
                 id: this.dirm.ids[i],

@@ -7,4 +7,10 @@ export const ActionTypes = constant({
     UPDATE_OPTIONS: null,
     SET_IMAGE_PAGE_ERROR: null,
     SET_TEXT_PAGE_ERROR: null,
+    START_TO_BUNDLE: null,
+    FINISH_TO_BUNDLE: null,
+    CLOSE_SAVE_DIALOG: null,
+    OPEN_SAVE_DIALOG: null,
+    UPDATE_FILE_PROCESSING_PROGRESS: null,
+    ERROR: null,
 });

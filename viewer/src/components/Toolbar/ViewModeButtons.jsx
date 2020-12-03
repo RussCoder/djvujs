@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFileAlt, faFileImage } from '@fortawesome/free-regular-svg-icons';
 
-import { get } from '../../reducers/rootReducer';
+import { get } from '../../reducers';
 import Constants from '../../constants';
 import { TranslationContext } from '../Translation';
 import { ControlButton } from '../StyledPrimitives';

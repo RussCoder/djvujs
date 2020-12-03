@@ -3,9 +3,10 @@ import { useSelector } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 
-import { get } from '../reducers/rootReducer';
+import { get } from '../reducers';
 import { useTranslation } from "./Translation";
 import styled from 'styled-components';
+import ProgressBar from "./ProgressBar";
 
 const Root = styled.div`
     flex-direction: column;
@@ -15,19 +16,6 @@ const Root = styled.div`
     align-items: center;
     justify-content: center;
     white-space: nowrap;
-`;
-
-const ProgressBar = styled.div`
-    border: 1px solid var(--color);
-    width: 25em;
-    max-width: 90%;
-    height: 3px;
-    margin-top: 0.5em;
-
-    div:first-child {
-        background: var(--color);
-        height: 100%;
-    }
 `;
 
 const FileLoadingScreen = () => {
@@ -45,9 +33,7 @@ const FileLoadingScreen = () => {
             <div css={`font-size: 1.5em`} style={(loaded || total) ? null : { visibility: "hidden" }}>
                 {Math.round(loaded / 1024).toLocaleString('ru-RU')} KB {total ? `/ ${Math.round(total / 1024).toLocaleString('ru-RU')} KB` : ''}
             </div>
-            <ProgressBar className="progress_bar" style={total ? null : { visibility: "hidden" }}>
-                <div style={{ width: percentage + "%" }} />
-            </ProgressBar>
+            <ProgressBar percentage={percentage} css={total ? null : `visibility: hidden`} />
         </Root>
     );
 };
