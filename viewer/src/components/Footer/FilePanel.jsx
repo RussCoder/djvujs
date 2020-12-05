@@ -8,7 +8,6 @@ import { css } from 'styled-components';
 import { ControlButton, TextButton } from '../StyledPrimitives';
 import { useTranslation } from '../Translation';
 import { useDispatch, useSelector } from 'react-redux';
-import { ActionTypes } from "../../constants";
 
 const style = css`
     width: 100%;
@@ -21,7 +20,6 @@ export default () => {
     const t = useTranslation();
     const dispatch = useDispatch();
     const fileName = useSelector(get.fileName);
-    const isIndirect = useSelector(get.isIndirect);
 
     return (
         <div css={style}>
@@ -36,9 +34,7 @@ export default () => {
             <FileBlock fileName={fileName} />
             {fileName ? (
                 <TextButton
-                    onClick={() => {
-                        dispatch(isIndirect ? { type: ActionTypes.OPEN_SAVE_DIALOG } : Actions.saveDocumentAction());
-                    }}
+                    onClick={() => dispatch(Actions.tryToSaveDocument())}
                     title={t("Save document")}
                 >
                     {t('Save')}

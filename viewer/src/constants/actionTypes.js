@@ -13,4 +13,5 @@ export const ActionTypes = constant({
     OPEN_SAVE_DIALOG: null,
     UPDATE_FILE_PROCESSING_PROGRESS: null,
     ERROR: null,
+    SAVE_DOCUMENT: null,
 });

@@ -403,7 +403,7 @@ class RootSaga {
         yield takeLatest(Constants.CREATE_DOCUMENT_FROM_ARRAY_BUFFER_ACTION, this.withErrorHandler(this.createDocumentFromArrayBuffer));
         yield takeLatest(Constants.SET_NEW_PAGE_NUMBER_ACTION, this.withErrorHandler(this.fetchPageData));
         yield takeLatest(Constants.SET_PAGE_BY_URL_ACTION, this.withErrorHandler(this.setPageByUrl));
-        yield takeLatest(Constants.SAVE_DOCUMENT_ACTION, this.withErrorHandler(this.saveDocument));
+        yield takeLatest(ActionTypes.SAVE_DOCUMENT, this.withErrorHandler(this.saveDocument));
         yield takeLatest(Constants.CLOSE_DOCUMENT_ACTION, this.withErrorHandler(this.resetWorker));
         yield takeLatest(Constants.SET_API_CALLBACK_ACTION, this.withErrorHandler(this.setCallback));
         yield takeLatest(Constants.ENABLE_CONTINUOUS_SCROLL_MODE_ACTION, this.withErrorHandler(this.switchToContinuosScrollMode));

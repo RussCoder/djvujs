@@ -127,4 +127,18 @@ export default {
 
     // Text Block (shown in the text view mode)
     "No text on this page": "Нет текста на этой странице",
+
+    // Save dialog (shows when you save an indirect djvu)
+    "You are trying to save an indirect (multi-file) document.":
+        "Вы пытаетесь сохранить многофайловый документ.",
+    "What exactly do you want to do?":
+        "Что именно вы хотите сделать?",
+    "Save only index file":
+        "Сохранить только корневой файл",
+    "Download, bundle and save the whole document as one file":
+        "Скачать, собрать и сохранить весь документ одним файлом",
+    "Downloading and bundling the document":
+        "Скачиваем и собираем документ",
+    "The document has been downloaded and bundled into one file successfully":
+        "Документ был успешно скачан и собран в единый файл",
 };

@@ -119,4 +119,18 @@ export default {
 
     // Text Block (shown in the text view mode)
     "No text on this page": "No text on this page",
+
+    // Save dialog (shows when you save an indirect djvu)
+    "You are trying to save an indirect (multi-file) document.":
+        "You are trying to save an indirect (multi-file) document.",
+    "What exactly do you want to do?":
+        "What exactly do you want to do?",
+    "Save only index file":
+        "Save only index file",
+    "Download, bundle and save the whole document as one file":
+        "Download, bundle and save the whole document as one file",
+    "Downloading and bundling the document":
+        "Downloading and bundling the document",
+    "The document has been downloaded and bundled into one file successfully":
+        "The document has been downloaded and bundled into one file successfully",
 };

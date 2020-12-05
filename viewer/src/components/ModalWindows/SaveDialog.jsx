@@ -66,14 +66,14 @@ export default () => {
             <Root>
                 {!isBundling ? <>
                     <div css={'margin-bottom: 2em;'}>
-                        {t("You are trying to save an indirect (multi-file) document.")}
+                        {t("You are trying to save an indirect (multi-file) document.") + ' '}
                         {t("What exactly do you want to do?")}
                     </div>
                     <OptionsWrapper>
                         <OptionButton
                             onClick={() => {
                                 closeDialog();
-                                dispatch(Actions.saveDocumentAction())
+                                dispatch({ type: ActionTypes.SAVE_DOCUMENT });
                             }}
                         >
                             {t('Save only index file')}
@@ -95,7 +95,7 @@ export default () => {
                             </> :
                             <>
                                 <div css={`text-align: center; margin-bottom: 1em;`}>
-                                    {t("The document has been downloaded and bundled successfully")}
+                                    {t("The document has been downloaded and bundled into one file successfully")}
                                 </div>
                                 <TextButton
                                     as="a"

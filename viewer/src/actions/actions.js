@@ -34,7 +34,13 @@ const Actions = {
 
     showHelpWindowAction: () => ({ type: Constants.SHOW_HELP_WINDOW_ACTION }),
 
-    saveDocumentAction: () => ({ type: Constants.SAVE_DOCUMENT_ACTION }),
+    tryToSaveDocument: () => (dispatch, getState) => {
+        if (get.isIndirect(getState())) {
+            dispatch({ type: ActionTypes.OPEN_SAVE_DIALOG });
+        } else {
+            dispatch({ type: ActionTypes.SAVE_DOCUMENT });
+        }
+    },
 
     startFileLoadingAction: () => ({ type: Constants.START_FILE_LOADING_ACTION }),
 
@@ -110,11 +116,6 @@ const Actions = {
         type: Constants.SET_USER_SCALE_ACTION,
         scale: scale < 0.1 ? 0.1 : scale > 6 ? 6 : scale
     }),
-
-    // dataUrlCreatedAction: (dataUrl) => ({
-    //     type: Consts.DATA_URL_CREATED_ACTION,
-    //     dataUrl: dataUrl
-    // }),
 
     toggleFullPageViewAction: (isFullPageView) => (dispatch) => {
         const disableScrollClass = 'disable_scroll_djvujs';
