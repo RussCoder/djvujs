@@ -5,10 +5,29 @@ var DjVu = (function () {
     'use strict;'
 
     var DjVu = {
-        VERSION: '0.4.5',
+        VERSION: '0.5.0',
         IS_DEBUG: false,
         setDebugMode: (flag) => DjVu.IS_DEBUG = flag
     };
+    function pLimit(limit = 4) {
+        const queue = [];
+        let running = 0;
+        const runNext = async () => {
+            if (!queue.length || running >= limit) return;
+            const func = queue.shift();
+            try {
+                running++;
+                await func();
+            } finally {
+                running--;
+                runNext();
+            }
+        };
+        return func => new Promise((resolve, reject) => {
+            queue.push(() => func().then(resolve, reject));
+            runNext();
+        });
+    }
     function loadFileViaXHR(url, responseType = 'arraybuffer') {
         return new Promise((resolve, reject) => {
             var xhr = new XMLHttpRequest();
@@ -686,9 +705,10 @@ var DjVu = (function () {
     }
 
     class DjVuError {
-        constructor(code, message) {
+        constructor(code, message, additionalData = null) {
             this.code = code;
             this.message = message;
+            if (additionalData) this.additionalData = additionalData;
         }
     }
     class IncorrectFileFormatDjVuError extends DjVuError {
@@ -703,8 +723,8 @@ var DjVu = (function () {
         }
     }
     class CorruptedFileDjVuError extends DjVuError {
-        constructor(message = "") {
-            super(DjVuErrorCodes.FILE_IS_CORRUPTED, "The file is corrupted! " + message);
+        constructor(message = "", data = null) {
+            super(DjVuErrorCodes.FILE_IS_CORRUPTED, "The file is corrupted! " + message, data);
         }
     }
     class UnableToTransferDataDjVuError extends DjVuError {
@@ -1408,32 +1428,34 @@ var DjVu = (function () {
 
     class ByteStream {
         constructor(buffer, offsetx, length) {
-            this.buffer = buffer;
+            this._buffer = buffer;
             this.offsetx = offsetx || 0;
             this.offset = 0;
-            this.length = length || buffer.byteLength;
-            if (this.length + offsetx > buffer.byteLength) {
-                this.length = buffer.byteLength - offsetx;
+            this._length = length || buffer.byteLength;
+            if (this._length + offsetx > buffer.byteLength) {
+                this._length = buffer.byteLength - offsetx;
                 console.error("Incorrect length in ByteStream!");
             }
-            this.viewer = new DataView(this.buffer, this.offsetx, this.length);
+            this.viewer = new DataView(this._buffer, this.offsetx, this._length);
         }
+        get length() { return this._length; }
+        get buffer() { return this._buffer; }
         getUint8Array(length = this.remainingLength()) {
             var off = this.offset;
             this.offset += length;
-            return new Uint8Array(this.buffer, this.offsetx + off, length);
+            return new Uint8Array(this._buffer, this.offsetx + off, length);
         }
         toUint8Array() {
-            return new Uint8Array(this.buffer, this.offsetx, this.length);
+            return new Uint8Array(this._buffer, this.offsetx, this._length);
         }
         remainingLength() {
-            return this.length - this.offset;
+            return this._length - this.offset;
         }
         reset() {
             this.offset = 0;
         }
         byte() {
-            if (this.offset >= this.length) {
+            if (this.offset >= this._length) {
                 this.offset++;
                 return 0xff;
             }
@@ -1474,16 +1496,8 @@ var DjVu = (function () {
         setOffset(offset) {
             this.offset = offset;
         }
-        readChunkName() {
-            return this.readStr4();
-        }
         readStr4() {
-            var str = "";
-            for (var i = 0; i < 4; i++) {
-                var byte = this.viewer.getUint8(this.offset++);
-                str += String.fromCharCode(byte);
-            }
-            return str;
+            return String.fromCharCode(...this.getUint8Array(4));
         }
         readStrNT() {
             var array = [];
@@ -1498,13 +1512,13 @@ var DjVu = (function () {
             return createStringFromUtf8Array(this.getUint8Array(byteLength));
         }
         fork(length = this.remainingLength()) {
-            return new ByteStream(this.buffer, this.offsetx + this.offset, length);
+            return new ByteStream(this._buffer, this.offsetx + this.offset, length);
         }
         clone() {
-            return new ByteStream(this.buffer, this.offsetx, this.length);
+            return new ByteStream(this._buffer, this.offsetx, this._length);
         }
         isEmpty() {
-            return this.offset >= this.length;
+            return this.offset >= this._length;
         }
     }
 
@@ -13734,11 +13748,17 @@ var DjVu = (function () {
                 this.ids[i] = bsz.readStrNT();
                 this.names[i] = this.flags[i] & 128 ? bsz.readStrNT() : this.ids[i];
                 this.titles[i] = this.flags[i] & 64 ? bsz.readStrNT() : this.ids[i];
-                if ((this.flags[i] & 63) === 1) {
+                if (this.isPageIndex(i)) {
                     this.pagesIds.push(this.ids[i]);
                 }
                 this.idToNameRegistry[this.ids[i]] = this.names[i];
             }
+        }
+        isPageIndex(i) {
+            return (this.flags[i] & 63) === 1;
+        }
+        isThumbnailIndex(i) {
+            return (this.flags[i] & 63) === 2;
         }
         getPageNameByItsNumber(number) {
             return this.getComponentNameByItsId(this.pagesIds[number - 1]);
@@ -13753,10 +13773,14 @@ var DjVu = (function () {
             return this.nfiles;
         }
         getMetadataStringByIndex(i) {
-            return `[id: "${this.ids[i]}", flag: ${this.flags[i]}, offset: ${this.offsets[i]}, size: ${this.sizes[i]}]\n`;
+            return (
+                `[id: "${this.ids[i]}", flag: ${this.flags[i]}, ` +
+                `offset: ${this.offsets ? this.offsets[i] : 'indirect'}, size: ${this.sizes[i]}]\n`
+            );
         }
         toString() {
             var str = super.toString();
+            str += (this.isBundled ? 'Bundled' : 'Indirect') + '\n';
             str += "FilesCount: " + this.nfiles + '\n';
             return str + '\n';
         }
@@ -14117,12 +14141,124 @@ var DjVu = (function () {
 
     class ThumChunk extends CompositeChunk { }
 
+    async function loadByteStream(url, errorData = {}) {
+        let xhr;
+        try {
+            xhr = await loadFileViaXHR(url);
+        } catch (e) {
+            throw new NetworkDjVuError({ url: url, ...errorData });
+        }
+        if (xhr.status && xhr.status !== 200) {
+            throw new UnsuccessfulRequestDjVuError(xhr, { ...errorData });
+        }
+        return new ByteStream(xhr.response);
+    }
+    function checkAndCropByteStream(bs, compositeChunkId = null, errorData = null) {
+        if (bs.readStr4() !== 'AT&T') {
+            throw new CorruptedFileDjVuError(`The byte stream isn't a djvu file.`, errorData);
+        }
+        if (!compositeChunkId) {
+            return bs.fork();
+        }
+        let chunkId = bs.readStr4();
+        const length = bs.getInt32();
+        chunkId += bs.readStr4();
+        if (chunkId !== compositeChunkId) {
+            throw new CorruptedFileDjVuError(
+                `Unexpected chunk id. Expected "${compositeChunkId}", but got "${chunkId}"`,
+                errorData
+            );
+        }
+        return bs.jump(-12).fork(length + 8);
+    }
+    async function loadPage(number, url) {
+        const errorData = { pageNumber: number };
+        return checkAndCropByteStream(await loadByteStream(url, errorData), null, errorData);
+    }
+    async function loadPageDependency(id, name, baseUrl, pageNumber = null) {
+        const errorData = { pageNumber: pageNumber, dependencyId: id };
+        return checkAndCropByteStream(await loadByteStream(baseUrl + name, errorData), 'FORMDJVI', errorData);
+    }
+    async function loadThumbnail(url, id = null) {
+        const errorData = { thumbnailId: id };
+        return checkAndCropByteStream(await loadByteStream(url, errorData), 'FORMTHUM', errorData);
+    }
+
+    async function bundle(progressCallback = () => { }) {
+        const djvuWriter = new DjVuWriter();
+        djvuWriter.startDJVM();
+        const dirm = {
+            dflags: this.dirm.dflags | 128,
+            flags: [],
+            names: [],
+            titles: [],
+            sizes: [],
+            ids: [],
+        };
+        const chunkByteStreams = [];
+        const filesQuantity = this.dirm.getFilesQuantity();
+        const totalOperations = filesQuantity + 3;
+        let pageNumber = 0;
+        const limit = pLimit(4);
+        let downloadedNumber = 0;
+        const promises = [];
+        for (let i = 0; i < filesQuantity; i++) {
+            promises.push(limit(async () => {
+                let bs;
+                if (this.dirm.isPageIndex(i)) {
+                    pageNumber++;
+                    bs = await loadPage(pageNumber, this._getUrlByPageNumber(pageNumber));
+                } else if (this.dirm.isThumbnailIndex(i)) {
+                    bs = await loadThumbnail(
+                        this.baseUrl + this.dirm.getComponentNameByItsId(this.dirm.ids[i]),
+                        this.dirm.ids[i]
+                    );
+                } else {
+                    bs = await loadPageDependency(
+                        this.dirm.ids[i],
+                        this.dirm.getComponentNameByItsId(this.dirm.ids[i]),
+                        this.baseUrl,
+                    );
+                }
+                downloadedNumber++;
+                progressCallback(downloadedNumber / totalOperations);
+                return {
+                    flags: this.dirm.flags[i],
+                    id: this.dirm.ids[i],
+                    name: this.dirm.names[i],
+                    title: this.dirm.titles[i],
+                    bs: bs,
+                };
+            }));
+        }
+        for (const data of await Promise.all(promises)) {
+            dirm.flags.push(data.flags);
+            dirm.ids.push(data.id);
+            dirm.names.push(data.names);
+            dirm.titles.push(data.title);
+            dirm.sizes.push(data.bs.length);
+            chunkByteStreams.push(data.bs);
+        }
+        djvuWriter.writeDirmChunk(dirm);
+        if (this.navm) {
+            djvuWriter.writeChunk(this.navm);
+        }
+        progressCallback((totalOperations - 2) / totalOperations);
+        for (const chunkByteStream of chunkByteStreams) {
+            djvuWriter.writeFormChunkBS(chunkByteStream);
+        }
+        progressCallback((totalOperations - 1) / totalOperations);
+        const newBuffer = djvuWriter.getBuffer();
+        progressCallback(1);
+        return new this.constructor(newBuffer);
+    }
+
     const MEMORY_LIMIT = 50 * 1024 * 1024;
     class DjVuDocument {
         constructor(arraybuffer, { baseUrl = null, memoryLimit = MEMORY_LIMIT } = {}) {
             this.buffer = arraybuffer;
             this.baseUrl = baseUrl && baseUrl.trim();
-            if (this.baseUrl !== null && this.baseUrl) {
+            if (typeof this.baseUrl === 'string') {
                 if (this.baseUrl[this.baseUrl.length - 1] !== '/') {
                     this.baseUrl += '/';
                 }
@@ -14147,7 +14283,9 @@ var DjVu = (function () {
                 this.bs.jump(-12);
                 this.pages = [new DjVuPage(this.bs.fork(this.length + 8), this.getINCLChunkCallback)];
             } else {
-                throw new CorruptedFileDjVuError(`The id of the first chunk of the document should be either FORMDJVM or FORMDJVU, but there is ${this.id}!`);
+                throw new CorruptedFileDjVuError(
+                    `The id of the first chunk of the document should be either FORMDJVM or FORMDJVU, but there is ${this.id}`
+                );
             }
         }
         _initMultiPageDocument() {
@@ -14279,6 +14417,9 @@ var DjVu = (function () {
                 this.djvi = newDjVi;
             }
         }
+        _getUrlByPageNumber(number) {
+            return this.baseUrl + this.dirm.getPageNameByItsNumber(number);
+        }
         async getPage(number) {
             var page = this.pages[number - 1];
             if (this.lastRequestedPage && this.lastRequestedPage !== page) {
@@ -14292,23 +14433,12 @@ var DjVu = (function () {
                     if (this.baseUrl === null) {
                         throw new NoBaseUrlDjVuError();
                     }
-                    var pageName = this.dirm.getPageNameByItsNumber(number);
-                    var url = this.baseUrl + pageName;
-                    try {
-                        var xhr = await loadFileViaXHR(url);
-                    } catch (e) {
-                        throw new NetworkDjVuError({ pageNumber: number, url: url });
-                    }
-                    if (xhr.status && xhr.status !== 200) {
-                        throw new UnsuccessfulRequestDjVuError(xhr, { pageNumber: number });
-                    }
-                    var pageBuffer = xhr.response;
-                    var bs = new ByteStream(pageBuffer);
-                    if (bs.readStr4() !== 'AT&T') {
-                        throw new CorruptedFileDjVuError(`The file gotten as the page number ${number} isn't a djvu file!`);
-                    }
-                    var page = new DjVuPage(bs.fork(), this.getINCLChunkCallback);
-                    this.memoryUsage += pageBuffer.byteLength;
+                    const bs = await loadPage(
+                        number,
+                        this._getUrlByPageNumber(number)
+                    );
+                    const page = new DjVuPage(bs, this.getINCLChunkCallback);
+                    this.memoryUsage += bs.buffer.byteLength;
                     await this._loadDependencies(page.getDependencies(), number);
                     this.releaseMemoryIfRequired(page.getDependencies());
                     this.pages[number - 1] = page;
@@ -14330,32 +14460,14 @@ var DjVu = (function () {
                 return;
             }
             await Promise.all(unloadedDependencies.map(async id => {
-                var url = this.baseUrl + (this.dirm ? this.dirm.getComponentNameByItsId(id) : id);
-                try {
-                    var xhr = await loadFileViaXHR(url);
-                } catch (e) {
-                    throw new NetworkDjVuError({ pageNumber: pageNumber, dependencyId: id, url: url });
-                }
-                if (xhr.status && xhr.status !== 200) {
-                    throw new UnsuccessfulRequestDjVuError(xhr, { pageNumber: pageNumber, dependencyId: id });
-                }
-                var componentBuffer = xhr.response;
-                var bs = new ByteStream(componentBuffer);
-                if (bs.readStr4() !== 'AT&T') {
-                    throw new CorruptedFileDjVuError(
-                        `The file gotten as a dependency ${id} ${pageNumber ? `for the page number ${pageNumber}` : ''} isn't a djvu file!`
-                    );
-                }
-                var chunkId = bs.readStr4();
-                var length = bs.getInt32();
-                chunkId += bs.readStr4();
-                if (chunkId !== "FORMDJVI") {
-                    throw new CorruptedFileDjVuError(
-                        `The file gotten as a dependency ${id} ${pageNumber ? `for the page number ${pageNumber}` : ''} isn't a djvu file with shared data!`
-                    );
-                }
-                this.djvi[id] = new DjViChunk(bs.jump(-12).fork(length + 8));
-                this.memoryUsage += componentBuffer.byteLength;
+                const bs = await loadPageDependency(
+                    id,
+                    this.dirm ? this.dirm.getComponentNameByItsId(id) : id,
+                    this.baseUrl,
+                    pageNumber
+                );
+                this.djvi[id] = new DjViChunk(bs);
+                this.memoryUsage += bs.buffer.byteLength;
             }));
         }
         getPageUnsafe(number) {
@@ -14372,9 +14484,7 @@ var DjVu = (function () {
             while (!bs.isEmpty()) {
                 var id = bs.readStr4();
                 var length = bs.getInt32();
-                bs.jump(-8);
-                var chunkBs = bs.fork(length + 8);
-                bs.jump(8 + length + (length & 1 ? 1 : 0));
+                bs.jump(length + (length & 1 ? 1 : 0));
                 if (id === 'FORM') {
                     count++;
                 }
@@ -14387,9 +14497,15 @@ var DjVu = (function () {
                 str += this.id + " " + this.length + '\n\n';
                 str += this.dirm.toString();
                 str += this.navm ? this.navm.toString() : '';
-                this.dirmOrderedChunks.forEach((chunk, i) => {
-                    str += this.dirm.getMetadataStringByIndex(i) + chunk.toString();
-                });
+                if (this.isBundled()) {
+                    this.dirmOrderedChunks.forEach((chunk, i) => {
+                        str += this.dirm.getMetadataStringByIndex(i) + chunk.toString();
+                    });
+                } else {
+                    for (let i = 0; i < this.dirm.getFilesQuantity(); i++) {
+                        str += this.dirm.getMetadataStringByIndex(i);
+                    }
+                }
             } else {
                 str += this.pages[0].toString();
             }
@@ -14401,49 +14517,46 @@ var DjVu = (function () {
             return url;
         }
         slice(from = 1, to = this.pages.length) {
-            var djvuWriter = new DjVuWriter();
+            const djvuWriter = new DjVuWriter();
             djvuWriter.startDJVM();
-            var dirm = {};
-            dirm.dflags = this.dirm.dflags;
-            var pageNumber = to - from + 1;
-            dirm.flags = [];
-            dirm.names = [];
-            dirm.titles = [];
-            dirm.sizes = [];
-            dirm.ids = [];
-            var chunkBS = [];
-            var pageIndex = 0;
-            var addedPageCount = 0;
-            var dependencies = {};
-            for (var i = 0; i < this.dirm.nfiles && addedPageCount < pageNumber; i++) {
-                var isPage = (this.dirm.flags[i] & 63) === 1;
-                if (isPage) {
-                    pageIndex++;
-                    if (pageIndex < from) {
-                        continue;
-                    }
-                    else {
-                        addedPageCount++;
-                        var cbs = new ByteStream(this.buffer, this.dirm.offsets[i], this.dirm.sizes[i]);
-                        var deps = new DjVuPage(cbs).getDependencies();
-                        cbs.reset();
-                        for (var j = 0; j < deps.length; j++) {
-                            dependencies[deps[j]] = 1;
-                        }
-                    }
+            const dirm = {
+                dflags: this.dirm.dflags,
+                flags: [],
+                names: [],
+                titles: [],
+                sizes: [],
+                ids: [],
+            };
+            const chunkByteStreams = [];
+            const totalPageCount = to - from + 1;
+            const dependencies = {};
+            const filesQuantity = this.dirm.getFilesQuantity();
+            for (
+                let i = 0, pageIndex = 0, addedPageCount = 0;
+                i < filesQuantity && addedPageCount < totalPageCount;
+                i++
+            ) {
+                const isPage = (this.dirm.flags[i] & 63) === 1;
+                if (!isPage) continue;
+                pageIndex++;
+                if (pageIndex < from) continue;
+                addedPageCount++;
+                const pageByteStream = new ByteStream(this.buffer, this.dirm.offsets[i], this.dirm.sizes[i]);
+                const deps = new DjVuPage(pageByteStream).getDependencies();
+                for (const dependencyId of deps) {
+                    dependencies[dependencyId] = 1;
                 }
             }
-            pageIndex = 0;
-            addedPageCount = 0;
-            for (var i = 0; i < this.dirm.nfiles && addedPageCount < pageNumber; i++) {
-                var isPage = (this.dirm.flags[i] & 63) === 1;
+            for (
+                let i = 0, pageIndex = 0, addedPageCount = 0;
+                i < filesQuantity && addedPageCount < totalPageCount;
+                i++
+            ) {
+                const isPage = (this.dirm.flags[i] & 63) === 1;
                 if (isPage) {
                     pageIndex++;
-                    if (pageIndex < from) {
-                        continue;
-                    } else {
-                        addedPageCount++;
-                    }
+                    if (pageIndex < from) continue;
+                    addedPageCount++;
                 }
                 if ((this.dirm.ids[i] in dependencies) || isPage) {
                     dirm.flags.push(this.dirm.flags[i]);
@@ -14451,21 +14564,21 @@ var DjVu = (function () {
                     dirm.ids.push(this.dirm.ids[i]);
                     dirm.names.push(this.dirm.names[i]);
                     dirm.titles.push(this.dirm.titles[i]);
-                    var cbs = new ByteStream(this.buffer, this.dirm.offsets[i], this.dirm.sizes[i]);
-                    chunkBS.push(cbs);
+                    chunkByteStreams.push(
+                        new ByteStream(this.buffer, this.dirm.offsets[i], this.dirm.sizes[i])
+                    );
                 }
             }
             djvuWriter.writeDirmChunk(dirm);
             if (this.navm) {
                 djvuWriter.writeChunk(this.navm);
             }
-            for (var i = 0; i < chunkBS.length; i++) {
-                djvuWriter.writeFormChunkBS(chunkBS[i]);
+            for (const chunkByteStream of chunkByteStreams) {
+                djvuWriter.writeFormChunkBS(chunkByteStream);
             }
-            var newbuffer = djvuWriter.getBuffer();
-            DjVu.IS_DEBUG && console.log("New Buffer size = ", newbuffer.byteLength);
-            var doc = new DjVuDocument(newbuffer);
-            return doc;
+            const newBuffer = djvuWriter.getBuffer();
+            DjVu.IS_DEBUG && console.log("New Buffer size = ", newBuffer.byteLength);
+            return new DjVuDocument(newBuffer);
         }
         static concat(doc1, doc2) {
             var dirm = {};
@@ -14528,6 +14641,9 @@ var DjVu = (function () {
             return new DjVuDocument(dw.getBuffer());
         }
     }
+    Object.assign(DjVuDocument.prototype, {
+        bundle,
+    });
 
     class DjVuWorker {
         constructor(path = URL.createObjectURL(new Blob(["(" + DjVuScript.toString() + ")();"], { type: 'application/javascript' }))) {
@@ -14540,14 +14656,29 @@ var DjVu = (function () {
             this.reset();
         }
         reset() {
-            this.worker && this.worker.terminate();
+            this.terminate();
             this.worker = new Worker(this.path);
             this.worker.onmessage = (e) => this.messageHandler(e);
             this.worker.onerror = (e) => this.errorHandler(e);
-            this.callbacks = null;
+            this.promiseCallbacks = null;
             this.currentPromise = null;
             this.promiseMap = new Map();
-            this.isTaskInProcess = false;
+            this.isWorking = false;
+            this.commandCounter = 0;
+            this.currentCommandId = null;
+            this.hyperCallbacks = {};
+            this.hyperCallbackCounter = 0;
+        }
+        registerHyperCallback(func) {
+            const id = this.hyperCallbackCounter++;
+            this.hyperCallbacks[id] = func;
+            return { hyperCallback: true, id: id };
+        }
+        unregisterHyperCallback(id) {
+            delete this.hyperCallbacks[id];
+        }
+        terminate() {
+            this.worker && this.worker.terminate();
         }
         get doc() {
             return DjVuWorkerTask.instance(this);
@@ -14564,7 +14695,9 @@ var DjVu = (function () {
         }
         dropCurrentTask() {
             this.currentPromise = null;
-            this.callbacks = null;
+            this.promiseCallbacks = null;
+            this.currentCommandId = null;
+            this.isWorking = false;
         }
         emptyTaskQueue() {
             this.promiseMap.clear();
@@ -14573,7 +14706,7 @@ var DjVu = (function () {
             this.emptyTaskQueue();
             this.dropCurrentTask();
         }
-        createNewPromise(commandObj, transferList) {
+        createNewPromise(commandObj, transferList = undefined) {
             var callbacks;
             var promise = new Promise((resolve, reject) => {
                 callbacks = { resolve, reject };
@@ -14582,22 +14715,46 @@ var DjVu = (function () {
             this.runNextTask();
             return promise;
         }
+        prepareCommandObject(commandObj) {
+            if (!(commandObj.data instanceof Array)) return commandObj;
+            const hyperCallbackIds = [];
+            for (const { args: argsList } of commandObj.data) {
+                for (const args of argsList) {
+                    for (let i = 0; i < args.length; i++) {
+                        if (typeof args[i] === 'function') {
+                            const hyperCallback = this.registerHyperCallback(args[i]);
+                            args[i] = hyperCallback;
+                            hyperCallbackIds.push(hyperCallback.id);
+                        }
+                    }
+                }
+            }
+            if (hyperCallbackIds.length) {
+                commandObj.sendBackData = {
+                    ...commandObj.sendBackData,
+                    hyperCallbackIds
+                };
+            }
+            return commandObj;
+        }
         runNextTask() {
-            if (this.isTaskInProcess) {
+            if (this.isWorking) {
                 return;
             }
             var next = this.promiseMap.entries().next().value;
             if (next) {
-                var obj = next[1];
-                var key = next[0];
-                this.callbacks = obj.callbacks;
-                this.currentPromise = key;
-                this.worker.postMessage(obj.commandObj, obj.transferList);
-                this.isTaskInProcess = true;
-                this.promiseMap.delete(key);
+                const [promise, { callbacks, commandObj, transferList }] = next;
+                this.promiseCallbacks = callbacks;
+                this.currentPromise = promise;
+                this.currentCommandId = this.commandCounter++;
+                commandObj.sendBackData = {
+                    commandId: this.currentCommandId,
+                };
+                this.worker.postMessage(this.prepareCommandObject(commandObj), transferList);
+                this.isWorking = true;
+                this.promiseMap.delete(promise);
             } else {
-                this.currentPromise = null;
-                this.callbacks = null;
+                this.dropCurrentTask();
             }
         }
         isTaskInProcess(promise) {
@@ -14606,71 +14763,53 @@ var DjVu = (function () {
         isTaskInQueue(promise) {
             return this.promiseMap.has(promise) || this.isTaskInProcess(promise);
         }
-        messageHandler(event) {
-            this.isTaskInProcess = false;
-            var callbacks = this.callbacks;
-            this.runNextTask();
-            if (!callbacks) {
-                return;
-            }
-            var obj = event.data;
-            switch (obj.command) {
-                case 'Error':
-                    callbacks.reject(obj.error);
-                    break;
+        processAction(obj) {
+            switch (obj.action) {
                 case 'Process':
                     this.onprocess ? this.onprocess(obj.percent) : 0;
                     break;
-                case 'getPageImageDataWithDpi':
-                    callbacks.resolve({
-                        imageData: new ImageData(new Uint8ClampedArray(obj.buffer), obj.width, obj.height),
-                        dpi: obj.dpi
-                    });
+                case 'hyperCallback':
+                    if (this.hyperCallbacks[obj.id]) this.hyperCallbacks[obj.id](...obj.args);
+                    break;
+            }
+        }
+        messageHandler({ data: obj }) {
+            if (obj.action) return this.processAction(obj);
+            const callbacks = this.promiseCallbacks;
+            const commandId = obj.sendBackData && obj.sendBackData.commandId;
+            if (commandId === this.currentCommandId
+                || this.currentCommandId === null) {
+                this.isWorking = false;
+                this.runNextTask();
+            } else {
+                return;
+            }
+            if (!callbacks) return;
+            const { resolve, reject } = callbacks;
+            switch (obj.command) {
+                case 'Error':
+                    reject(obj.error);
                     break;
                 case 'createDocument':
-                    callbacks.resolve();
-                    break;
-                case 'slice':
-                    callbacks.resolve(obj.buffer);
+                case 'startMultiPageDocument':
+                case 'addPageToDocument':
+                    resolve();
                     break;
                 case 'createDocumentFromPictures':
-                    callbacks.resolve(obj.buffer);
-                    break;
-                case 'startMultiPageDocument':
-                    callbacks.resolve();
-                    break;
-                case 'addPageToDocument':
-                    callbacks.resolve();
-                    break;
                 case 'endMultiPageDocument':
-                    callbacks.resolve(obj.buffer);
-                    break;
-                case 'getDocumentMetaData':
-                    callbacks.resolve(obj.str);
-                    break;
-                case 'getPageCount':
-                    callbacks.resolve(obj.pageNumber);
-                    break;
-                case 'getPageText':
-                    callbacks.resolve(obj.text);
-                    break;
-                case 'getContents':
-                    callbacks.resolve(obj.contents);
-                    break;
-                case 'getPageNumberByUrl':
-                    callbacks.resolve(obj.pageNumber);
-                    break;
-                case 'createDocumentUrl':
-                    callbacks.resolve(obj.url);
+                    resolve(obj.buffer);
                     break;
                 case 'run':
                     var restoredResult = !obj.result ? obj.result :
                         obj.result.length && obj.result.map ? obj.result.map(result => this.restoreValueAfterTransfer(result)) :
                             this.restoreValueAfterTransfer(obj.result);
-                    callbacks.resolve(restoredResult);
+                    resolve(restoredResult);
                     break;
                 default:
                     console.error("Unexpected message from DjVuWorker: ", obj);
+            }
+            if (obj.sendBackData && obj.sendBackData.hyperCallbackIds) {
+                obj.sendBackData.hyperCallbackIds.forEach(id => this.unregisterHyperCallback(id));
             }
         }
         restoreValueAfterTransfer(value) {
@@ -14690,26 +14829,8 @@ var DjVu = (function () {
         }
         revokeObjectURL(url) {
             this.worker.postMessage({
-                command: this.revokeObjectURL.name,
+                action: this.revokeObjectURL.name,
                 url: url,
-            });
-        }
-        createDocumentUrl() {
-            return this.createNewPromise({ command: 'createDocumentUrl' });
-        }
-        getPageCount() {
-            return this.createNewPromise({ command: 'getPageCount' });
-        }
-        getContents() {
-            return this.createNewPromise({ command: 'getContents' });
-        }
-        getPageNumberByUrl(url) {
-            return this.createNewPromise({ command: 'getPageNumberByUrl', url: url });
-        }
-        getDocumentMetaData(html) {
-            return this.createNewPromise({
-                command: 'getDocumentMetaData',
-                html: html
             });
         }
         startMultiPageDocument(slicenumber, delayInit, grayscale) {
@@ -14737,18 +14858,6 @@ var DjVu = (function () {
         createDocument(buffer, options) {
             return this.createNewPromise({ command: 'createDocument', buffer: buffer, options: options }, [buffer]);
         }
-        getPageImageDataWithDpi(pagenumber) {
-            return this.createNewPromise({
-                command: 'getPageImageDataWithDpi',
-                pagenumber: pagenumber
-            });
-        }
-        getPageText(pagenumber) {
-            return this.createNewPromise({ command: 'getPageText', pagenumber: pagenumber });
-        }
-        slice(_from, _to) {
-            return this.createNewPromise({ command: 'slice', from: _from, to: _to });
-        }
         createDocumentFromPictures(imageArray, slicenumber, delayInit, grayscale) {
             var simpleImages = new Array(imageArray.length);
             var buffers = new Array(imageArray.length);
@@ -14767,11 +14876,6 @@ var DjVu = (function () {
                 delayInit: delayInit,
                 grayscale: grayscale
             }, buffers);
-        }
-        static createArrayBufferURL(buffer) {
-            var blob = new Blob([buffer]);
-            var url = URL.createObjectURL(blob);
-            return url;
         }
     }
     class DjVuWorkerTask {
@@ -15273,10 +15377,19 @@ var DjVu = (function () {
     function initWorker() {
         var djvuDocument;
         var iwiw;
-        onmessage = async function (oEvent) {
+        onmessage = async function ({ data: obj }) {
+            if (obj.action) return handlers[obj.action](obj);
             try {
-                var obj = oEvent.data;
-                await handlers[obj.command](obj);
+                const { data, transferList } = await handlers[obj.command](obj) || {};
+                try {
+                    postMessage({
+                        command: obj.command,
+                        ...data,
+                        ...(obj.sendBackData ? { sendBackData: obj.sendBackData } : null),
+                    }, transferList && transferList.length ? transferList : undefined);
+                } catch (e) {
+                    throw new UnableToTransferDataDjVuError(obj.data);
+                }
             } catch (error) {
                 console.error(error);
                 var errorObj = error instanceof DjVuError ? error : {
@@ -15284,10 +15397,11 @@ var DjVu = (function () {
                     name: error.name,
                     message: error.message
                 };
-                errorObj.lastCommandObject = obj;
+                errorObj.commandObject = obj;
                 postMessage({
                     command: 'Error',
-                    error: errorObj
+                    error: errorObj,
+                    ...(obj.sendBackData ? { sendBackData: obj.sendBackData } : null),
                 });
             }
         };
@@ -15310,6 +15424,18 @@ var DjVu = (function () {
             }
             return value;
         }
+        function restoreHyperCallbacks(args) {
+            return args.map(arg => {
+                if (typeof arg === 'object' && arg.hyperCallback) {
+                    return (...params) => postMessage({
+                        action: 'hyperCallback',
+                        id: arg.id,
+                        args: params
+                    });
+                }
+                return arg;
+            });
+        }
         var handlers = {
             async run(obj) {
                 const results = await Promise.all(obj.data.map(async task => {
@@ -15318,89 +15444,36 @@ var DjVu = (function () {
                         if (typeof res[task.funcs[i]] !== 'function') {
                             throw new IncorrectTaskDjVuError(task);
                         }
-                        res = await res[task.funcs[i]](...task.args[i]);
+                        res = await res[task.funcs[i]](...restoreHyperCallbacks(task.args[i]));
                     }
                     return res;
                 }));
                 var transferList = [];
                 var processedResults = results.map(result => processValueBeforeTransfer(result, transferList));
-                try {
-                    transferList.length ? postMessage({
-                        command: 'run',
+                return {
+                    data: {
                         result: processedResults.length === 1 ? processedResults[0] : processedResults
-                    }, transferList) : postMessage({
-                        command: 'run',
-                        result: processedResults.length === 1 ? processedResults[0] : processedResults
-                    });
-                } catch (e) {
-                    throw new UnableToTransferDataDjVuError(obj.data);
-                }
+                    },
+                    transferList
+                };
             },
             revokeObjectURL(obj) {
                 URL.revokeObjectURL(obj.url);
             },
-            createDocumentUrl() {
-                postMessage({
-                    command: 'createDocumentUrl',
-                    url: djvuDocument.createObjectURL()
-                });
-            },
-            getContents() {
-                postMessage({
-                    command: 'getContents',
-                    contents: djvuDocument.getContents()
-                });
-            },
-            getPageNumberByUrl(obj) {
-                postMessage({
-                    command: 'getPageNumberByUrl',
-                    pageNumber: djvuDocument.getPageNumberByUrl(obj.url)
-                });
-            },
-            async getPageText(obj) {
-                var pagenum = +obj.pagenumber;
-                var text = await djvuDocument.getPage(pagenum).getText();
-                postMessage({
-                    command: 'getPageText',
-                    text: text
-                });
-            },
-            async getPageImageDataWithDpi(obj) {
-                var pagenum = +obj.pagenumber;
-                var page = await djvuDocument.getPage(pagenum);
-                var imageData = page.getImageData();
-                var dpi = page.getDpi();
-                postMessage({
-                    command: 'getPageImageDataWithDpi',
-                    buffer: imageData.data.buffer,
-                    width: imageData.width,
-                    height: imageData.height,
-                    dpi: dpi
-                }, [imageData.data.buffer]);
-            },
-            getPageCount(obj) {
-                postMessage({
-                    command: 'getPageCount',
-                    pageNumber: djvuDocument.pages.length
-                });
-            },
-            getDocumentMetaData(obj) {
-                var str = djvuDocument.toString(obj.html);
-                postMessage({ command: 'getDocumentMetaData', str: str });
-            },
             startMultiPageDocument(obj) {
                 iwiw = new IWImageWriter(obj.slicenumber, obj.delayInit, obj.grayscale);
                 iwiw.startMultiPageDocument();
-                postMessage({ command: 'startMultiPageDocument' });
             },
             addPageToDocument(obj) {
                 var imageData = new ImageData(new Uint8ClampedArray(obj.simpleImage.buffer), obj.simpleImage.width, obj.simpleImage.height);
                 iwiw.addPageToDocument(imageData);
-                postMessage({ command: 'addPageToDocument' });
             },
             endMultiPageDocument(obj) {
                 var buffer = iwiw.endMultiPageDocument();
-                postMessage({ command: 'endMultiPageDocument', buffer: buffer }, [buffer]);
+                return {
+                    data: { buffer: buffer },
+                    transferList: [buffer]
+                };
             },
             createDocumentFromPictures(obj) {
                 var sims = obj.images;
@@ -15410,22 +15483,17 @@ var DjVu = (function () {
                 }
                 var iw = new IWImageWriter(obj.slicenumber, obj.delayInit, obj.grayscale);
                 iw.onprocess = (percent) => {
-                    postMessage({ command: 'Process', percent: percent });
+                    postMessage({ action: 'Process', percent: percent });
                 };
                 var ndoc = iw.createMultyPageDocument(imageArray);
-                postMessage({ command: 'createDocumentFromPictures', buffer: ndoc.buffer }, [ndoc.buffer]);
-            },
-            slice(obj) {
-                var ndoc = djvuDocument.slice(obj.from, obj.to);
-                postMessage({ command: 'slice', buffer: ndoc.buffer }, [ndoc.buffer]);
+                return {
+                    data: { buffer: ndoc.buffer },
+                    transferList: [ndoc.buffer]
+                };
             },
             createDocument(obj) {
                 djvuDocument = new DjVuDocument(obj.buffer, obj.options);
-                postMessage({ command: 'createDocument', pagenumber: djvuDocument.pages.length });
             },
-            reloadDocument() {
-                djvuDocument = new DjVuDocument(djvuDocument.buffer);
-            }
         };
     }
 

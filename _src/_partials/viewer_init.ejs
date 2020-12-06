@@ -1,7 +1,7 @@
 <script src="<%= library_link %>"></script>
 <script src="<%= viewer_js_link %>"></script>
 <script>
-    window.onload = function() { 
+    window.addEventListener("load", () => {
         var ViewerInstance = new DjVu.Viewer();
         ViewerInstance.render(document.querySelector("#for_viewer"));
 
@@ -11,5 +11,5 @@
                 ViewerInstance.loadDocumentByUrl(link.href);
             };
         })
-    }
+    });
 </script>

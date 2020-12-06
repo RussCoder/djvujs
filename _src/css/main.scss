@@ -16,8 +16,10 @@ body {
 
 header {
     text-align: center;
+
     .site_name {
         font-size: 5.5em;
+        color: inherit;
     }
 
     a {
@@ -30,14 +32,20 @@ header {
     .lang_block {
         display: flex;
         justify-content: center;
+
         a {
             font-size: 1.5em;
             display: flex;
             align-items: center;
-            box-shadow: 0 0 1px gray;
             padding: 0.1em;
             margin: 0 0.5em;
-            
+            color: darkblue;
+            border-bottom: 1px solid transparent;
+
+            &:hover {
+                border-color: darkblue;
+            }
+
             img {
                 margin-right: 0.1em;
             }
@@ -60,10 +68,12 @@ nav {
         text-decoration: none;
         color: inherit;
         border: 1px solid $lineColor;
-        border-radius: 0.3em;
+        border-radius: 0.5em 0 0.5em 0;
         white-space: nowrap;
-        &:hover {
-            background: $lineColor;
+
+        &:hover, &.active {
+            color: darkblue;
+            border-color: darkblue;
         }
     }
 }
@@ -112,16 +122,22 @@ footer {
     padding: 1em 0;
 }
 
-a {
+.main > a, .main > :not(#for_viewer) a {
     text-decoration: none;
-    color: inherit;
+    color: darkblue;
     font-size: 0.8em;
-    border: 1px solid $lineColor;
-    padding: 0.1em 0.2em;
-    border-radius: 0.3em;
+    border: 1px solid darkblue;
+    padding: 0.2em;
+    border-radius: 3px;
+    margin: 0.5em;
+    display: inline-block;
 
     &:hover {
-        background: $lineColor;
+        box-shadow: 0 2px 1px darkblue;
+    }
+
+    &:active {
+        text-shadow: 0 0 0.5px darkblue;
     }
 }
 
