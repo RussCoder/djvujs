@@ -1,4 +1,9 @@
-# DjVu.js Viewer Changelog
+# DjVu.js Viewer's Changelog
+
+## v.0.5.2 (06.12.2020)
+
+- Feature: bundle indirect djvu documents (suggestion in the save dialog).
+- Fix: hide the page's scrollbars in the full page mode.
 
 ## v.0.5.1 (19.11.2020)
 - Separate image and text errors for a page in order to show the part of data which is available.

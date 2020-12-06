@@ -1,4 +1,11 @@
-# DjVu.js Library Changelog
+# DjVu.js Library's Changelog
+
+## v.0.5.0 (06.12.2020)
+
+- Feature: bundle indirect djvu documents.
+- Removed old redundant DjVuWorker's methods duplicating "doc" proxy API.
+- Now callbacks can be passed to the DjVuWorker.
+- Minor improvements.
 
 ## v.0.4.5 (18.11.2020)
 
