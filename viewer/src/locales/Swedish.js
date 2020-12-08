@@ -118,4 +118,21 @@ export default {
     // Contents
     "Contents": "Innehåll",
     "No contents provided": "Inget innehåll har givits",
+
+    // Text Block (shown in the text view mode)
+    "No text on this page": "Ingen text finns på denna sida",
+
+    // Save dialog (shows when you save an indirect djvu)
+    "You are trying to save an indirect (multi-file) document.":
+        "Du försöker spara ett indirekt dokument (flera filer).",
+    "What exactly do you want to do?":
+        "Vad vill du göra?",
+    "Save only index file":
+        "Spara endast index-fil",
+    "Download, bundle and save the whole document as one file":
+        "Ladda ner, packa ihop och spara hela dokumentet som en fil",
+    "Downloading and bundling the document":
+        "Laddar ner och packer ihop dokumentet",
+    "The document has been downloaded and bundled into one file successfully":
+        "Dokumentet har laddats ner och packats ihop till en fil",
 };
