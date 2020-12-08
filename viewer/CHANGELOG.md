@@ -1,5 +1,10 @@
 # DjVu.js Viewer's Changelog
 
+## v.0.5.3 (08.12.2020)
+
+- Fix: styles in the help window.
+- Update of the Swedish translation.
+
 ## v.0.5.2 (06.12.2020)
 
 - Feature: bundle indirect djvu documents (suggestion in the save dialog).
