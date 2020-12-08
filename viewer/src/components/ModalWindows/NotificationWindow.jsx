@@ -5,6 +5,18 @@ import { connect } from 'react-redux';
 import ModalWindow from './ModalWindow';
 import Actions from '../../actions/actions';
 import { TranslationContext } from "../Translation";
+import styled from "styled-components";
+
+const Header = styled.div`
+    text-align: center;
+    padding: 0.5em;
+    border-bottom: 1px solid gray;
+`;
+
+const Body = styled.div`
+    padding: 0.5em;
+    padding-right: 0;
+`;
 
 class NotificationWindow extends React.Component {
 
@@ -28,11 +40,11 @@ class NotificationWindow extends React.Component {
 
         return (
             <ModalWindow isError={isError} onClose={closeNotificationWindow}>
-                <div className="notification_window">
-                    <div className="header">
+                <div>
+                    <Header>
                         {isError ? t("Error") + ": " + header : header}
-                    </div>
-                    <div className="body">{message}</div>
+                    </Header>
+                    <Body>{message}</Body>
                 </div>
             </ModalWindow>
         );

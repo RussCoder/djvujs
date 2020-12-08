@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import cx from 'classnames';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimesCircle } from '@fortawesome/free-regular-svg-icons';
 import styled, { css } from 'styled-components';
@@ -12,57 +11,39 @@ const style = css`
     left: 0;
     width: 100%;
     height: 100%;
+`;
 
-    .modal_window {
-        box-shadow: 0 0 2px var(--color);
-        background: var(--modal-window-background-color);
-        border-radius: 0.5em;
-        font-size: 1.5em;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translateX(-50%) translateY(-50%);
-        max-width: 80%;
-        max-height: 80%;
-        z-index: 2;
-        padding: 0;
-        overflow: hidden;
+const ModalWindowRoot = styled.div`
+    box-shadow: 0 0 2px var(--color);
+    background: var(--modal-window-background-color);
+    border-radius: 0.5em;
+    font-size: 1.5em;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-50%);
+    max-width: 80%;
+    max-height: 80%;
+    z-index: 2;
+    padding: 0;
+    overflow: hidden;
 
-        &.fixed_size {
-            height: 80%;
-            width: 80%;
-        }
+    ${p => p.$fixedSize ? `
+        height: 80%;
+        width: 80%;
+    ` : ''};
 
-        &.error {
-            background: rgb(255, 209, 212);
-            color: black;
-        }
+    ${p => p.$error ? `
+       background: rgb(255, 209, 212);
+       color: black;
+    ` : ''};
+`;
 
-        .close_button {
-            ${iconButton};
-            font-size: 25px;
-            float: right;
-            padding: 0.2em;
-        }
-
-        .content {
-            overflow: auto;
-
-            .notification_window {
-
-                .header {
-                    text-align: center;
-                    padding: 0.5em;
-                    border-bottom: 1px solid gray;
-                }
-
-                .body {
-                    padding: 0.5em;
-                    padding-right: 0;
-                }
-            }
-        }
-    }
+const closeButtonStyle = css`
+    ${iconButton};
+    font-size: 25px;
+    float: right;
+    padding: 0.2em;
 `;
 
 const DarkLayer = styled.div`
@@ -77,7 +58,6 @@ const DarkLayer = styled.div`
     z-index: 1;
 `;
 
-
 export default class ModalWindow extends React.Component {
 
     static propTypes = {
@@ -88,27 +68,25 @@ export default class ModalWindow extends React.Component {
     };
 
     render() {
-        const { onClose, isError, isFixedSize, className } = this.props;
-
-        const classes = {
-            modal_window: true,
-            error: isError,
-            fixed_size: isFixedSize
-        };
+        const { onClose, isError, isFixedSize, className = '' } = this.props;
 
         return (
             <div css={style}>
                 <DarkLayer onClick={onClose} />
-                <div className={`${cx(classes)} ${className || ''}`}>
+                <ModalWindowRoot
+                    className={className}
+                    $error={isError}
+                    $fixedSize={isFixedSize}
+                >
                     <FontAwesomeIcon
-                        className="close_button"
+                        css={closeButtonStyle}
                         icon={faTimesCircle}
                         onClick={onClose}
                     />
-                    <div className="content">
+                    <div css={`overflow: auto;`}>
                         {this.props.children}
                     </div>
-                </div>
+                </ModalWindowRoot>
             </div>
         );
     }

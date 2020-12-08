@@ -7,7 +7,6 @@ import { TextButton } from "../StyledPrimitives";
 import { get } from "../../reducers";
 import { ActionTypes } from "../../constants";
 import ProgressBar from "../ProgressBar";
-import Actions from "../../actions/actions";
 
 const Root = styled.div`
     padding: 1em;

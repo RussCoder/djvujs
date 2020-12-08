@@ -12,13 +12,23 @@ import styled from "styled-components";
 
 const Root = styled.div`
     padding: 0.5em;
+`;
 
-    div:first-child {
-        font-size: 1.2em;
-        width: 100%;
-        font-weight: 600;
-        border-bottom: 1px solid var(--border-color);
-        margin: 0.5em 0;
+const Header = styled.div`
+    font-size: 1.2em;
+    width: 100%;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border-color);
+    margin: 0.5em 0;
+`;
+
+const HotkeyGrid = styled.div`
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: 0.5em;
+
+    & > :nth-child(2n+1) {
+        text-align: center;
     }
 `;
 
@@ -34,9 +44,8 @@ export default () => {
     return (
         <ModalWindow onClose={() => dispatch(Actions.closeHelpWindowAction())} isFixedSize={true}>
             <Root>
-                <div
-                    className="header">{`DjVu.js Viewer v.${DjVu.Viewer.VERSION} (DjVu.js v.${DjVu.VERSION})`}</div>
-                <div className="para">
+                <Header>{`DjVu.js Viewer v.${DjVu.Viewer.VERSION} (DjVu.js v.${DjVu.VERSION})`}</Header>
+                <div>
                     {t('The application for viewing .djvu files in the browser.')}<br />
                     {t("If something doesn't work properly, feel free to write about the problem at #email.", {
                         '#email': <a target="_blank" rel="noopener noreferrer"
@@ -53,13 +62,15 @@ export default () => {
                     })}<br />
                 </div>
 
-                <div className="header">{t('Hotkeys')}</div>
-                <div className="para"><em>Ctrl+S</em> - {t('save the document')}</div>
-                <div className="para"><em>Left Arrow</em> - {t('go to the previous page')}</div>
-                <div className="para"><em>Right Arrow</em> - {t('go to the next page')}</div>
+                <Header>{t('Hotkeys')}</Header>
+                <HotkeyGrid>
+                    <em>Ctrl+S</em><span>- {t('save the document')}</span>
+                    <em>{'\u2190'}</em><span>- {t('go to the previous page')}</span>
+                    <em>{'\u2192'}</em><span>- {t('go to the next page')}</span>
+                </HotkeyGrid>
 
-                <div className="header">{t('Controls')}</div>
-                <div className="para">
+                <Header>{t('Controls')}</Header>
+                <div>
                     {t("#expandIcon and #collapseIcon are to switch the viewer to the full page mode and back.", {
                         "#expandIcon": <FontAwesomeIcon icon={faExpand} />,
                         "#collapseIcon": <FontAwesomeIcon icon={faCompress} />,

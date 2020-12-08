@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import cx from 'classnames';
 
 import CanvasImage from './CanvasImage';
 import TextLayer from './TextLayer';
@@ -14,7 +13,7 @@ const Root = styled.div`
     overflow: hidden;
     margin: 0 auto;
 
-    .complex_image_content {
+    & > div:first-child {
         position: absolute;
         left: 50%;
         top: 50%;
@@ -24,21 +23,11 @@ const Root = styled.div`
             display: block;
         }
 
-        &>canvas {
+        & > canvas {
             display: block;
         }
 
-        &.rotate90 {
-            transform: translateX(-50%) translateY(-50%) rotate(90deg);
-        }
-
-        &.rotate180 {
-            transform: translateX(-50%) translateY(-50%) rotate(180deg);
-        }
-
-        &.rotate270 {
-            transform: translateX(-50%) translateY(-50%) rotate(270deg);
-        }
+        ${p => p.$rotation ? `transform: translateX(-50%) translateY(-50%) rotate(${p.$rotation}deg)` : ''};
     }
 `;
 
@@ -74,22 +63,16 @@ class ComplexImage extends React.PureComponent {
             [width, height] = [height, width];
         }
 
-        const contentClasses = {
-            complex_image_content: true,
-            rotate90: this.props.rotation === 90,
-            rotate180: this.props.rotation === 180,
-            rotate270: this.props.rotation === 270,
-        };
-
         return (
             <Root
                 style={{
                     width: width + "px",
                     height: height + "px"
                 }}
+                $rotation={this.props.rotation}
                 ref={this.props.outerRef}
             >
-                <div className={cx(contentClasses)}>
+                <div>
                     {this.props.imageData ?
                         <CanvasImage {...this.props} /> :
                         this.props.imageUrl ?
