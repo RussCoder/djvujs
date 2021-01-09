@@ -2,10 +2,10 @@ var DjVu = (function () {
     'use strict';
 
     function DjVuScript() {
-    'use strict;'
+    'use strict';
 
     var DjVu = {
-        VERSION: '0.5.0',
+        VERSION: '0.5.1',
         IS_DEBUG: false,
         setDebugMode: (flag) => DjVu.IS_DEBUG = flag
     };
@@ -114,13 +114,18 @@ var DjVu = (function () {
         return codePoints;
     }
 
+    const pageSize = 64 * 1024;
+    const growthLimit = 20 * 1024 * 1024 / pageSize;
     class ByteStreamWriter {
-        constructor(length) {
-            this.growthStep = length || 4096;
-            this.buffer = new ArrayBuffer(this.growthStep);
-            this.viewer = new DataView(this.buffer);
+        constructor(length = 0) {
+            this.memory = new WebAssembly.Memory({ initial: Math.ceil(length / pageSize), maximum: 65536 });
+            this.assignBufferFromMemory();
             this.offset = 0;
             this.offsetMarks = {};
+        }
+        assignBufferFromMemory() {
+            this.buffer = this.memory.buffer;
+            this.viewer = new DataView(this.buffer);
         }
         reset() {
             this.offset = 0;
@@ -131,7 +136,7 @@ var DjVu = (function () {
             return this;
         }
         writeByte(byte) {
-            this.checkOffset();
+            this.checkOffset(1);
             this.viewer.setUint8(this.offset++, byte);
             return this;
         }
@@ -140,7 +145,7 @@ var DjVu = (function () {
             return this;
         }
         writeInt32(val) {
-            this.checkOffset(3);
+            this.checkOffset(4);
             this.viewer.setInt32(this.offset, val);
             this.offset += 4;
             return this;
@@ -165,26 +170,23 @@ var DjVu = (function () {
             return this.buffer.slice(0, this.offset);
         }
         checkOffset(requiredBytesNumber = 0) {
-            var bool = this.offset + requiredBytesNumber >= this.buffer.byteLength;
+            const bool = this.offset + requiredBytesNumber > this.buffer.byteLength;
             if (bool) {
                 this._expand(requiredBytesNumber);
             }
             return bool;
         }
         _expand(requiredBytesNumber) {
-            var newLength = 2 * this.buffer.byteLength;
-            if (newLength < this.buffer.byteLength + requiredBytesNumber) {
-                newLength += requiredBytesNumber;
-            }
-            var nb = new ArrayBuffer(newLength);
-            new Uint8Array(nb).set(new Uint8Array(this.buffer));
-            this.buffer = nb;
-            this.viewer = new DataView(this.buffer);
+            this.memory.grow(Math.max(
+                Math.ceil(requiredBytesNumber / pageSize),
+                Math.min(this.memory.buffer.byteLength / pageSize, growthLimit)
+            ));
+            this.assignBufferFromMemory();
         }
         jump(length) {
             length = +length;
             if (length > 0) {
-                this.checkOffset(length - 1);
+                this.checkOffset(length);
             }
             this.offset += length;
             return this;
@@ -193,7 +195,7 @@ var DjVu = (function () {
             this.writeArray(bs.toUint8Array());
         }
         writeArray(arr) {
-            while (this.checkOffset(arr.length - 1)) { }
+            while (this.checkOffset(arr.length)) { }
             new Uint8Array(this.buffer).set(arr, this.offset);
             this.offset += arr.length;
         }
@@ -205,13 +207,13 @@ var DjVu = (function () {
             this.writeByte(0);
         }
         writeInt16(val) {
-            this.checkOffset(1);
+            this.checkOffset(2);
             this.viewer.setInt16(this.offset, val);
             this.offset += 2;
             return this;
         }
         writeUint16(val) {
-            this.checkOffset(1);
+            this.checkOffset(2);
             this.viewer.setUint16(this.offset, val);
             this.offset += 2;
             return this;
@@ -14244,8 +14246,9 @@ var DjVu = (function () {
             djvuWriter.writeChunk(this.navm);
         }
         progressCallback((totalOperations - 2) / totalOperations);
-        for (const chunkByteStream of chunkByteStreams) {
-            djvuWriter.writeFormChunkBS(chunkByteStream);
+        for (let i = 0; i < chunkByteStreams.length; i++) {
+            djvuWriter.writeFormChunkBS(chunkByteStreams[i]);
+            chunkByteStreams[i] = null;
         }
         progressCallback((totalOperations - 1) / totalOperations);
         const newBuffer = djvuWriter.getBuffer();
@@ -14697,7 +14700,6 @@ var DjVu = (function () {
             this.currentPromise = null;
             this.promiseCallbacks = null;
             this.currentCommandId = null;
-            this.isWorking = false;
         }
         emptyTaskQueue() {
             this.promiseMap.clear();
@@ -14775,13 +14777,13 @@ var DjVu = (function () {
         }
         messageHandler({ data: obj }) {
             if (obj.action) return this.processAction(obj);
+            this.isWorking = false;
             const callbacks = this.promiseCallbacks;
             const commandId = obj.sendBackData && obj.sendBackData.commandId;
-            if (commandId === this.currentCommandId
-                || this.currentCommandId === null) {
-                this.isWorking = false;
+            if (commandId === this.currentCommandId || this.currentCommandId === null) {
                 this.runNextTask();
             } else {
+                console.warn('DjVu.js: Something strange came from the worker.', obj);
                 return;
             }
             if (!callbacks) return;
