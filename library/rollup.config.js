@@ -5,7 +5,7 @@ const commonjs = require('rollup-plugin-commonjs');
 const outputTemplate = {
     format: 'iife',
     name: 'DjVu',
-    intro: "function DjVuScript() {\n'use strict;'",
+    intro: "function DjVuScript() {\n'use strict';",
     outro: "}\nreturn Object.assign(DjVuScript(), {DjVuScript});"
 };
 

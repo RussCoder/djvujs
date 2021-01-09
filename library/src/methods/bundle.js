@@ -77,8 +77,9 @@ export default async function bundle(progressCallback = () => { }) {
 
     progressCallback((totalOperations - 2) / totalOperations);
 
-    for (const chunkByteStream of chunkByteStreams) {
-        djvuWriter.writeFormChunkBS(chunkByteStream);
+    for (let i = 0; i < chunkByteStreams.length; i++) {
+        djvuWriter.writeFormChunkBS(chunkByteStreams[i]);
+        chunkByteStreams[i] = null; // release memory
     }
 
     progressCallback((totalOperations - 1) / totalOperations);

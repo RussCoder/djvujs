@@ -1,5 +1,14 @@
 # DjVu.js Library's Changelog
 
+## v.0.5.1 (09.01.2021)
+
+- More robust memory management for document creation (usage of
+  `WebAssembly.Memory` with its `grow()` method instead of manual `ArrayBuffer`
+  expansion).
+- `'use strict';` in the Web Worker (typo correction).
+- Returned to the old behaviour: wait for the completion of a forgotten task,
+  before sending the next to the Web Worker.
+
 ## v.0.5.0 (06.12.2020)
 
 - Feature: bundle indirect djvu documents.

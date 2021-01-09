@@ -1,13 +1,27 @@
 import { stringToCodePoints, codePointsToUtf8 } from './DjVu';
 
+const pageSize = 64 * 1024;
+const growthLimit = 20 * 1024 * 1024 / pageSize;
+
 export default class ByteStreamWriter {
-    constructor(length) {
-        //размер шага роста используемой памяти
-        this.growthStep = length || 4096; // not used now
-        this.buffer = new ArrayBuffer(this.growthStep);
-        this.viewer = new DataView(this.buffer);
+    constructor(length = 0) {
+        // As the practice has shown, usage of WebAssembly.Memory and its grow() method
+        // is more robust than the manual expansion of ArrayBuffer 
+        // via `new Uint8Array(newBuffer).set(new Uint8Array(oldBuffer))`.
+        // In particular, with WebAssembly.Memory it's possible to download and bundle
+        // a document that is about 1.7 GB in size, while with raw ArrayBuffers 
+        // a browser tab crashes (in Chrome) when the buffer reaches about 1.5 GB 
+        // (or there is an error that a buffer cannot be allocated).
+        this.memory = new WebAssembly.Memory({ initial: Math.ceil(length / pageSize), maximum: 65536 });
+        this.assignBufferFromMemory();
+
         this.offset = 0;
         this.offsetMarks = {};
+    }
+
+    assignBufferFromMemory() {
+        this.buffer = this.memory.buffer;
+        this.viewer = new DataView(this.buffer);
     }
 
     /**
@@ -24,7 +38,7 @@ export default class ByteStreamWriter {
     }
 
     writeByte(byte) {
-        this.checkOffset();
+        this.checkOffset(1);
         this.viewer.setUint8(this.offset++, byte);
         return this;
     }
@@ -35,7 +49,7 @@ export default class ByteStreamWriter {
     }
 
     writeInt32(val) {
-        this.checkOffset(3);
+        this.checkOffset(4);
         this.viewer.setInt32(this.offset, val);
         this.offset += 4;
         return this;
@@ -71,7 +85,7 @@ export default class ByteStreamWriter {
     }
 
     checkOffset(requiredBytesNumber = 0) {
-        var bool = this.offset + requiredBytesNumber >= this.buffer.byteLength;
+        const bool = this.offset + requiredBytesNumber > this.buffer.byteLength;
         if (bool) {
             this._expand(requiredBytesNumber);
         }
@@ -79,25 +93,18 @@ export default class ByteStreamWriter {
     }
 
     _expand(requiredBytesNumber) {
-        //Globals.Timer.start("expandTime");
-
-        var newLength = 2 * this.buffer.byteLength; // perhaps it's not the best strategy but still it works
-        if (newLength < this.buffer.byteLength + requiredBytesNumber) {
-            newLength += requiredBytesNumber;
-        }
-        var nb = new ArrayBuffer(newLength);
-        new Uint8Array(nb).set(new Uint8Array(this.buffer)); // быстрое копирование ArrayBuffer
-        this.buffer = nb;
-        this.viewer = new DataView(this.buffer);
-
-        //Globals.Timer.end("expandTime");
+        this.memory.grow(Math.max(
+            Math.ceil(requiredBytesNumber / pageSize),
+            Math.min(this.memory.buffer.byteLength / pageSize, growthLimit)
+        ));
+        this.assignBufferFromMemory();
     }
 
     //смещение на length байт
     jump(length) {
         length = +length;
         if (length > 0) {
-            this.checkOffset(length - 1);
+            this.checkOffset(length);
         }
         this.offset += length;
         return this;
@@ -108,7 +115,7 @@ export default class ByteStreamWriter {
     }
 
     writeArray(arr) {
-        while (this.checkOffset(arr.length - 1)) { }
+        while (this.checkOffset(arr.length)) { }
         new Uint8Array(this.buffer).set(arr, this.offset);
         this.offset += arr.length;
     }
@@ -123,14 +130,14 @@ export default class ByteStreamWriter {
     }
 
     writeInt16(val) {
-        this.checkOffset(1);
+        this.checkOffset(2);
         this.viewer.setInt16(this.offset, val);
         this.offset += 2;
         return this;
     }
 
     writeUint16(val) {
-        this.checkOffset(1);
+        this.checkOffset(2);
         this.viewer.setUint16(this.offset, val);
         this.offset += 2;
         return this;

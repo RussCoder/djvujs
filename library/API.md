@@ -263,11 +263,11 @@ The `DjVuWorker` instance has the following methods and props:
   queue.
 - `isTaskInProcess(promise: Promise): boolean` - checks whether the task has
   been already started.
-- `revokeObjectURL(url: string): void` - the sad fact is that if an ObjectURL
-  has been created inside a worker it can be revoked only inside this very
-  worker. I checked it by myself. Maybe it will change in the future, but you
-  should prefer this method to the `URL.revokeObjectURL()` when you want to
-  revoke a URL from the worker (e.g. a URL to a PNG image or a whole document).
+- `revokeObjectURL(url: string): void` - formerly, if an ObjectURL had been
+  created inside a worker it could be revoked only inside this very worker. I
+  checked it by myself, but now it seems that this behavior has been fixed and
+  usual `URL.revokeObjectURL()` works too. But this method is still available if
+  you wish to revoke the URL inside the worker in which it was created.
 - `reset(): void` - recreates the worker.
 
 ## Additional Notes

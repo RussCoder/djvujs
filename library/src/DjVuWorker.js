@@ -66,10 +66,6 @@ export default class DjVuWorker {
         this.currentPromise = null;
         this.promiseCallbacks = null;
         this.currentCommandId = null;
-        // reset the flag, although the worker doesn't stop. But it's more robust,
-        // than to wait till the forgotten task finishes. Just because the message can not to come from the worker,
-        // e.g. when it contains data which cannot be cloned, like functions ((although it shouldn't happen).
-        this.isWorking = false;
     }
 
     emptyTaskQueue() {
@@ -165,15 +161,28 @@ export default class DjVuWorker {
     messageHandler({ data: obj }) {
         if (obj.action) return this.processAction(obj);
 
+        this.isWorking = false;
         const callbacks = this.promiseCallbacks;
         const commandId = obj.sendBackData && obj.sendBackData.commandId;
 
-        if (commandId === this.currentCommandId
-            || this.currentCommandId === null) { // technically, we can forget the current task, but still have a task queue
-            this.isWorking = false;
+        // either a result or a forgotten command returned
+        if (commandId === this.currentCommandId || this.currentCommandId === null) {
+            // in fact, this invocation is essential, since this.isWorking
+            // isn't reset when all tasks are cancelled.
+            // So we still wait for a cancelled task to finish - it's important, because otherwise
+            // cancelAllTasks() would have no sense - the real worker's queue would be overwhelmed with "current" tasks,
+            // which cannot be cancelled once sent, while now it's possible to really cancel all tasks several times
+            // while some other task is being processed in the worker.
+            // Real example: a user is quickly turning over pages in the single page mode in the viewer.
+            // commandIds only prevent us from forgetting current task
+            // in case when something comes from the worker and it's not an action
+            // (it shouldn't happen, just an additional measure)
             this.runNextTask();
         } else {
-            return; // in case if we cancel a task, but its result came afterwards
+            // it shouldn't happen, it means that one more task has been already sent
+            // without waiting for a forgotten one. Or an action is sent incorrectly.
+            console.warn('DjVu.js: Something strange came from the worker.', obj);
+            return;
         }
 
         if (!callbacks) return; // in case of all tasks cancellation
