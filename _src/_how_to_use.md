@@ -82,7 +82,10 @@ The `config` is an object containing options for the viewer. It's an optional pa
     theme: 'dark',
     djvuOptions: {
         baseUrl: "/url/to/directory/with/indirect/djvu/"
-    }
+    },
+    uiOptions: {
+        hideFullPageSwitch: true,  
+    },
 }
 
 ```
@@ -95,6 +98,10 @@ Use `DjVu.Viewer.getAvailableLanguages()`to get the full list of languages which
 Note, you also can [add your own language](https://github.com/RussCoder/djvujs/blob/master/TRANSLATION.md).
 - `theme` - the color theme. Either `light` or `dark`. By default the browser's color scheme is used (or the value save in the local storage).
 - `djvuOptions` - an object which is passed to the library. Now there is only one option - the base url, which is the url to the directory containing the files of an indirect djvu. For bundled djvu this parameter is not required. The base url is extracted automatically from a url to the index.djvu, when the `loadDocumentByUrl` is called, but in case of `loadDocument` method, this parameter should be provided manually.
+- `uiOptions` - options to adjust the UI of the viewer:
+  - `hideFullPageSwitch` - if `true` there will be no full-page mode switch. It
+    may be used, if the viewer takes the whole page by default, so the switch is
+    useless.
 
 There are several static methods and properties:
 
