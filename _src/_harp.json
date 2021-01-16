@@ -1,7 +1,7 @@
 {
     "globals": {
         "library_version": "0.5.1",
-        "viewer_version": "0.5.3",
+        "viewer_version": "0.5.4",
         "viewer_js_link": "/assets/dist/djvu_viewer.js",
         "library_link": "/assets/dist/djvu.js"
     }
