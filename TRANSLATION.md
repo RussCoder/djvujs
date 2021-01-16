@@ -3,8 +3,9 @@
 If you want to add one more translation to the viewer, 
 you need to fulfill the following steps:
 
-1. Copy [the Russian dictionary file](viewer/src/locales/Russian.js) and rename it
-according to the name of your language in English.
+1. Copy [the Russian dictionary file](viewer/src/locales/Russian.js) and rename
+   it according to the name of your language in English. Put your file into the
+   same directory, where the Russian file is.
 
 2. Then change all the Russian translations of English phrases with your own. 
 You can look at the  [the English dictionary file](viewer/src/locales/English.js), 

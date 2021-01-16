@@ -6,7 +6,11 @@ window.onunload = () => chrome.runtime.sendMessage("unregister_viewer_tab");
 
 window.onload = () => {
     chrome.runtime.sendMessage("register_viewer_tab", () => {
-        viewer = new DjVu.Viewer();
+        viewer = new DjVu.Viewer({
+            uiOptions: {
+                hideFullPageSwitch: true,
+            }
+        });
         viewer.render(document.getElementById('root'));
 
         viewer.on(DjVu.Viewer.Events.DOCUMENT_CHANGED, () => {

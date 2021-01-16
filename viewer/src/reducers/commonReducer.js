@@ -16,18 +16,33 @@ const initialState = Object.freeze({
     isHelpWindowShown: false,
     isContinuousScrollMode: false,
     isIndirect: false,
-    options: {
+    options: { // all these options are saved in localStorage
         interceptHttpRequests: false,
         analyzeHeaders: false,
         locale: 'en',
         theme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
         preferContinuousScroll: false,
     },
+    uiOptions: { // aren't saved, should be set programmatically, if required
+        hideFullPageSwitch: false,
+    },
 });
+
+function getInitialStateWithOptions(state) {
+    return {
+        ...initialState,
+        isFullPageView: state.isFullPageView,
+        options: state.options,
+        uiOptions: state.uiOptions,
+    };
+}
 
 export default (state = initialState, action) => {
     const payload = action.payload;
     switch (action.type) {
+
+        case ActionTypes.SET_UI_OPTIONS:
+            return { ...state, uiOptions: { ...state.uiOptions, ...payload } };
 
         case ActionTypes.UPDATE_OPTIONS:
             return { ...state, options: { ...state.options, ...payload } };
@@ -72,23 +87,17 @@ export default (state = initialState, action) => {
 
         case Constants.DOCUMENT_CREATED_ACTION:
             return {
-                ...initialState,
+                ...getInitialStateWithOptions(state),
                 documentId: state.documentId + 1,
                 isLoading: true,
-                isFullPageView: state.isFullPageView,
                 isContinuousScrollMode: state.options.preferContinuousScroll ? true : state.isContinuousScrollMode,
                 pagesQuantity: action.pagesQuantity,
                 fileName: action.fileName,
                 isIndirect: action.isIndirect,
-                options: state.options,
             };
 
         case Constants.CLOSE_DOCUMENT_ACTION:
-            return {
-                ...initialState,
-                isFullPageView: state.isFullPageView,
-                options: state.options,
-            };
+            return getInitialStateWithOptions(state);
 
         case Constants.CONTENTS_IS_GOTTEN_ACTION:
             return {
@@ -129,6 +138,7 @@ export default (state = initialState, action) => {
 }
 
 export const get = {
+    uiOptions: state => state.uiOptions,
     documentId: state => state.documentId,
     userScale: state => state.userScale,
     pageRotation: state => state.pageRotation,

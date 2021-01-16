@@ -1,5 +1,10 @@
 # DjVu.js Viewer's Changelog
 
+## v.0.5.4 (16.01.2021)
+
+- French translation.
+- An option to hide the full-page mode switch.
+
 ## v.0.5.3 (08.12.2020)
 
 - Fix: styles in the help window.

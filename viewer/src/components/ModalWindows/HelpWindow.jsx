@@ -36,6 +36,7 @@ export default () => {
     const isShown = useSelector(get.isHelpWindowShown);
     const dispatch = useDispatch();
     const t = useTranslation();
+    const { hideFullPageSwitch } = useSelector(get.uiOptions);
 
     if (!isShown) {
         return null;
@@ -69,14 +70,18 @@ export default () => {
                     <em>{'\u2192'}</em><span>- {t('go to the next page')}</span>
                 </HotkeyGrid>
 
-                <Header>{t('Controls')}</Header>
-                <div>
-                    {t("#expandIcon and #collapseIcon are to switch the viewer to the full page mode and back.", {
-                        "#expandIcon": <FontAwesomeIcon icon={faExpand} />,
-                        "#collapseIcon": <FontAwesomeIcon icon={faCompress} />,
-                    })}
-                    {' ' + t("If you work with the browser extension, these buttons will cause no effect, since the viewer takes the whole page by default.")}
-                </div>
+                {hideFullPageSwitch ? null :
+                    <>
+                        <Header>{t('Controls')}</Header>
+                        <div>
+                            {t("#expandIcon and #collapseIcon are to switch the viewer to the full page mode and back.", {
+                                "#expandIcon": <FontAwesomeIcon icon={faExpand} />,
+                                "#collapseIcon": <FontAwesomeIcon icon={faCompress} />,
+                            })}
+                            {' ' + t("If you work with the browser extension, these buttons will cause no effect, since the viewer takes the whole page by default.")}
+                        </div>
+                    </>
+                }
             </Root>
         </ModalWindow>
     );

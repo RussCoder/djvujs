@@ -110,10 +110,14 @@ class RootSaga {
         yield put(Actions.pagesSizesAreGottenAction(pagesSizes));
     }
 
-    * configure({ pageNumber, pageRotation, pageScale, language, theme }) {
+    * configure({ pageNumber, pageRotation, pageScale, language, theme, uiOptions }) {
         if (pageNumber) yield put(Actions.setNewPageNumberAction(pageNumber, true));
         if (pageRotation) yield put(Actions.setPageRotationAction(pageRotation));
         if (pageScale) yield put(Actions.setUserScaleAction(pageScale));
+        if (uiOptions) yield put({
+            type: ActionTypes.SET_UI_OPTIONS,
+            payload: uiOptions,
+        });
 
         const options = {};
         if (language) {
@@ -190,7 +194,7 @@ class RootSaga {
         // set the current number to start page fetching saga
         // fetchPageData should be called via yield* directly, otherwise it won't be cancelled by takeLatest effect
         const state = yield select();
-        yield put(Actions.setNewPageNumberAction(get.currentPageNumber(state), true)); // set the current number to start page fetching saga   
+        yield put(Actions.setNewPageNumberAction(get.currentPageNumber(state), true)); // set the current number to start page fetching saga
     }
 
     * setPageByUrl(action) {

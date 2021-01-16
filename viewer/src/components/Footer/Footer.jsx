@@ -5,6 +5,8 @@ import HelpButton from './HelpButton';
 import FullPageViewButton from './FullPageViewButton';
 import styled from 'styled-components';
 import { ControlButton } from '../StyledPrimitives';
+import { useSelector } from "react-redux";
+import { get } from "../../reducers";
 
 const Root = styled.div`
     width: 100%;
@@ -18,17 +20,17 @@ const Root = styled.div`
     }
 `;
 
-class Footer extends React.Component {
-    render() {
-        return (
-            <Root>
-                <StatusBar />
-                <FilePanel />
-                <HelpButton />
-                <FullPageViewButton />
-            </Root>
-        );
-    }
+function Footer() {
+    const { hideFullPageSwitch } = useSelector(get.uiOptions);
+
+    return (
+        <Root>
+            <StatusBar />
+            <FilePanel />
+            <HelpButton />
+            {hideFullPageSwitch ? null : <FullPageViewButton />}
+        </Root>
+    );
 }
 
 export default Footer;

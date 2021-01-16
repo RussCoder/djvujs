@@ -17,7 +17,7 @@ const Events = constant({
 
 export default class DjVuViewer extends EventEmitter {
 
-    static VERSION = '0.5.3';
+    static VERSION = '0.5.4';
 
     static Events = Events;
 
@@ -25,12 +25,20 @@ export default class DjVuViewer extends EventEmitter {
         return Object.keys(dictionaries);
     };
 
-    constructor({ language = null } = {}) {
+    /**
+     * Technically, we can pass the same config as to the configure() method.
+     * But all other options are reset when a new document is loaded.
+     * So there is not sense to pass them into the constructor.
+     */
+    constructor({ language = null, uiOptions = null } = {}) {
         super();
         this.store = configureStore(this.eventMiddleware);
 
-        if (language) {
-            this.configure({ language: language });
+        if (language || uiOptions) {
+            this.configure({
+                language: language,
+                uiOptions: uiOptions,
+            });
         }
     }
 
@@ -87,10 +95,13 @@ export default class DjVuViewer extends EventEmitter {
         );
     }
 
-    configure({ pageNumber, pageRotation, pageScale, language, theme } = {}) {
+    /**
+     * The config object is destructed merely for the purpose of documentation
+     */
+    configure({ pageNumber, pageRotation, pageScale, language, theme, uiOptions } = {}) {
         this.store.dispatch({
             type: ActionTypes.CONFIGURE,
-            pageNumber, pageRotation, pageScale, language, theme,
+            pageNumber, pageRotation, pageScale, language, theme, uiOptions,
         });
 
         return this;
