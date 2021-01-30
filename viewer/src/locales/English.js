@@ -25,8 +25,10 @@ export default {
         "You can improve the translation here",
 
     // Initial screen
-    "Click the #helpButton button to know more about the app":
-        "Click the #helpButton button to know more about the app",
+    "#helpButton - learn more about the app":
+        "#helpButton - learn more about the app",
+    "#optionsButton - see the available options":
+        "#optionsButton - see the available options",
     "powered with":
         "powered with",
     "Drag & Drop a file here or click to choose manually":
@@ -47,6 +49,10 @@ export default {
     "Error details": "Error details",
 
     // Options and its tooltips
+    "Options": "Options",
+    "Show options window": "Show options window",
+    "Color theme": "Color theme",
+    "Extension options": "Extension options", // the options of the browser extension
     "Open all links with .djvu at the end via the viewer":
         "Open all links with .djvu at the end via the viewer",
     "All links to .djvu files will be opened by the viewer via a simple click on a link":

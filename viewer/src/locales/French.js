@@ -27,8 +27,6 @@ export default {
         "Vous pouvez améliorer la traduction ici",
 
     // Initial screen
-    "Click the #helpButton button to know more about the app":
-        "Cliquer sur #helpButton pour en savoir plus à propos de l'application",
     "powered with":
         "basé sur",
     "Drag & Drop a file here or click to choose manually":

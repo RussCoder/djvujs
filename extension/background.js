@@ -189,9 +189,23 @@ const disableHeadersAnalysis = () => {
     onHeadersReceived.hasListener(headersAnalyzer) && onHeadersReceived.removeListener(headersAnalyzer)
 };
 
+const defaultOptions = Object.freeze({
+    // here we duplicated only the options, which are used by the extension code
+    interceptHttpRequests: true,
+    analyzeHeaders: false,
+});
+
 const onOptionsChanged = json => {
+    let parsedOptions = {};
     try {
-        const options = JSON.parse(json);
+        parsedOptions = json ? JSON.parse(json) : {};
+    } catch (e) {
+        console.error('DjVu.js Extension: cannot parse options json from the storage. The json: \n', json);
+        console.error(e);
+    }
+
+    try {
+        const options = { ...defaultOptions, ...parsedOptions };
         if (options.interceptHttpRequests) {
             enableHttpIntercepting();
         } else {
@@ -204,7 +218,7 @@ const onOptionsChanged = json => {
             disableHeadersAnalysis();
         }
     } catch (e) {
-        console.error('DjVu.js Extension: Error on attempt to read and apply options. The json: ', json);
+        console.error('DjVu.js Extension: some options might not have been applied due to an error.');
         console.error(e);
     }
 };

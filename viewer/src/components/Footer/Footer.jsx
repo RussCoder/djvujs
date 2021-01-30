@@ -7,6 +7,7 @@ import styled from 'styled-components';
 import { ControlButton } from '../StyledPrimitives';
 import { useSelector } from "react-redux";
 import { get } from "../../reducers";
+import OptionsButton from "./OptionsButton";
 
 const Root = styled.div`
     width: 100%;
@@ -28,6 +29,7 @@ function Footer() {
             <StatusBar />
             <FilePanel />
             <HelpButton />
+            <OptionsButton />
             {hideFullPageSwitch ? null : <FullPageViewButton />}
         </Root>
     );

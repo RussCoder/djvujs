@@ -1,4 +1,5 @@
 const Constants = {
+    TRANSLATION_PAGE_URL: "https://github.com/RussCoder/djvujs/blob/master/TRANSLATION.md",
     DEFAULT_DPI: 100,
     TEXT_CURSOR_MODE: null,
     GRAB_CURSOR_MODE: null,

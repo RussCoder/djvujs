@@ -14,11 +14,12 @@ const initialState = Object.freeze({
     contents: null,
     errorMessage: null,
     isHelpWindowShown: false,
+    isOptionsWindowOpened: false,
     isContinuousScrollMode: false,
     isIndirect: false,
     options: { // all these options are saved in localStorage
-        interceptHttpRequests: false,
-        analyzeHeaders: false,
+        interceptHttpRequests: true, // this value MUST BE DUPLICATED in the extension code
+        analyzeHeaders: false, // this value MUST BE DUPLICATED in the extension code
         locale: 'en',
         theme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
         preferContinuousScroll: false,
@@ -62,17 +63,14 @@ export default (state = initialState, action) => {
                 pageRotation: action.pageRotation
             };
 
+        case ActionTypes.TOGGLE_OPTIONS_WINDOW:
+            return { ...state, isOptionsWindowOpened: payload };
+
         case Constants.SHOW_HELP_WINDOW_ACTION:
-            return {
-                ...state,
-                isHelpWindowShown: true
-            }
+            return { ...state, isHelpWindowShown: true };
 
         case Constants.CLOSE_HELP_WINDOW_ACTION:
-            return {
-                ...state,
-                isHelpWindowShown: false
-            }
+            return { ...state, isHelpWindowShown: false };
 
         case Constants.SET_NEW_PAGE_NUMBER_ACTION:
         case Constants.CREATE_DOCUMENT_FROM_ARRAY_BUFFER_ACTION:
@@ -138,6 +136,7 @@ export default (state = initialState, action) => {
 }
 
 export const get = {
+    isOptionsWindowOpened: state => state.isOptionsWindowOpened,
     uiOptions: state => state.uiOptions,
     documentId: state => state.documentId,
     userScale: state => state.userScale,

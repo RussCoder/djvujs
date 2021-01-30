@@ -3,13 +3,13 @@ import React from 'react';
 import HelpButton from '../Footer/HelpButton';
 import FileZone from './FileZone';
 import DjVu from '../../DjVu';
-import Options from '../Options';
 import { inExtension } from '../../utils';
 import LinkBlock from './LinkBlock';
 import { useTranslation } from '../Translation';
-import { LanguagePanel } from "../LanguagePanel";
+import { LanguagePanel } from "../Language/LanguagePanel";
 import styled from 'styled-components';
 import ThemeSwitcher from './ThemeSwitcher';
+import OptionsButton from "../Footer/OptionsButton";
 
 const Root = styled.div`
     font-size: 2em;
@@ -23,12 +23,21 @@ const Root = styled.div`
     align-items: center;
 `;
 
-const Central = styled.div`
-    margin-bottom: 2em;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-wrap: wrap;
+const InfoBlock = styled.div`
+    width: max-content;
+    margin: 0 auto 1em auto;
+    text-align: left;
+    font-size: 0.8em;
+
+    svg {
+        font-size: 1.5em;
+    }
+
+    div {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.25em;
+    }
 `;
 
 export default () => {
@@ -47,10 +56,12 @@ export default () => {
                     {`(${t('powered with')} DjVu.js v.${DjVu.VERSION})`}
                 </div>
 
-                {inExtension ? <Central><Options /></Central> : null}
-                <div style={{ clear: 'both', margin: '1em' }}>
-                    {t('Click the #helpButton button to know more about the app', { '#helpButton': <HelpButton /> })}
-                </div>
+                <InfoBlock>
+                    <div>{t('#optionsButton - see the available options', {
+                        '#optionsButton': <OptionsButton />
+                    })}</div>
+                    <div>{t('#helpButton - learn more about the app', { '#helpButton': <HelpButton /> })}</div>
+                </InfoBlock>
                 {inExtension ? <LinkBlock /> : null}
                 <FileZone />
             </div>

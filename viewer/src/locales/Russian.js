@@ -33,8 +33,10 @@ export default {
         "Вы можете улучшить перевод тут",
 
     // Initial screen
-    "Click the #helpButton button to know more about the app":
-        "Нажмите на #helpButton, чтобы узнать больше о приложении",
+    "#helpButton - learn more about the app":
+        "#helpButton - узнать больше о программе",
+    "#optionsButton - see the available options":
+        "#optionsButton - изменение настроек",
     "powered with":
         "основано на",
     "Drag & Drop a file here or click to choose manually":
@@ -55,6 +57,10 @@ export default {
     "Error details": "Детали ошибки",
 
     // Options and its tooltips
+    "Options": "Настройки",
+    "Show options window": "Открыть окно настроек",
+    "Color theme": "Цветовая схема",
+    "Extension options": "Настройки расширения", // the options of the browser extension
     "Open all links with .djvu at the end via the viewer":
         "Открывать все ссылки с .djvu на конце через расширение",
     "All links to .djvu files will be opened by the viewer via a simple click on a link":

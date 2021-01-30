@@ -6,7 +6,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSun, faMoon } from '@fortawesome/free-regular-svg-icons';
 import { ActionTypes } from '../../constants/index';
 
-const Root = styled.div`
+const Root = styled.span`
     margin-top: 1.5em;
 
     svg {

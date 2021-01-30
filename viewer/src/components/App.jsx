@@ -13,6 +13,7 @@ import HelpWindow from './ModalWindows/HelpWindow';
 import { TranslationProvider } from './Translation';
 import Main from './Main';
 import SaveDialog from "./ModalWindows/SaveDialog";
+import OptionsWindow from "./ModalWindows/OptionsWindow";
 
 const GlobalStyle = createGlobalStyle`
     html.disable_scroll_djvujs,
@@ -123,6 +124,8 @@ class App extends Component {
                     />
                     <HelpWindow />
                     <SaveDialog />
+                    <OptionsWindow />
+                    <div id="djvujs-modal-windows-container" />
                 </div>
             </TranslationProvider>
         );

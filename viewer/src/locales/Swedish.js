@@ -27,8 +27,6 @@ export default {
         "Du kan förtydliga översättningen här",
 
     // Initial screen
-    "Click the #helpButton button to know more about the app":
-        "Klicka på knappen #helpButton för att lära dig mer om applikationen",
     "powered with":
         "baserat på",
     "Drag & Drop a file here or click to choose manually":

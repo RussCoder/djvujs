@@ -1,4 +1,5 @@
 import React from 'react';
+import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimesCircle } from '@fortawesome/free-regular-svg-icons';
@@ -6,6 +7,7 @@ import styled, { css } from 'styled-components';
 import { iconButton } from '../cssMixins';
 
 const style = css`
+    z-index: 0; // to make windows with their dark layers lie one on top of another when they are created in sequence 
     position: absolute;
     top: 0;
     left: 0;
@@ -14,6 +16,7 @@ const style = css`
 `;
 
 const ModalWindowRoot = styled.div`
+    color: var(--color);
     box-shadow: 0 0 2px var(--color);
     background: var(--modal-window-background-color);
     border-radius: 0.5em;
@@ -24,9 +27,12 @@ const ModalWindowRoot = styled.div`
     transform: translateX(-50%) translateY(-50%);
     max-width: 80%;
     max-height: 80%;
+    width: max-content;
+    height: max-content;
     z-index: 2;
     padding: 0;
     overflow: hidden;
+    --closeButtonBlockHeight: 28px;
 
     ${p => p.$fixedSize ? `
         height: 80%;
@@ -41,10 +47,17 @@ const ModalWindowRoot = styled.div`
 
 const closeButtonStyle = css`
     ${iconButton};
-    font-size: 25px;
-    float: right;
-    padding: 0.2em;
+    font-size: 24px;
+    display: block;
+    height: var(--closeButtonBlockHeight);
+    padding-right: 2px;
+    margin-left: auto;
 `;
+
+const ContentWrapper = styled.div`
+    overflow: auto;
+    padding-bottom: var(--closeButtonBlockHeight);
+`
 
 const DarkLayer = styled.div`
     position: absolute;
@@ -61,16 +74,16 @@ const DarkLayer = styled.div`
 export default class ModalWindow extends React.Component {
 
     static propTypes = {
-        additionalClasses: PropTypes.string,
         isError: PropTypes.bool,
         isFixedSize: PropTypes.bool,
+        usePortal: PropTypes.bool,
         onClose: PropTypes.func.isRequired
     };
 
     render() {
-        const { onClose, isError, isFixedSize, className = '' } = this.props;
+        const { onClose, isError, isFixedSize, className = '', usePortal = false } = this.props;
 
-        return (
+        const component = (
             <div css={style}>
                 <DarkLayer onClick={onClose} />
                 <ModalWindowRoot
@@ -83,11 +96,20 @@ export default class ModalWindow extends React.Component {
                         icon={faTimesCircle}
                         onClick={onClose}
                     />
-                    <div css={`overflow: auto;`}>
+                    <ContentWrapper>
                         {this.props.children}
-                    </div>
+                    </ContentWrapper>
                 </ModalWindowRoot>
             </div>
         );
+
+        if (usePortal) { // portal is needed to a modal window from another modal window.
+            // In the first render, when the app is mounted, there is no container element,
+            // but in normal case a modal window should be shown before the app is mounted.
+            const container = document.getElementById('djvujs-modal-windows-container');
+            return container ? ReactDOM.createPortal(component, container) : component;
+        } else {
+            return component;
+        }
     }
 }
