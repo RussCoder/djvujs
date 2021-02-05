@@ -2,16 +2,20 @@ import { createSelector } from 'reselect';
 import Constants from '../constants';
 import { ActionTypes } from '../constants/index';
 
-const initialState = Object.freeze({
+const singlePageInitialState = Object.freeze({
     imageData: null,
     imageDpi: null,
     pageText: null,
     textZones: null,
+    imagePageError: null,
+    textPageError: null,
+});
+
+const initialState = Object.freeze({
+    ...singlePageInitialState,
     cursorMode: Constants.GRAB_CURSOR_MODE,
     currentPageNumber: 1,
     isPageNumberSetManually: false,
-    imagePageError: null,
-    textPageError: null,
     pageList: [],
     pageSizeList: [],
 });
@@ -47,7 +51,8 @@ export default function pageReducer(state = initialState, action) {
             };
 
         case Constants.PAGE_IS_LOADED_ACTION:
-            if (state.pageList[action.pageNumber - 1].url) { // if it has been already loaded we should avoid unnecessary updates
+            const page = state.pageList[action.pageNumber - 1];
+            if (page && page.url) { // if it has been already loaded we should avoid unnecessary updates
                 return state;
             }
             const newPagesList = [...state.pageList];
@@ -72,7 +77,8 @@ export default function pageReducer(state = initialState, action) {
 
         case Constants.SET_NEW_PAGE_NUMBER_ACTION:
             return {
-                ...((state.textPageError || state.imagePageError) ? initialState : state),
+                ...state,
+                ...((state.textPageError || state.imagePageError) ? singlePageInitialState : null),
                 isPageNumberSetManually: action.isPageNumberSetManually,
                 currentPageNumber: action.pageNumber
             };

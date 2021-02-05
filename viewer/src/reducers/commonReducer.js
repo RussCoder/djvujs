@@ -10,9 +10,8 @@ const initialState = Object.freeze({
     isTextMode: false,
     pagesQuantity: null,
     isFullPageView: false,
-    errorHeader: null,
+    error: null,
     contents: null,
-    errorMessage: null,
     isHelpWindowShown: false,
     isOptionsWindowOpened: false,
     isContinuousScrollMode: false,
@@ -119,16 +118,11 @@ export default (state = initialState, action) => {
             return {
                 ...state,
                 isLoading: false,
-                errorHeader: action.errorHeader,
-                errorMessage: action.errorMessage,
-            }
+                error: payload,
+            };
 
-        case Constants.CLOSE_MODAL_WINDOW_ACTION:
-            return {
-                ...state,
-                errorHeader: null,
-                errorMessage: null,
-            }
+        case ActionTypes.CLOSE_ERROR_WINDOW:
+            return { ...state, error: null }
 
         default:
             return state;
@@ -146,8 +140,7 @@ export const get = {
     isIndirect: state => state.isIndirect,
     isHelpWindowShown: state => state.isHelpWindowShown,
     fileName: state => state.fileName,
-    errorMessage: state => state.errorMessage,
-    errorHeader: state => state.errorHeader,
+    error: state => state.error,
     options: state => state.options,
     isFullPageView: state => state.isFullPageView,
     isLoading: state => state.isLoading,

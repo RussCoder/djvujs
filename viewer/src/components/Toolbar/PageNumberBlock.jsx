@@ -45,9 +45,11 @@ class PageNumberBlock extends React.Component {
 
     static contextType = TranslationContext;
 
-    setNewPageNumber(number) {
+    setNewPageNumber(number, isNext = true) {
         if (number >= 1 && number <= this.props.pagesQuantity) {
             this.props.setNewPageNumber(number, true);
+        } else {
+            this.props.setNewPageNumber(isNext ? 1 : this.props.pagesQuantity);
         }
     }
 
@@ -56,11 +58,11 @@ class PageNumberBlock extends React.Component {
     };
 
     goToNextPage = () => {
-        this.setNewPageNumber(this.props.pageNumber + 1);
+        this.setNewPageNumber(this.props.pageNumber + 1, true);
     };
 
     goToPrevPage = () => {
-        this.setNewPageNumber(this.props.pageNumber - 1);
+        this.setNewPageNumber(this.props.pageNumber - 1, false);
     };
 
     render() {

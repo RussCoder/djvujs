@@ -32,6 +32,8 @@ const ModalWindowRoot = styled.div`
     z-index: 2;
     padding: 0;
     overflow: hidden;
+    display: flex; // to enable overflow: auto in the content wrapper
+    flex-direction: column;
     --closeButtonBlockHeight: 28px;
 
     ${p => p.$fixedSize ? `

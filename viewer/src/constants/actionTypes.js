@@ -16,4 +16,5 @@ export const ActionTypes = constant({
     SAVE_DOCUMENT: null,
     SET_UI_OPTIONS: null,
     TOGGLE_OPTIONS_WINDOW: null,
+    CLOSE_ERROR_WINDOW: null,
 });

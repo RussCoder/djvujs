@@ -1,3 +1,10 @@
+import DjVu from './DjVu';
+
+/**
+ * We use the error codes form the library just to unify the structure of error objects and
+ * make it easier to show an appropriate error message for each case. These codes are used in the
+ * ErrorWindow component.
+ */
 export function loadFile(url, progressHandler) {
     return new Promise((resolve, reject) => {
         var xhr = new XMLHttpRequest();
@@ -6,6 +13,8 @@ export function loadFile(url, progressHandler) {
         xhr.onload = (e) => {
             if (xhr.status && xhr.status !== 200) { // при загрузке файла status === 0
                 return reject({
+                    code: DjVu.ErrorCodes.UNSUCCESSFUL_REQUEST,
+                    status: xhr.status,
                     header: `Response status code: ${xhr.status}`,
                     message: `Response status text: ${xhr.statusText}`
                 });
@@ -14,11 +23,11 @@ export function loadFile(url, progressHandler) {
         };
 
         xhr.onerror = (e) => {
-            console.error("DjVu.js Viewer load file error: \n", e);
             reject({
-                header: "Web request error",
-                message: "An error occurred, the file wasn't loaded. The error object is printed to the browser console."
-            })
+                code: DjVu.ErrorCodes.NETWORK_ERROR,
+                header: "Network error",
+                message: "You should check your network connection",
+            });
         }
 
         xhr.onprogress = progressHandler;

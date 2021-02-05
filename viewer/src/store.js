@@ -9,6 +9,11 @@ import initHotkeys from './hotkeys';
 const configureStore = (eventMiddleware = undefined) => {
     const sagaMiddleware = createSagaMiddleware();
     const store = createStore(rootReducer, applyMiddleware(
+        // store => next => action => {
+        //     const state = store.getState();
+        //     console.log(action);
+        //     next(action);
+        // },
         thunkMiddleware,
         sagaMiddleware,
         eventMiddleware

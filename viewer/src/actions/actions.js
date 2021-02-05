@@ -67,29 +67,12 @@ const Actions = {
     }),
 
     errorAction: error => {
-        let { header, message } = error;
-
-        if (!header || !message) {
-            switch (error.code) {
-                case DjVu.ErrorCodes.INCORRECT_FILE_FORMAT:
-                    header = "Incorrect file format!";
-                    message = "The provided file isn't a .djvu file!";
-                    break;
-                default:
-                    header = "Unexpected error occurred!";
-                    message = JSON.stringify(error);
-            }
-        }
+        console.error(error);
 
         return {
             type: ActionTypes.ERROR,
-            errorHeader: header,
-            errorMessage: message
+            payload: error,
         }
-    },
-
-    closeModalWindowAction() {
-        return { type: Constants.CLOSE_MODAL_WINDOW_ACTION };
     },
 
     createDocumentFromArrayBufferAction: (arrayBuffer, fileName = "***", config = {}) => ({

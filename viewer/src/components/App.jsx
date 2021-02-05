@@ -8,7 +8,7 @@ import Toolbar from "./Toolbar/Toolbar";
 import InitialScreen from './InitialScreen/InitialScreen';
 import FileLoadingScreen from './FileLoadingScreen';
 import Footer from './Footer/Footer';
-import NotificationWindow from './ModalWindows/NotificationWindow';
+import ErrorWindow from './ModalWindows/ErrorWindow';
 import HelpWindow from './ModalWindows/HelpWindow';
 import { TranslationProvider } from './Translation';
 import Main from './Main';
@@ -117,11 +117,7 @@ class App extends Component {
                     }
                     {this.props.isFileLoading ? null : <Footer />}
 
-                    <NotificationWindow
-                        header={this.props.errorHeader}
-                        message={this.props.errorMessage}
-                        type={"error"}
-                    />
+                    <ErrorWindow />
                     <HelpWindow />
                     <SaveDialog />
                     <OptionsWindow />
@@ -138,8 +134,6 @@ export default connect(
         isFileLoaded: get.isDocumentLoaded(state),
         isFileLoading: get.isFileLoading(state),
         isFullPageView: get.isFullPageView(state),
-        errorHeader: get.errorHeader(state),
-        errorMessage: get.errorMessage(state),
         options: get.options(state),
     })
 )(App);

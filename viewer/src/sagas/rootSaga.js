@@ -208,9 +208,9 @@ class RootSaga {
         func = func.bind(this);
         return function* (action) {
             try {
-                yield* func(action);
+                const gen = func(action);
+                if (gen && gen.next) yield* gen;
             } catch (error) {
-                console.error(error);
                 yield put(Actions.errorAction(error))
             }
         }
@@ -240,7 +240,7 @@ class RootSaga {
         this.callbacks[action.callbackName] = action.callback;
     }
 
-    * switchToContinuosScrollMode() {
+    * switchToContinuousScrollMode() {
         this.djvuWorker.cancelAllTasks();
         if (!this.pageDataManager) {
             yield* this.prepareForContinuousMode();
@@ -364,7 +364,6 @@ class RootSaga {
                 yield put(Actions.setNewPageNumberAction(pageNumber, true));
             }
         } catch (e) {
-            console.error(e);
             yield put(Actions.errorAction(e));
         } finally {
             yield put(Actions.endFileLoadingAction());
@@ -410,7 +409,7 @@ class RootSaga {
         yield takeLatest(ActionTypes.SAVE_DOCUMENT, this.withErrorHandler(this.saveDocument));
         yield takeLatest(Constants.CLOSE_DOCUMENT_ACTION, this.withErrorHandler(this.resetWorker));
         yield takeLatest(Constants.SET_API_CALLBACK_ACTION, this.withErrorHandler(this.setCallback));
-        yield takeLatest(Constants.ENABLE_CONTINUOUS_SCROLL_MODE_ACTION, this.withErrorHandler(this.switchToContinuosScrollMode));
+        yield takeLatest(Constants.ENABLE_CONTINUOUS_SCROLL_MODE_ACTION, this.withErrorHandler(this.switchToContinuousScrollMode));
         yield takeLatest(Constants.ENABLE_SINGLE_PAGE_MODE_ACTION, this.withErrorHandler(this.switchToSinglePageMode));
         yield takeLatest(Constants.ENABLE_TEXT_MODE_ACTION, this.withErrorHandler(this.switchToTextMode));
         yield takeLatest(ActionTypes.UPDATE_OPTIONS, this.withErrorHandler(this.updateOptions));

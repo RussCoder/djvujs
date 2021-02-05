@@ -94,11 +94,14 @@ export default class PageDataManager {
     }
 
     * loadPageFromLastPromise() {
-        const [page, textZones] = yield this.lastLoadPagePromise;
-        page.textZones = textZones;
-        this.allPages[this.lastLoadPageNumber] = page;
-        this.lastLoadPagePromise = null;
-        this.lastLoadPageNumber = null;
+        try {
+            const [page, textZones] = yield this.lastLoadPagePromise;
+            page.textZones = textZones;
+            this.allPages[this.lastLoadPageNumber] = page;
+        } finally {
+            this.lastLoadPagePromise = null;
+            this.lastLoadPageNumber = null;
+        }
     }
 
     * loadPage(pageNumber) {
