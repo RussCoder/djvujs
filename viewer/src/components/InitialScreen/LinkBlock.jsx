@@ -41,13 +41,13 @@ const LinkBlock = () => {
     return (
         <LinkBlockRoot onSubmit={(e) => {
             e.preventDefault();
-            if (url) {
+            if (/^https?:\/\/.+/.test(url.trim())) {
                 dispatch({
                     type: ActionTypes.LOAD_DOCUMENT_BY_URL,
                     url: url,
                 });
             } else {
-                alert(t('Enter a valid URL to a djvu into the field'));
+                alert(t('Enter a valid URL (it should start with "http(s)://")'));
             }
         }}>
             <input

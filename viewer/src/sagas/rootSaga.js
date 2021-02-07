@@ -14,6 +14,7 @@ import PageDataManager from './PageDataManager';
 import { inExtension } from '../utils';
 import { loadFile } from '../utils';
 import dictionaries from "../locales";
+import { createTranslator } from "../components/Translation";
 
 class RootSaga {
     constructor(dispatch) {
@@ -198,6 +199,33 @@ class RootSaga {
     }
 
     * setPageByUrl(action) {
+        const url = action.url;
+        if (url && url[0] !== '#') { // urls can be empty strings sometimes
+            // right now the constructor options are saved for indirect documents only
+            const data = this.documentContructorData;
+            const baseUrl = data && data.options && data.options.baseUrl;
+            const absoluteUrl = (
+                /^https?:\/\/.+/.test(url) ? url :
+                    baseUrl ? new URL(url, baseUrl).href :
+                        !inExtension ? new URL(url, location.href) : null
+            );
+
+            if (absoluteUrl) {
+                if (inExtension) {
+                    chrome.runtime.sendMessage({ command: 'open_viewer_tab', url: absoluteUrl });
+                } else {
+                    const t = createTranslator(yield select(get.dictionary));
+                    if (confirm(t('The link points to another document. Do you want to proceed?'))) {
+                        yield put({
+                            type: ActionTypes.LOAD_DOCUMENT_BY_URL,
+                            url: absoluteUrl,
+                        })
+                    }
+                }
+                return;
+            }
+        }
+
         const pageNumber = yield this.djvuWorker.doc.getPageNumberByUrl(action.url).run();
         if (pageNumber !== null) {
             yield put(Actions.setNewPageNumberAction(pageNumber, true));

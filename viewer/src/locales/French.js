@@ -35,9 +35,6 @@ export default {
         "Copier un lien vers un fichier .djvu",
     "Open URL":
         "Ouvrir le lien",
-    // an alert shown when there is no link to open
-    "Enter a valid URL to a djvu into the field":
-        "Insérer un lien correct vers un fichier .djvu",
 
     // Errors. Usually there is a header and a message for each error type.
     // For the web request error there are different types of messages depending on the HTTP status.

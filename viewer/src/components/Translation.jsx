@@ -6,8 +6,7 @@ import dictionaries from '../locales';
 export const TranslationContext = React.createContext(text => text);
 
 export const TranslationProvider = ({ children }) => {
-    const { locale } = useSelector(get.options);
-    const dict = dictionaries[locale] || dictionaries.en;
+    const dict = useSelector(get.dictionary);
 
     return (
         <TranslationContext.Provider value={createTranslator(dict)}>

@@ -45,9 +45,8 @@ export default {
         "Вставьте ссылку на .djvu файл",
     "Open URL":
         "Открыть ссылку",
-    // an alert shown when there is no link to open
-    "Enter a valid URL to a djvu into the field":
-        "Вставьте корректную ссылку на .djvu файл",
+    'Enter a valid URL (it should start with "http(s)://")': // an alert shown when you try to open an empty URL
+        'Введите корректную ссылку (она должна начинаться с "http(s)://")',
 
     // Errors. Usually there is a header and a message for each error type.
     // For the web request error there are different types of messages depending on the HTTP status.
@@ -172,6 +171,10 @@ export default {
     // Contents
     "Contents": "Содержание",
     "No contents provided": "Нет содержания",
+    // A rare case. Open /library/assets/links.djvu in the viewer on https://djvu.js.org/ (not in the extension!)
+    // and click the "Absolute Link" in the contents
+    "The link points to another document. Do you want to proceed?":
+        "Ссылка ведет на другой документ. Вы хотите продолжить?",
 
     // Text Block (shown in the text view mode)
     "No text on this page": "Нет текста на этой странице",

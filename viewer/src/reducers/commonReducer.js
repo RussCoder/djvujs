@@ -1,5 +1,6 @@
 import Constants from '../constants';
 import { ActionTypes } from "../constants";
+import dictionaries from '../locales';
 
 const initialState = Object.freeze({
     documentId: 0, // required to detect the document change in the UI components
@@ -130,6 +131,7 @@ export default (state = initialState, action) => {
 }
 
 export const get = {
+    dictionary: state => dictionaries[get.options(state).locale] || dictionaries.en,
     isOptionsWindowOpened: state => state.isOptionsWindowOpened,
     uiOptions: state => state.uiOptions,
     documentId: state => state.documentId,

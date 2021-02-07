@@ -35,9 +35,6 @@ export default {
         "Klistra in en URL till en .djvu-fil här",
     "Open URL":
         "Öppna URL",
-    // an alert shown when there is no link to open
-    "Enter a valid URL to a djvu into the field":
-        "Ange en giltig URL till en .djvu-fil i fältet",
 
     // Errors. Usually there is a header and a message for each error type.
     // For the web request error there are different types of messages depending on the HTTP status.

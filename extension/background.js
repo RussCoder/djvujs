@@ -88,6 +88,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         unregisterViewerTab(sender.tab.id);
     }
 
+    if (message.command === 'open_viewer_tab') {
+        openViewerTab(message.url);
+    }
+
     sendResponse();
 })
 
