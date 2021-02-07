@@ -63,6 +63,11 @@ export default class DIRMChunk extends IFFChunk {
         return this.getComponentNameByItsId(this.pagesIds[number - 1]);
     }
 
+    getPageNumberByItsId(id) {
+        const index = this.pagesIds.indexOf(id);
+        return index === -1 ? null : (index + 1);
+    }
+
     getComponentNameByItsId(id) {
         return this.idToNameRegistry[id];
     }

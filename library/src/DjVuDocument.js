@@ -66,7 +66,6 @@ export default class DjVuDocument {
          */
         this.pages = []; //страницы FORMDJVU
         this.thumbs = [];
-        this.idToPageNumberMap = {}; // used to get pages by their id (url)
 
         if (this.dirm.isBundled) {
             this._parseComponents();
@@ -116,7 +115,6 @@ export default class DjVuDocument {
                         this.bs.fork(length + 8),
                         this.getINCLChunkCallback
                     ));
-                    this.idToPageNumberMap[this.dirm.ids[i]] = this.pages.length;
                     break;
                 case "FORMDJVI":
                     //через строчку id chunk INCL ссылается на нужный ресурс
@@ -176,10 +174,10 @@ export default class DjVuDocument {
             return null;
         }
 
-        var ref = url.slice(1);
-        var pageNumber = this.idToPageNumberMap[ref];
+        const ref = url.slice(1);
+        let pageNumber = this.dirm.getPageNumberByItsId(ref);
         if (!pageNumber) {
-            var num = Math.round(Number(ref));
+            const num = Math.round(Number(ref));
             if (num >= 1 && num <= this.pages.length) { // there can be refs like "#057";
                 pageNumber = num;
             }
