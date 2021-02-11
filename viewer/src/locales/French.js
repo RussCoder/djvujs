@@ -10,10 +10,13 @@
 
 export default {
     // language info
-    englishName: "French",
-    nativeName: "Français",
+    englishName:
+        "French",
+    nativeName:
+        "Français",
 
-    "Language": "Langue", // not used now, but will be used in options afterwards
+    "Language":
+        "Langue", // not used now, but will be used in options afterwards
 
     // Translation: tooltips and notification
     // (to see the notification window, remove several phrases from any dictionary, except for the English one)
@@ -40,8 +43,10 @@ export default {
     // For the web request error there are different types of messages depending on the HTTP status.
     // The ways to see the errors in the viewer are described in comments below.
     // In case of web requests you can load links via the browser extension (via the URL field on the initial screen)
-    "Error": "Erreur",
-    "Error on page": "Erreur dans la page", // Open 'library/assets/czech_indirect/index.djvu
+    "Error":
+        "Erreur",
+    "Error on page":
+        "Erreur dans la page", // Open 'library/assets/czech_indirect/index.djvu
 
     // Options and its tooltips
     "Open all links with .djvu at the end via the viewer":
@@ -54,19 +59,28 @@ export default {
         "Analysez les en-têtes de chaque nouvel onglet pour identifier les fichiers même sans l'extension .djvu en fin de lien",
 
     // Footer: status bar
-    "Ready": "Prêt",
-    "Loading": "Chargement",
+    "Ready":
+        "Prêt",
+    "Loading":
+        "Chargement",
 
     // Footer: buttons' tooltips
-    "Show help window": "Afficher la fenêtre d'aide",
-    "Switch full page mode": "Passer en mode pleine page",
+    "Show help window":
+        "Afficher la fenêtre d'aide",
+    "Switch full page mode":
+        "Passer en mode pleine page",
 
     // File Block tooltips
-    "Choose a file": "Choisir un fichier",
-    "Close document": "Fermer le document",
-    "Save document": "Enregistrer le document",
-    "Save": "Enregistrer",
-    "Open another .djvu file": "Ouvrir un autre fichier .djvu",
+    "Choose a file":
+        "Choisir un fichier",
+    "Close document":
+        "Fermer le document",
+    "Save document":
+        "Enregistrer le document",
+    "Save":
+        "Enregistrer",
+    "Open another .djvu file":
+        "Ouvrir un autre fichier .djvu",
 
     // Help window
     "The application for viewing .djvu files in the browser.":
@@ -111,11 +125,14 @@ export default {
         "Défilement glisser-déposer",
 
     // Contents
-    "Contents": "Table des matières",
-    "No contents provided": "Pas de sommaire",
+    "Contents":
+        "Table des matières",
+    "No contents provided":
+        "Pas de sommaire",
 
     // Text Block (shown in the text view mode)
-    "No text on this page": "Pas de texte dans cette page",
+    "No text on this page":
+        "Pas de texte dans cette page",
 
     // Save dialog (shows when you save an indirect djvu)
     "You are trying to save an indirect (multi-file) document.":

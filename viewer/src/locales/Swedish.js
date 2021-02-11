@@ -10,10 +10,13 @@
 
 export default {
     // language info
-    englishName: "Swedish",
-    nativeName: "Svenska",
+    englishName:
+        "Swedish",
+    nativeName:
+        "Svenska",
 
-    "Language": "Språk", // not used now, but will be used in options afterwards
+    "Language":
+        "Språk", // not used now, but will be used in options afterwards
 
     // Translation: tooltips and notification
     // (to see the notification window, remove several phrases from any dictionary, except for the English one)
@@ -40,8 +43,10 @@ export default {
     // For the web request error there are different types of messages depending on the HTTP status.
     // The ways to see the errors in the viewer are described in comments below.
     // In case of web requests you can load links via the browser extension (via the URL field on the initial screen)
-    "Error": "Fel",
-    "Error on page": "Felaktigheter på sidan", // Open 'library/assets/czech_indirect/index.djvu
+    "Error":
+        "Fel",
+    "Error on page":
+        "Felaktigheter på sidan", // Open 'library/assets/czech_indirect/index.djvu
 
     // Options and its tooltips
     "Open all links with .djvu at the end via the viewer":
@@ -54,19 +59,28 @@ export default {
         "Analysera rubriker på alla nya flikar för att känna av om länkar är av .djvu-format (även länkar som inte slutar med \".djvu\"",
 
     // Footer: status bar
-    "Ready": "Klar",
-    "Loading": "Laddar",
+    "Ready":
+        "Klar",
+    "Loading":
+        "Laddar",
 
     // Footer: buttons' tooltips
-    "Show help window": "Visa hjälpsida",
-    "Switch full page mode": "Ändra visningsläge till helsida",
+    "Show help window":
+        "Visa hjälpsida",
+    "Switch full page mode":
+        "Ändra visningsläge till helsida",
 
     // File Block tooltips
-    "Choose a file": "Välj en fil",
-    "Close document": "Stäng dokument",
-    "Save document": "Spara dokument",
-    "Save": "Spara",
-    "Open another .djvu file": "Öppna ytterligare en .djvu-fil",
+    "Choose a file":
+        "Välj en fil",
+    "Close document":
+        "Stäng dokument",
+    "Save document":
+        "Spara dokument",
+    "Save":
+        "Spara",
+    "Open another .djvu file":
+        "Öppna ytterligare en .djvu-fil",
 
     // Help window
     "The application for viewing .djvu files in the browser.":
@@ -111,11 +125,14 @@ export default {
         "Visningsläge med greppbart markörläge",
 
     // Contents
-    "Contents": "Innehåll",
-    "No contents provided": "Inget innehåll har givits",
+    "Contents":
+        "Innehåll",
+    "No contents provided":
+        "Inget innehåll har givits",
 
     // Text Block (shown in the text view mode)
-    "No text on this page": "Ingen text finns på denna sida",
+    "No text on this page":
+        "Ingen text finns på denna sida",
 
     // Save dialog (shows when you save an indirect djvu)
     "You are trying to save an indirect (multi-file) document.":

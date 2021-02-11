@@ -8,10 +8,13 @@
 
 export default {
     // language info
-    englishName: "English",
-    nativeName: "English",
+    englishName:
+        "English",
+    nativeName:
+        "English",
 
-    "Language": "Language", // not used now, but will be used in options afterwards
+    "Language":
+        "Language", // not used now, but will be used in options afterwards
 
     // Translation: tooltips and notification
     // (to see the notification window, remove several phrases from any dictionary, except for the English one)
@@ -44,9 +47,12 @@ export default {
     // For the web request error there are different types of messages depending on the HTTP status.
     // The ways to see the errors in the viewer are described in comments below.
     // In case of web requests you can load links via the browser extension (via the URL field on the initial screen)
-    "Error": "Error",
-    "Error on page": "Error on page", // Open 'library/assets/czech_indirect/index.djvu
-    "Network error": "Network error", // Disable internet connection and try to load something by URL
+    "Error":
+        "Error",
+    "Error on page":
+        "Error on page", // Open 'library/assets/czech_indirect/index.djvu
+    "Network error":
+        "Network error", // Disable internet connection and try to load something by URL
     "Check your network connection":
         "Check your network connection",
     // Load any URL to a nonexistent page on the Internet,
@@ -90,10 +96,14 @@ export default {
         "Cannot print the error, look in the console",
 
     // Options and its tooltips
-    "Options": "Options",
-    "Show options window": "Show options window",
-    "Color theme": "Color theme",
-    "Extension options": "Extension options", // the options of the browser extension
+    "Options":
+        "Options",
+    "Show options window":
+        "Show options window",
+    "Color theme":
+        "Color theme",
+    "Extension options":
+        "Extension options", // the options of the browser extension
     "Open all links with .djvu at the end via the viewer":
         "Open all links with .djvu at the end via the viewer",
     "All links to .djvu files will be opened by the viewer via a simple click on a link":
@@ -104,19 +114,28 @@ export default {
         "Analyze headers of every new tab in order to process even links which do not end with the .djvu extension",
 
     // Footer: status bar
-    "Ready": "Ready",
-    "Loading": "Loading",
+    "We are ready":
+        "Ready",
+    "Trying to load, wish me a good luck":
+        "Loading",
 
     // Footer: buttons' tooltips
-    "Show help window": "Show help window",
-    "Switch full page mode": "Switch full page mode",
+    "Show help window":
+        "Show help window",
+    "Switch full page mode":
+        "Switch full page mode",
 
     // File Block tooltips
-    "Choose a file": "Choose a file",
-    "Close document": "Close document",
-    "Save document": "Save document",
-    "Save": "Save",
-    "Open another .djvu file": "Open another .djvu file",
+    "Choose a file":
+        "Choose a file",
+    "Close document":
+        "Close document",
+    "Save document":
+        "Save document",
+    "Save":
+        "Save",
+    "Open another .djvu file":
+        "Open another .djvu file",
 
     // Help window
     "The application for viewing .djvu files in the browser.":
@@ -161,15 +180,18 @@ export default {
         "Grab cursor mode",
 
     // Contents
-    "Contents": "Contents",
-    "No contents provided": "No contents provided",
+    "Contents":
+        "Contents",
+    "No contents provided":
+        "No contents provided",
     // A rare case. Open /library/assets/links.djvu in the viewer on https://djvu.js.org/ (not in the extension!)
     // and click the "Absolute Link" in the contents
     "The link points to another document. Do you want to proceed?":
         "The link points to another document. Do you want to proceed?",
 
     // Text Block (shown in the text view mode)
-    "No text on this page": "No text on this page",
+    "No text on this page":
+        "No text on this page",
 
     // Save dialog (shows when you save an indirect djvu)
     "You are trying to save an indirect (multi-file) document.":
