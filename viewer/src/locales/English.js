@@ -6,6 +6,8 @@
  * The dictionary was made form the Russian via automatic replacement of (".+")(:\s+(?://.+\n\s+)?)(".+") regular expression to $1$2$1
  */
 
+// Marker to align en-sv lines, e.g. any line in other locale starts at the same line in original (English). We have to improve here, too. 
+
 export default {
     // language info
     englishName:
