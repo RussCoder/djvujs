@@ -43,7 +43,7 @@ export default {
     "Open URL":
         "Öppna URL",
     'Enter a valid URL (it should start with "http(s)://")': // an alert shown when you try to open an empty URL
-        'TODO (sv): Enter a valid URL (it should start with "http(s)://")',
+        'Ange en giltig URL (den ska börja med "http (s): //")',
 
     // Errors. Usually there is a header and a message for each error type.
     // For the web request error there are different types of messages depending on the HTTP status.
