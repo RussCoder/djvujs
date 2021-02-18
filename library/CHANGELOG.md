@@ -1,5 +1,10 @@
 # DjVu.js Library's Changelog
 
+## v.0.5.2 (18.02.2021)
+
+- Use DIRM registry to get a page number by its id. 
+  This approach works the same for bundled and indirect documents.
+
 ## v.0.5.1 (09.01.2021)
 
 - More robust memory management for document creation (usage of
