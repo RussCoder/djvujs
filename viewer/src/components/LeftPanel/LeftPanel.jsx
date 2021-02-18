@@ -5,6 +5,8 @@ import ContentsPanel from './ContentsPanel';
 import { get } from '../../reducers';
 import styled, { css } from 'styled-components';
 
+const minWidth = '0.4em';
+
 const style = css`
     flex: 0 0 auto;
     border: 1px solid var(--border-color);
@@ -13,7 +15,7 @@ const style = css`
     box-sizing: border-box;
     width: 20%;
     max-width: 90%;
-    min-width: 0.4em;
+    min-width: ${minWidth};
 `;
 
 const Border = styled.div`
@@ -61,12 +63,13 @@ class LeftPanel extends React.Component {
     ref = node => this.topNode = node;
 
     render() {
-        const contents = this.props.contents;
+        const { contents, uiOptions: { showContentsAutomatically } } = this.props;
+
         return (
             <div
                 css={style}
                 ref={this.ref}
-                style={contents ? null : { width: "0.4em" }} // use the min-width from styles
+                style={(contents && showContentsAutomatically) ? null : { width: minWidth }}
             >
                 <Border onMouseDown={this.onBeginResizing} />
                 <div style={{ height: '100%' }}>
@@ -78,5 +81,6 @@ class LeftPanel extends React.Component {
 }
 
 export default connect(state => ({
+    uiOptions: get.uiOptions(state),
     contents: get.contents(state)
 }))(LeftPanel);

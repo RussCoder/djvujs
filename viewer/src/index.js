@@ -5,6 +5,14 @@ DjVu.Viewer = DjVuViewer;
 
 if (process.env.NODE_ENV !== 'production') {
     window.addEventListener('load', () => {
+        window.viewer = window.DjVuViewerInstance = new window.DjVu.Viewer({
+            uiOptions: {
+                // showContentsAutomatically: false,
+                // changePageOnScroll: false,
+            }
+        });
+        window.DjVuViewerInstance.render(document.getElementById('root'));
+
         //window.DjVuViewerInstance.loadDocumentByUrl("/DjVu3Spec.djvu#page=10");
         window.DjVuViewerInstance.loadDocumentByUrl("/DjVu3Spec_indirect/index.djvu");
 

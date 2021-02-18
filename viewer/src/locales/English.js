@@ -114,9 +114,9 @@ export default {
         "Analyze headers of every new tab in order to process even links which do not end with the .djvu extension",
 
     // Footer: status bar
-    "We are ready":
+    "Ready":
         "Ready",
-    "Trying to load, wish me a good luck":
+    "Loading":
         "Loading",
 
     // Footer: buttons' tooltips

@@ -28,7 +28,7 @@ export default class DjVuViewer extends EventEmitter {
     /**
      * Technically, we can pass the same config as to the configure() method.
      * But all other options are reset when a new document is loaded.
-     * So there is not sense to pass them into the constructor.
+     * So there is no sense to pass them into the constructor.
      */
     constructor({ language = null, uiOptions = null } = {}) {
         super();
@@ -97,6 +97,17 @@ export default class DjVuViewer extends EventEmitter {
 
     /**
      * The config object is destructed merely for the purpose of documentation
+     * @param {number} pageNumber
+     * @param {0|90|180|270} pageRotation
+     * @param {number} pageScale
+     * @param {string} language
+     * @param {'dark'|'light'} theme
+     * @param {{
+          hideFullPageSwitch: boolean,
+          changePageOnScroll: boolean,
+          showContentsAutomatically: boolean,
+       }} uiOptions
+     * @returns {DjVuViewer}
      */
     configure({ pageNumber, pageRotation, pageScale, language, theme, uiOptions } = {}) {
         this.store.dispatch({

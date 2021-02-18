@@ -26,6 +26,8 @@ const initialState = Object.freeze({
     },
     uiOptions: { // aren't saved, should be set programmatically, if required
         hideFullPageSwitch: false,
+        changePageOnScroll: true,
+        showContentsAutomatically: true,
     },
 });
 
