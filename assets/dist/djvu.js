@@ -5,7 +5,7 @@ var DjVu = (function () {
     'use strict';
 
     var DjVu = {
-        VERSION: '0.5.1',
+        VERSION: '0.5.2',
         IS_DEBUG: false,
         setDebugMode: (flag) => DjVu.IS_DEBUG = flag
     };
@@ -13765,6 +13765,10 @@ var DjVu = (function () {
         getPageNameByItsNumber(number) {
             return this.getComponentNameByItsId(this.pagesIds[number - 1]);
         }
+        getPageNumberByItsId(id) {
+            const index = this.pagesIds.indexOf(id);
+            return index === -1 ? null : (index + 1);
+        }
         getComponentNameByItsId(id) {
             return this.idToNameRegistry[id];
         }
@@ -14296,7 +14300,6 @@ var DjVu = (function () {
             this._readContentsChunkIfExists();
             this.pages = [];
             this.thumbs = [];
-            this.idToPageNumberMap = {};
             if (this.dirm.isBundled) {
                 this._parseComponents();
             } else {
@@ -14340,7 +14343,6 @@ var DjVu = (function () {
                             this.bs.fork(length + 8),
                             this.getINCLChunkCallback
                         ));
-                        this.idToPageNumberMap[this.dirm.ids[i]] = this.pages.length;
                         break;
                     case "FORMDJVI":
                         this.dirmOrderedChunks[i] = this.djvi[this.dirm.ids[i]] = new DjViChunk(this.bs.fork(length + 8));
@@ -14386,10 +14388,10 @@ var DjVu = (function () {
             if (url[0] !== '#') {
                 return null;
             }
-            var ref = url.slice(1);
-            var pageNumber = this.idToPageNumberMap[ref];
+            const ref = url.slice(1);
+            let pageNumber = this.dirm.getPageNumberByItsId(ref);
             if (!pageNumber) {
-                var num = Math.round(Number(ref));
+                const num = Math.round(Number(ref));
                 if (num >= 1 && num <= this.pages.length) {
                     pageNumber = num;
                 }

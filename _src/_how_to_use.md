@@ -72,7 +72,7 @@ Furthermore, the viewer has an API, which allows to open djvu files programmatic
 - `off(eventName)` - to remove an event handler.
 
 The `config` is an object containing options for the viewer. It's an optional parameter. It has the following shape:
-```js
+```json5
 // any of the parameters may be omitted, use only those you need
 {
     pageNumber: 10,
@@ -84,11 +84,13 @@ The `config` is an object containing options for the viewer. It's an optional pa
         baseUrl: "/url/to/directory/with/indirect/djvu/"
     },
     uiOptions: {
-        hideFullPageSwitch: true,  
+        hideFullPageSwitch: true,
+        changePageOnScroll: false,
+        showContentsAutomatically: false,        
     },
 }
-
 ```
+
 - `pageNumber` - the number of a currently opened page. Greater than or equal to 1. If it's less than 1, 1 will be used, if it's greater than the 
   total number of pages in a document, then the last page number will be used.
 - `pageRotation` - the rotation of a page, it can be 0, 90, 180, 270.
@@ -102,6 +104,11 @@ Note, you also can [add your own language](https://github.com/RussCoder/djvujs/b
   - `hideFullPageSwitch` - if `true` there will be no full-page mode switch. It
     may be used, if the viewer takes the whole page by default, so the switch is
     useless.
+  - `changePageOnScroll` - relevant only for single-page view mode. By default, if you continue to scroll, when a page has 
+    been already scrolled to the very bottom, there will be a transition to the next page. When this option is `false` this
+    behavior is disabled.
+  - `showContentsAutomatically` - by default, if there is a table of contents in a document, it's shown automatically right after the 
+    document has been opened. When this parameter is `false`, the table of contents is kept minimized.
 
 There are several static methods and properties:
 
@@ -115,7 +122,7 @@ There are several static methods and properties:
 If you want to load file, select the page number and keep track of what page is currently open, you can do the following:
 
 ```js
-async function loadDocument {
+async function loadDocument() {
     const viewer = new DjVu.Viewer();
     viewer.render(document.getElementById('for_viewer'));
     await viewer.loadDocumentByUrl('assets/my-djvu-file.djvu');

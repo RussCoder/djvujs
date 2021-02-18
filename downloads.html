@@ -29,9 +29,9 @@
 
 Here you can download the library and the viewer .js and .css files.
 
-<p><a href="/assets/dist/djvu.js" download="djvu.js">Download DjVu.js library (version 0.5.1)</a></p>
+<p><a href="/assets/dist/djvu.js" download="djvu.js">Download DjVu.js library (version 0.5.2)</a></p>
 
-<p></p><a href="/assets/dist/djvu_viewer.js" download="djvu_viewer.js">Download DjVu.js Viewer .js file (version 0.5.4)</a>
+<p></p><a href="/assets/dist/djvu_viewer.js" download="djvu_viewer.js">Download DjVu.js Viewer .js file (version 0.5.5)</a>
 
 <p>Note that since the version 0.5.0 all viewer's CSS is inside the js file. So no separate djvu_viewer.css is provided.</p>
 
@@ -91,7 +91,7 @@ to start a local web server in order to make everything work as it works on the 
 <li><code>off(eventName)</code> - to remove an event handler.</li>
 </ul>
 <p>The <code>config</code> is an object containing options for the viewer. It&#39;s an optional parameter. It has the following shape:</p>
-<pre><code class="language-js">// any of the parameters may be omitted, use only those you need
+<pre><code class="language-json5">// any of the parameters may be omitted, use only those you need
 {
     pageNumber: 10,
     pageRotation: 90,
@@ -102,10 +102,11 @@ to start a local web server in order to make everything work as it works on the 
         baseUrl: &quot;/url/to/directory/with/indirect/djvu/&quot;
     },
     uiOptions: {
-        hideFullPageSwitch: true,  
+        hideFullPageSwitch: true,
+        changePageOnScroll: false,
+        showContentsAutomatically: false,        
     },
-}
-</code></pre>
+}</code></pre>
 <ul>
 <li><code>pageNumber</code> - the number of a currently opened page. Greater than or equal to 1. If it&#39;s less than 1, 1 will be used, if it&#39;s greater than the 
 total number of pages in a document, then the last page number will be used.</li>
@@ -120,6 +121,11 @@ Note, you also can <a href="https://github.com/RussCoder/djvujs/blob/master/TRAN
 <li><code>hideFullPageSwitch</code> - if <code>true</code> there will be no full-page mode switch. It
 may be used, if the viewer takes the whole page by default, so the switch is
 useless.</li>
+<li><code>changePageOnScroll</code> - relevant only for single-page view mode. By default, if you continue to scroll, when a page has 
+been already scrolled to the very bottom, there will be a transition to the next page. When this option is <code>false</code> this
+behavior is disabled.</li>
+<li><code>showContentsAutomatically</code> - by default, if there is a table of contents in a document, it&#39;s shown automatically right after the 
+document has been opened. When this parameter is <code>false</code>, the table of contents is kept minimized.</li>
 </ul>
 </li>
 </ul>
@@ -133,7 +139,7 @@ useless.</li>
 </li>
 </ul>
 <h2>More examples</h2><p>If you want to load file, select the page number and keep track of what page is currently open, you can do the following:</p>
-<pre><code class="language-js">async function loadDocument {
+<pre><code class="language-js">async function loadDocument() {
     const viewer = new DjVu.Viewer();
     viewer.render(document.getElementById(&#39;for_viewer&#39;));
     await viewer.loadDocumentByUrl(&#39;assets/my-djvu-file.djvu&#39;);
