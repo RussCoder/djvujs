@@ -6,14 +6,20 @@
  * Some phrases are tooltips, that is, they are visible only when you hover the cursor over controls.
  *
  * And try to preserve the order of phrases (just for convenience of further additions and corrections).
+ *
+ * All null values mean that the corresponding strings need to be translated.
+ * Such values are added automatically for convenience as placeholders.
  */
- 
+
 export default {
     // language info
-    englishName: "Italian",
-    nativeName: "Italiano",
+    englishName:
+        "Italian",
+    nativeName:
+        "Italiano",
 
-    "Language": "Lingua", // not used now, but will be used in options afterwards
+    "Language":
+        "Lingua", // not used now, but will be used in options afterwards
 
     // Translation: tooltips and notification
     // (to see the notification window, remove several phrases from any dictionary, except for the English one)
@@ -46,9 +52,12 @@ export default {
     // For the web request error there are different types of messages depending on the HTTP status.
     // The ways to see the errors in the viewer are described in comments below.
     // In case of web requests you can load links via the browser extension (via the URL field on the initial screen)
-    "Error": "Errore",
-    "Error on page": "Errore nella pagina", // Open 'library/assets/czech_indirect/index.djvu
-    "Network error": "Errore di rete", // Disable internet connection and try to load something by URL
+    "Error":
+        "Errore",
+    "Error on page":
+        "Errore nella pagina", // Open 'library/assets/czech_indirect/index.djvu
+    "Network error":
+        "Errore di rete", // Disable internet connection and try to load something by URL
     "Check your network connection":
         "Controlla la connessione di rete",
     // Load any URL to a nonexistent page on the Internet,
@@ -92,10 +101,14 @@ export default {
         "Non è possibile riportare l'errore, cercare nella console",
 
     // Options and its tooltips
-    "Options": "Opzioni",
-    "Show options window": "Mostra opzioni",
-    "Color theme": "Colore tema",
-    "Extension options": "Opzioni estensioni", // the options of the browser extension
+    "Options":
+        "Opzioni",
+    "Show options window":
+        "Mostra opzioni",
+    "Color theme":
+        "Colore tema",
+    "Extension options":
+        "Opzioni estensioni", // the options of the browser extension
     "Open all links with .djvu at the end via the viewer":
         "Aprire tutti i link con estensione .djvu tramite viewer",
     "All links to .djvu files will be opened by the viewer via a simple click on a link":
@@ -106,19 +119,28 @@ export default {
         "Аnalizza gli header http di ogni nuovo tab del browser al fine di processare i link che non terminano con estensione .djvu",
 
     // Footer: status bar
-    "Ready": "Pronto",
-    "Loading": "In caricamento",
+    "Ready":
+        "Pronto",
+    "Loading":
+        "In caricamento",
 
     // Footer: buttons' tooltips
-    "Show help window": "Mostra guida",
-    "Switch full page mode": "Attiva/disattiva modalità a piena pagina",
+    "Show help window":
+        "Mostra guida",
+    "Switch full page mode":
+        "Attiva/disattiva modalità a piena pagina",
 
     // File Block tooltips
-    "Choose a file": "Scegli un file",
-    "Close document": "Chiudi documento",
-    "Save document": "Salva documento",
-    "Save": "Salva",
-    "Open another .djvu file": "Apri un altro file .djvu",
+    "Choose a file":
+        "Scegli un file",
+    "Close document":
+        "Chiudi documento",
+    "Save document":
+        "Salva documento",
+    "Save":
+        "Salva",
+    "Open another .djvu file":
+        "Apri un altro file .djvu",
 
     // Help window
     "The application for viewing .djvu files in the browser.":
@@ -163,15 +185,18 @@ export default {
         "Modalità trascinamento pagina",
 
     // Contents
-    "Contents": "Contenuti",
-    "No contents provided": "Nessun contenuto disponibile",
+    "Contents":
+        "Contenuti",
+    "No contents provided":
+        "Nessun contenuto disponibile",
     // A rare case. Open /library/assets/links.djvu in the viewer on https://djvu.js.org/ (not in the extension!)
     // and click the "Absolute Link" in the contents
     "The link points to another document. Do you want to proceed?":
         "Il link punta ad un altro documento. Vuoi procedere?",
 
     // Text Block (shown in the text view mode)
-    "No text on this page": "Nessun contenuto testuale nel documento",
+    "No text on this page":
+        "Nessun contenuto testuale nel documento",
 
     // Save dialog (shows when you save an indirect djvu)
     "You are trying to save an indirect (multi-file) document.":

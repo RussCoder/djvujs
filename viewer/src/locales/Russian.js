@@ -2,6 +2,13 @@
  * The exemplary dictionary which should be used for the creation of other localizations.
  * Copy this file and change all Russian strings to your own.
  * Remove this (the topmost) comment, but leave other comments in place.
+ *
+ * Another way to create a template file with nulls instead of translated strings is to
+ * run the following command inside the `viewer` directory:
+ *
+ * npm run syncLocales EnglishNameOfNewLanguage
+ *
+ * It will generate the EnglishNameOfNewLanguage.js file in the locales folder.
  */
 
 /**
@@ -12,6 +19,9 @@
  * Some phrases are tooltips, that is, they are visible only when you hover the cursor over controls.
  *
  * And try to preserve the order of phrases (just for convenience of further additions and corrections).
+ *
+ * All null values mean that the corresponding strings need to be translated.
+ * Such values are added automatically for convenience as placeholders.
  */
 
 export default {

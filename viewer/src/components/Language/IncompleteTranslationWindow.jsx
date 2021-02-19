@@ -23,7 +23,13 @@ export default ({ onClose, missedPhrases }) => {
     const t = useTranslation();
 
     return (
-        <ModalWindow onClose={() => onClose(null)} usePortal={true}>
+        <ModalWindow
+            onClose={(e) => {
+                e.stopPropagation();
+                onClose();
+            }}
+            usePortal={true}
+        >
             <Root>
                 <div>
                     <strong>{t("The translation isn't complete.")} </strong>

@@ -1,6 +1,8 @@
 {
     "name": "DjVu.js_Viewer",
     "private": true,
+    "type": "module",
+    "cracoConfig": "craco.config.cjs",
     "devDependencies": {
         "@craco/craco": "^5.8.0",
         "babel-plugin-styled-components": "^1.11.1",
@@ -27,6 +29,7 @@
         "styled-components": "^5.2.1"
     },
     "scripts": {
+        "syncLocales": "node syncLocales.js",
         "start": "craco start",
         "build": "craco build",
         "test": "craco test --env=jsdom",

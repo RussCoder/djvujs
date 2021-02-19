@@ -1,9 +1,14 @@
 /**
- * The English dictionary isn't quite needed.
- * But it exists as an additional example and for unification of code.
- * However, if you want to create a new localization, use Russian dictionary for reference and additional comments.
+ * Some phrases contain insertions, e.g. icons and buttons, which are inserted in the code.
+ * Here instead of visual components we use placeholders, e.g. #helpButton, which start with #.
+ * Your translated phrase MUST also contain the same placeholder, but you can change its position.
  *
- * The dictionary was made form the Russian via automatic replacement of (".+")(:\s+(?://.+\n\s+)?)(".+") regular expression to $1$2$1
+ * Some phrases are tooltips, that is, they are visible only when you hover the cursor over controls.
+ *
+ * And try to preserve the order of phrases (just for convenience of further additions and corrections).
+ *
+ * All null values mean that the corresponding strings need to be translated.
+ * Such values are added automatically for convenience as placeholders.
  */
 
 export default {

@@ -6,6 +6,9 @@
  * Some phrases are tooltips, that is, they are visible only when you hover the cursor over controls.
  *
  * And try to preserve the order of phrases (just for convenience of further additions and corrections).
+ *
+ * All null values mean that the corresponding strings need to be translated.
+ * Such values are added automatically for convenience as placeholders.
  */
 
 export default {
