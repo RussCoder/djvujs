@@ -9,6 +9,11 @@ if (process.env.NODE_ENV !== 'production') {
             uiOptions: {
                 // showContentsAutomatically: false,
                 // changePageOnScroll: false,
+                // onSaveNotification: {
+                //     text: "Doing this you agree with something else",
+                //     yesButton: "Maybe",
+                //     noButton: "Never!",
+                // }
             }
         });
         window.DjVuViewerInstance.render(document.getElementById('root'));

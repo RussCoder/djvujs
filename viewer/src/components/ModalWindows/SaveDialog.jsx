@@ -7,6 +7,7 @@ import { TextButton } from "../StyledPrimitives";
 import { get } from "../../reducers";
 import { ActionTypes } from "../../constants";
 import ProgressBar from "../ProgressBar";
+import { normalizeFileName } from "../../utils";
 
 const Root = styled.div`
     padding: 1em;
@@ -29,6 +30,11 @@ const ProcessingBlock = styled.div`
     align-items: center;
 `;
 
+const getBundledFileName = fileName => {
+    const normalized = normalizeFileName(fileName);
+    return /(?:[^a-z]|\b)index(?:[^a-z]|\b)/.test(normalized) ? "bundled_" + normalized : normalized;
+}
+
 export default () => {
     const t = useTranslation();
     const dispatch = useDispatch();
@@ -36,6 +42,7 @@ export default () => {
     const buffer = useSelector(get.resultBuffer);
     const progress = useSelector(get.fileProcessingProgress);
     const isBundling = useSelector(get.isBundling);
+    const fileName = useSelector(get.fileName);
     const [url, setUrl] = React.useState(null);
 
     const closeDialog = () => {
@@ -99,7 +106,7 @@ export default () => {
                                 <TextButton
                                     as="a"
                                     href={url}
-                                    download="bundled_document.djvu"
+                                    download={getBundledFileName(fileName)}
                                     css={`text-decoration: none; margin: 0.5em`}
                                 >
                                     {t('Save')}

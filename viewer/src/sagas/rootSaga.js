@@ -11,7 +11,7 @@ import Actions from "../actions/actions";
 import PagesCache from './PagesCache';
 import DjVu from '../DjVu';
 import PageDataManager from './PageDataManager';
-import { inExtension } from '../utils';
+import { normalizeFileName, inExtension } from '../utils';
 import { loadFile } from '../utils';
 import dictionaries from "../locales";
 import { createTranslator } from "../components/Translation";
@@ -252,7 +252,7 @@ class RootSaga {
             const url = yield this.djvuWorker.doc.createObjectURL().run();
             const a = document.createElement('a');
             a.href = url;
-            a.download = /\.(djv|djvu)$/.test(fileName) ? fileName : (fileName + '.djvu');
+            a.download = normalizeFileName(fileName);
             a.dispatchEvent(new MouseEvent("click"));
         }
     }
