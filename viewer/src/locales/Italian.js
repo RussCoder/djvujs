@@ -40,7 +40,7 @@ export default {
     "Open URL":
         "Apri URL",
     'Enter a valid URL (it should start with "http(s)://")': // an alert shown when you try to open an empty URL
-        'Inserire un URL valido (dovrebbe iniziare con "http(s)://")',
+        'Inserire un URL valido (deve iniziare con "http(s)://")',
 
     // Errors. Usually there is a header and a message for each error type.
     // For the web request error there are different types of messages depending on the HTTP status.
@@ -146,7 +146,7 @@ export default {
 
     // Toolbar tooltips
     "Continuous scroll view mode":
-        "Abilita scorrimento",
+        "Vista a pagina continua",
     "Single page view mode":
         "Vista a pagina singola",
     "Text view mode":
@@ -175,15 +175,15 @@ export default {
 
     // Save dialog (shows when you save an indirect djvu)
     "You are trying to save an indirect (multi-file) document.":
-        "Stai per salvare un documento multi-file (formato indirect).",
+        "Stai per salvare un documento DjVu multi-file (formato indirect).",
     "What exactly do you want to do?":
         "Cosa vuoi fare?",
     "Save only index file":
         "Salva solo indice",
     "Download, bundle and save the whole document as one file":
-        "Salva documento completo in un unico file",
+        "Scarica, impacchetta e salva documento completo in un unico file",
     "Downloading and bundling the document":
-        "Scaricamento in corso",
+        "Scaricamento e impacchettamento in corso",
     "The document has been downloaded and bundled into one file successfully":
-        "Il documento è stato scaricato correttamente",
+        "Il documento è stato scaricato e impacchettato correttamente",
 };
