@@ -75,19 +75,24 @@ The `config` is an object containing options for the viewer. It's an optional pa
 ```json5
 // any of the parameters may be omitted, use only those you need
 {
-    pageNumber: 10,
-    pageRotation: 90,
-    pageScale: 2,
-    language: 'ru',
-    theme: 'dark',
-    djvuOptions: {
-        baseUrl: "/url/to/directory/with/indirect/djvu/"
+  pageNumber: 10,
+  pageRotation: 90,
+  pageScale: 2,
+  language: 'ru',
+  theme: 'dark',
+  djvuOptions: {
+    baseUrl: "/url/to/directory/with/indirect/djvu/"
+  },
+  uiOptions: {
+    hideFullPageSwitch: true,
+    changePageOnScroll: false,
+    showContentsAutomatically: false,
+    onSaveNotification: {
+      text: "Here is your notification/agreement for the user",
+      yesButton: "Text on the yes button", // optional
+      noButton: "Text on the no button", // optional
     },
-    uiOptions: {
-        hideFullPageSwitch: true,
-        changePageOnScroll: false,
-        showContentsAutomatically: false,        
-    },
+  },
 }
 ```
 
@@ -104,11 +109,19 @@ Note, you also can [add your own language](https://github.com/RussCoder/djvujs/b
   - `hideFullPageSwitch` - if `true` there will be no full-page mode switch. It
     may be used, if the viewer takes the whole page by default, so the switch is
     useless.
-  - `changePageOnScroll` - relevant only for single-page view mode. By default, if you continue to scroll, when a page has 
-    been already scrolled to the very bottom, there will be a transition to the next page. When this option is `false` this
-    behavior is disabled.
-  - `showContentsAutomatically` - by default, if there is a table of contents in a document, it's shown automatically right after the 
-    document has been opened. When this parameter is `false`, the table of contents is kept minimized.
+  - `changePageOnScroll` - relevant only for single-page view mode. By default,
+    if you continue to scroll, when a page has been already scrolled to the very
+    bottom, there will be a transition to the next page. When this option
+    is `false` this behavior is disabled.
+  - `showContentsAutomatically` - by default, if there is a table of contents in
+    a document, it's shown automatically right after the document has been
+    opened. When this parameter is `false`, the table of contents is kept
+    minimized.
+  - `onSaveNotification` - an object containing 3 fields: `text` - the main
+    text, `yesButton` (optional) - what is written on the "yes" button,
+    `noButton` (optional) - what is written on the "no" button. It's needed if
+    you want to show some notification/agreement to the user when he tries to
+    download a document.
 
 There are several static methods and properties:
 
