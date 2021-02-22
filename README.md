@@ -80,11 +80,16 @@ If you have some problems, read the technical documentation or create an issue. 
 - [CHANGELOG of the library](library/CHANGELOG.md)
 - [CHANGELOG of the viewer](viewer/CHANGELOG.md)
 
-## License (Unlicense) / Лицензия (Нелицензия)
+## License / Лицензия
 
-This is free and unencumbered software released into the public domain.
-Read more at https://unlicense.org/ or see the [LICENSE file](LICENSE).
+The DjVu.js Library is distributed under the terms of [GNU GPL v2](GNU_GPL_v2).
+Everything else in this repository (including the DjVu.js Viewer and the browser
+extension) is under [The Unlicense](UNLICENSE). Read more in
+the [LICENSE file](LICENSE.md).
 
 <hr>
 
-Данный проект является свободным программным обеспечением и общественным достоянием. Читайте подробнее на https://unlicense.org/ или в [файле лицензии](LICENSE).
+Библиотека DjVu.js распространяется под лицензией [GNU GPL v2](GNU_GPL_v2). Все
+остальное в этом репозитории (включая DjVu.js Viewer и расширение для браузера)
+является общественным достоянием ([The Unlicense](UNLICENSE)). Читайте подробнее
+в [файле лицензии](LICENSE.md).
