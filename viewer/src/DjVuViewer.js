@@ -27,19 +27,12 @@ export default class DjVuViewer extends EventEmitter {
 
     /**
      * Technically, we can pass the same config as to the configure() method.
-     * But all other options are reset when a new document is loaded.
-     * So there is no sense to pass them into the constructor.
+     * But some options are reset when a new document is loaded.
      */
-    constructor({ language = null, uiOptions = null } = {}) {
+    constructor(config = null) {
         super();
         this.store = configureStore(this.eventMiddleware);
-
-        if (language || uiOptions) {
-            this.configure({
-                language: language,
-                uiOptions: uiOptions,
-            });
-        }
+        config && this.configure(config);
     }
 
     eventMiddleware = store => next => action => {
@@ -86,6 +79,7 @@ export default class DjVuViewer extends EventEmitter {
     }
 
     render(element) {
+        this.unmount();
         this.htmlElement = element;
         ReactDOM.render(
             <Provider store={this.store}>
@@ -93,6 +87,16 @@ export default class DjVuViewer extends EventEmitter {
             </Provider>
             , element
         );
+    }
+
+    unmount() {
+        this.htmlElement && ReactDOM.unmountComponentAtNode(this.htmlElement);
+        this.htmlElement = null;
+    }
+
+    destroy() {
+        this.unmount();
+        this.store.dispatch({ type: ActionTypes.DESTROY });
     }
 
     /**

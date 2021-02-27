@@ -31,11 +31,15 @@ export default () => {
                 icon={faSun}
                 css={theme === 'light' ? activeStyle : null}
                 onClick={createClickHandler('light')}
+                data-djvujs-id={'light_theme_button'}
+                data-djvujs-class={theme === 'light' ? 'active' : null}
             />
             <FontAwesomeIcon
                 icon={faMoon}
                 css={theme === 'dark' ? activeStyle : null}
                 onClick={createClickHandler('dark')}
+                data-djvujs-id={'dark_theme_button'}
+                data-djvujs-class={theme === 'dark' ? 'active' : null}
             />
         </Root>
     )

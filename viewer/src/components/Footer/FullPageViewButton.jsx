@@ -13,7 +13,7 @@ const FullPageViewButton = () => {
     const t = useTranslation();
 
     return (
-        <div title={t("Switch full page mode")}>
+        <div title={t("Switch full page mode")} data-djvujs-class="full_page_button">
             <ControlButton
                 icon={isFullPageView ? faCompress : faExpand}
                 onClick={() => dispatch(Actions.toggleFullPageViewAction(!isFullPageView))}

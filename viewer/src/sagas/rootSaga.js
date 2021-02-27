@@ -2,7 +2,7 @@
  * All side-effect logic is here (all logic which isn't related directly to the UI)
  */
 import contentDisposition from 'content-disposition';
-import { put, select, takeLatest } from 'redux-saga/effects';
+import { put, select, takeLatest, take, cancel } from 'redux-saga/effects';
 import { get } from '../reducers';
 // import { delay } from 'redux-saga';
 
@@ -25,7 +25,7 @@ class RootSaga {
         // so just for them on the main page of the extension a script url should be provided manually.
         // In all other cases no libURL is required - a blob URL will be generated automatically for the worker.
         const libURL = inExtension ? document.querySelector('script#djvu_js_lib').src : undefined;
-        window.worker = this.djvuWorker = new DjVu.Worker(libURL);
+        this.djvuWorker = new DjVu.Worker(libURL);
 
         // it's needed to recreate the worker when the bundle() operation is cancelled (but save the document),
         // because bundle() may take quite a while, if there are many pages in the document.
@@ -453,6 +453,11 @@ class RootSaga {
         );
 
         yield* this.withErrorHandler(this.loadOptions)();
+
+        yield take(ActionTypes.DESTROY);
+        this.pageDataManager && (yield* this.pageDataManager.reset());
+        this.djvuWorker.terminate();
+        yield cancel();
     }
 }
 

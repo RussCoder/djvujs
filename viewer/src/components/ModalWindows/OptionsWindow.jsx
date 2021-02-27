@@ -63,6 +63,7 @@ export default () => {
         <ModalWindow
             onClose={() => dispatch({ type: ActionTypes.TOGGLE_OPTIONS_WINDOW, payload: false })}
             css={`min-width: 15em;`}
+            data-djvujs-id="options_window"
         >
             <Root>
                 <MainHeader>{t('Options')}</MainHeader>

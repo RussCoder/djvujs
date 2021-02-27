@@ -5,6 +5,8 @@ DjVu.Viewer = DjVuViewer;
 
 if (process.env.NODE_ENV !== 'production') {
     window.addEventListener('load', () => {
+        if (new URLSearchParams(location.search).get('tests')) return; // do nothing in case of end-to-end tests
+
         window.viewer = window.DjVuViewerInstance = new window.DjVu.Viewer({
             uiOptions: {
                 // showContentsAutomatically: false,

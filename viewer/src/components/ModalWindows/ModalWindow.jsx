@@ -86,8 +86,8 @@ export default class ModalWindow extends React.Component {
         const { onClose, isError, isFixedSize, className = '', usePortal = false } = this.props;
 
         const component = (
-            <div css={style}>
-                <DarkLayer onClick={onClose} />
+            <div css={style} data-djvujs-class="modal_window">
+                <DarkLayer onClick={onClose} data-djvujs-class="dark_layer" />
                 <ModalWindowRoot
                     className={className}
                     $error={isError}
@@ -97,6 +97,7 @@ export default class ModalWindow extends React.Component {
                         css={closeButtonStyle}
                         icon={faTimesCircle}
                         onClick={onClose}
+                        data-djvujs-class="close_button"
                     />
                     <ContentWrapper>
                         {this.props.children}

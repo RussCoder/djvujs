@@ -105,6 +105,7 @@ class App extends Component {
                         ${style};
                         ${this.props.isFullPageView ? fullPageStyle : ''};
                     `}
+                    data-djvujs-id="root"
                 >
                     {this.props.isFileLoading ?
                         <FileLoadingScreen /> :
