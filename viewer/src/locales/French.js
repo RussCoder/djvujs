@@ -5,7 +5,8 @@
  *
  * Some phrases are tooltips, that is, they are visible only when you hover the cursor over controls.
  *
- * And try to preserve the order of phrases (just for convenience of further additions and corrections).
+ * Preserve the order of phrases and put the translation on a new line.
+ * (for convenience of further additions and corrections).
  *
  * All null values mean that the corresponding strings need to be translated.
  * Such values are added automatically for convenience as placeholders.
@@ -211,4 +212,22 @@ export default {
         "Téléchargement & assemblage du document",
     "The document has been downloaded and bundled into one file successfully":
         "Le document a été téléchargé, rassemblé & sauveguardé dans un seul fichier avec succès",
+
+    // Printing
+    "Print document":
+        null,
+    "Pages must be rendered before printing.":
+        null,
+    "It may take a while.":
+        null,
+    "Select the pages you want to print.":
+        null,
+    "From":
+        null,
+    "to":
+        null,
+    "Prepare pages for printing":
+        null,
+    "Preparing pages for printing":
+        null,
 };

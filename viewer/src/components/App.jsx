@@ -1,6 +1,5 @@
-import React, { Component } from 'react';
-import { connect } from 'react-redux';
-import PropTypes from 'prop-types';
+import React from 'react';
+import { useSelector } from 'react-redux';
 import { createGlobalStyle, css } from 'styled-components';
 
 import { get } from '../reducers';
@@ -14,6 +13,7 @@ import { TranslationProvider } from './Translation';
 import Main from './Main';
 import SaveDialog from "./ModalWindows/SaveDialog";
 import OptionsWindow from "./ModalWindows/OptionsWindow";
+import PrintDialog from "./ModalWindows/PrintDialog";
 
 const GlobalStyle = createGlobalStyle`
     html.disable_scroll_djvujs,
@@ -87,54 +87,42 @@ const fullPageStyle = css`
     z-index: 100;
 `;
 
-class App extends Component {
-    static propTypes = {
-        isFullPageView: PropTypes.bool.isRequired,
-        isFileLoaded: PropTypes.bool.isRequired
-    };
+export default () => {
+    const isFileLoaded = useSelector(get.isDocumentLoaded);
+    const isFileLoading = useSelector(get.isFileLoading);
+    const isFullPageView = useSelector(get.isFullPageView);
+    const theme = useSelector(get.options).theme;
+    const isPrintDialogOpened = useSelector(get.isPrintDialogOpened);
 
-    render() {
-        const theme = this.props.options.theme;
+    return (
+        <TranslationProvider>
+            <GlobalStyle />
+            <div
+                css={`
+                    ${theme === 'dark' ? darkTheme : lightTheme};
+                    ${style};
+                    ${isFullPageView ? fullPageStyle : ''};
+                `}
+                data-djvujs-id="root"
+            >
+                {isFileLoading ?
+                    <FileLoadingScreen /> :
 
-        return (
-            <TranslationProvider>
-                <GlobalStyle />
-                <div
-                    css={`
-                        ${theme === 'dark' ? darkTheme : lightTheme};
-                        ${style};
-                        ${this.props.isFullPageView ? fullPageStyle : ''};
-                    `}
-                    data-djvujs-id="root"
-                >
-                    {this.props.isFileLoading ?
-                        <FileLoadingScreen /> :
+                    !isFileLoaded ? <InitialScreen /> :
+                        <React.Fragment>
+                            <Main />
+                            <Toolbar />
+                        </React.Fragment>
+                }
+                {isFileLoading ? null : <Footer />}
 
-                        !this.props.isFileLoaded ? <InitialScreen /> :
-                            <React.Fragment>
-                                <Main />
-                                <Toolbar />
-                            </React.Fragment>
-                    }
-                    {this.props.isFileLoading ? null : <Footer />}
-
-                    <ErrorWindow />
-                    <HelpWindow />
-                    <SaveDialog />
-                    <OptionsWindow />
-                    <div id="djvujs-modal-windows-container" />
-                </div>
-            </TranslationProvider>
-        );
-    }
+                <ErrorWindow />
+                <HelpWindow />
+                <SaveDialog />
+                <OptionsWindow />
+                {isPrintDialogOpened ? <PrintDialog /> : null}
+                <div id="djvujs-modal-windows-container" />
+            </div>
+        </TranslationProvider>
+    );
 }
-
-export default connect(
-    state => ({
-        isLoading: get.isLoading(state),
-        isFileLoaded: get.isDocumentLoaded(state),
-        isFileLoading: get.isFileLoading(state),
-        isFullPageView: get.isFullPageView(state),
-        options: get.options(state),
-    })
-)(App);

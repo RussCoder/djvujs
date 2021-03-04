@@ -67,7 +67,7 @@ class ImageBlock extends React.Component {
 
     scrollCurrentPageIntoViewIfRequired() {
         if (this.props.viewMode === Constants.CONTINUOUS_SCROLL_MODE
-            && this.props.isPageNumberSetManually
+            && this.props.shouldScrollToPage
             && this.virtualList
             && !this.virtualList.isItemVisible(this.props.currentPageNumber - 1)) {
             this.virtualList.scrollToItem(this.props.currentPageNumber - 1);
@@ -276,7 +276,7 @@ export default connect(
     state => ({
         documentId: get.documentId(state),
         currentPageNumber: get.currentPageNumber(state),
-        isPageNumberSetManually: get.isPageNumberSetManually(state),
+        shouldScrollToPage: get.shouldScrollToPage(state),
         viewMode: get.viewMode(state),
         pageList: get.pageList(state),
         pageSizeList: get.pageSizeList(state),

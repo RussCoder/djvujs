@@ -15,7 +15,7 @@ const initialState = Object.freeze({
     ...singlePageInitialState,
     cursorMode: Constants.GRAB_CURSOR_MODE,
     currentPageNumber: 1,
-    isPageNumberSetManually: false,
+    shouldScrollToPage: false,
     pageList: [],
     pageSizeList: [],
 });
@@ -79,7 +79,7 @@ export default function pageReducer(state = initialState, action) {
             return {
                 ...state,
                 ...((state.textPageError || state.imagePageError) ? singlePageInitialState : null),
-                isPageNumberSetManually: action.isPageNumberSetManually,
+                shouldScrollToPage: action.shouldScrollToPage,
                 currentPageNumber: action.pageNumber
             };
 
@@ -111,7 +111,7 @@ export const get = {
     imageDpi: $(s => s.imageDpi),
     textZones: $(s => s.textZones),
     currentPageNumber: $(s => s.currentPageNumber),
-    isPageNumberSetManually: $(s => s.isPageNumberSetManually),
+    shouldScrollToPage: $(s => s.shouldScrollToPage),
     imagePageError: $(s => s.imagePageError),
     textPageError: $(s => s.textPageError),
     pageList: $(s => s.pageList),

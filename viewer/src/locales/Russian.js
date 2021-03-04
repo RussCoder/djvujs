@@ -18,7 +18,8 @@
  *
  * Some phrases are tooltips, that is, they are visible only when you hover the cursor over controls.
  *
- * And try to preserve the order of phrases (just for convenience of further additions and corrections).
+ * Preserve the order of phrases and put the translation on a new line.
+ * (for convenience of further additions and corrections).
  *
  * All null values mean that the corresponding strings need to be translated.
  * Such values are added automatically for convenience as placeholders.
@@ -224,4 +225,22 @@ export default {
         "Скачиваем и собираем документ",
     "The document has been downloaded and bundled into one file successfully":
         "Документ был успешно скачан и собран в единый файл",
+
+    // Printing
+    "Print document":
+        "Распечатать документ",
+    "Pages must be rendered before printing.":
+        "Страницы должны быть отрисованы перед печатью.",
+    "It may take a while.":
+        "Это может занять некоторое время.",
+    "Select the pages you want to print.":
+        "Выберите те страницы, которые вы хотите распечатать.",
+    "From":
+        "Начиная с",
+    "to":
+        "по",
+    "Prepare pages for printing":
+        "Подготовить страницы к печати",
+    "Preparing pages for printing":
+        "Подготавливаем страницы к печати",
 };

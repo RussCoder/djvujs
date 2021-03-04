@@ -1,5 +1,6 @@
 import React from 'react';
 import { faTimesCircle } from '@fortawesome/free-regular-svg-icons';
+import { faPrint } from '@fortawesome/free-solid-svg-icons';
 
 import Actions from '../../actions/actions';
 import { get } from '../../reducers';
@@ -9,6 +10,7 @@ import { ControlButton, TextButton } from '../StyledPrimitives';
 import { useTranslation } from '../Translation';
 import { useDispatch, useSelector } from 'react-redux';
 import ModalWindow from "../ModalWindows/ModalWindow";
+import { ActionTypes } from "../../constants";
 
 const style = css`
     width: 100%;
@@ -52,18 +54,24 @@ export default () => {
             ) : null}
             <FileBlock fileName={fileName} />
             {fileName ? (
-                <TextButton
-                    onClick={() => {
-                        if (onSaveNotification && onSaveNotification.text) {
-                            showNotification(true);
-                        } else {
-                            saveHandler();
-                        }
-                    }}
-                    title={t("Save document")}
-                >
-                    {t('Save')}
-                </TextButton>
+                <>
+                    <ControlButton
+                        icon={faPrint} title={t('Print document')}
+                        onClick={() => dispatch({ type: ActionTypes.OPEN_PRINT_DIALOG })}
+                    />
+                    <TextButton
+                        onClick={() => {
+                            if (onSaveNotification && onSaveNotification.text) {
+                                showNotification(true);
+                            } else {
+                                saveHandler();
+                            }
+                        }}
+                        title={t("Save document")}
+                    >
+                        {t('Save')}
+                    </TextButton>
+                </>
             ) : null}
             {isNotificationShown ?
                 <ModalWindow
