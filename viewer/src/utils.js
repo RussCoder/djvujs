@@ -37,7 +37,7 @@ export function loadFile(url, progressHandler) {
 
 export const inExtension = !!(document.querySelector('input#djvu_js_extension_main_page')
     && window.chrome && window.chrome.runtime && window.chrome.runtime.id);
-export const isChromeExtension = inExtension && !/Firefox/.test(navigator.userAgent);
+export const isFirefox = /Firefox/.test(navigator.userAgent);
 
 export const normalizeFileName = fileName => {
     return /\.(djv|djvu)$/.test(fileName) ? fileName : (fileName + '.djvu');
