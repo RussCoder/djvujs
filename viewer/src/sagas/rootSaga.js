@@ -2,7 +2,7 @@
  * All side-effect logic is here (all logic which isn't related directly to the UI)
  */
 import contentDisposition from 'content-disposition';
-import { put, select, takeLatest } from 'redux-saga/effects';
+import { put, select, takeLatest, take, cancel, fork } from 'redux-saga/effects';
 import { get } from '../reducers';
 // import { delay } from 'redux-saga';
 
@@ -10,11 +10,13 @@ import Constants, { ActionTypes } from '../constants';
 import Actions from "../actions/actions";
 import PagesCache from './PagesCache';
 import DjVu from '../DjVu';
-import PageDataManager from './PageDataManager';
-import { inExtension } from '../utils';
+import ContinuousScrollManager from './ContinuousScrollManager';
+import { normalizeFileName, inExtension } from '../utils';
 import { loadFile } from '../utils';
 import dictionaries from "../locales";
 import { createTranslator } from "../components/Translation";
+import PrintManager from './PrintManager';
+import PageStorage from "./PageStorage";
 
 class RootSaga {
     constructor(dispatch) {
@@ -25,15 +27,18 @@ class RootSaga {
         // so just for them on the main page of the extension a script url should be provided manually.
         // In all other cases no libURL is required - a blob URL will be generated automatically for the worker.
         const libURL = inExtension ? document.querySelector('script#djvu_js_lib').src : undefined;
-        window.worker = this.djvuWorker = new DjVu.Worker(libURL);
+        this.djvuWorker = new DjVu.Worker(libURL);
 
         // it's needed to recreate the worker when the bundle() operation is cancelled (but save the document),
         // because bundle() may take quite a while, if there are many pages in the document.
         this.isBundling = false;
         this.documentContructorData = null;
 
+        this.pageStorage = new PageStorage();
         this.pagesCache = new PagesCache(this.djvuWorker);
-        this.pageDataManager = null;
+        this.printManager = new PrintManager(this.djvuWorker, this.pageStorage);
+        this.printTask = null;
+        this.continuousScrollManager = null;
     }
 
     * getImageData() {
@@ -60,7 +65,7 @@ class RootSaga {
         const viewMode = get.viewMode(state);
 
         if (viewMode === Constants.CONTINUOUS_SCROLL_MODE) {
-            yield* this.pageDataManager.startDataFetching();
+            yield* this.continuousScrollManager.startDataFetching();
         } else {
             const pageNumber = get.currentPageNumber(state);
 
@@ -107,7 +112,7 @@ class RootSaga {
 
     * prepareForContinuousMode() {
         const pagesSizes = yield this.djvuWorker.doc.getPagesSizes().run();
-        this.pageDataManager = new PageDataManager(this.djvuWorker, pagesSizes.length);
+        this.continuousScrollManager = new ContinuousScrollManager(this.djvuWorker, pagesSizes.length, this.pageStorage);
         yield put(Actions.pagesSizesAreGottenAction(pagesSizes));
     }
 
@@ -177,7 +182,7 @@ class RootSaga {
         }
 
         const state = yield select();
-        this.pageDataManager = null; // we don't have to reset it, since the worker was recreated and all memory was release in any case
+        this.continuousScrollManager = null; // we don't have to reset it, since the worker was recreated and all memory was release in any case
         if (get.viewMode(state) === Constants.CONTINUOUS_SCROLL_MODE) {
             yield* this.prepareForContinuousMode();
         }
@@ -193,7 +198,7 @@ class RootSaga {
 
     * resetCurrentPageNumber() {
         // set the current number to start page fetching saga
-        // fetchPageData should be called via yield* directly, otherwise it won't be cancelled by takeLatest effect
+        // fetchPageData shouldn't be called via yield* directly, otherwise it won't be cancelled by takeLatest effect
         const state = yield select();
         yield put(Actions.setNewPageNumberAction(get.currentPageNumber(state), true)); // set the current number to start page fetching saga
     }
@@ -252,7 +257,7 @@ class RootSaga {
             const url = yield this.djvuWorker.doc.createObjectURL().run();
             const a = document.createElement('a');
             a.href = url;
-            a.download = /\.(djv|djvu)$/.test(fileName) ? fileName : (fileName + '.djvu');
+            a.download = normalizeFileName(fileName);
             a.dispatchEvent(new MouseEvent("click"));
         }
     }
@@ -270,7 +275,7 @@ class RootSaga {
 
     * switchToContinuousScrollMode() {
         this.djvuWorker.cancelAllTasks();
-        if (!this.pageDataManager) {
+        if (!this.continuousScrollManager) {
             yield* this.prepareForContinuousMode();
         }
         this.pagesCache.resetPagesCache();
@@ -280,8 +285,8 @@ class RootSaga {
 
     * switchToSinglePageMode() {
         this.djvuWorker.cancelAllTasks();
-        if (this.pageDataManager) {
-            yield* this.pageDataManager.reset();
+        if (this.continuousScrollManager) {
+            yield* this.continuousScrollManager.reset();
         }
         yield* this.resetCurrentPageNumber();
         yield put({ type: ActionTypes.UPDATE_OPTIONS, payload: { preferContinuousScroll: false } });
@@ -289,8 +294,8 @@ class RootSaga {
 
     * switchToTextMode() {
         this.djvuWorker.cancelAllTasks();
-        if (this.pageDataManager) {
-            yield* this.pageDataManager.reset();
+        if (this.continuousScrollManager) {
+            yield* this.continuousScrollManager.reset();
         }
         yield* this.fetchPageTextIfRequired();
     }
@@ -430,6 +435,24 @@ class RootSaga {
         }
     }
 
+    * preparePagesForPrinting(action) {
+        const { from, to } = action.payload;
+        this.printTask = yield fork(this.printManager.preparePagesForPrinting.bind(this.printManager), from, to);
+    }
+
+    * cancelPrintTaskIfRequired() {
+        if (this.printTask) {
+            this.printTask.cancel();
+            this.printTask = null;
+            const viewMode = yield select(get.viewMode);
+            if (viewMode !== Constants.CONTINUOUS_SCROLL_MODE) {
+                // in the continuous scroll mode redundant pages will be removed automatically
+                this.pageStorage.removeAllPages();
+            }
+            yield* this.resetCurrentPageNumber();
+        }
+    }
+
     * main() {
         yield takeLatest(Constants.CREATE_DOCUMENT_FROM_ARRAY_BUFFER_ACTION, this.withErrorHandler(this.createDocumentFromArrayBuffer));
         yield takeLatest(Constants.SET_NEW_PAGE_NUMBER_ACTION, this.withErrorHandler(this.fetchPageData));
@@ -452,7 +475,21 @@ class RootSaga {
             this.withErrorHandler(this.hardReloadIfRequired)
         );
 
+        yield takeLatest([
+                ActionTypes.ERROR,
+                ActionTypes.CLOSE_PRINT_DIALOG,
+            ], this.withErrorHandler(this.cancelPrintTaskIfRequired)
+        );
+
+        yield takeLatest(ActionTypes.PREPARE_PAGES_FOR_PRINTING, this.withErrorHandler(this.preparePagesForPrinting));
+
         yield* this.withErrorHandler(this.loadOptions)();
+
+        yield take(ActionTypes.DESTROY);
+        this.djvuWorker.terminate();
+        // actually it's not needed since, all URLs will be revoked when the worker is terminated
+        // this.pageStorage.removeAllPages();
+        yield cancel();
     }
 }
 

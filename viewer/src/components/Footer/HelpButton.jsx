@@ -11,7 +11,7 @@ const HelpButton = () => {
     const t = useTranslation();
 
     return (
-        <span title={t("Show help window")}>
+        <span title={t("Show help window")} data-djvujs-class="help_button">
             <ControlButton
                 icon={faQuestionCircle}
                 onClick={() => dispatch(Actions.showHelpWindowAction())}

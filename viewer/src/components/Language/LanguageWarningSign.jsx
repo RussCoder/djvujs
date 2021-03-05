@@ -17,7 +17,7 @@ const Warning = styled.span`
 export default ({ languageCode }) => {
     const dict = dictionaries[languageCode];
     const notTranslatedPhrases = Object.keys(dictionaries.en).filter(key => {
-        return !(key in dict);
+        return dict[key] == null;
     });
     let [isWindowOpened, toggleWindow] = React.useState(false);
 

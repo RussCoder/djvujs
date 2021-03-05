@@ -11,7 +11,7 @@ const OptionsButton = () => {
     const t = useTranslation();
 
     return (
-        <span title={t("Show options window")}>
+        <span title={t("Show options window")} data-djvujs-class="options_button">
             <ControlButton
                 icon={faCog}
                 onClick={() => dispatch({ type: ActionTypes.TOGGLE_OPTIONS_WINDOW, payload: true })}

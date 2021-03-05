@@ -2,6 +2,13 @@
  * The exemplary dictionary which should be used for the creation of other localizations.
  * Copy this file and change all Russian strings to your own.
  * Remove this (the topmost) comment, but leave other comments in place.
+ *
+ * Another way to create a template file with nulls instead of translated strings is to
+ * run the following command inside the `viewer` directory:
+ *
+ * npm run syncLocales EnglishNameOfNewLanguage
+ *
+ * It will generate the EnglishNameOfNewLanguage.js file in the locales folder.
  */
 
 /**
@@ -11,15 +18,22 @@
  *
  * Some phrases are tooltips, that is, they are visible only when you hover the cursor over controls.
  *
- * And try to preserve the order of phrases (just for convenience of further additions and corrections).
+ * Preserve the order of phrases and put the translation on a new line.
+ * (for convenience of further additions and corrections).
+ *
+ * All null values mean that the corresponding strings need to be translated.
+ * Such values are added automatically for convenience as placeholders.
  */
 
 export default {
     // language info
-    englishName: "Russian",
-    nativeName: "Русский",
+    englishName:
+        "Russian",
+    nativeName:
+        "Русский",
 
-    "Language": "Язык", // not used now, but will be used in options afterwards
+    "Language":
+        "Язык", // not used now, but will be used in options afterwards
 
     // Translation: tooltips and notification
     // (to see the notification window, remove several phrases from any dictionary, except for the English one)
@@ -52,9 +66,12 @@ export default {
     // For the web request error there are different types of messages depending on the HTTP status.
     // The ways to see the errors in the viewer are described in comments below.
     // In case of web requests you can load links via the browser extension (via the URL field on the initial screen)
-    "Error": "Ошибка",
-    "Error on page": "Ошибка на странице", // Open 'library/assets/czech_indirect/index.djvu
-    "Network error": "Ошибка сети", // Disable internet connection and try to load something by URL
+    "Error":
+        "Ошибка",
+    "Error on page":
+        "Ошибка на странице", // Open 'library/assets/czech_indirect/index.djvu
+    "Network error":
+        "Ошибка сети", // Disable internet connection and try to load something by URL
     "Check your network connection":
         "Проверьте свое интернет-соединение",
     // Load any URL to a nonexistent page on the Internet,
@@ -98,10 +115,14 @@ export default {
         "Невозможно вывести ошибку в текстовом виде, посмотрите в консоль",
 
     // Options and its tooltips
-    "Options": "Настройки",
-    "Show options window": "Открыть окно настроек",
-    "Color theme": "Цветовая схема",
-    "Extension options": "Настройки расширения", // the options of the browser extension
+    "Options":
+        "Настройки",
+    "Show options window":
+        "Открыть окно настроек",
+    "Color theme":
+        "Цветовая схема",
+    "Extension options":
+        "Настройки расширения", // the options of the browser extension
     "Open all links with .djvu at the end via the viewer":
         "Открывать все ссылки с .djvu на конце через расширение",
     "All links to .djvu files will be opened by the viewer via a simple click on a link":
@@ -112,19 +133,28 @@ export default {
         "Анализировать заголовки каждой новой вкладки, чтобы определять файлы даже без расширения \".djvu\" в ссылке",
 
     // Footer: status bar
-    "Ready": "Готово",
-    "Loading": "Загрузка",
+    "Ready":
+        "Готово",
+    "Loading":
+        "Загрузка",
 
     // Footer: buttons' tooltips
-    "Show help window": "Показать окно справки",
-    "Switch full page mode": "Переключить полностраничный режим",
+    "Show help window":
+        "Показать окно справки",
+    "Switch full page mode":
+        "Переключить полностраничный режим",
 
     // File Block tooltips
-    "Choose a file": "Выберите файл",
-    "Close document": "Закрыть документ",
-    "Save document": "Сохранить документ",
-    "Save": "Сохранить",
-    "Open another .djvu file": "Открыть другой .djvu файл",
+    "Choose a file":
+        "Выберите файл",
+    "Close document":
+        "Закрыть документ",
+    "Save document":
+        "Сохранить документ",
+    "Save":
+        "Сохранить",
+    "Open another .djvu file":
+        "Открыть другой .djvu файл",
 
     // Help window
     "The application for viewing .djvu files in the browser.":
@@ -169,15 +199,18 @@ export default {
         "Режим перетаскивания",
 
     // Contents
-    "Contents": "Содержание",
-    "No contents provided": "Нет содержания",
+    "Contents":
+        "Содержание",
+    "No contents provided":
+        "Нет содержания",
     // A rare case. Open /library/assets/links.djvu in the viewer on https://djvu.js.org/ (not in the extension!)
     // and click the "Absolute Link" in the contents
     "The link points to another document. Do you want to proceed?":
         "Ссылка ведет на другой документ. Вы хотите продолжить?",
 
     // Text Block (shown in the text view mode)
-    "No text on this page": "Нет текста на этой странице",
+    "No text on this page":
+        "Нет текста на этой странице",
 
     // Save dialog (shows when you save an indirect djvu)
     "You are trying to save an indirect (multi-file) document.":
@@ -192,4 +225,22 @@ export default {
         "Скачиваем и собираем документ",
     "The document has been downloaded and bundled into one file successfully":
         "Документ был успешно скачан и собран в единый файл",
+
+    // Printing
+    "Print document":
+        "Распечатать документ",
+    "Pages must be rendered before printing.":
+        "Страницы должны быть отрисованы перед печатью.",
+    "It may take a while.":
+        "Это может занять некоторое время.",
+    "Select the pages you want to print.":
+        "Выберите те страницы, которые вы хотите распечатать.",
+    "From":
+        "Начиная с",
+    "to":
+        "по",
+    "Prepare pages for printing":
+        "Подготовить страницы к печати",
+    "Preparing pages for printing":
+        "Подготавливаем страницы к печати",
 };

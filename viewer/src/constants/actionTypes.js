@@ -17,4 +17,10 @@ export const ActionTypes = constant({
     SET_UI_OPTIONS: null,
     TOGGLE_OPTIONS_WINDOW: null,
     CLOSE_ERROR_WINDOW: null,
+    DESTROY: null,
+    OPEN_PRINT_DIALOG: null,
+    CLOSE_PRINT_DIALOG: null,
+    PREPARE_PAGES_FOR_PRINTING: null,
+    START_PRINTING: null,
+    UPDATE_PRINT_PROGRESS: null,
 });

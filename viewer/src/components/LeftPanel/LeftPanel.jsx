@@ -5,23 +5,38 @@ import ContentsPanel from './ContentsPanel';
 import { get } from '../../reducers';
 import styled, { css } from 'styled-components';
 
+const minWidth = '0.4em';
+
 const style = css`
     flex: 0 0 auto;
     border: 1px solid var(--border-color);
     border-radius: 1em 0 1em 0;
-    overflow: hidden;
     box-sizing: border-box;
     width: 20%;
     max-width: 90%;
-    min-width: 0.4em;
+    min-width: ${minWidth};
 `;
 
 const Border = styled.div`
     box-sizing: border-box;
     float: right;
-    opacity: 0.7;
-    width: 4px;
     height: 100%;
+    position: relative;
+    width: 7px;
+    left: 4px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    --point-size: 5px;
+
+    div {
+        width: var(--point-size);
+        height: var(--point-size);
+        transform: scaleX(0.75) scaleY(1.25) rotateZ(45deg);
+        background: var(--border-color);
+        margin-bottom: var(--point-size);
+    }
 
     &:hover {
         cursor: col-resize;
@@ -61,15 +76,20 @@ class LeftPanel extends React.Component {
     ref = node => this.topNode = node;
 
     render() {
-        const contents = this.props.contents;
+        const { contents, uiOptions: { showContentsAutomatically } } = this.props;
+
         return (
             <div
                 css={style}
                 ref={this.ref}
-                style={contents ? null : { width: "0.4em" }} // use the min-width from styles
+                style={(contents && showContentsAutomatically) ? null : { width: minWidth }}
             >
-                <Border onMouseDown={this.onBeginResizing} />
-                <div style={{ height: '100%' }}>
+                <Border onMouseDown={this.onBeginResizing}>
+                    <div />
+                    <div />
+                    <div />
+                </Border>
+                <div style={{ height: '100%', overflow: "hidden" }}>
                     <ContentsPanel contents={contents} />
                 </div>
             </div>
@@ -78,5 +98,6 @@ class LeftPanel extends React.Component {
 }
 
 export default connect(state => ({
+    uiOptions: get.uiOptions(state),
     contents: get.contents(state)
 }))(LeftPanel);

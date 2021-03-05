@@ -5,15 +5,22 @@
  *
  * Some phrases are tooltips, that is, they are visible only when you hover the cursor over controls.
  *
- * And try to preserve the order of phrases (just for convenience of further additions and corrections).
+ * Preserve the order of phrases and put the translation on a new line.
+ * (for convenience of further additions and corrections).
+ *
+ * All null values mean that the corresponding strings need to be translated.
+ * Such values are added automatically for convenience as placeholders.
  */
 
 export default {
     // language info
-    englishName: "Swedish",
-    nativeName: "Svenska",
+    englishName:
+        "Swedish",
+    nativeName:
+        "Svenska",
 
-    "Language": "Språk", // not used now, but will be used in options afterwards
+    "Language":
+        "Språk", // not used now, but will be used in options afterwards
 
     // Translation: tooltips and notification
     // (to see the notification window, remove several phrases from any dictionary, except for the English one)
@@ -27,6 +34,10 @@ export default {
         "Du kan förtydliga översättningen här",
 
     // Initial screen
+    "#helpButton - learn more about the app":
+        "#helpButton - lär dig mer om applikationen",
+    "#optionsButton - see the available options":
+        "#optionsButton - Se tillgängliga alternativ",
     "powered with":
         "baserat på",
     "Drag & Drop a file here or click to choose manually":
@@ -35,15 +46,70 @@ export default {
         "Klistra in en URL till en .djvu-fil här",
     "Open URL":
         "Öppna URL",
+    'Enter a valid URL (it should start with "http(s)://")': // an alert shown when you try to open an empty URL
+        'Ange en giltig URL (den ska börja med "http (s): //")',
 
     // Errors. Usually there is a header and a message for each error type.
     // For the web request error there are different types of messages depending on the HTTP status.
     // The ways to see the errors in the viewer are described in comments below.
     // In case of web requests you can load links via the browser extension (via the URL field on the initial screen)
-    "Error": "Fel",
-    "Error on page": "Felaktigheter på sidan", // Open 'library/assets/czech_indirect/index.djvu
+    "Error":
+        "Fel",
+    "Error on page":
+        "Felaktigheter på sidan", // Open 'library/assets/czech_indirect/index.djvu
+    "Network error":
+        "Nätverksfel", // Disable internet connection and try to load something by URL
+    "Check your network connection":
+        "Kontrollera nätverksanslutningen",
+    // Load any URL to a nonexistent page on the Internet,
+    // e.g. https://djvu.js.org/nonexistentpage
+    "Web request error":
+        "Fel vid webbegärning",
+    "404 Document not found":
+        "404 Dokument hittas inte",
+    "403 Access forbidden":
+        "403 Åtkomst förbjuden",
+    "500 Internal server error":
+        "500 Internt serverfel",
+    "The request failed with HTTP status #status":
+        "TBegäran misslyckades med http-status #status",
+    "DjVu file is corrupted": // Open "/library/assets/czech_indirect/dict0085.iff"
+        "DjVu-filen är korrupt:",
+    "The file doesn't comply with the DjVu format specification or it's not a whole DjVu document":
+        "Filen överensstämmer inte med specificerat DjVu-format eller så är dokumentet inte komplett",
+    "Incorrect file format": // Open a not-djvu file.
+        "Felaktigt filformat",
+    "The provided file is not a DjVu document":
+        "Den angivna filen är inte ett DjVu-dokument",
+    // Load a URL to a DjVu file with "#page=100500" at the end (both in continuous scroll and single-page view modes)
+    // e.g. https://djvu.js.org/assets/djvu_examples/DjVu3Spec.djvu#page=100500
+    "Incorrect page number":
+        "Felaktigt sidnummer",
+    "There is no page with the number #pageNumber":
+        "Felaktigt sidnummer #pageNumber",
+    // "baseURL" is a URL to a document directory,
+    // all links inside the document index.djvu are considered relative to this URL.
+    // The term "base URL" can be translated as "a URL to the document's folder".
+    "No base URL for an indirect DjVu document":  // Open "/library/assets/czech_indirect/index.djvu"
+        "Ingen bas-URL för ett indirekt DjVu-dokument",
+    "You probably opened an indirect (multi-file) DjVu document manually.":
+        "Du öppnade troligen ett indirekt DjVu-dokument (med flera filer) manuellt.",
+    "But such multi-file documents can be only loaded by URL.":
+        "Dokument med flera filer kan endast laddas med URL.",
+    "Unexpected error": // Of course there is no standard way to produce this kind of error
+        "Ett oväntat fel uppstod",
+    "Cannot print the error, look in the console":
+        "Kunde inte skriva ut felet, titta i konsolen",
 
     // Options and its tooltips
+    "Options":
+        "Alternativ",
+    "Show options window":
+        "Visa fönster med alternativ",
+    "Color theme":
+        "Färgtema",
+    "Extension options":
+        "Förlängningsalternativ", // the options of the browser extension
     "Open all links with .djvu at the end via the viewer":
         "Öppna alla länkar med .djvu via webbläsaren",
     "All links to .djvu files will be opened by the viewer via a simple click on a link":
@@ -54,19 +120,28 @@ export default {
         "Analysera rubriker på alla nya flikar för att känna av om länkar är av .djvu-format (även länkar som inte slutar med \".djvu\"",
 
     // Footer: status bar
-    "Ready": "Klar",
-    "Loading": "Laddar",
+    "Ready":
+        "Klar",
+    "Loading":
+        "Laddar",
 
     // Footer: buttons' tooltips
-    "Show help window": "Visa hjälpsida",
-    "Switch full page mode": "Ändra visningsläge till helsida",
+    "Show help window":
+        "Visa hjälpsida",
+    "Switch full page mode":
+        "Ändra visningsläge till helsida",
 
     // File Block tooltips
-    "Choose a file": "Välj en fil",
-    "Close document": "Stäng dokument",
-    "Save document": "Spara dokument",
-    "Save": "Spara",
-    "Open another .djvu file": "Öppna ytterligare en .djvu-fil",
+    "Choose a file":
+        "Välj en fil",
+    "Close document":
+        "Stäng dokument",
+    "Save document":
+        "Spara dokument",
+    "Save":
+        "Spara",
+    "Open another .djvu file":
+        "Öppna ytterligare en .djvu-fil",
 
     // Help window
     "The application for viewing .djvu files in the browser.":
@@ -111,11 +186,18 @@ export default {
         "Visningsläge med greppbart markörläge",
 
     // Contents
-    "Contents": "Innehåll",
-    "No contents provided": "Inget innehåll har givits",
+    "Contents":
+        "Innehåll",
+    "No contents provided":
+        "Inget innehåll har givits",
+    // A rare case. Open /library/assets/links.djvu in the viewer on https://djvu.js.org/ (not in the extension!)
+    // and click the "Absolute Link" in the contents
+    "The link points to another document. Do you want to proceed?":
+        "Länken vidarebefodrar till ett annat dokument. Vill du fortsätta?",
 
     // Text Block (shown in the text view mode)
-    "No text on this page": "Ingen text finns på denna sida",
+    "No text on this page":
+        "Ingen text finns på denna sida",
 
     // Save dialog (shows when you save an indirect djvu)
     "You are trying to save an indirect (multi-file) document.":
@@ -130,4 +212,22 @@ export default {
         "Laddar ner och packer ihop dokumentet",
     "The document has been downloaded and bundled into one file successfully":
         "Dokumentet har laddats ner och packats ihop till en fil",
+
+    // Printing
+    "Print document":
+        null,
+    "Pages must be rendered before printing.":
+        null,
+    "It may take a while.":
+        null,
+    "Select the pages you want to print.":
+        null,
+    "From":
+        null,
+    "to":
+        null,
+    "Prepare pages for printing":
+        null,
+    "Preparing pages for printing":
+        null,
 };

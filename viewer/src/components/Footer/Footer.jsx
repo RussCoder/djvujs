@@ -25,7 +25,7 @@ function Footer() {
     const { hideFullPageSwitch } = useSelector(get.uiOptions);
 
     return (
-        <Root>
+        <Root data-djvujs-id="footer">
             <StatusBar />
             <FilePanel />
             <HelpButton />

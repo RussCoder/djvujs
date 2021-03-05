@@ -82,10 +82,10 @@ const Actions = {
         config: config,
     }),
 
-    setNewPageNumberAction: (pageNumber, isPageNumberSetManually = false) => ({
+    setNewPageNumberAction: (pageNumber, shouldScrollToPage = false) => ({
         type: Constants.SET_NEW_PAGE_NUMBER_ACTION,
         pageNumber: pageNumber,
-        isPageNumberSetManually: isPageNumberSetManually,
+        shouldScrollToPage: shouldScrollToPage,
     }),
 
     setPageByUrlAction(url) {

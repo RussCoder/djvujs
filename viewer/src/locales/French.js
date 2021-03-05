@@ -5,15 +5,22 @@
  *
  * Some phrases are tooltips, that is, they are visible only when you hover the cursor over controls.
  *
- * And try to preserve the order of phrases (just for convenience of further additions and corrections).
+ * Preserve the order of phrases and put the translation on a new line.
+ * (for convenience of further additions and corrections).
+ *
+ * All null values mean that the corresponding strings need to be translated.
+ * Such values are added automatically for convenience as placeholders.
  */
 
 export default {
     // language info
-    englishName: "French",
-    nativeName: "Français",
+    englishName:
+        "French",
+    nativeName:
+        "Français",
 
-    "Language": "Langue", // not used now, but will be used in options afterwards
+    "Language":
+        "Langue", // not used now, but will be used in options afterwards
 
     // Translation: tooltips and notification
     // (to see the notification window, remove several phrases from any dictionary, except for the English one)
@@ -27,6 +34,10 @@ export default {
         "Vous pouvez améliorer la traduction ici",
 
     // Initial screen
+    "#helpButton - learn more about the app":
+        null,
+    "#optionsButton - see the available options":
+        null,
     "powered with":
         "basé sur",
     "Drag & Drop a file here or click to choose manually":
@@ -35,15 +46,70 @@ export default {
         "Copier un lien vers un fichier .djvu",
     "Open URL":
         "Ouvrir le lien",
+    'Enter a valid URL (it should start with "http(s)://")': // an alert shown when you try to open an empty URL
+        null,
 
     // Errors. Usually there is a header and a message for each error type.
     // For the web request error there are different types of messages depending on the HTTP status.
     // The ways to see the errors in the viewer are described in comments below.
     // In case of web requests you can load links via the browser extension (via the URL field on the initial screen)
-    "Error": "Erreur",
-    "Error on page": "Erreur dans la page", // Open 'library/assets/czech_indirect/index.djvu
+    "Error":
+        "Erreur",
+    "Error on page":
+        "Erreur dans la page", // Open 'library/assets/czech_indirect/index.djvu
+    "Network error":
+        null, // Disable internet connection and try to load something by URL
+    "Check your network connection":
+        null,
+    // Load any URL to a nonexistent page on the Internet,
+    // e.g. https://djvu.js.org/nonexistentpage
+    "Web request error":
+        null,
+    "404 Document not found":
+        null,
+    "403 Access forbidden":
+        null,
+    "500 Internal server error":
+        null,
+    "The request failed with HTTP status #status":
+        null,
+    "DjVu file is corrupted": // Open "/library/assets/czech_indirect/dict0085.iff"
+        null,
+    "The file doesn't comply with the DjVu format specification or it's not a whole DjVu document":
+        null,
+    "Incorrect file format": // Open a not-djvu file.
+        null,
+    "The provided file is not a DjVu document":
+        null,
+    // Load a URL to a DjVu file with "#page=100500" at the end (both in continuous scroll and single-page view modes)
+    // e.g. https://djvu.js.org/assets/djvu_examples/DjVu3Spec.djvu#page=100500
+    "Incorrect page number":
+        null,
+    "There is no page with the number #pageNumber":
+        null,
+    // "baseURL" is a URL to a document directory,
+    // all links inside the document index.djvu are considered relative to this URL.
+    // The term "base URL" can be translated as "a URL to the document's folder".
+    "No base URL for an indirect DjVu document":  // Open "/library/assets/czech_indirect/index.djvu"
+        null,
+    "You probably opened an indirect (multi-file) DjVu document manually.":
+        null,
+    "But such multi-file documents can be only loaded by URL.":
+        null,
+    "Unexpected error": // Of course there is no standard way to produce this kind of error
+        null,
+    "Cannot print the error, look in the console":
+        null,
 
     // Options and its tooltips
+    "Options":
+        null,
+    "Show options window":
+        null,
+    "Color theme":
+        null,
+    "Extension options":
+        null, // the options of the browser extension
     "Open all links with .djvu at the end via the viewer":
         "Ouvrir tous les liеns .djvu avec l'extension",
     "All links to .djvu files will be opened by the viewer via a simple click on a link":
@@ -54,19 +120,28 @@ export default {
         "Analysez les en-têtes de chaque nouvel onglet pour identifier les fichiers même sans l'extension .djvu en fin de lien",
 
     // Footer: status bar
-    "Ready": "Prêt",
-    "Loading": "Chargement",
+    "Ready":
+        "Prêt",
+    "Loading":
+        "Chargement",
 
     // Footer: buttons' tooltips
-    "Show help window": "Afficher la fenêtre d'aide",
-    "Switch full page mode": "Passer en mode pleine page",
+    "Show help window":
+        "Afficher la fenêtre d'aide",
+    "Switch full page mode":
+        "Passer en mode pleine page",
 
     // File Block tooltips
-    "Choose a file": "Choisir un fichier",
-    "Close document": "Fermer le document",
-    "Save document": "Enregistrer le document",
-    "Save": "Enregistrer",
-    "Open another .djvu file": "Ouvrir un autre fichier .djvu",
+    "Choose a file":
+        "Choisir un fichier",
+    "Close document":
+        "Fermer le document",
+    "Save document":
+        "Enregistrer le document",
+    "Save":
+        "Enregistrer",
+    "Open another .djvu file":
+        "Ouvrir un autre fichier .djvu",
 
     // Help window
     "The application for viewing .djvu files in the browser.":
@@ -111,11 +186,18 @@ export default {
         "Défilement glisser-déposer",
 
     // Contents
-    "Contents": "Table des matières",
-    "No contents provided": "Pas de sommaire",
+    "Contents":
+        "Table des matières",
+    "No contents provided":
+        "Pas de sommaire",
+    // A rare case. Open /library/assets/links.djvu in the viewer on https://djvu.js.org/ (not in the extension!)
+    // and click the "Absolute Link" in the contents
+    "The link points to another document. Do you want to proceed?":
+        null,
 
     // Text Block (shown in the text view mode)
-    "No text on this page": "Pas de texte dans cette page",
+    "No text on this page":
+        "Pas de texte dans cette page",
 
     // Save dialog (shows when you save an indirect djvu)
     "You are trying to save an indirect (multi-file) document.":
@@ -130,4 +212,22 @@ export default {
         "Téléchargement & assemblage du document",
     "The document has been downloaded and bundled into one file successfully":
         "Le document a été téléchargé, rassemblé & sauveguardé dans un seul fichier avec succès",
+
+    // Printing
+    "Print document":
+        null,
+    "Pages must be rendered before printing.":
+        null,
+    "It may take a while.":
+        null,
+    "Select the pages you want to print.":
+        null,
+    "From":
+        null,
+    "to":
+        null,
+    "Prepare pages for printing":
+        null,
+    "Preparing pages for printing":
+        null,
 };

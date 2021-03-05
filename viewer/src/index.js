@@ -5,6 +5,21 @@ DjVu.Viewer = DjVuViewer;
 
 if (process.env.NODE_ENV !== 'production') {
     window.addEventListener('load', () => {
+        if (new URLSearchParams(location.search).get('tests')) return; // do nothing in case of end-to-end tests
+
+        window.viewer = window.DjVuViewerInstance = new window.DjVu.Viewer({
+            uiOptions: {
+                // showContentsAutomatically: false,
+                // changePageOnScroll: false,
+                // onSaveNotification: {
+                //     text: "Doing this you agree with something else",
+                //     yesButton: "Maybe",
+                //     noButton: "Never!",
+                // }
+            }
+        });
+        window.DjVuViewerInstance.render(document.getElementById('root'));
+
         //window.DjVuViewerInstance.loadDocumentByUrl("/DjVu3Spec.djvu#page=10");
         window.DjVuViewerInstance.loadDocumentByUrl("/DjVu3Spec_indirect/index.djvu");
 

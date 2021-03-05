@@ -67,7 +67,7 @@ class ImageBlock extends React.Component {
 
     scrollCurrentPageIntoViewIfRequired() {
         if (this.props.viewMode === Constants.CONTINUOUS_SCROLL_MODE
-            && this.props.isPageNumberSetManually
+            && this.props.shouldScrollToPage
             && this.virtualList
             && !this.virtualList.isItemVisible(this.props.currentPageNumber - 1)) {
             this.virtualList.scrollToItem(this.props.currentPageNumber - 1);
@@ -106,13 +106,24 @@ class ImageBlock extends React.Component {
     }
 
     onWheel = (e) => {
+        if (e.ctrlKey) {
+            e.preventDefault();
+            const scaleDelta = 0.05 * (-Math.sign(e.deltaY));
+            const newScale = this.props.userScale + scaleDelta;
+            this.props.dispatch(Actions.setUserScaleAction(newScale));
+            return;
+        }
+
+        if (!this.props.changePageOnScroll) return;
+
+        // scrollTimeStamp is needed to ignore scroll events following immediately after the event which
+        // caused the page change.
         if (this.scrollTimeStamp) {
             if (e.timeStamp - this.scrollTimeStamp < 100) {
                 e.preventDefault();
                 this.scrollTimeStamp = e.timeStamp;
                 return;
             } else {
-                this.wrapper.style.overflow = null;
                 this.scrollTimeStamp = null;
             }
         }
@@ -127,13 +138,6 @@ class ImageBlock extends React.Component {
                 this.scrollToBottomOnUpdate = true;
                 this.props.dispatch(Actions.goToPreviousPageAction());
             }
-            return;
-        }
-        if (e.ctrlKey) {
-            e.preventDefault();
-            const scaleDelta = 0.05 * (-Math.sign(e.deltaY));
-            const newScale = this.props.userScale + scaleDelta;
-            this.props.dispatch(Actions.setUserScaleAction(newScale));
         }
     };
 
@@ -207,12 +211,9 @@ class ImageBlock extends React.Component {
         }
     }
 
-    _onScroll = e => {
-        this._firstScrollTimestamp = null;
+    onScroll = createDeferredHandler(() => {
         this.setNewPageNumber(this.virtualList.getCurrentVisibleItemIndex() + 1);
-    }
-
-    onScroll = createDeferredHandler(this._onScroll)
+    });
 
     getItemSizes = memoize((pageList, userScale, rotation) => {
         const isRotated = rotation === 90 || rotation === 270;
@@ -275,7 +276,7 @@ export default connect(
     state => ({
         documentId: get.documentId(state),
         currentPageNumber: get.currentPageNumber(state),
-        isPageNumberSetManually: get.isPageNumberSetManually(state),
+        shouldScrollToPage: get.shouldScrollToPage(state),
         viewMode: get.viewMode(state),
         pageList: get.pageList(state),
         pageSizeList: get.pageSizeList(state),
@@ -285,5 +286,6 @@ export default connect(
         textZones: get.textZones(state),
         cursorMode: get.cursorMode(state),
         rotation: get.pageRotation(state),
+        changePageOnScroll: get.uiOptions(state).changePageOnScroll,
     })
 )(ImageBlock);

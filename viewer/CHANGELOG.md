@@ -1,5 +1,22 @@
 # DjVu.js Viewer's Changelog
 
+## v.0.5.6 (21.02.2021)
+
+- Simplified Chinese translation.
+- UI options: a notification/agreement can be shown when a user tries to save a
+  document.
+- Save an indirect document after it's bundled with its original name.
+- UI improvement: a handle to resize the left panel.
+
+## v.0.5.5 (18.02.2021)
+
+- Translation of error messages.
+- New UI options: `showContentsAutomatically` and `changePageOnScroll`.
+- Options window.
+- Support of absolute and relative links in the table of contents.
+- Italian translation.
+- Minor improvements and corrections.
+
 ## v.0.5.4 (16.01.2021)
 
 - French translation.

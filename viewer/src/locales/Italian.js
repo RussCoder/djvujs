@@ -215,7 +215,7 @@ export default {
 
     // Printing
     "Print document":
-        "Stampa documento",
+      "Stampa documento",
     "Pages must be rendered before printing.":
         "Le pagine devono essere processate prima della stampa",
     "It may take a while.":

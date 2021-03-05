@@ -2,7 +2,7 @@
 
 The viewer is built with React and it was bootstrapped with [Create React App](https://create-react-app.dev/).
 The default build config is overridden with @craco/craco.
-Thus, to understand how it is built look at `.env` and `craco.config.js` files.
+Thus, to understand how it is built look at `.env` and `craco.config.cjs` files.
 
 The viewer is intended to be easily built into a web page via including 2 files - js and css.
 

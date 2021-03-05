@@ -42,6 +42,7 @@ export const LanguagePanel = () => {
                     <React.Fragment key={code}>
                         <LanguageItem
                             $selected={locale === code}
+                            data-djvujs-class={'language_name ' + (locale === code ? 'selected' : '')}
                             onClick={() => dispatch({
                                 type: ActionTypes.UPDATE_OPTIONS,
                                 payload: { locale: code },

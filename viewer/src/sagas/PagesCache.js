@@ -1,8 +1,8 @@
 /**
- * The logic of extracting and caching pages of a document in the discrete page mode.
+ * The logic of extracting and caching pages of a document in the single page view mode.
  * The current, the previous and the next pages are fetched (and pre-fetched).
- * A page in the format of ImageData may take about 30 MB of RAM, 
- * so it's not good to cache more than 3 ones.
+ * A page in the format of ImageData may take about 30 MB of RAM,
+ * so it's not good to cache more than 3.
  */
 
 import { fork } from 'redux-saga/effects';
@@ -17,16 +17,17 @@ export default class PagesCache {
         this.imageDataPromisePageNumber = null;
 
         this.currentPageNumber = null;
-        this.prevPageNumber = null;
-        this.nextPageNumber = null;
-
         this.lastCachingTask = null;
-
-        //window.pc = this;
     }
 
     cancelCachingTask() {
-        this.lastCachingTask && this.lastCachingTask.cancel();
+        // Actually, it should never happen, because the task is forked (not spawned),
+        // so it is cancelled automatically by "takeLatest".
+        // But it can happen, if we run the method via "yield*" in another saga rather than via dispatching the action.
+        if (this.lastCachingTask && this.lastCachingTask.isRunning()) {
+            console.warn("DjVu.js Viewer: Have to cancel the caching task manually!", this.lastCachingTask);
+            this.lastCachingTask.cancel();
+        }
         this.lastCachingTask = null;
     }
 
@@ -61,7 +62,7 @@ export default class PagesCache {
 
         this.pages = newPages;
 
-        this.cancelCachingTask(); // it should kind of be cancelled automatically, since it is forked rather than spawned, but auto cancellation doesn't work
+        this.cancelCachingTask();
         yield* this.fetchImageDataByPageNumber(currentPageNumber);
 
         if (pageNumbersToCache) {
