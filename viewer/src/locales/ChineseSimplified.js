@@ -215,19 +215,19 @@ export default {
 
     // Printing
     "Print document":
-        null,
+        "打印文档",
     "Pages must be rendered before printing.":
-        null,
+        "打印前需渲染页面，",
     "It may take a while.":
-        null,
+        "可能需要一会儿。",
     "Select the pages you want to print.":
-        null,
+        "选择你想打印的页面。",
     "From":
-        null,
+        "从",
     "to":
-        null,
+        "到",
     "Prepare pages for printing":
-        null,
+        "准备页面以打印",
     "Preparing pages for printing":
-        null,
+        "准备页面中",
 };
