@@ -1,16 +1,23 @@
 /**
- * Объект создающий фоновый поток. Предоставляет интерфейс и инкапсулирует логику связи с
+ * DjVuScript is a function containing the whole library.
+ * It's a wrapper added in the build process. Look at the build config file.
+ */
+function getLinkToTheWholeLibrary() {
+    if (!getLinkToTheWholeLibrary.url) {
+        getLinkToTheWholeLibrary.url = URL.createObjectURL(new Blob(
+            ["(" + DjVuScript.toString() + ")();"],
+            { type: 'application/javascript' }
+        ));
+    }
+    return getLinkToTheWholeLibrary.url;
+}
+
+/**
+ * Класс создающий фоновый поток. Предоставляет интерфейс и инкапсулирует логику связи с
  * объектом DjVuDocument в фоновом потоке выполнения.
- * DjVuScript is a function which containing the whole build of the library.
- * It's an additional wrapper added in the build process. Look at the build config file.
  */
 export default class DjVuWorker {
-    constructor(path = URL.createObjectURL(new Blob(["(" + DjVuScript.toString() + ")();"], { type: 'application/javascript' }))) {
-        if (typeof DjVuScript !== "function") { // just in case
-            console.warn("No DjVu Scripted detected!");
-            var script = document.querySelector('script#djvu_js_lib, script[src*="djvu."]');
-            path = script ? script.src : '/src/DjVuWorkerScript.js';
-        }
+    constructor(path = getLinkToTheWholeLibrary()) {
         this.path = path;
         this.reset();
     }
@@ -181,7 +188,13 @@ export default class DjVuWorker {
         } else {
             // it shouldn't happen, it means that one more task has been already sent
             // without waiting for a forgotten one. Or an action is sent incorrectly.
-            console.warn('DjVu.js: Something strange came from the worker.', obj);
+            // Or there is an unhandled promise rejection or an error.
+            if (obj === "unhandledrejection" || obj === "error") {
+                console.warn("DjVu.js: " + obj + " occurred in the worker!");
+                this.runNextTask();
+            } else {
+                console.warn('DjVu.js: Something strange came from the worker.', obj);
+            }
             return;
         }
 
