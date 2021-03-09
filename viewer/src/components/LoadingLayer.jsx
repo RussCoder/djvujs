@@ -19,11 +19,12 @@ const MessageWrapper = styled.div`
     left: 50%;
     transform: translate(-50%, -50%);
     opacity: 0.8;
-    font-size: 5em;
+    font-size: 3em;
     flex: 1 1 auto;
     display: flex;
     justify-content: center;
     align-items: center;
+    white-space: nowrap;
 `;
 
 export default class LoadingLayer extends React.Component {

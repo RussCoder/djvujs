@@ -52,6 +52,39 @@ export default () => {
                 dispatch({ type: ActionTypes.CLOSE_PRINT_DIALOG });
             }, isFirefox ? 100 : 0);
         };
+        const styleSheet = document.createElement('style');
+        // language=css
+        styleSheet.innerHTML = `
+            html, body {
+                margin: 0;
+                padding: 0;
+            }
+
+            img {
+                display: block;
+                margin: 0 auto;
+                /*
+                Firefox ignores "break-inside: avoid" (while Chrome seems to apply it by default)
+                so we have to use break-after.
+                */
+                break-after: ${isFirefox ? 'page' : 'auto'};
+                break-inside: avoid;
+                /* 
+                When the print scale is bigger than 100%, there can be a situation when height can be increased, but 
+                width is limited with max-width, so the proportions are distorted. To prevent this we use object-fit.                
+                */
+                object-fit: contain;
+                box-sizing: border-box;
+                /* 
+                It seems like 100vw and 100vh can be used as width and height of the paper sheet.
+                So we can fit a very big image to the paper size. 
+                */
+                max-width: 100vw;
+                max-height: 100vh;
+            }
+        `;
+        win.document.head.appendChild(styleSheet);
+
         const promises = [];
 
         for (const page of pages) {
@@ -60,16 +93,9 @@ export default () => {
             img.src = page.url;
             img.width = page.width;
             img.height = page.height;
-
-            img.style.display = 'block';
-            // don't mind if two pages fit on one sheet, but it's not good to split one image into two pages
-            img.style.breakInside = 'avoid'; // Chrome actually by default does not break images
-            if (isFirefox) { // Firefox ignores break-inside, so we have to use break-after
-                img.style.breakAfter = 'page';
-            }
-            img.style.margin = '0 auto';
             img.style.width = (page.width / page.dpi) + 'in';
             img.style.height = (page.height / page.dpi) + 'in';
+
             win.document.body.appendChild(img);
         }
 
