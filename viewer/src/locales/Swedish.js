@@ -215,19 +215,19 @@ export default {
 
     // Printing
     "Print document":
-        null,
+        "Skriv ut",
     "Pages must be rendered before printing.":
-        null,
+        "Sidorna måste renderas före utskrift.",
     "It may take a while.":
-        null,
+        "Det kan ta en stund.",
     "Select the pages you want to print.":
-        null,
+        "Välj de sidor du vill skriva ut.",
     "From":
-        null,
+        "Från",
     "to":
-        null,
+        "till",
     "Prepare pages for printing":
-        null,
+        "Förbered sidor för utskrift",
     "Preparing pages for printing":
-        null,
+        "Förbereder sidor för utskrift",
 };
