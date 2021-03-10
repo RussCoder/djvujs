@@ -5,7 +5,7 @@ var DjVu = (function () {
     'use strict';
 
     var DjVu = {
-        VERSION: '0.5.2',
+        VERSION: '0.5.3',
         IS_DEBUG: false,
         setDebugMode: (flag) => DjVu.IS_DEBUG = flag
     };
@@ -14650,13 +14650,17 @@ var DjVu = (function () {
         bundle,
     });
 
+    function getLinkToTheWholeLibrary() {
+        if (!getLinkToTheWholeLibrary.url) {
+            getLinkToTheWholeLibrary.url = URL.createObjectURL(new Blob(
+                ["(" + DjVuScript.toString() + ")();"],
+                { type: 'application/javascript' }
+            ));
+        }
+        return getLinkToTheWholeLibrary.url;
+    }
     class DjVuWorker {
-        constructor(path = URL.createObjectURL(new Blob(["(" + DjVuScript.toString() + ")();"], { type: 'application/javascript' }))) {
-            if (typeof DjVuScript !== "function") {
-                console.warn("No DjVu Scripted detected!");
-                var script = document.querySelector('script#djvu_js_lib, script[src*="djvu."]');
-                path = script ? script.src : '/src/DjVuWorkerScript.js';
-            }
+        constructor(path = getLinkToTheWholeLibrary()) {
             this.path = path;
             this.reset();
         }
@@ -14785,7 +14789,12 @@ var DjVu = (function () {
             if (commandId === this.currentCommandId || this.currentCommandId === null) {
                 this.runNextTask();
             } else {
-                console.warn('DjVu.js: Something strange came from the worker.', obj);
+                if (obj === "unhandledrejection" || obj === "error") {
+                    console.warn("DjVu.js: " + obj + " occurred in the worker!");
+                    this.runNextTask();
+                } else {
+                    console.warn('DjVu.js: Something strange came from the worker.', obj);
+                }
                 return;
             }
             if (!callbacks) return;
@@ -15381,6 +15390,14 @@ var DjVu = (function () {
     function initWorker() {
         var djvuDocument;
         var iwiw;
+        addEventListener("error", e => {
+            console.error(e);
+            postMessage("error");
+        });
+        addEventListener("unhandledrejection", e => {
+            console.error(e);
+            postMessage("unhandledrejection");
+        });
         onmessage = async function ({ data: obj }) {
             if (obj.action) return handlers[obj.action](obj);
             try {
@@ -15405,6 +15422,7 @@ var DjVu = (function () {
                 postMessage({
                     command: 'Error',
                     error: errorObj,
+                    a: () => {},
                     ...(obj.sendBackData ? { sendBackData: obj.sendBackData } : null),
                 });
             }
@@ -15430,7 +15448,7 @@ var DjVu = (function () {
         }
         function restoreHyperCallbacks(args) {
             return args.map(arg => {
-                if (typeof arg === 'object' && arg.hyperCallback) {
+                if (arg && (typeof arg === 'object') && arg.hyperCallback) {
                     return (...params) => postMessage({
                         action: 'hyperCallback',
                         id: arg.id,

@@ -75,6 +75,7 @@ The `config` is an object containing options for the viewer. It's an optional pa
 ```json5
 // any of the parameters may be omitted, use only those you need
 {
+  name: "MyDjVuDocument.djvu",
   pageNumber: 10,
   pageRotation: 90,
   pageScale: 2,
@@ -89,22 +90,41 @@ The `config` is an object containing options for the viewer. It's an optional pa
     showContentsAutomatically: false,
     onSaveNotification: {
       text: "Here is your notification/agreement for the user",
-      yesButton: "Text on the yes button", // optional
-      noButton: "Text on the no button", // optional
+      yesButton: "Text on the yes button",
+      // optional
+      noButton: "Text on the no button",
+      // optional
     },
+    hideOpenAndCloseButtons: false,
+    hidePrintButton: true,
+    hideSaveButton: false,
   },
 }
 ```
 
-- `pageNumber` - the number of a currently opened page. Greater than or equal to 1. If it's less than 1, 1 will be used, if it's greater than the 
-  total number of pages in a document, then the last page number will be used.
+- `name` - the visible name of the opened document. It is also used when the
+  document is saved.
+- `pageNumber` - the number of the currently opened page. Greater than or equal
+  to 1. If it's less than 1, 1 will be used, if it's greater than the total
+  number of pages in a document, then the last page number will be used.
 - `pageRotation` - the rotation of a page, it can be 0, 90, 180, 270.
-- `pageScale` - the scale of a page, it is a number from 0.1 to 6 (~ 10% to 600%). Numbers less/greater than the limits are replaced by the limits themselves, to wit, 8 will be treated as 6, and 0.001 as 0.1, 0 will be ignored at all and the default scale value (which is 1) will be used.  
+- `pageScale` - the scale of a page, it is a number from 0.1 to 6 (~ 10% to
+  600%). Numbers less/greater than the limits are replaced by the limits
+  themselves, to wit, 8 will be treated as 6, and 0.001 as 0.1, 0 will be
+  ignored at all, and the default scale value (which is 1) will be used.
 - `language` - 2-character language code like `ru`, `en`, `sv` etc.
-Use `DjVu.Viewer.getAvailableLanguages()`to get the full list of languages which can be used.
-Note, you also can [add your own language](https://github.com/RussCoder/djvujs/blob/master/TRANSLATION.md).
-- `theme` - the color theme. Either `light` or `dark`. By default the browser's color scheme is used (or the value save in the local storage).
-- `djvuOptions` - an object which is passed to the library. Now there is only one option - the base url, which is the url to the directory containing the files of an indirect djvu. For bundled djvu this parameter is not required. The base url is extracted automatically from a url to the index.djvu, when the `loadDocumentByUrl` is called, but in case of `loadDocument` method, this parameter should be provided manually.
+  Use `DjVu.Viewer.getAvailableLanguages()`to get the full list of languages
+  which can be used. Note, you also
+  can [add your own language](https://github.com/RussCoder/djvujs/blob/master/TRANSLATION.md)
+  .
+- `theme` - the color theme. Either `light` or `dark`. By default the browser's
+  color scheme is used (or the value save in the local storage).
+- `djvuOptions` - an object which is passed to the library. Now there is only
+  one option - the base url, which is the url to the directory containing the
+  files of an indirect djvu. For bundled djvu this parameter is not required.
+  The base url is extracted automatically from a url to the index.djvu, when
+  the `loadDocumentByUrl` is called, but in case of `loadDocument` method, this
+  parameter should be provided manually.
 - `uiOptions` - options to adjust the UI of the viewer:
   - `hideFullPageSwitch` - if `true` there will be no full-page mode switch. It
     may be used, if the viewer takes the whole page by default, so the switch is
@@ -122,6 +142,10 @@ Note, you also can [add your own language](https://github.com/RussCoder/djvujs/b
     `noButton` (optional) - what is written on the "no" button. It's needed if
     you want to show some notification/agreement to the user when he tries to
     download a document.
+  - `hideOpenAndCloseButtons` - if `true` the document cannot be changed via the
+    user interface.
+  - `hidePrintButton` - hides the print button when `true`.
+  - `hideSaveButton` - hides the save button when `true`.
 
 There are several static methods and properties:
 
