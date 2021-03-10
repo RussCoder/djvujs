@@ -151,7 +151,7 @@ class RootSaga {
     }
 
     * createDocumentFromArrayBuffer({ arrayBuffer, fileName, config }) {
-        this.resetWorker();
+        this.resetWorkerAndStorages();
 
         this.documentContructorData = {
             buffer: arrayBuffer.slice(0),
@@ -262,7 +262,8 @@ class RootSaga {
         }
     }
 
-    resetWorker() {
+    resetWorkerAndStorages() {
+        this.pageStorage.reset();
         this.pagesCache.resetPagesCache();
         this.djvuWorker.reset();
         this.isBundling = false;
@@ -385,7 +386,7 @@ class RootSaga {
             config.djvuOptions = { baseUrl: new URL('./', responseURL).href };
             yield* this.createDocumentFromArrayBuffer({
                 arrayBuffer: buffer,
-                fileName: config.name || getFileNameFromUrl(url),
+                fileName: config.name === undefined ? getFileNameFromUrl(url) : config.name,
                 config: config
             });
 
@@ -458,7 +459,7 @@ class RootSaga {
         yield takeLatest(Constants.SET_NEW_PAGE_NUMBER_ACTION, this.withErrorHandler(this.fetchPageData));
         yield takeLatest(Constants.SET_PAGE_BY_URL_ACTION, this.withErrorHandler(this.setPageByUrl));
         yield takeLatest(ActionTypes.SAVE_DOCUMENT, this.withErrorHandler(this.saveDocument));
-        yield takeLatest(Constants.CLOSE_DOCUMENT_ACTION, this.withErrorHandler(this.resetWorker));
+        yield takeLatest(Constants.CLOSE_DOCUMENT_ACTION, this.withErrorHandler(this.resetWorkerAndStorages));
         yield takeLatest(Constants.SET_API_CALLBACK_ACTION, this.withErrorHandler(this.setCallback));
         yield takeLatest(Constants.ENABLE_CONTINUOUS_SCROLL_MODE_ACTION, this.withErrorHandler(this.switchToContinuousScrollMode));
         yield takeLatest(Constants.ENABLE_SINGLE_PAGE_MODE_ACTION, this.withErrorHandler(this.switchToSinglePageMode));

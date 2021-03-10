@@ -76,7 +76,7 @@ class FileBlock extends React.Component {
                 title={t("Open another .djvu file")}
             >
                 <FileIcon icon={faUpload} />
-                <FileName>{this.props.fileName || t("Choose a file")}</FileName>
+                <FileName>{this.props.fileName == null ? t("Choose a file") : (this.props.fileName || '')}</FileName>
                 <input
                     style={{ display: 'none' }}
                     type="file"

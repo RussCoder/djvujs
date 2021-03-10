@@ -100,7 +100,10 @@ export default () => {
         }
 
         if (isFirefox) {
-            win.print(); // Firefox shows blank pages if we wait for images (although prints correctly)
+            // Firefox shows blank pages if we wait for images (although prints correctly)
+            // Also, it seems to not fire "load" event if the images have been already shown before
+            // (as pages in the continuous scroll mode) in the browser extension.
+            win.print();
         } else {
             // Chrome shows empty images on pages if we do not wait
             Promise.all(promises).then(() => win.print());

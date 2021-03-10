@@ -28,6 +28,9 @@ const initialState = Object.freeze({
         hideFullPageSwitch: false,
         changePageOnScroll: true,
         showContentsAutomatically: true,
+        hideOpenAndCloseButtons: false,
+        hidePrintButton: false,
+        hideSaveButton: false,
     },
 });
 
@@ -148,7 +151,7 @@ export const get = {
     options: state => state.options,
     isFullPageView: state => state.isFullPageView,
     isLoading: state => state.isLoading,
-    isDocumentLoaded: state => !!state.fileName,
+    isDocumentLoaded: state => !!state.pagesQuantity,
     viewMode: state => {
         if (!state.isIndirect && state.isContinuousScrollMode) {
             return Constants.CONTINUOUS_SCROLL_MODE;

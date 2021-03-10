@@ -3,7 +3,5 @@
 node_modules
 _src
 build
-extension/djvu.js
-extension/djvu_viewer.js
-extension/djvu_viewer.css
+extension/dist
 extension/web-ext-artifacts

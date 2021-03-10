@@ -17,7 +17,7 @@ const Events = constant({
 
 export default class DjVuViewer extends EventEmitter {
 
-    static VERSION = '0.5.6';
+    static VERSION = '0.6.0';
 
     static Events = Events;
 
@@ -110,6 +110,9 @@ export default class DjVuViewer extends EventEmitter {
           hideFullPageSwitch: boolean,
           changePageOnScroll: boolean,
           showContentsAutomatically: boolean,
+          hideOpenAndCloseButtons: boolean,
+          hidePrintButton: boolean,
+          hideSaveButton: boolean,
        }} uiOptions
      * @returns {DjVuViewer}
      */

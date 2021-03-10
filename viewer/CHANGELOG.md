@@ -1,5 +1,10 @@
 # DjVu.js Viewer's Changelog
 
+## v.0.6.0 (10.03.2021)
+
+- Print function.
+- New UI options to hide open, close, print and save buttons.
+
 ## v.0.5.6 (21.02.2021)
 
 - Simplified Chinese translation.

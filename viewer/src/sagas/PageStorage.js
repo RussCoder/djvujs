@@ -10,6 +10,10 @@ export default class PageStorage {
         this.pages = {};
     }
 
+    reset() {
+        this.removeAllPages();
+    }
+
     getAllPageNumbers() {
         return Object.keys(this.pages);
     }

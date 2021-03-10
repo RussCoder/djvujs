@@ -21,6 +21,12 @@ const Root = styled.div`
     }
 `;
 
+const RightButtonsBlock = styled.div`
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+`;
+
 function Footer() {
     const { hideFullPageSwitch } = useSelector(get.uiOptions);
 
@@ -28,9 +34,11 @@ function Footer() {
         <Root data-djvujs-id="footer">
             <StatusBar />
             <FilePanel />
-            <HelpButton />
-            <OptionsButton />
-            {hideFullPageSwitch ? null : <FullPageViewButton />}
+            <RightButtonsBlock>
+                <HelpButton />
+                <OptionsButton />
+                {hideFullPageSwitch ? null : <FullPageViewButton />}
+            </RightButtonsBlock>
         </Root>
     );
 }
