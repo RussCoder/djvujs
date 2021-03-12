@@ -84,12 +84,12 @@ If you have some problems, read the technical documentation or create an issue. 
 
 The DjVu.js Library is distributed under the terms of [GNU GPL v2](GNU_GPL_v2).
 Everything else in this repository (including the DjVu.js Viewer and the browser
-extension) is under [The Unlicense](UNLICENSE). Read more in
+extension) is under [The Unlicense](THE_UNLICENSE). Read more in
 the [LICENSE file](LICENSE.md).
 
 <hr>
 
 Библиотека DjVu.js распространяется под лицензией [GNU GPL v2](GNU_GPL_v2). Все
 остальное в этом репозитории (включая DjVu.js Viewer и расширение для браузера)
-является общественным достоянием ([The Unlicense](UNLICENSE)). Читайте подробнее
+является общественным достоянием ([The Unlicense](THE_UNLICENSE)). Читайте подробнее
 в [файле лицензии](LICENSE.md).
