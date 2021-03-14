@@ -58,6 +58,8 @@ export default () => {
             html, body {
                 margin: 0;
                 padding: 0;
+                height: 100%;
+                width: 100%;
             }
 
             img {
@@ -76,11 +78,12 @@ export default () => {
                 object-fit: contain;
                 box-sizing: border-box;
                 /* 
-                It seems like 100vw and 100vh can be used as width and height of the paper sheet.
-                So we can fit a very big image to the paper size. 
+                It seems like 100vw and 100vh can be used as width and height of the paper sheet in Chrome and Firefox.
+                But in Safari they seem to correspond to the size of the iframe, which is 0, so empty pages are printed.
+                So we use 100% width and height here (and for html and body too) to fit big images to the paper size. 
                 */
-                max-width: 100vw;
-                max-height: 100vh;
+                max-width: 100%;
+                max-height: 100%;
             }
         `;
         win.document.head.appendChild(styleSheet);
