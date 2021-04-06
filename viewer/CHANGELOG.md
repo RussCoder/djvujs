@@ -1,5 +1,10 @@
 # DjVu.js Viewer's Changelog
 
+## v.0.6.2 (06.04.2021)
+
+- Spanish and Portuguese translations.
+- French translation update.
+
 ## v.0.6.1 (14.03.2021)
 
 - Fixed print CSS to avoid printing empty pages in Safari.

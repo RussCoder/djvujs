@@ -15,219 +15,219 @@
 export default {
     // language info
     englishName:
-        "French",
+        "Spanish",
     nativeName:
-        "Français",
+        "Castellano",
 
     "Language":
-        "Langue", // not used now, but will be used in options afterwards
+        "Idioma", // not used now, but will be used in options afterwards
 
     // Translation: tooltips and notification
     // (to see the notification window, remove several phrases from any dictionary, except for the English one)
     "Add more":
-        "Ajouter une traduction",
+        "Añadir mas",
     "The translation isn't complete.":
-        "La traduction n'est pas terminée.",
+        "La traducción está incompleta.",
     "The following phrases are not translated:":
-        "Les assertions suivantes n'ont pas été traduites:",
+        "Las siguientes frases no estan traduccidas:",
     "You can improve the translation here":
-        "Vous pouvez améliorer la traduction ici",
+        "Puedes mejorar la traducción aquí",
 
     // Initial screen
     "#helpButton - learn more about the app":
-        "#helpButton - à propos",
+        "#helpButton - saber más sobre la aplicación",
     "#optionsButton - see the available options":
-        "#helpButton - options disponibles",
+        "#optionsButton - ver las opciones disponibles",
     "powered with":
-        "basé sur",
+        "Powered  with",
     "Drag & Drop a file here or click to choose manually":
-        "Glisser-Déposer ici un fichier, ou cliquer pour le slectionner manuellement",
+        "Arrastrar y soltar un archivo o click para elegirlo manualmente",
     "Paste a URL to a djvu file here":
-        "Copier un lien vers un fichier .djvu",
+        "Pegar una URL al archivo djvu aquí",
     "Open URL":
-        "Ouvrir le lien",
+        "Abrir URL",
     'Enter a valid URL (it should start with "http(s)://")': // an alert shown when you try to open an empty URL
-        'Insérer une URL valide (doit commencer par "http(s)://")',
+        'Introducir una URL válida (debe comenzar con "http(s)://")',
 
     // Errors. Usually there is a header and a message for each error type.
     // For the web request error there are different types of messages depending on the HTTP status.
     // The ways to see the errors in the viewer are described in comments below.
     // In case of web requests you can load links via the browser extension (via the URL field on the initial screen)
     "Error":
-        "Erreur",
+        "Error",
     "Error on page":
-        "Erreur dans la page", // Open 'library/assets/czech_indirect/index.djvu
+        "Error en la página", // Open 'library/assets/czech_indirect/index.djvu
     "Network error":
-        "Erreur de réseau", // Disable internet connection and try to load something by URL
+        "Error de red", // Disable internet connection and try to load something by URL
     "Check your network connection":
-        "Vérifier votre connexion internet",
+        "Compruebe su conexión a la red",
     // Load any URL to a nonexistent page on the Internet,
     // e.g. https://djvu.js.org/nonexistentpage
     "Web request error":
-        "Erreur de requête web",
+        "Error en la solicitud de la web",
     "404 Document not found":
-        "404 Dcument non trouvé",
+        "404 Documento no encontrado",
     "403 Access forbidden":
-        "403 Accès interdit",
+        "403 Acceso prohibido",
     "500 Internal server error":
-        "500 Erreur interne du serveur",
+        "500 Error interno del servidor",
     "The request failed with HTTP status #status":
-        "La requête a échouée avec le statut HTTP #status",
+        "La solicitud ha fallado con el estado HTTP #status",
     "DjVu file is corrupted": // Open "/library/assets/czech_indirect/dict0085.iff"
-        "Le fichier DjVu est corrompu",
+        "El archivo DjVu esta corrupto",
     "The file doesn't comply with the DjVu format specification or it's not a whole DjVu document":
-        "Le fichier ne respecte pas la spécification du format DjVu ou il s'agit d'un document DjVu incomplet",
+        "El archivo no cumple con la especificación del formato DjVu o no es un documento DjVu completo",
     "Incorrect file format": // Open a not-djvu file.
-        "Format de fichier incorrect",
+        "Formato de archivo incorrecto",
     "The provided file is not a DjVu document":
-        "Le fichier fourni n'est pas un document DjVu",
+        "El archivo proporcionado no es un documento DjVu",
     // Load a URL to a DjVu file with "#page=100500" at the end (both in continuous scroll and single-page view modes)
     // e.g. https://djvu.js.org/assets/djvu_examples/DjVu3Spec.djvu#page=100500
     "Incorrect page number":
-        "Numéro de page incorrect",
+        "Número de página incorrecto",
     "There is no page with the number #pageNumber":
-        "Il n'existe pas de page avec le numéro #pageNumber",
+        "No hay ninguna página con el número #pageNumber",
     // "baseURL" is a URL to a document directory,
     // all links inside the document index.djvu are considered relative to this URL.
     // The term "base URL" can be translated as "a URL to the document's folder".
     "No base URL for an indirect DjVu document":  // Open "/library/assets/czech_indirect/index.djvu"
-        "URL de base manquante du document DjVu indirect (multi-fichier)",
+        "No hay URL base para un documento DjVu indirecto",
     "You probably opened an indirect (multi-file) DjVu document manually.":
-        "Vous avez probablement ouvert manuellement un document DjVu indirect (multi-fichier).",
+        "Probablemente haya abierto manualmente un documento DjVu indirecto (de varios archivos).",
     "But such multi-file documents can be only loaded by URL.":
-        "Mais de tels documents multi-fichier ne peuvent être ouvert que par URL",
+        "Pero estos documentos de varios archivos sólo pueden cargarse por URL.",
     "Unexpected error": // Of course there is no standard way to produce this kind of error
-        "Erreur inconnue",
+        "Error inesperado",
     "Cannot print the error, look in the console":
-        "Impossible de rapporter l'erreur, regarder dans la console.",
+        "No se puede imprimir el error, mira en la consola",
 
     // Options and its tooltips
     "Options":
-        "Options",
+        "Opciones",
     "Show options window":
-        "Afficher la fenêtre d'option",
+        "Mostrar ventana de opciones",
     "Color theme":
-        "Changer de thème",
+        "Tema de color",
     "Extension options":
-        "Options de l'extension", // the options of the browser extension
+        "Opciones de extensión", // the options of the browser extension
     "Open all links with .djvu at the end via the viewer":
-        "Ouvrir tous les liеns .djvu avec l'extension",
+        "Abrir todos los enlaces con .djvu al final a través del visor",
     "All links to .djvu files will be opened by the viewer via a simple click on a link":
-        "Tous les liens .djvu seront ouverts avec l'extension en cliquant simplement sur le lien",
+        "Todos los enlaces a archivos .djvu serán abiertos por el visor mediante un clic simple en un enlace",
     "Detect .djvu files by means of http headers":
-        "Identifier les fichiers .djvu par leur en-tête http",
+        "Detectar archivos .djvu mediante cabeceras http",
     "Analyze headers of every new tab in order to process even links which do not end with the .djvu extension":
-        "Analyser les en-têtes de chaque nouvel onglet pour identifier les fichiers même sans l'extension .djvu en fin de lien",
+        "Analizar las cabeceras de cada nueva pestaña para procesar incluso los enlaces que no terminan con la extensión .djvu",
 
     // Footer: status bar
     "Ready":
-        "Prêt",
+        "Listo",
     "Loading":
-        "Chargement",
+        "Cargando",
 
     // Footer: buttons' tooltips
     "Show help window":
-        "Afficher la fenêtre d'aide",
+        "Mostrar ventana de ayuda",
     "Switch full page mode":
-        "Passer en mode pleine page",
+        "Cambiar el modo de página completa",
 
     // File Block tooltips
     "Choose a file":
-        "Choisir un fichier",
+        "Seleccionar archivo",
     "Close document":
-        "Fermer le document",
+        "Cerrar documento",
     "Save document":
-        "Enregistrer le document",
+        "Guardar documento",
     "Save":
-        "Enregistrer",
+        "Guardar",
     "Open another .djvu file":
-        "Ouvrir un autre fichier .djvu",
+        "Abrir otro archivo .djvu",
 
     // Help window
     "The application for viewing .djvu files in the browser.":
-        "Une application pour afficher des fichiers .djvu dans le naviguateur.",
+        "La aplicación para ver archivos .djvu en el navegador.",
     "If something doesn't work properly, feel free to write about the problem at #email.":
-        "Si quelque chose ne fonctionne pas correctement, vous pouvez écrire à #email.",
+        "Si algo no funciona correctamente, no dudes en escribir sobre el problema en #email.",
     "The official website is #website.":
-        "Le site officiel est #website.",
+        "El sitio web oficial es #website.",
     "The source code is available on #link.":
-        "Le code source est disponible à l'adresse: #link.",
+        "El código fuente está disponible en #link.",
     "Hotkeys":
-        "Raccourcis Clavier",
+        "Atajos de teclado",
     "save the document":
-        "enregistrer le document",
+        "Guardar el documento",
     "go to the previous page":
-        "page précédente",
+        "ir a la página anterior",
     "go to the next page":
-        "page suivante",
+        "ir a la página siguiente",
     "Controls":
-        "Boutons",
+        "Controles",
     "#expandIcon and #collapseIcon are to switch the viewer to the full page mode and back.":
-        "#expandIcon & #collapseIcon permettent de passer en mode pleine page et inversement.",
+        "#expandIcon y #collapseIcon son para cambiar el visor al modo de página completa y viceversa.",
     "If you work with the browser extension, these buttons will cause no effect, since the viewer takes the whole page by default.":
-        "Si vous utilisez l'extension pour navigateur, ces boutons n'auront aucun effet, car l'application occupe déjà toute la page.",
+        "Si trabaja con la extensión del navegador, estos botones no causarán ningún efecto, ya que el visor toma toda la página por defecto.",
 
     // Toolbar tooltips
     "Continuous scroll view mode":
-        "Mode défilement continu",
+        "Modo de scroll continuo",
     "Single page view mode":
-        "Mode page unique",
+        "Modo de vista de una sola página",
     "Text view mode":
-        "Mode texte",
+        "Modo de vista de texto",
     "Click on the number to enter it manually":
-        "Cliquer sur le nombre pour en saisir un manuellement",
+        "Haga clic en el número para introducirlo manualmente",
     "Rotate the page":
-        "Faire pivoter la page",
+        "Rotar página",
     "You also can scale the page via Ctrl+MouseWheel":
-        "Vous pouvez également ajuster la page avec Ctrl+Molette",
+        "También puede escalar la página mediante Ctrl+Rueda del ratón",
     "Text cursor mode":
-        "Curseur pour mettre le texte en surbrillance",
+        "Modo cursor de texto",
     "Grab cursor mode":
-        "Défilement glisser-déposer",
+        "Modo cursor de agarre",
 
     // Contents
     "Contents":
-        "Table des matières",
+        "Contenido",
     "No contents provided":
-        "Pas de sommaire",
+        "No se proporciona ningún contenido",
     // A rare case. Open /library/assets/links.djvu in the viewer on https://djvu.js.org/ (not in the extension!)
     // and click the "Absolute Link" in the contents
     "The link points to another document. Do you want to proceed?":
-        "Le lien redirige vers un autre document. Voulez-vous continuer ?",
+        "El enlace apunta a otro documento. ¿Desea continuar?",
 
     // Text Block (shown in the text view mode)
     "No text on this page":
-        "Pas de texte dans cette page",
+        "No hay texto en esta página",
 
     // Save dialog (shows when you save an indirect djvu)
     "You are trying to save an indirect (multi-file) document.":
-        "Vous essayez d'enregistrer un document multi-fichier ",
+        "Está intentando guardar un documento indirecto (de varios archivos)",
     "What exactly do you want to do?":
-        "Que voulez-vous faire ?",
+        "¿Qué quiere hacer exactamente?",
     "Save only index file":
-        "Enregistrer uniquement le fichier racine",
+        "Guardar sólo el archivo de índice",
     "Download, bundle and save the whole document as one file":
-        "Télécharger, rassembler & sauveguarder l'ensemble du document dans un seul fichier",
+        "Descargue, agrupe y guarde todo el documento como un solo archivo",
     "Downloading and bundling the document":
-        "Téléchargement & assemblage du document",
+        "Descargando y agrupando el documento",
     "The document has been downloaded and bundled into one file successfully":
-        "Le document a été téléchargé, rassemblé & sauveguardé dans un seul fichier avec succès",
+        "El documento ha sido descargado y agrupado en un archivo con éxito",
 
     // Printing
     "Print document":
-        "Imprimer le document",
+        "Imprimir documento",
     "Pages must be rendered before printing.":
-        "Les pages doivent être rendues avant impression",
+        "Las páginas deben ser renderizadas antes de la impresión.",
     "It may take a while.":
-        "Cela peut prendre un moment",
+        "Puede llevar un tiempo.",
     "Select the pages you want to print.":
-        "Sélectionner la page à imprimer",
+        "Seleccione las páginas que desea imprimir.",
     "From":
-        "De",
+        "Desde",
     "to":
-        "à",
+        "hasta",
     "Prepare pages for printing":
-        "Préparer les pages pour l'impression",
+        "Preparar las páginas para la impresión",
     "Preparing pages for printing":
-        "Préparation des pages pour l'impression",
+        "Preparando páginas para imprimir",
 };
