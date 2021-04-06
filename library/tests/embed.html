@@ -1,24 +1,42 @@
 <!-- A page to test the browser extension, namely how the viewer builds into a third party page-->
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Embed test page</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            height: 100vh;
+        }
+
+        body > * {
+            margin: 1em 0;
+        }
+
+        iframe {
+            width: 600px;
+            height: 400px;
+        }
+    </style>
 </head>
 
-<body style="height: 100vh">
+<body>
+    <!-- It should be processed via request interception. This feature is needed for old websites where the main part is an iframe -->
+    <iframe src="/assets/boy.djvu"></iframe>
+    <!-- This iframe should be processed by content script, despite that its src ends with ".djvu" -->
+    <iframe src="/get_embed_djvu_html?file=/assets/boy.djvu"></iframe>
     <object type="image/x.djvu" data="/assets/boy.djvu" width="10" height="10">
         <param name="src" value="/assets/boy.djvu">
     </object>
+    <embed type="image/x-djvu" src="/assets/DjVu3Spec.djvu" width="600">
+    <embed type="image/vnd.djvu" src="/assets/malliavin.djvu" width="600" height="82%">
     <object classid="clsid:0e8d0700-75df-11d3-8b4a-0008c7450c4a" width="100%" height="100%">
         <param name="src" value="/assets/czech.djvu">
     </object>
-    <embed type="image/x-djvu" src="/assets/DjVu3Spec.djvu" width="600">
-    <embed type="image/vnd.djvu" src="/assets/malliavin.djvu" width="600" height="82%">
 </body>
 
 </html>

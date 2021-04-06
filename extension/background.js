@@ -68,12 +68,18 @@ const registerViewerTab = tabId => {
     }
 };
 
+const executeScript = (src, sender) => promisify(chrome.tabs.executeScript)(sender.tab.id, {
+    frameId: sender.frameId,
+    file: src,
+    runAt: "document_end"
+});
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (sender.tab && message === "include_scripts") {
         Promise.all([
-            promisify(chrome.tabs.executeScript)(sender.tab.id, { frameId: sender.frameId, file: 'djvu.js', runAt: "document_end" }),
-            promisify(chrome.tabs.executeScript)(sender.tab.id, { frameId: sender.frameId, file: 'djvu_viewer.js', runAt: "document_end" }),
-            promisify(chrome.tabs.insertCSS)(sender.tab.id, { frameId: sender.frameId, file: 'djvu_viewer.css', runAt: "document_end" })
+            executeScript('dist/djvu.js', sender),
+            executeScript('dist/djvu_viewer.js', sender),
+            //promisify(chrome.tabs.insertCSS)(sender.tab.id, { frameId: sender.frameId, file: 'djvu_viewer.css', runAt: "document_end" })
         ]).then(() => {
             sendResponse();
         })
@@ -125,7 +131,11 @@ chrome.webRequest.onBeforeRequest.addListener(details => {
 // it shouldn't be the same function as the file opening interceptor,
 // since this event listener can be removed independently from the file opening interceptor
 const requestInterceptor = details => {
-    return { redirectUrl: getViewerUrl(details.url) };
+    // http://*/*.djvu also corresponds to "http://localhost/page.php?file=doc.djvu"
+    // so we have to add this additional check, because it's not a link to a file.
+    if (/\.djvu?$/.test(new URL(details.url).pathname)) {
+        return { redirectUrl: getViewerUrl(details.url) };
+    }
 }
 
 const onBeforeRequest = chrome.webRequest.onBeforeRequest;
