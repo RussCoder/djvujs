@@ -37,6 +37,11 @@ const ContinuousScrollItem = styled.div`
     transform: translate3d(0, 0, 0); // just for performance optimization when continuos mode is enabled
 `;
 
+function resetEventListener(node, event, handler, options = undefined) {
+    node.removeEventListener(event, handler, options);
+    node.addEventListener(event, handler, options);
+}
+
 /**
  * CanvasImage wrapper. Handles user scaling of the image and grabbing.
  */
@@ -65,9 +70,11 @@ class ImageBlock extends React.Component {
         return { horizontalRatio, verticalRatio };
     }
 
-    scrollCurrentPageIntoViewIfRequired() {
+    scrollCurrentPageIntoViewIfRequired(prevProps) {
         if (this.props.viewMode === Constants.CONTINUOUS_SCROLL_MODE
             && this.props.shouldScrollToPage
+            && (prevProps.currentPageNumber !== this.props.currentPageNumber
+                || prevProps.viewMode !== Constants.CONTINUOUS_SCROLL_MODE)
             && this.virtualList
             && !this.virtualList.isItemVisible(this.props.currentPageNumber - 1)) {
             this.virtualList.scrollToItem(this.props.currentPageNumber - 1);
@@ -181,21 +188,15 @@ class ImageBlock extends React.Component {
 
     wrapperRef = (node) => {
         this.wrapper = node;
-        if (node) {
-            node.removeEventListener('mousedown', this.startMoving);
-            node.removeEventListener('mouseup', this.finishMoving);
-            node.removeEventListener('mouseleave', this.finishMoving);
+        if (!node) return;
 
-            node.addEventListener('mousedown', this.startMoving);
-            node.addEventListener('mouseup', this.finishMoving);
-            node.addEventListener('mouseleave', this.finishMoving);
-            node.removeEventListener('wheel', this.onWheel);
-            node.addEventListener('wheel', this.onWheel);
+        resetEventListener(node, 'mousedown', this.startMoving);
+        resetEventListener(node, 'mouseup', this.finishMoving);
+        resetEventListener(node, 'mouseleave', this.finishMoving);
+        resetEventListener(node, 'wheel', this.onWheel);
 
-            if (this.props.viewMode === Constants.CONTINUOUS_SCROLL_MODE) {
-                node.removeEventListener('scroll', this.onScroll);
-                node.addEventListener('scroll', this.onScroll);
-            }
+        if (this.props.viewMode === Constants.CONTINUOUS_SCROLL_MODE) {
+            resetEventListener(node, 'scroll', this.onScroll, { passive: true });
         }
     }
 
