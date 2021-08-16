@@ -13,7 +13,7 @@ const Root = styled.div`
     width: 100%;
     display: flex;
     justify-content: flex-start;
-    padding: 0.4em 0;
+    padding: 0.2em 0;
     align-items: center;
 
     ${ControlButton} {

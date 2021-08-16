@@ -14,7 +14,7 @@ const Root = styled.div`
     width: 100%;
     height: 100%;
     display: flex;
-    padding: 0.5em;
+    padding: 5px;
     box-sizing: border-box;
     overflow: hidden;
 `;

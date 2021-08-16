@@ -17,6 +17,7 @@ const initialState = Object.freeze({
     isOptionsWindowOpened: false,
     isContinuousScrollMode: false,
     isIndirect: false,
+    isContentsOpened: false,
     options: { // all these options are saved in localStorage
         interceptHttpRequests: true, // this value MUST BE DUPLICATED in the extension code
         analyzeHeaders: false, // this value MUST BE DUPLICATED in the extension code
@@ -105,7 +106,8 @@ export default (state = initialState, action) => {
         case Constants.CONTENTS_IS_GOTTEN_ACTION:
             return {
                 ...state,
-                contents: action.contents
+                contents: action.contents,
+                isContentsOpened: state.uiOptions.showContentsAutomatically && !!action.contents,
             };
 
         case Constants.SET_USER_SCALE_ACTION:
@@ -119,6 +121,12 @@ export default (state = initialState, action) => {
                 ...state,
                 isFullPageView: action.isFullPageView
             }
+
+        case ActionTypes.CLOSE_CONTENTS:
+            return { ...state, isContentsOpened: false };
+
+        case ActionTypes.TOGGLE_CONTENTS:
+            return { ...state, isContentsOpened: !state.isContentsOpened };
 
         case ActionTypes.ERROR:
             return {
@@ -136,6 +144,7 @@ export default (state = initialState, action) => {
 }
 
 export const get = {
+    isContentsOpened: state => state.isContentsOpened,
     dictionary: state => dictionaries[get.options(state).locale] || dictionaries.en,
     isOptionsWindowOpened: state => state.isOptionsWindowOpened,
     uiOptions: state => state.uiOptions,

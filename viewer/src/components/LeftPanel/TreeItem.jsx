@@ -3,24 +3,14 @@ import PropTypes from 'prop-types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMinusSquare, faPlusSquare } from '@fortawesome/free-regular-svg-icons';
 import { faCircle } from '@fortawesome/free-solid-svg-icons';
-import { css } from 'styled-components';
+import styled from 'styled-components';
 
-const style = css`
-    display: flex;
+const Name = styled.div`
+    cursor: pointer;
+    margin-left: 0.5em;
 
-    .content {
-        .name {
-            cursor: pointer;
-            margin-left: 0.5em;
-
-            &:hover {
-                text-decoration: underline;
-            }
-        }
-
-        .children {
-            padding-left: 0.5em;
-        }
+    &:hover {
+        text-decoration: underline;
     }
 `;
 
@@ -47,7 +37,7 @@ export default class TreeItem extends React.Component {
             return null;
         }
         return (
-            <div className="children">
+            <div css={`padding-left: 0.5em;`}>
                 {this.props.children.map((treeItem, i) => {
                     return <TreeItem key={i} {...treeItem} />
                 })}
@@ -61,15 +51,15 @@ export default class TreeItem extends React.Component {
 
     render() {
         return (
-            <div css={style}>
+            <div css={`display: flex;`}>
                 {this.props.children ?
                     <FontAwesomeIcon
                         icon={this.state.isCollapsed ? faPlusSquare : faMinusSquare}
                         onClick={this.toggleItem}
                     /> : <FontAwesomeIcon icon={faCircle} transform="shrink-8" />
                 }
-                <div className="content">
-                    <div className="name" onClick={this.onClick}>{this.props.name}</div>
+                <div>
+                    <Name className="name" onClick={this.onClick}>{this.props.name}</Name>
                     {this.state.isCollapsed ? null : this.renderChildren()}
                 </div>
             </div>

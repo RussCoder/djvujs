@@ -1,10 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTimesCircle } from '@fortawesome/free-regular-svg-icons';
 import styled, { css } from 'styled-components';
-import { iconButton } from '../cssMixins';
+import CloseButton from "../CloseButton";
 
 const style = css`
     z-index: 0; // to make windows with their dark layers lie one on top of another when they are created in sequence 
@@ -47,15 +45,6 @@ const ModalWindowRoot = styled.div`
     ` : ''};
 `;
 
-const closeButtonStyle = css`
-    ${iconButton};
-    font-size: 24px;
-    display: block;
-    height: var(--closeButtonBlockHeight);
-    padding-right: 2px;
-    margin-left: auto;
-`;
-
 const ContentWrapper = styled.div`
     overflow: auto;
     padding-bottom: var(--closeButtonBlockHeight);
@@ -93,11 +82,9 @@ export default class ModalWindow extends React.Component {
                     $error={isError}
                     $fixedSize={isFixedSize}
                 >
-                    <FontAwesomeIcon
-                        css={closeButtonStyle}
-                        icon={faTimesCircle}
+                    <CloseButton
                         onClick={onClose}
-                        data-djvujs-class="close_button"
+                        css={`height: var(--closeButtonBlockHeight);`}
                     />
                     <ContentWrapper>
                         {this.props.children}

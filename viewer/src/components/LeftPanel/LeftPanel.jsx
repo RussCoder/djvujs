@@ -3,18 +3,18 @@ import { connect } from 'react-redux';
 
 import ContentsPanel from './ContentsPanel';
 import { get } from '../../reducers';
-import styled, { css } from 'styled-components';
+import styled from 'styled-components';
+import { ActionTypes } from "../../constants";
 
-const minWidth = '0.4em';
+const closeWidth = 40;
 
-const style = css`
+const Root = styled.div`
     flex: 0 0 auto;
     border: 1px solid var(--border-color);
     border-radius: 1em 0 1em 0;
     box-sizing: border-box;
     width: 20%;
-    max-width: 90%;
-    min-width: ${minWidth};
+    max-width: 80%;
 `;
 
 const Border = styled.div`
@@ -71,19 +71,21 @@ class LeftPanel extends React.Component {
         window.removeEventListener('mousemove', this.onResizing);
         window.removeEventListener('mouseup', this.onEndResizing);
         this.initialState = null;
+
+        if (this.topNode.getBoundingClientRect().width < closeWidth) {
+            this.props.dispatch({ type: ActionTypes.CLOSE_CONTENTS });
+        }
     };
 
     ref = node => this.topNode = node;
 
     render() {
-        const { contents, uiOptions: { showContentsAutomatically } } = this.props;
+        const { contents, isContentsOpened } = this.props;
+
+        if (!isContentsOpened) return null;
 
         return (
-            <div
-                css={style}
-                ref={this.ref}
-                style={(contents && showContentsAutomatically) ? null : { width: minWidth }}
-            >
+            <Root ref={this.ref}>
                 <Border onMouseDown={this.onBeginResizing}>
                     <div />
                     <div />
@@ -92,12 +94,12 @@ class LeftPanel extends React.Component {
                 <div style={{ height: '100%', overflow: "hidden" }}>
                     <ContentsPanel contents={contents} />
                 </div>
-            </div>
+            </Root>
         );
     }
 }
 
 export default connect(state => ({
-    uiOptions: get.uiOptions(state),
-    contents: get.contents(state)
+    contents: get.contents(state),
+    isContentsOpened: get.isContentsOpened(state),
 }))(LeftPanel);

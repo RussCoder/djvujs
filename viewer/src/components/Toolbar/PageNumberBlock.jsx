@@ -20,7 +20,7 @@ const Root = styled.div`
 `;
 
 const navButtonStyle = css`
-    font-size: 2em;
+    font-size: var(--button-basic-size);
     margin: 0 0.1em;
     border-radius: 100%;
     cursor: pointer;

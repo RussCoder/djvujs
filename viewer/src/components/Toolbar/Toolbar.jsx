@@ -6,53 +6,51 @@ import CursorModeButtonGroup from './CursorModeButtonGroup';
 import RotationControl from './RotationControl';
 import styled from 'styled-components';
 import { ControlButton } from '../StyledPrimitives';
+import ContentsButton from "./ContentsButton";
 
 const Root = styled.div`
     flex: 0 0 auto;
     border: 1px solid var(--border-color);
-    border-radius: 0.5em 0 0.5em 0;
-    padding: 0.3em;
+    border-radius: 0 0.5em 0 0.5em;
+    padding: 0.5em 0.3em;
     display: flex;
     flex-wrap: nowrap;
     justify-content: space-between;
     align-items: center;
-    margin-top: 0.5em;
-    width: 90%;
     height: 2em;
     text-align: center;
-    max-width: 45em;
+    align-self: stretch;
+    margin: 0 5px;
+    
+    --button-basic-size: 1.5em;
 
     ${ControlButton} {
-        font-size: 2em;
+        font-size: var(--button-basic-size);
     }
+`;
 
-    .button_group {
-        border-left: 1px solid gray;
-        border-right: 1px solid gray;
-        white-space: nowrap;
-        padding: 0 0.1em;
-
-        span {
-            opacity: 0.5;
-            display: inline-block;
-
-            &.active {
-                opacity: 1;
-            }
-        }
-    }
-
-    .view_mode_group {
-
+const CentralPanel = styled.div`
+    height: 100%;
+    max-width: 45em;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    & > * {
+        margin: 0 0.5em;
     }
 `;
 
 export default () => (
     <Root>
-        <ViewModeButtons />
-        <CursorModeButtonGroup />
-        <PageNumberBlock />
-        <ScaleGizmo />
-        <RotationControl />
+        <ContentsButton />
+        <CentralPanel>
+            <ViewModeButtons />
+            <CursorModeButtonGroup />
+            <PageNumberBlock />
+            <ScaleGizmo />
+            <RotationControl />
+        </CentralPanel>
     </Root>
 );

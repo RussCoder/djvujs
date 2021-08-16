@@ -8,6 +8,23 @@ import Constants from '../../constants';
 import Actions from '../../actions/actions';
 import { useTranslation } from "../Translation";
 import { ControlButton } from '../StyledPrimitives';
+import styled from "styled-components";
+
+const Root = styled.div`
+    border-left: 1px solid gray;
+    border-right: 1px solid gray;
+    white-space: nowrap;
+    padding: 0 0.1em;
+
+    span {
+        opacity: 0.5;
+        display: inline-block;
+
+        &.active {
+            opacity: 1;
+        }
+    }
+`;
 
 const CursorModeButtonGroup = () => {
     const cursorMode = useSelector(get.cursorMode);
@@ -15,7 +32,7 @@ const CursorModeButtonGroup = () => {
     const t = useTranslation();
 
     return (
-        <div className="button_group">
+        <Root>
             <span title={t("Text cursor mode")} className={cursorMode === Constants.TEXT_CURSOR_MODE ? "active" : null}>
                 <ControlButton
                     icon={faICursor}
@@ -28,7 +45,7 @@ const CursorModeButtonGroup = () => {
                     onClick={() => dispatch(Actions.setCursorModeAction(Constants.GRAB_CURSOR_MODE))}
                 />
             </span>
-        </div>
+        </Root>
     );
 };
 

@@ -14,16 +14,19 @@ const Root = styled.div`
     cursor: pointer;
     margin: 0 0.5em;
 
+    svg {
+        font-size: calc(var(--button-basic-size) * 0.7);
+    }
+
     svg:first-child {
-        font-size: 1.2em;
         &:hover {
             transform: scale(1.1);
         }
     }
 
     svg:last-child {
-        font-size: 1.2em;
         transform: scale(-1, 1);
+
         &:hover {
             transform: scale(-1.1, 1.1);
         }

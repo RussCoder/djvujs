@@ -33,6 +33,14 @@ export default class DjVuViewer extends EventEmitter {
         super();
         this.store = configureStore(this.eventMiddleware);
         config && this.configure(config);
+
+        if (process.env.NODE_ENV === 'development') { // because CRA's Fast Refresh works bad
+            if (module.hot) {
+                module.hot.accept('./components/App', () => {
+                    this.render(this.htmlElement);
+                });
+            }
+        }
     }
 
     eventMiddleware = store => next => action => {
