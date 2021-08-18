@@ -10,7 +10,7 @@ import styled from 'styled-components';
 
 const FileIcon = styled(FontAwesomeIcon)`
     flex: 0 0 auto;
-    font-size: 1.5em;
+    //font-size: var(--button-basic-size, 1.5em);
 `;
 
 const FileName = styled.span`
@@ -31,7 +31,6 @@ const Root = styled.div`
     justify-content: flex-start;
     white-space: nowrap;
     overflow: hidden;
-    padding: 0.15em;
 
     &:hover {
         ${FileIcon} {

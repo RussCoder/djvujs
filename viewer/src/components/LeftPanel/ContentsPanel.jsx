@@ -6,7 +6,7 @@ import Actions from '../../actions/actions';
 import TreeItem from './TreeItem';
 import { TranslationContext } from "../Translation";
 import styled from 'styled-components';
-import CloseButton from "../CloseButton";
+import CloseButton from "../misc/CloseButton";
 import { ActionTypes } from "../../constants";
 
 const Root = styled.div`
@@ -22,6 +22,7 @@ const Header = styled.div`
     margin-bottom: 0.5em;
     padding-bottom: 0.2em;
     display: flex;
+    justify-content: space-between;
 `;
 
 class ContentsPanel extends React.Component {

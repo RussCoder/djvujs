@@ -7,6 +7,8 @@ import RotationControl from './RotationControl';
 import styled from 'styled-components';
 import { ControlButton } from '../StyledPrimitives';
 import ContentsButton from "./ContentsButton";
+import FullPageViewButton from "../Footer/FullPageViewButton";
+import MenuButton from "./MenuButton";
 
 const Root = styled.div`
     flex: 0 0 auto;
@@ -20,7 +22,7 @@ const Root = styled.div`
     height: 2em;
     text-align: center;
     align-self: stretch;
-    margin: 0 5px;
+    margin-top: var(--app-padding);
     
     --button-basic-size: 1.5em;
 
@@ -42,6 +44,12 @@ const CentralPanel = styled.div`
     }
 `;
 
+const RightPanel = styled.div`
+    height: 100%;
+    display: flex;
+    align-items: center;
+`;
+
 export default () => (
     <Root>
         <ContentsButton />
@@ -52,5 +60,9 @@ export default () => (
             <ScaleGizmo />
             <RotationControl />
         </CentralPanel>
+        <RightPanel>
+            <FullPageViewButton />
+            <MenuButton />
+        </RightPanel>
     </Root>
 );

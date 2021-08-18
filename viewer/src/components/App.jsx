@@ -57,6 +57,9 @@ const style = css`
     flex-direction: column;
     align-items: center;
     line-height: initial;
+    
+    --app-padding: 5px;
+    padding: var(--app-padding);
 
     background: var(--background-color);
     color: var(--color);
@@ -114,7 +117,7 @@ export default () => {
                             <Toolbar />
                         </React.Fragment>
                 }
-                {isFileLoading ? null : <Footer />}
+                {/*{isFileLoading ? null : <Footer />}*/}
 
                 <ErrorWindow />
                 <HelpWindow />

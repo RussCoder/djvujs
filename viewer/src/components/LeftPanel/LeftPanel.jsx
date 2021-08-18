@@ -7,14 +7,15 @@ import styled from 'styled-components';
 import { ActionTypes } from "../../constants";
 
 const closeWidth = 40;
+const initialWidth = '20%';
 
 const Root = styled.div`
     flex: 0 0 auto;
     border: 1px solid var(--border-color);
     border-radius: 1em 0 1em 0;
     box-sizing: border-box;
-    width: 20%;
     max-width: 80%;
+    transition: margin-left 0.5s, width 0.5s;
 `;
 
 const Border = styled.div`
@@ -45,10 +46,12 @@ const Border = styled.div`
 
 class LeftPanel extends React.Component {
 
+    lastContents = null;
+
     onBeginResizing = (e) => {
         e.preventDefault();
         const width = this.topNode.getBoundingClientRect().width;
-        this.setState({ width });
+        this.topNode.style.transition = 'none';
         this.initialState = {
             clientX: e.clientX,
             width: width
@@ -70,6 +73,7 @@ class LeftPanel extends React.Component {
         e.preventDefault();
         window.removeEventListener('mousemove', this.onResizing);
         window.removeEventListener('mouseup', this.onEndResizing);
+        this.topNode.style.transition = null;
         this.initialState = null;
 
         if (this.topNode.getBoundingClientRect().width < closeWidth) {
@@ -81,11 +85,30 @@ class LeftPanel extends React.Component {
 
     render() {
         const { contents, isContentsOpened } = this.props;
+        const firstRender = contents && this.lastContents !== contents;
+        this.lastContents = contents;
 
-        if (!isContentsOpened) return null;
+        const currentWidth = this.topNode ? this.topNode.getBoundingClientRect().width : 0;
+        const getCloseShift = (width) => `calc(-${width}px - var(--app-padding))`;
 
         return (
-            <Root ref={this.ref}>
+            <Root
+                ref={this.ref}
+                style={isContentsOpened ? {
+                    width: initialWidth,
+                    marginLeft: 0,
+                    transition: firstRender ? 'none' : null
+                } : {
+                    width: currentWidth,
+                    marginLeft: getCloseShift(currentWidth),
+                }}
+                onTransitionEnd={e => {
+                    if (e.propertyName === 'margin-left' && !isContentsOpened) {
+                        this.topNode.style.width = initialWidth;
+                        this.topNode.style.marginLeft = `calc(-${initialWidth} - var(--app-padding))`;
+                        this.topNode.style.transition = `none`;
+                    }
+                }}>
                 <Border onMouseDown={this.onBeginResizing}>
                     <div />
                     <div />

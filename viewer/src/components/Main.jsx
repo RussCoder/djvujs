@@ -8,13 +8,14 @@ import LoadingLayer from './LoadingLayer';
 import ImageBlock from './ImageBlock/ImageBlock';
 import TextBlock from './TextBlock';
 import ErrorPage from './ErrorPage';
+import Menu from "./Menu";
 
 const Root = styled.div`
+    position: relative;
     flex: 1 1 auto;
     width: 100%;
     height: 100%;
     display: flex;
-    padding: 5px;
     box-sizing: border-box;
     overflow: hidden;
 `;
@@ -57,6 +58,7 @@ export default () => {
                 {renderMainElement()}
                 {(isLoading && viewMode === Constants.SINGLE_PAGE_MODE) ? <LoadingLayer /> : null}
             </PageZone>
+            <Menu />
         </Root>
     );
 }

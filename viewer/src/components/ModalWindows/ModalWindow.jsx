@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
 import styled, { css } from 'styled-components';
-import CloseButton from "../CloseButton";
+import CloseButton from "../misc/CloseButton";
 
 const style = css`
     z-index: 0; // to make windows with their dark layers lie one on top of another when they are created in sequence 
@@ -84,7 +84,11 @@ export default class ModalWindow extends React.Component {
                 >
                     <CloseButton
                         onClick={onClose}
-                        css={`height: var(--closeButtonBlockHeight);`}
+                        css={`
+                            height: var(--closeButtonBlockHeight);
+                            margin-left: auto;
+                            margin-right: 0.25em;
+                        `}
                     />
                     <ContentWrapper>
                         {this.props.children}

@@ -9,6 +9,7 @@ import styled from "styled-components";
 const Root = styled.svg`
     ${iconButton};
     font-size: 2em;
+    flex: 0 0 auto;
 `;
 
 export default () => {
