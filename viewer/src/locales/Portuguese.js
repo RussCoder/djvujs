@@ -230,4 +230,16 @@ export default {
         "Preparar páginas para impressão",
     "Preparing pages for printing":
         "Preparar páginas para impressão",
+
+    // Menu
+    "Menu":
+        null,
+    "Document":
+        null,
+    "About":
+        null,
+    "Print":
+        null,
+    "Close":
+        null,
 };

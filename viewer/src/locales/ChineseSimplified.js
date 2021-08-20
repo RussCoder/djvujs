@@ -230,4 +230,16 @@ export default {
         "准备页面以打印",
     "Preparing pages for printing":
         "准备页面中",
+
+    // Menu
+    "Menu":
+        null,
+    "Document":
+        null,
+    "About":
+        null,
+    "Print":
+        null,
+    "Close":
+        null,
 };

@@ -230,4 +230,16 @@ export default {
         "Avvia processo di stampa",
     "Preparing pages for printing":
         "Sto preparando le pagine per la stampa",
+
+    // Menu
+    "Menu":
+        null,
+    "Document":
+        null,
+    "About":
+        null,
+    "Print":
+        null,
+    "Close":
+        null,
 };

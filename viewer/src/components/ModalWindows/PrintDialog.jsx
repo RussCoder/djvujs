@@ -8,7 +8,7 @@ import styled from "styled-components";
 import { ActionTypes } from "../../constants";
 import { styledInput } from "../cssMixins";
 import { TextButton } from "../StyledPrimitives";
-import ProgressBar from "../ProgressBar";
+import ProgressBar from "../misc/ProgressBar";
 import { isFirefox } from "../../utils";
 
 const Root = styled.div`

@@ -4,8 +4,8 @@ import CloseButton from "./misc/CloseButton";
 import { useDispatch, useSelector } from "react-redux";
 import { get } from "../reducers";
 import FileBlock from "./FileBlock";
-import OptionsButton from "./Footer/OptionsButton";
-import HelpButton from "./Footer/HelpButton";
+import OptionsButton from "./misc/OptionsButton";
+import HelpButton from "./misc/HelpButton";
 import { ControlButton } from "./StyledPrimitives";
 import { faPrint } from "@fortawesome/free-solid-svg-icons";
 import { ActionTypes } from "../constants";
@@ -100,7 +100,7 @@ export default () => {
     const isOpened = useSelector(get.isMenuOpened);
     const dispatch = useDispatch();
     const t = useTranslation();
-    const documentName = useSelector(get.fileName);
+    const fileName = useSelector(get.fileName);
     const { hideOpenAndCloseButtons, hidePrintButton, hideSaveButton } = useSelector(get.uiOptions);
 
     const closeHandler = () => dispatch({ type: ActionTypes.CLOSE_MENU });
@@ -108,13 +108,14 @@ export default () => {
     return (
         <Root $opened={isOpened}>
             <Header>
-                <span>Menu</span>
+                <span>{t('Menu')}</span>
                 <CloseButton onClick={closeHandler} />
             </Header>
 
             <DocumentWrapper>
-                <div>Document:</div>
-                <FileBlock fileName={documentName} />
+                <div>{t('Document')}:</div>
+                {hideOpenAndCloseButtons ? fileName ? <span>{fileName}</span> : null :
+                    <FileBlock fileName={fileName || ''} />}
 
                 <DocumentControls>
                     {hidePrintButton ? null :
@@ -126,7 +127,7 @@ export default () => {
                             title={t('Print document')}
                         >
                             <ControlButton icon={faPrint} />
-                            <span>Print</span>
+                            <span>{t('Print')}</span>
                         </DocumentControl>}
 
                     {hideSaveButton ? null : <DocumentControl onClick={closeHandler}>
@@ -136,7 +137,7 @@ export default () => {
                     {hideOpenAndCloseButtons ? null :
                         <DocumentControl onClick={() => dispatch(Actions.closeDocumentAction())}>
                             <ControlButton as={CloseButton} css={`font-size: 1em;`} />
-                            <span>Close</span>
+                            <span>{t('Close')}</span>
                         </DocumentControl>}
                 </DocumentControls>
             </DocumentWrapper>

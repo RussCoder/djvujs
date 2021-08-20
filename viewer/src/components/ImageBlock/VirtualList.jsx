@@ -129,7 +129,7 @@ export default class VirtualList extends React.PureComponent {
         const Item = this.props.itemRenderer;
 
         for (let i = startIndex; i <= stopIndex; i++) {
-            items[i] = <Item
+            items[i - startIndex] = <Item
                 index={i}
                 style={this.itemStyles[i]}
                 data={this.props.data ? this.props.data[i] : null}

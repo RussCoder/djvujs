@@ -244,9 +244,9 @@ class ImageBlock extends React.Component {
 
     render() {
         const isGrabMode = this.props.cursorMode === Constants.GRAB_CURSOR_MODE;
+        const { documentId, pageSizeList, pageList, userScale, rotation, viewMode, imageData } = this.props;
 
-        const { documentId, pageSizeList, pageList, userScale, rotation } = this.props;
-        return this.props.viewMode === Constants.CONTINUOUS_SCROLL_MODE ?
+        return (viewMode === Constants.CONTINUOUS_SCROLL_MODE && pageSizeList.length) ?
             <VirtualList
                 ref={this.virtualListRef}
                 outerRef={this.wrapperRef}
@@ -256,7 +256,7 @@ class ImageBlock extends React.Component {
                 itemRenderer={this.itemRenderer}
                 key={documentId}
             />
-            : this.props.imageData ?
+            : imageData ?
                 <div
                     css={style}
                     $grab={isGrabMode}

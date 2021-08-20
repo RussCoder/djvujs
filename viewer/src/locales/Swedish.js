@@ -230,4 +230,16 @@ export default {
         "Förbered sidor för utskrift",
     "Preparing pages for printing":
         "Förbereder sidor för utskrift",
+
+    // Menu
+    "Menu":
+        null,
+    "Document":
+        null,
+    "About":
+        null,
+    "Print":
+        null,
+    "Close":
+        null,
 };

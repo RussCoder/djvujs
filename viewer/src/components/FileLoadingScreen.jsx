@@ -6,7 +6,7 @@ import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { get } from '../reducers';
 import { useTranslation } from "./Translation";
 import styled from 'styled-components';
-import ProgressBar from "./ProgressBar";
+import ProgressBar from "./misc/ProgressBar";
 
 const Root = styled.div`
     flex-direction: column;

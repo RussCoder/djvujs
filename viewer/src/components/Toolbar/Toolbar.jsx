@@ -7,7 +7,7 @@ import RotationControl from './RotationControl';
 import styled from 'styled-components';
 import { ControlButton } from '../StyledPrimitives';
 import ContentsButton from "./ContentsButton";
-import FullPageViewButton from "../Footer/FullPageViewButton";
+import FullPageViewButton from "../misc/FullPageViewButton";
 import MenuButton from "./MenuButton";
 
 const Root = styled.div`
@@ -40,7 +40,7 @@ const CentralPanel = styled.div`
     justify-content: center;
     
     & > * {
-        margin: 0 0.5em;
+        margin: 0 0.8em;
     }
 `;
 

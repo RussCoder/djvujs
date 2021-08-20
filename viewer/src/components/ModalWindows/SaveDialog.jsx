@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { TextButton } from "../StyledPrimitives";
 import { get } from "../../reducers";
 import { ActionTypes } from "../../constants";
-import ProgressBar from "../ProgressBar";
+import ProgressBar from "../misc/ProgressBar";
 import { normalizeFileName } from "../../utils";
 
 const Root = styled.div`

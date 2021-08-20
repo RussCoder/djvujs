@@ -1,7 +1,6 @@
 import React from 'react';
-import { TranslationContext } from "./Translation";
 import styled from 'styled-components';
-import LoadingPhrase from './LoadingPhrase';
+import LoadingPhrase from './misc/LoadingPhrase';
 
 const DarkLayer = styled.div`
     position: absolute;
@@ -28,8 +27,6 @@ const MessageWrapper = styled.div`
 `;
 
 export default class LoadingLayer extends React.Component {
-    static contextType = TranslationContext;
-
     constructor(props) {
         super(props);
         this.showTimeout = null;
@@ -48,8 +45,6 @@ export default class LoadingLayer extends React.Component {
     }
 
     render() {
-        const t = this.context;
-
         return (
             <div
                 style={{ display: 'none' }}

@@ -1,6 +1,6 @@
 import React from 'react';
 
-import HelpButton from '../Footer/HelpButton';
+import HelpButton from '../misc/HelpButton';
 import FileZone from './FileZone';
 import DjVu from '../../DjVu';
 import { inExtension } from '../../utils';
@@ -9,8 +9,8 @@ import { useTranslation } from '../Translation';
 import { LanguagePanel } from "../Language/LanguagePanel";
 import styled from 'styled-components';
 import ThemeSwitcher from './ThemeSwitcher';
-import OptionsButton from "../Footer/OptionsButton";
-import FullPageViewButton from "../Footer/FullPageViewButton";
+import OptionsButton from "../misc/OptionsButton";
+import FullPageViewButton from "../misc/FullPageViewButton";
 
 const Root = styled.div`
     font-size: 2em;

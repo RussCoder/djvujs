@@ -1,13 +1,13 @@
 import React from 'react';
 import FilePanel from './FilePanel';
 import StatusBar from './StatusBar';
-import HelpButton from './HelpButton';
-import FullPageViewButton from './FullPageViewButton';
+import HelpButton from '../misc/HelpButton';
+import FullPageViewButton from '../misc/FullPageViewButton';
 import styled from 'styled-components';
 import { ControlButton } from '../StyledPrimitives';
 import { useSelector } from "react-redux";
 import { get } from "../../reducers";
-import OptionsButton from "./OptionsButton";
+import OptionsButton from "../misc/OptionsButton";
 
 const Root = styled.div`
     width: 100%;

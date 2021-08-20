@@ -1,5 +1,11 @@
 # DjVu.js Viewer's Changelog
 
+## v.0.7.0 (20.08.2021)
+
+- Removed footer, added menu in order to use less space for controls.
+- Contents panel is animated and can be closed completely.
+- Continuous scroll mode performance improvement.
+
 ## v.0.6.2 (06.04.2021)
 
 - Spanish and Portuguese translations.
