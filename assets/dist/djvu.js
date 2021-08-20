@@ -11230,7 +11230,7 @@ var DjVu = (function () {
     var isArray = require('isarray');
     var Duplex;
     Readable.ReadableState = ReadableState;
-    var EE = require('events').EventEmitter;
+    require('events').EventEmitter;
     var EElistenerCount = function (emitter, type) {
       return emitter.listeners(type).length;
     };
