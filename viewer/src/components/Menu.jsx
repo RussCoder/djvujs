@@ -6,7 +6,7 @@ import { get } from "../reducers";
 import FileBlock from "./FileBlock";
 import OptionsButton from "./Footer/OptionsButton";
 import HelpButton from "./Footer/HelpButton";
-import { ControlButton, TextButton } from "./StyledPrimitives";
+import { ControlButton } from "./StyledPrimitives";
 import { faPrint } from "@fortawesome/free-solid-svg-icons";
 import { ActionTypes } from "../constants";
 import { useTranslation } from "./Translation";
@@ -32,6 +32,15 @@ const Root = styled.div`
     ${p => p.$opened ? 'transform: translateX(0);' : 'transform: translateX(calc(100% + var(--app-padding)));'};
 
     transition: transform 0.5s;
+`;
+
+const MenuWrapper = styled.div`
+    display: flex;
+    flex-direction: column;
+
+    & > * {
+        margin-bottom: 1em;
+    }
 `;
 
 const Header = styled.div`
@@ -87,22 +96,12 @@ const DocumentControl = styled.div`
     }
 `;
 
-const MenuItem = styled.div`
-    ${MenuItemStyle};
-    margin: 1em 0;
-`;
-
-
 export default () => {
     const isOpened = useSelector(get.isMenuOpened);
     const dispatch = useDispatch();
     const t = useTranslation();
     const documentName = useSelector(get.fileName);
     const { hideOpenAndCloseButtons, hidePrintButton, hideSaveButton } = useSelector(get.uiOptions);
-
-    const transferClickToButton = e => {
-        e.target.parentElement.querySelector('svg').dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    };
 
     const closeHandler = () => dispatch({ type: ActionTypes.CLOSE_MENU });
 
@@ -118,17 +117,20 @@ export default () => {
                 <FileBlock fileName={documentName} />
 
                 <DocumentControls>
-                    {hidePrintButton ? null : <DocumentControl onClick={closeHandler}>
-                        <ControlButton
-                            icon={faPrint} title={t('Print document')}
-                            onClick={() => dispatch({ type: ActionTypes.OPEN_PRINT_DIALOG })}
-                        />
-                        <span onClick={transferClickToButton}>Print</span>
-                    </DocumentControl>}
+                    {hidePrintButton ? null :
+                        <DocumentControl
+                            onClick={() => {
+                                dispatch({ type: ActionTypes.OPEN_PRINT_DIALOG });
+                                closeHandler();
+                            }}
+                            title={t('Print document')}
+                        >
+                            <ControlButton icon={faPrint} />
+                            <span>Print</span>
+                        </DocumentControl>}
 
                     {hideSaveButton ? null : <DocumentControl onClick={closeHandler}>
-                        <SaveButton />
-                        <span onClick={transferClickToButton}>{t('Save')}</span>
+                        <SaveButton onClick={closeHandler} withLabel={true} />
                     </DocumentControl>}
 
                     {hideOpenAndCloseButtons ? null :
@@ -139,16 +141,10 @@ export default () => {
                 </DocumentControls>
             </DocumentWrapper>
 
-            <MenuItem onClick={closeHandler}>
-                <OptionsButton />
-                <span onClick={transferClickToButton}>Options</span>
-            </MenuItem>
-
-            <MenuItem onClick={closeHandler}>
-                <HelpButton />
-                <span onClick={transferClickToButton}>About</span>
-            </MenuItem>
-
+            <MenuWrapper>
+                <OptionsButton onClick={closeHandler} withLabel={true} />
+                <HelpButton onClick={closeHandler} withLabel={true} />
+            </MenuWrapper>
         </Root>
     );
 }

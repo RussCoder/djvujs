@@ -7,6 +7,16 @@ export const ControlButton = styled(FontAwesomeIcon)`
     margin: 0 0.5em;
 `;
 
+export const ControlButtonWrapper = styled.span`
+    cursor: pointer;
+
+    :hover {
+        ${ControlButton} {
+            transform: scale(1.1);
+        }
+    }
+`;
+
 export const TextButton = styled.button`
     background: inherit;
     color: var(--color);

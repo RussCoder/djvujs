@@ -1,5 +1,5 @@
 import React from "react";
-import { ControlButton } from "../StyledPrimitives";
+import { ControlButton, ControlButtonWrapper } from "../StyledPrimitives";
 import { faDownload } from "@fortawesome/free-solid-svg-icons";
 import SaveNotification from "./SaveNotification";
 import { useDispatch, useSelector } from "react-redux";
@@ -7,7 +7,7 @@ import { get } from "../../reducers";
 import Actions from "../../actions/actions";
 import { useTranslation } from "../Translation";
 
-export default () => {
+export default ({ withLabel = false, onClick = () => {} }) => {
     const t = useTranslation();
     const dispatch = useDispatch();
     const [isNotificationShown, showNotification] = React.useState(false);
@@ -16,19 +16,22 @@ export default () => {
 
     return (
         <>
-            <ControlButton
+            <ControlButtonWrapper
+                title={t("Save document")}
                 onClick={() => {
                     if (onSaveNotification && onSaveNotification.text) {
                         showNotification(true);
                     } else {
                         saveHandler();
                     }
+                    onClick();
                 }}
-                icon={faDownload}
-                title={t("Save document")}
-            />
+            >
+                <ControlButton icon={faDownload} />
+                {withLabel ? <span>{t('Save')}</span> : null}
+            </ControlButtonWrapper>
             {isNotificationShown ?
                 <SaveNotification onSave={saveHandler} onClose={() => showNotification(false)} /> : null}
         </>
-    )
+    );
 };

@@ -4,19 +4,24 @@ import { faQuestionCircle } from '@fortawesome/free-regular-svg-icons';
 
 import Actions from '../../actions/actions';
 import { useTranslation } from "../Translation";
-import { ControlButton } from '../StyledPrimitives';
+import { ControlButton, ControlButtonWrapper } from '../StyledPrimitives';
 
-const HelpButton = () => {
+const HelpButton = ({ withLabel = null, onClick = () => {} }) => {
     const dispatch = useDispatch();
     const t = useTranslation();
 
     return (
-        <span title={t("Show help window")} data-djvujs-class="help_button">
-            <ControlButton
-                icon={faQuestionCircle}
-                onClick={() => dispatch(Actions.showHelpWindowAction())}
-            />
-        </span>
+        <ControlButtonWrapper
+            title={t("Show help window")}
+            data-djvujs-class="help_button"
+            onClick={() => {
+                dispatch(Actions.showHelpWindowAction());
+                onClick();
+            }}
+        >
+            <ControlButton icon={faQuestionCircle} />
+            {withLabel ? <span>{t('About')}</span> : null}
+        </ControlButtonWrapper>
     );
 };
 

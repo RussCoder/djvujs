@@ -8,8 +8,10 @@ describe.only('Initial screen', () => {
     it('Initial screen is visible', () => {
         cy.contains("DjVu.js Viewer").should('be.visible');
         cy.contains("powered with DjVu.js").should('be.visible');
-        getByCustomClass('help_button').its('length').should('eq', 2);
-        getByCustomClass('options_button').its('length').should('eq', 2);
+        // getByCustomClass('help_button').its('length').should('eq', 2);
+        // getByCustomClass('options_button').its('length').should('eq', 2);
+        getByCustomClass('help_button').should('be.visible');
+        getByCustomClass('options_button').should('be.visible');
     });
 
     it('Dark and white theme', () => {

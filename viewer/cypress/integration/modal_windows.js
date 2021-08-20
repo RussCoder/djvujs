@@ -5,21 +5,21 @@ describe('Modal windows', () => {
     beforeEach(renderViewer);
 
     it('A click on the dark layer closes the modal window', () => {
-        cy.get(customId('footer')).find(customClass('help_button')).click();
+        cy.get(customClass('help_button')).click();
         cy.get(customClass('modal_window')).as('modal_window').should('be.visible');
         cy.get(customId('root')).click(5, 5);
         cy.get('@modal_window').should('not.exist');
     });
 
     it('The close button closes the modal window', () => {
-        cy.get(customId('footer')).find(customClass('help_button')).click();
+        cy.get(customClass('help_button')).click();
         cy.get(customClass('modal_window')).as('modal_window').should('be.visible')
             .find(customClass('close_button')).click();
         cy.get("@modal_window").should('not.exist');
     });
 
     it('Options window', () => {
-        cy.get(customId('footer')).find(customClass('options_button')).click();
+        cy.get(customClass('options_button')).click();
         cy.get(customClass('modal_window')).should('be.visible').within(() => {
             cy.contains('Options');
             cy.contains('Language');
@@ -28,7 +28,7 @@ describe('Modal windows', () => {
     });
 
     it('Help window', () => {
-        cy.get(customId('footer')).find(customClass('help_button')).click();
+        cy.get(customClass('help_button')).click();
         cy.get(customClass('modal_window')).should('be.visible').within(() => {
             cy.contains('DjVu.js Viewer');
             cy.contains('Hotkeys');

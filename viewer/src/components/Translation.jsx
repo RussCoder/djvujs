@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 import { get } from "../reducers";
 import dictionaries from '../locales';
 
-export const TranslationContext = React.createContext(text => text);
+export const TranslationContext = React.createContext((text, insertions = null) => text);
 
 export const TranslationProvider = ({ children }) => {
     const dict = useSelector(get.dictionary);

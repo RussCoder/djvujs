@@ -10,6 +10,7 @@ import { LanguagePanel } from "../Language/LanguagePanel";
 import styled from 'styled-components';
 import ThemeSwitcher from './ThemeSwitcher';
 import OptionsButton from "../Footer/OptionsButton";
+import FullPageViewButton from "../Footer/FullPageViewButton";
 
 const Root = styled.div`
     font-size: 2em;
@@ -40,6 +41,12 @@ const InfoBlock = styled.div`
     }
 `;
 
+const Footer = styled.div`
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+`;
+
 export default () => {
     const t = useTranslation();
 
@@ -65,6 +72,7 @@ export default () => {
                 {inExtension ? <LinkBlock /> : null}
                 <FileZone />
             </div>
+            <Footer><FullPageViewButton /></Footer>
         </Root>
     );
 };
