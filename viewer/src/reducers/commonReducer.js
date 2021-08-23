@@ -18,7 +18,6 @@ const initialState = Object.freeze({
     isContinuousScrollMode: false,
     isIndirect: false,
     isContentsOpened: false,
-    isMenuOpened: false,
     options: { // all these options are saved in localStorage
         interceptHttpRequests: true, // this value MUST BE DUPLICATED in the extension code
         analyzeHeaders: false, // this value MUST BE DUPLICATED in the extension code
@@ -129,12 +128,6 @@ export default (state = initialState, action) => {
         case ActionTypes.TOGGLE_CONTENTS:
             return { ...state, isContentsOpened: !state.isContentsOpened };
 
-        case ActionTypes.CLOSE_MENU:
-            return { ...state, isMenuOpened: false };
-
-        case ActionTypes.TOGGLE_MENU:
-            return { ...state, isMenuOpened: !state.isMenuOpened };
-
         case ActionTypes.ERROR:
             return {
                 ...state,
@@ -151,7 +144,6 @@ export default (state = initialState, action) => {
 }
 
 export const get = {
-    isMenuOpened: state => state.isMenuOpened,
     isContentsOpened: state => state.isContentsOpened,
     dictionary: state => dictionaries[get.options(state).locale] || dictionaries.en,
     isOptionsWindowOpened: state => state.isOptionsWindowOpened,

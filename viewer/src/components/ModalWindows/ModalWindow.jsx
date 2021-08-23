@@ -5,7 +5,7 @@ import styled, { css } from 'styled-components';
 import CloseButton from "../misc/CloseButton";
 
 const style = css`
-    z-index: 0; // to make windows with their dark layers lie one on top of another when they are created in sequence 
+    z-index: 4; // 0 was used to just make windows with their dark layers lie one on top of another when they are created in sequence 
     position: absolute;
     top: 0;
     left: 0;

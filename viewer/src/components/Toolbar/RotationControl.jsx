@@ -13,6 +13,7 @@ const Root = styled.div`
     align-items: center;
     cursor: pointer;
     margin: 0 0.5em;
+    text-align: center;
 
     svg {
         font-size: calc(var(--button-basic-size) * 0.7);

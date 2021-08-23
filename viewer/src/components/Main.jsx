@@ -8,7 +8,6 @@ import LoadingLayer from './LoadingLayer';
 import ImageBlock from './ImageBlock/ImageBlock';
 import TextBlock from './TextBlock';
 import ErrorPage from './ErrorPage';
-import Menu from "./Menu";
 
 const Root = styled.div`
     position: relative;
@@ -58,7 +57,6 @@ export default () => {
                 {renderMainElement()}
                 {(isLoading && viewMode === Constants.SINGLE_PAGE_MODE) ? <LoadingLayer /> : null}
             </PageZone>
-            <Menu />
         </Root>
     );
 }

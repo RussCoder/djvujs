@@ -15,8 +15,9 @@ import Actions from "../actions/actions";
 
 const Root = styled.div`
     font-size: 16px;
+    --button-basic-size: 1em;
     position: absolute;
-    bottom: 0;
+    bottom: calc(100% + var(--app-padding));
     right: 0;
     z-index: 1;
     height: 15em;
@@ -29,7 +30,7 @@ const Root = styled.div`
     border-radius: 5px 0 5px 0;
     padding: 0.5em;
 
-    ${p => p.$opened ? 'transform: translateX(0);' : 'transform: translateX(calc(100% + var(--app-padding)));'};
+    ${p => p.$opened ? 'transform: translateX(0);' : 'transform: translateX(calc(100% + var(--app-padding) * 2));'};
 
     transition: transform 0.5s;
 `;
@@ -96,14 +97,13 @@ const DocumentControl = styled.div`
     }
 `;
 
-export default () => {
-    const isOpened = useSelector(get.isMenuOpened);
+export default ({ isOpened, onClose }) => {
     const dispatch = useDispatch();
     const t = useTranslation();
     const fileName = useSelector(get.fileName);
     const { hideOpenAndCloseButtons, hidePrintButton, hideSaveButton } = useSelector(get.uiOptions);
 
-    const closeHandler = () => dispatch({ type: ActionTypes.CLOSE_MENU });
+    const closeHandler = onClose;
 
     return (
         <Root $opened={isOpened}>
