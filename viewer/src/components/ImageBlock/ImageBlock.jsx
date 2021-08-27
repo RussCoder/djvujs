@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
+import { connect, useSelector } from 'react-redux';
 import memoize from 'memoize-one';
 
 import Actions from '../../actions/actions';
@@ -108,18 +108,40 @@ class ImageBlock extends React.Component {
         this.complexImage && (this.complexImage.style.opacity = 1); // show the content after the scroll bars were adjusted
     }
 
+    enableScaleHandler = e => {
+        if (this.isScaleHandlerEnabled || e.key !== 'Control' || !this.wrapper) return;
+        this.wrapper.addEventListener('wheel', this.wheelScaleHandler);
+        this.isScaleHandlerEnabled = true;
+    }
+
+    disableScaleHandler = e => {
+        if (!this.isScaleHandlerEnabled || e.key !== 'Control') return;
+        this.wrapper.removeEventListener('wheel', this.wheelScaleHandler);
+        this.isScaleHandlerEnabled = false;
+    }
+
     componentDidMount() {
+        window.addEventListener('keydown', this.enableScaleHandler);
+        window.addEventListener('keyup', this.disableScaleHandler);
+
         this.componentDidUpdate({}, {}, {});
     }
 
-    onWheel = (e) => {
-        if (e.ctrlKey) {
-            e.preventDefault();
-            const scaleDelta = 0.05 * (-Math.sign(e.deltaY));
-            const newScale = this.props.userScale + scaleDelta;
-            this.props.dispatch(Actions.setUserScaleAction(newScale));
-            return;
-        }
+    componentWillUnmount() {
+        window.removeEventListener('keydown', this.enableScaleHandler);
+        window.removeEventListener('keyup', this.disableScaleHandler);
+    }
+
+    wheelScaleHandler = e => {
+        if (!e.ctrlKey) return;
+        e.preventDefault();
+        const scaleDelta = 0.05 * (-Math.sign(e.deltaY));
+        const newScale = this.props.userScale + scaleDelta;
+        this.props.dispatch(Actions.setUserScaleAction(newScale));
+    }
+
+    singlePageWheelHandler = (e) => {
+        if (e.ctrlKey) return;
 
         if (!this.props.changePageOnScroll) return;
 
@@ -193,10 +215,11 @@ class ImageBlock extends React.Component {
         resetEventListener(node, 'mousedown', this.startMoving);
         resetEventListener(node, 'mouseup', this.finishMoving);
         resetEventListener(node, 'mouseleave', this.finishMoving);
-        resetEventListener(node, 'wheel', this.onWheel);
 
         if (this.props.viewMode === Constants.CONTINUOUS_SCROLL_MODE) {
             resetEventListener(node, 'scroll', this.onScroll, { passive: true });
+        } else {
+            resetEventListener(node, 'wheel', this.singlePageWheelHandler);
         }
     }
 
@@ -218,7 +241,7 @@ class ImageBlock extends React.Component {
 
     getItemSizes = memoize((pageList, userScale, rotation) => {
         const isRotated = rotation === 90 || rotation === 270;
-        return this.props.pageList.map(page => {
+        return pageList.map(page => {
             const scaleFactor = Constants.DEFAULT_DPI / page.dpi * userScale;
             return Math.floor((isRotated ? page.width : page.height) * scaleFactor) + 6; // 2px for top and bottom image borders, 4px for vertical paddings of the wrapper element
         })
@@ -226,7 +249,9 @@ class ImageBlock extends React.Component {
 
     virtualListRef = component => this.virtualList = component;
 
-    itemRenderer = React.memo(({ index, style, data: pageData }) => {
+    itemRenderer = React.memo(({ index, style }) => {
+        const pageData = useSelector(state => get.pageList(state)[index]);
+
         return (
             <ContinuousScrollItem style={style} key={index}>
                 <ComplexImage
@@ -244,7 +269,7 @@ class ImageBlock extends React.Component {
 
     render() {
         const isGrabMode = this.props.cursorMode === Constants.GRAB_CURSOR_MODE;
-        const { documentId, pageSizeList, pageList, userScale, rotation, viewMode, imageData } = this.props;
+        const { documentId, pageSizeList, userScale, rotation, viewMode, imageData } = this.props;
 
         return (viewMode === Constants.CONTINUOUS_SCROLL_MODE && pageSizeList.length) ?
             <VirtualList
@@ -252,7 +277,7 @@ class ImageBlock extends React.Component {
                 outerRef={this.wrapperRef}
                 css={`${grabbingCursor}; ${isGrabMode ? 'cursor: grab;' : ''}`}
                 itemSizes={this.getItemSizes(pageSizeList, userScale, rotation)}
-                data={pageList}
+                //data={pageList}
                 itemRenderer={this.itemRenderer}
                 key={documentId}
             />
@@ -279,7 +304,7 @@ export default connect(
         currentPageNumber: get.currentPageNumber(state),
         shouldScrollToPage: get.shouldScrollToPage(state),
         viewMode: get.viewMode(state),
-        pageList: get.pageList(state),
+        //pageList: get.pageList(state),
         pageSizeList: get.pageSizeList(state),
         imageData: get.imageData(state),
         imageDpi: get.imageDpi(state),

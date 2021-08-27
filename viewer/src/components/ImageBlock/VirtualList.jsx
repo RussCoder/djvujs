@@ -27,7 +27,7 @@ export default class VirtualList extends React.PureComponent {
         renderingRadius: PropTypes.number,
         outerRef: PropTypes.func,
         className: PropTypes.string,
-        data: PropTypes.any,
+        //data: PropTypes.any,
         resizeKey: PropTypes.any,
     }
 
@@ -132,7 +132,7 @@ export default class VirtualList extends React.PureComponent {
             items[i - startIndex] = <Item
                 index={i}
                 style={this.itemStyles[i]}
-                data={this.props.data ? this.props.data[i] : null}
+                //data={this.props.data ? this.props.data[i] : null}
                 key={i}
             />;
         }
@@ -175,14 +175,14 @@ export default class VirtualList extends React.PureComponent {
     getHeightStyle = memoize(contentHeight => ({ height: contentHeight + 'px' }));
 
     render() {
-        const itemList = this.props.data;
+        const itemSizes = this.props.itemSizes;
 
         return (
             <Root
                 ref={this.ref}
                 className={this.props.className}
             >
-                {itemList && itemList.length ?
+                {itemSizes && itemSizes.length ?
                     <div style={this.getHeightStyle(this.contentHeight)}>
                         {this.renderItems()}
                     </div>
