@@ -30,3 +30,13 @@ export const renderViewer = () => {
         win.viewer.render(win.document.getElementById('root'));
     });
 };
+
+export function loadDocument() {
+    cy.clearLocalStorage();
+    cy.window().then(win => {
+        win.viewer.loadDocumentByUrl('DjVu3Spec.djvu', {
+            name: "test_document",
+            locale: 'en',
+        });
+    });
+}

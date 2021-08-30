@@ -1,4 +1,5 @@
-import { getByCustomClass, getByCustomId, haveCustomClass, hexToRGB, notHaveCustomClass, renderViewer } from "../utils";
+import { getByCustomId, haveCustomClass, hexToRGB, notHaveCustomClass, renderViewer } from "../utils";
+import { initialScreenShouldBeVisible } from "../shared";
 
 describe.only('Initial screen', () => {
     before(() => cy.visit('/'));
@@ -6,12 +7,7 @@ describe.only('Initial screen', () => {
     beforeEach(renderViewer);
 
     it('Initial screen is visible', () => {
-        cy.contains("DjVu.js Viewer").should('be.visible');
-        cy.contains("powered with DjVu.js").should('be.visible');
-        // getByCustomClass('help_button').its('length').should('eq', 2);
-        // getByCustomClass('options_button').its('length').should('eq', 2);
-        getByCustomClass('help_button').should('be.visible');
-        getByCustomClass('options_button').should('be.visible');
+        initialScreenShouldBeVisible();
     });
 
     it('Dark and white theme', () => {

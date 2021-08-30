@@ -20,6 +20,7 @@ export default () => {
         <Root
             as={isOpened ? IoListCircleSharp : IoListCircleOutline}
             onClick={() => dispatch({ type: ActionTypes.TOGGLE_CONTENTS })}
+            data-djvujs-id="contents_button"
         />
     );
 }

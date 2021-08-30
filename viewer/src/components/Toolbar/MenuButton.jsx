@@ -12,6 +12,6 @@ const Root = styled(FiCommand)`
 
 export default ({ onClick }) => {
     return (
-        <Root onClick={onClick} />
+        <Root onClick={onClick} data-djvujs-id="menu_button" />
     );
 }

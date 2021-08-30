@@ -14,6 +14,6 @@ const Root = styled(TiPin)`
 
 export default ({ isPinned, onClick }) => {
     return (
-        <Root $pinned={isPinned} onClick={onClick} />
+        <Root $pinned={isPinned} onClick={onClick} data-djvujs-id="pin_button" />
     );
 };

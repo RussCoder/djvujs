@@ -106,7 +106,7 @@ export default ({ isOpened, onClose }) => {
     const closeHandler = onClose;
 
     return (
-        <Root $opened={isOpened}>
+        <Root $opened={isOpened} data-djvujs-id="menu">
             <Header>
                 <span>{t('Menu')}</span>
                 <CloseButton onClick={closeHandler} />

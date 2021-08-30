@@ -20,28 +20,3 @@ describe('Full page mode', () => {
         })
     });
 });
-
-describe('Work with a document', () => {
-    before(() => {
-        cy.visit('/');
-        renderViewer();
-    });
-
-    beforeEach(() => {
-        cy.clearLocalStorage();
-        cy.window().then(win => {
-            win.viewer.loadDocumentByUrl('DjVu3Spec.djvu', {
-                name: "My test document",
-                locale: 'en',
-            });
-        });
-    });
-
-    it('Go to the next/previous page', () => {
-        cy.contains('1 / 71').next('svg').click();
-        cy.contains('2 / 71').prev('svg').click();
-        cy.contains('1 / 71').prev('svg').click();
-        cy.contains('71 / 71').next('svg').click();
-        cy.contains('1 / 71');
-    });
-});

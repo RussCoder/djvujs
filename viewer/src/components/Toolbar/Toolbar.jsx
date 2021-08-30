@@ -38,7 +38,7 @@ const Root = styled.div`
 
     margin-bottom: 0;
     transition: margin-bottom 0.5s;
-    ${p => p.$hidden ? `margin-bottom: calc(-${toolbarHeight} - var(--app-padding))` : ''};
+    ${p => p.$hidden ? `margin-bottom: calc(-${toolbarHeight} - var(--app-padding) - 1px)` : ''}; // -1px just for cypress
 `;
 
 const CentralPanel = styled.div`
@@ -92,6 +92,7 @@ export default () => {
                 $pinned={pinned}
                 onMouseOver={onMouseEnter}
                 onMouseOut={onMouseLeave}
+                data-djvujs-id="toolbar"
             >
                 <ContentsButton />
                 <CentralPanel>
