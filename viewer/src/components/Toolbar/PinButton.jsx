@@ -1,5 +1,6 @@
 import { TiPin } from 'react-icons/ti';
 import styled from "styled-components";
+import { useTranslation } from "../Translation";
 
 const Root = styled(TiPin)`
     font-size: calc(var(--button-basic-size) * 1.2);
@@ -13,7 +14,14 @@ const Root = styled(TiPin)`
 `;
 
 export default ({ isPinned, onClick }) => {
+    const t = useTranslation();
+
     return (
-        <Root $pinned={isPinned} onClick={onClick} data-djvujs-id="pin_button" />
+        <Root
+            $pinned={isPinned}
+            onClick={onClick}
+            data-djvujs-id="pin_button"
+            title={t(isPinned ? 'Toolbar is always shown' : 'Toolbar automatically hides')}
+        />
     );
 };

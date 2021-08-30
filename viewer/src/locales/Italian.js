@@ -184,6 +184,12 @@ export default {
         "Modalità selezione testo",
     "Grab cursor mode":
         "Modalità trascinamento pagina",
+    "Table of contents":
+        null,
+    "Toolbar is always shown":
+        null,
+    "Toolbar automatically hides":
+        null,
 
     // Contents
     "Contents":

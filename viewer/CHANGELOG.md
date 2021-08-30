@@ -1,5 +1,10 @@
 # DjVu.js Viewer's Changelog
 
+## v.0.7.1 (30.08.2021)
+
+- Toolbar can be pinned and unpinned.
+- Minor fixes and improvements.
+
 ## v.0.7.0 (20.08.2021)
 
 - Removed footer, added menu in order to use less space for controls.

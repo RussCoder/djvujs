@@ -184,6 +184,12 @@ export default {
         "Curseur pour mettre le texte en surbrillance",
     "Grab cursor mode":
         "Défilement glisser-déposer",
+    "Table of contents":
+        null,
+    "Toolbar is always shown":
+        null,
+    "Toolbar automatically hides":
+        null,
 
     // Contents
     "Contents":

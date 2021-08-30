@@ -5,6 +5,7 @@ import { ActionTypes } from "../../constants";
 import { iconButton } from "../cssMixins";
 import { get } from "../../reducers";
 import styled from "styled-components";
+import { useTranslation } from "../Translation";
 
 const Root = styled.svg`
     ${iconButton};
@@ -15,12 +16,14 @@ const Root = styled.svg`
 export default () => {
     const dispatch = useDispatch();
     const isOpened = useSelector(get.isContentsOpened);
+    const t = useTranslation();
 
     return (
         <Root
             as={isOpened ? IoListCircleSharp : IoListCircleOutline}
             onClick={() => dispatch({ type: ActionTypes.TOGGLE_CONTENTS })}
             data-djvujs-id="contents_button"
+            title={t("Table of contents")}
         />
     );
 }

@@ -184,6 +184,12 @@ export default {
         "文本选择模式",
     "Grab cursor mode":
         "拖拽模式",
+    "Table of contents":
+        null,
+    "Toolbar is always shown":
+        null,
+    "Toolbar automatically hides":
+        null,
 
     // Contents
     "Contents":

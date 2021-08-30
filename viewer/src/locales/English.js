@@ -184,6 +184,12 @@ export default {
         "Text cursor mode",
     "Grab cursor mode":
         "Grab cursor mode",
+    "Table of contents":
+        "Table of contents",
+    "Toolbar is always shown":
+        "Toolbar is always shown",
+    "Toolbar automatically hides":
+        "Toolbar automatically hides",
 
     // Contents
     "Contents":

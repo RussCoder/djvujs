@@ -184,6 +184,12 @@ export default {
         "Visningsläge med textmarkör",
     "Grab cursor mode":
         "Visningsläge med greppbart markörläge",
+    "Table of contents":
+        null,
+    "Toolbar is always shown":
+        null,
+    "Toolbar automatically hides":
+        null,
 
     // Contents
     "Contents":

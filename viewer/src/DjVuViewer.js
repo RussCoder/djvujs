@@ -17,7 +17,7 @@ const Events = constant({
 
 export default class DjVuViewer extends EventEmitter {
 
-    static VERSION = '0.7.0';
+    static VERSION = '0.7.1';
 
     static Events = Events;
 
