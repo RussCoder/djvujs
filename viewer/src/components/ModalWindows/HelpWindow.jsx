@@ -12,6 +12,7 @@ import styled from "styled-components";
 
 const Root = styled.div`
     padding: 0.5em;
+    font-size: ${p => p.theme.isMobile ? 12 : 20}px;
 `;
 
 const Header = styled.div`

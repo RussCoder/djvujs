@@ -11,8 +11,6 @@ import { ControlButton } from '../StyledPrimitives';
 import styled from "styled-components";
 
 const Root = styled.div`
-    border-left: 1px solid gray;
-    border-right: 1px solid gray;
     white-space: nowrap;
     padding: 0 0.1em;
 

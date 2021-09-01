@@ -14,7 +14,6 @@ export default ({ className }) => {
             rel="noopener noreferrer"
             title={t("Add more")}
             css={`
-                margin: 0 1rem;
                 color: var(--color) !important;
                 display: inline-block;
                 height: 1em;

@@ -8,9 +8,19 @@ import styled from 'styled-components';
 const Name = styled.div`
     cursor: pointer;
     margin-left: 0.5em;
+    line-height: 20px;
 
     &:hover {
         text-decoration: underline;
+    }
+`;
+
+const Root = styled.div`
+    display: flex;
+    flex-wrap: nowrap;
+    
+    & > svg {
+        font-size: 20px;
     }
 `;
 
@@ -51,7 +61,7 @@ export default class TreeItem extends React.Component {
 
     render() {
         return (
-            <div css={`display: flex;`}>
+            <Root>
                 {this.props.children ?
                     <FontAwesomeIcon
                         icon={this.state.isCollapsed ? faPlusSquare : faMinusSquare}
@@ -62,7 +72,7 @@ export default class TreeItem extends React.Component {
                     <Name className="name" onClick={this.onClick}>{this.props.name}</Name>
                     {this.state.isCollapsed ? null : this.renderChildren()}
                 </div>
-            </div>
+            </Root>
         );
     }
 }

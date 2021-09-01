@@ -19,10 +19,10 @@ const continuousScrollButtonStyle = css`
     max-height: 100%;
 `;
 
-const Root = styled.div`
-    display: flex;
+const Root = styled.span`
+    display: inline-flex;
     align-items: center;
-    height: 100%;
+    height: calc(var(--button-basic-size) * 1.2);
 
     span {
         opacity: 0.5;

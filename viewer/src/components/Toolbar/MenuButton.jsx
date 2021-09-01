@@ -7,7 +7,7 @@ const Root = styled(FiCommand)`
     ${iconButton};
     font-size: 2em;
     color: var(--highlight-color);
-    margin-left: 1em;
+    margin-left: ${p => p.theme.isMobile || console.log('theme', p.theme) ? 0 : '1em'};
 `;
 
 export default ({ onClick }) => {

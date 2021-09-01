@@ -12,6 +12,12 @@ import { ActionTypes } from "../constants";
 import { useTranslation } from "./Translation";
 import SaveButton from "./misc/SaveButton";
 import Actions from "../actions/actions";
+import { useAppContext } from "./AppContext";
+import ScaleGizmo from "./Toolbar/ScaleGizmo";
+import RotationControl from "./Toolbar/RotationControl";
+import ViewModeButtons from "./Toolbar/ViewModeButtons";
+import CursorModeButtonGroup from "./Toolbar/CursorModeButtonGroup";
+import FullPageViewButton from "./misc/FullPageViewButton";
 
 const Root = styled.div`
     font-size: 16px;
@@ -20,15 +26,20 @@ const Root = styled.div`
     bottom: calc(100% + var(--app-padding));
     right: 0;
     z-index: 1;
-    height: 15em;
+    min-height: min(15em, ${p => p.theme.appHeight * 0.7}px);
+    max-height: ${p => p.theme.appHeight * 0.7}px;
     width: 15em;
 
-    min-width: max-content;
+    min-width: fit-content;
     max-width: 90%;
     background: var(--background-color);
     border: 1px solid var(--border-color);
     border-radius: 5px 0 5px 0;
     padding: 0.5em;
+    overflow: hidden;
+
+    display: flex;
+    flex-direction: column;
 
     ${p => p.$opened ? 'transform: translateX(0);' : 'transform: translateX(calc(100% + var(--app-padding) * 2));'};
 
@@ -72,10 +83,25 @@ const DocumentWrapper = styled.div`
     }
 `;
 
+const documentControlsMobileStyle = css`
+    flex-direction: column;
+    padding-left: 1em;
+    align-items: flex-start;
+    border-bottom: 1px dashed var(--border-color);
+    margin-bottom: 1em;
+
+    & > * {
+        margin-bottom: 0.5em;
+    }
+`;
+
 const DocumentControls = styled.div`
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     margin-top: 1em;
+
+    ${p => p.theme.isMobile ? documentControlsMobileStyle : ''};
 `;
 
 const MenuItemStyle = css`
@@ -91,10 +117,25 @@ const MenuItemStyle = css`
 const DocumentControl = styled.div`
     ${MenuItemStyle};
     margin-right: 1.5em;
+    white-space: nowrap;
 
     ${ControlButton} {
         margin-left: 0;
     }
+`;
+
+const MobileControl = styled.div`
+    display: flex;
+    align-items: center;
+    margin-bottom: 1em;
+
+    span:first-child {
+        margin-right: 1em;
+    }
+`;
+
+const Content = styled.div`
+    overflow: auto;
 `;
 
 export default ({ isOpened, onClose }) => {
@@ -102,6 +143,7 @@ export default ({ isOpened, onClose }) => {
     const t = useTranslation();
     const fileName = useSelector(get.fileName);
     const { hideOpenAndCloseButtons, hidePrintButton, hideSaveButton } = useSelector(get.uiOptions);
+    const { isMobile } = useAppContext();
 
     const closeHandler = onClose;
 
@@ -112,40 +154,66 @@ export default ({ isOpened, onClose }) => {
                 <CloseButton onClick={closeHandler} />
             </Header>
 
-            <DocumentWrapper>
-                <div>{t('Document')}:</div>
-                {hideOpenAndCloseButtons ? fileName ? <span>{fileName}</span> : null :
-                    <FileBlock fileName={fileName || ''} />}
+            <Content>
+                <DocumentWrapper>
+                    <div>{t('Document')}:</div>
+                    {hideOpenAndCloseButtons ? fileName ? <span>{fileName}</span> : null :
+                        <FileBlock fileName={fileName || ''} />}
 
-                <DocumentControls>
-                    {hidePrintButton ? null :
-                        <DocumentControl
-                            onClick={() => {
-                                dispatch({ type: ActionTypes.OPEN_PRINT_DIALOG });
-                                closeHandler();
-                            }}
-                            title={t('Print document')}
-                        >
-                            <ControlButton icon={faPrint} />
-                            <span>{t('Print')}</span>
+                    <DocumentControls>
+                        {hidePrintButton ? null :
+                            <DocumentControl
+                                onClick={() => {
+                                    dispatch({ type: ActionTypes.OPEN_PRINT_DIALOG });
+                                    closeHandler();
+                                }}
+                                title={t('Print document')}
+                            >
+                                <ControlButton icon={faPrint} />
+                                <span>{t('Print')}</span>
+                            </DocumentControl>}
+
+                        {hideSaveButton ? null : <DocumentControl onClick={closeHandler}>
+                            <SaveButton onClick={closeHandler} withLabel={true} />
                         </DocumentControl>}
 
-                    {hideSaveButton ? null : <DocumentControl onClick={closeHandler}>
-                        <SaveButton onClick={closeHandler} withLabel={true} />
-                    </DocumentControl>}
+                        {hideOpenAndCloseButtons ? null :
+                            <DocumentControl onClick={() => dispatch(Actions.closeDocumentAction())}>
+                                <ControlButton as={CloseButton} css={`font-size: 1em;`} />
+                                <span>{t('Close')}</span>
+                            </DocumentControl>}
+                    </DocumentControls>
 
-                    {hideOpenAndCloseButtons ? null :
-                        <DocumentControl onClick={() => dispatch(Actions.closeDocumentAction())}>
-                            <ControlButton as={CloseButton} css={`font-size: 1em;`} />
-                            <span>{t('Close')}</span>
-                        </DocumentControl>}
-                </DocumentControls>
-            </DocumentWrapper>
+                    {isMobile ?
+                        <>
+                            <MobileControl>
+                                <span>{t('View mode')}:</span>
+                                <ViewModeButtons />
+                            </MobileControl>
+                            <MobileControl>
+                                <span>{t('Scale')}:</span>
+                                <ScaleGizmo />
+                            </MobileControl>
+                            <MobileControl>
+                                <span>{t('Rotation')}:</span>
+                                <RotationControl />
+                            </MobileControl>
+                            <MobileControl>
+                                <span>{t('Cursor mode')}:</span>
+                                <CursorModeButtonGroup />
+                            </MobileControl>
+                        </> : null}
+                </DocumentWrapper>
 
-            <MenuWrapper>
-                <OptionsButton onClick={closeHandler} withLabel={true} />
-                <HelpButton onClick={closeHandler} withLabel={true} />
-            </MenuWrapper>
+                <MenuWrapper>
+                    {isMobile ? <MobileControl>
+                        <span>{t('Full page mode')}:</span>
+                        <FullPageViewButton />
+                    </MobileControl> : null}
+                    <OptionsButton onClick={closeHandler} withLabel={true} />
+                    <HelpButton onClick={closeHandler} withLabel={true} />
+                </MenuWrapper>
+            </Content>
         </Root>
     );
 }

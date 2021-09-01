@@ -4,15 +4,23 @@ import ScaleGizmo from './ScaleGizmo';
 import ViewModeButtons from './ViewModeButtons';
 import CursorModeButtonGroup from './CursorModeButtonGroup';
 import RotationControl from './RotationControl';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 import { ControlButton } from '../StyledPrimitives';
 import ContentsButton from "./ContentsButton";
 import FullPageViewButton from "../misc/FullPageViewButton";
 import MenuButton from "./MenuButton";
 import PinButton from "./PinButton";
 import Menu from "../Menu";
+import { useAppContext } from "../AppContext";
 
 const toolbarHeight = '3em';
+
+const mobileStyle = css`
+    & > * {
+        margin-right: 0;
+        margin-left: 0;
+    }
+`
 
 const Root = styled.div`
     position: relative;
@@ -30,6 +38,7 @@ const Root = styled.div`
     margin-top: var(--app-padding);
     z-index: 2;
 
+    font-size: 14px;
     --button-basic-size: 1.5em;
 
     ${ControlButton} {
@@ -39,6 +48,8 @@ const Root = styled.div`
     margin-bottom: 0;
     transition: margin-bottom 0.5s;
     ${p => p.$hidden ? `margin-bottom: calc(-${toolbarHeight} - var(--app-padding) - 1px)` : ''}; // -1px just for cypress
+    
+    ${p => p.$mobile ? mobileStyle : ''};
 `;
 
 const CentralPanel = styled.div`
@@ -72,7 +83,6 @@ export default () => {
     const [pinned, setPinned] = React.useState(true);
     const [hidden, setHidden] = React.useState(false);
     const [isMenuOpen, setIsMenuOpen] = React.useState(false);
-    const reallyHidden = hidden && !pinned;
 
     const onMouseEnter = React.useCallback(() => setHidden(false), [setHidden]);
     const onMouseLeave = React.useCallback(() => setHidden(true), [setHidden]);
@@ -80,31 +90,36 @@ export default () => {
         setPinned(!pinned);
     }, [pinned, setPinned]);
 
+    const { isMobile } = useAppContext();
+    const reallyPinned = isMobile || pinned;
+    const reallyHidden = hidden && !reallyPinned;
+
     return (
         <>
-            {pinned ? null : <InvisibleLayer
+            {reallyPinned ? null : <InvisibleLayer
                 onMouseEnter={onMouseEnter}
                 onMouseLeave={onMouseLeave}
                 onTouchStart={onMouseEnter}
             />}
             <Root
                 $hidden={reallyHidden}
-                $pinned={pinned}
+                $pinned={reallyPinned}
                 onMouseOver={onMouseEnter}
                 onMouseOut={onMouseLeave}
                 data-djvujs-id="toolbar"
+                $mobile={isMobile}
             >
                 <ContentsButton />
                 <CentralPanel>
-                    <ViewModeButtons />
-                    <CursorModeButtonGroup />
+                    {isMobile ? null :<ViewModeButtons />}
+                    {isMobile ? null : <CursorModeButtonGroup />}
                     <PageNumberBlock />
-                    <ScaleGizmo />
-                    <RotationControl />
+                    {isMobile ? null :<ScaleGizmo />}
+                    {isMobile ? null : <RotationControl />}
                 </CentralPanel>
                 <RightPanel>
-                    <PinButton isPinned={pinned} onClick={handlePin} />
-                    <FullPageViewButton />
+                    {isMobile ? null :<PinButton isPinned={pinned} onClick={handlePin} />}
+                    {isMobile ? null :<FullPageViewButton />}
                     <MenuButton onClick={() => setIsMenuOpen(!isMenuOpen)} />
                 </RightPanel>
                 <Menu isOpened={isMenuOpen && !reallyHidden} onClose={() => setIsMenuOpen(false)} />

@@ -8,6 +8,7 @@ import { TranslationContext } from "../Translation";
 import styled from 'styled-components';
 import CloseButton from "../misc/CloseButton";
 import { ActionTypes } from "../../constants";
+import { withAppContext } from "../AppContext";
 
 const Root = styled.div`
     padding: 0.5em;
@@ -34,7 +35,7 @@ class ContentsPanel extends React.Component {
     static contextType = TranslationContext;
 
     onTreeItemClick = (url) => {
-        this.props.dispatch(Actions.setPageByUrlAction(url));
+        this.props.dispatch(Actions.setPageByUrlAction(url, this.props.appContext.isMobile));
     };
 
     convertBookmarkArrayToTreeItemDataArray(bookmarkArray) {
@@ -73,4 +74,4 @@ class ContentsPanel extends React.Component {
     }
 }
 
-export default connect()(ContentsPanel);
+export default connect()(withAppContext(ContentsPanel));

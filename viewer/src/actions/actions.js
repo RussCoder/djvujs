@@ -88,10 +88,11 @@ const Actions = {
         shouldScrollToPage: shouldScrollToPage,
     }),
 
-    setPageByUrlAction(url) {
+    setPageByUrlAction(url, closeContentsOnSuccess = false) {
         return {
             type: Constants.SET_PAGE_BY_URL_ACTION,
-            url: url
+            url: url,
+            closeContentsOnSuccess: closeContentsOnSuccess,
         };
     },
 

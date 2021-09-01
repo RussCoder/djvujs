@@ -234,6 +234,9 @@ class RootSaga {
         const pageNumber = yield this.djvuWorker.doc.getPageNumberByUrl(action.url).run();
         if (pageNumber !== null) {
             yield put(Actions.setNewPageNumberAction(pageNumber, true));
+            if (action.closeContentsOnSuccess) {
+                yield put({ type: ActionTypes.CLOSE_CONTENTS });
+            }
         }
     }
 

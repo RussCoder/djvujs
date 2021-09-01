@@ -8,6 +8,7 @@ import dictionaries from '../../locales';
 const Warning = styled.span`
     color: var(--color);
     cursor: pointer;
+    margin-right: 0.5em;
 
     :hover {
         color: var(--highlight-color);

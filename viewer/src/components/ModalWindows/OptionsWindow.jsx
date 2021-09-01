@@ -5,12 +5,9 @@ import { useTranslation } from "../Translation";
 import { ActionTypes } from "../../constants";
 import styled from 'styled-components';
 import ModalWindow from "./ModalWindow";
-import dictionaries from '../../locales';
 import ThemeSwitcher from "../InitialScreen/ThemeSwitcher";
-import LanguageWarningSign from "../Language/LanguageWarningSign";
 import { inExtension } from "../../utils";
-import { styledInput } from "../cssMixins";
-import AddLanguageButton from "../Language/AddLanguageButton";
+import LanguageSelector from "../Language/LanguageSelector";
 
 const Root = styled.div`
     box-sizing: border-box;
@@ -44,13 +41,6 @@ const Option = styled.label`
     margin-bottom: 1em;
 `;
 
-const Select = styled.select`
-    font-size: 1em;
-    margin-right: 0.5em;
-    padding-right: 0.5em;
-    ${styledInput};
-`;
-
 export default () => {
     const options = useSelector(get.options);
     const dispatch = useDispatch();
@@ -67,21 +57,8 @@ export default () => {
         >
             <Root>
                 <MainHeader>{t('Options')}</MainHeader>
-                <Option as="div" css={`display: flex; align-items: flex-end;`}>
-                    <span style={{ marginRight: '0.5em' }}>{t('Language')}:</span>
-                    <Select
-                        value={options.locale}
-                        onChange={(e) => dispatch({
-                            type: ActionTypes.UPDATE_OPTIONS,
-                            payload: { locale: e.target.value }
-                        })}
-                    >
-                        {Object.entries(dictionaries).map(([code, dic]) => (
-                            <option value={code} key={code}>{dic.nativeName}</option>
-                        ))}
-                    </Select>
-                    <LanguageWarningSign languageCode={options.locale} />
-                    <AddLanguageButton css={`font-size: 1.2em`} />
+                <Option as="div">
+                    <LanguageSelector />
                 </Option>
                 <Option>
                     <span style={{ marginRight: '0.5em' }}>{t('Color theme')}:</span>

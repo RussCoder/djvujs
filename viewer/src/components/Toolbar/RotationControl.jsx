@@ -8,8 +8,8 @@ import { get } from '../../reducers';
 import { useTranslation } from "../Translation";
 import styled from 'styled-components';
 
-const Root = styled.div`
-    display: flex;
+const Root = styled.span`
+    display: inline-flex;
     align-items: center;
     cursor: pointer;
     margin: 0 0.5em;
