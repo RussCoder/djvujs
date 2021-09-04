@@ -57,6 +57,7 @@ const style = css`
     flex-direction: column;
     align-items: center;
     line-height: initial;
+    writing-mode: horizontal-tb;
     
     --app-padding: 5px;
     padding: var(--app-padding);

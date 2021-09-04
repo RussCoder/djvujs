@@ -22,9 +22,19 @@
     -->
     <title>DjVu Viewer</title>
     <style>
+
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            /*writing-mode: vertical-lr;*/
+        }
+
         body {
             margin: 0;
             padding: 0;
+            display: flex; /* in order to prevent child's margin:auto collapse (become) parent's margins */
             font-family: sans-serif;
             background: repeating-linear-gradient(135deg, #5aa0fa, #ffffff 50%);
         }
@@ -33,10 +43,11 @@
             box-sizing: border-box;
             width: 80%;
             padding: 2px;
-            height: 90vh;
+            height: 90%;
             margin: 5vh auto;
             box-shadow: 0 0 1px gray;
             background: #b0c093;
+            /*writing-mode: horizontal-tb;*/
         }
     </style>
     <script id="djvu_js_lib" src="%PUBLIC_URL%/tmp/djvu.js"></script>

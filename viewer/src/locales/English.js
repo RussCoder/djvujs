@@ -248,4 +248,14 @@ export default {
         "Print",
     "Close":
         "Close",
+    "View mode":
+        "View mode",
+    "Scale":
+        "Scale",
+    "Rotation":
+        "Rotation",
+    "Cursor mode":
+        "Cursor mode",
+    "Full page mode":
+        "Full page mode",
 };

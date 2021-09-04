@@ -25,6 +25,7 @@ const style = css`
     height: 100%;
     overflow: auto;
     box-sizing: border-box;
+    touch-action: pan-x pan-y;
     ${p => p.$grab ? 'cursor: grab' : ''};
 
     ${grabbingCursor};
@@ -52,6 +53,10 @@ class ImageBlock extends React.Component {
         imageDpi: PropTypes.number,
         userScale: PropTypes.number
     };
+
+    initialGrabbingState = null;
+    pointerEventCache = {};
+    lastPointerDiff = -1;
 
     getSnapshotBeforeUpdate() {
         if (!this.wrapper) {
@@ -195,7 +200,6 @@ class ImageBlock extends React.Component {
             scrollTop: this.wrapper.scrollTop
         };
         this.wrapper.classList.add('djvujs_grabbing');
-        this.wrapper.addEventListener('mousemove', this.handleMoving);
     };
 
     finishMoving = (e) => {
@@ -205,16 +209,67 @@ class ImageBlock extends React.Component {
         e.preventDefault();
         this.initialGrabbingState = null;
         this.wrapper.classList.remove('djvujs_grabbing');
-        this.wrapper.removeEventListener('mousemove', this.handleMoving);
     };
+
+    onPointerDown = (e) => {
+        this.wrapper.addEventListener('pointermove', this.onPointerMove);
+
+        if (e.pointerType === 'mouse') {
+            return this.startMoving(e);
+        }
+
+        this.pointerEventCache[e.pointerId] = e;
+    };
+
+    onPointerMove = (e) => {
+        if (e.pointerType === 'mouse') {
+            return this.handleMoving(e);
+        }
+
+        this.pointerEventCache[e.pointerId] = e;
+
+        const events = Object.values(this.pointerEventCache);
+        if (events.length === 2) {
+            e.preventDefault();
+            e.stopPropagation(); // isn't needed for mobile chrome, but maybe for other browsers
+
+            const pointerDiff = Math.hypot(events[0].clientX - events[1].clientX, events[0].clientY - events[1].clientY);
+            if (this.lastPointerDiff > 0) {
+                const blockSize = Math.hypot(this.wrapper.offsetWidth, this.wrapper.offsetHeight);
+                this.props.dispatch(Actions.setUserScaleAction(
+                    this.props.userScale + (pointerDiff - this.lastPointerDiff) / blockSize
+                ));
+            }
+
+            this.lastPointerDiff = pointerDiff;
+        }
+    }
+
+    onPointerUp = (e) => {
+        if (e.pointerType === 'mouse') {
+            this.finishMoving(e);
+        }
+
+        delete this.pointerEventCache[e.pointerId];
+        const events = Object.values(this.pointerEventCache);
+        if (events.length < 2) {
+            this.lastPointerDiff = -1;
+        }
+
+        if (events.length === 0) {
+            this.wrapper.removeEventListener('pointermove', this.onPointerMove);
+        }
+    }
+
 
     wrapperRef = (node) => {
         this.wrapper = node;
         if (!node) return;
 
-        resetEventListener(node, 'mousedown', this.startMoving);
-        resetEventListener(node, 'mouseup', this.finishMoving);
-        resetEventListener(node, 'mouseleave', this.finishMoving);
+        resetEventListener(node, 'pointerdown', this.onPointerDown);
+        resetEventListener(node, 'pointerup', this.onPointerUp);
+        resetEventListener(node, 'pointerleave', this.onPointerUp);
+        resetEventListener(node, 'pointercancel', this.onPointerUp);
 
         if (this.props.viewMode === Constants.CONTINUOUS_SCROLL_MODE) {
             resetEventListener(node, 'scroll', this.onScroll, { passive: true });

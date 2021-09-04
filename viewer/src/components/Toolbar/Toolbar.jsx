@@ -99,22 +99,21 @@ export default () => {
             {reallyPinned ? null : <InvisibleLayer
                 onMouseEnter={onMouseEnter}
                 onMouseLeave={onMouseLeave}
-                onTouchStart={onMouseEnter}
             />}
             <Root
                 $hidden={reallyHidden}
                 $pinned={reallyPinned}
-                onMouseOver={onMouseEnter}
-                onMouseOut={onMouseLeave}
+                onMouseEnter={reallyPinned ? null : onMouseEnter}
+                onMouseLeave={reallyPinned ? null : onMouseLeave}
                 data-djvujs-id="toolbar"
                 $mobile={isMobile}
             >
                 <ContentsButton />
                 <CentralPanel>
-                    {isMobile ? null :<ViewModeButtons />}
+                    {isMobile ? null : <ViewModeButtons />}
                     {isMobile ? null : <CursorModeButtonGroup />}
                     <PageNumberBlock />
-                    {isMobile ? null :<ScaleGizmo />}
+                    {isMobile ? null : <ScaleGizmo />}
                     {isMobile ? null : <RotationControl />}
                 </CentralPanel>
                 <RightPanel>

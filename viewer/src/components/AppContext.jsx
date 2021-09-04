@@ -21,11 +21,15 @@ export default ({ AppRoot }) => {
         if (!rootRef.current) return;
 
         const observer = new ResizeObserver(([entry]) => {
+            // maybe it's better to observe borderBox, but in mobile browsers only contentRect is supported now
+            const boxSize = entry.contentBoxSize ? (entry.contentBoxSize[0] || entry.contentBoxSize) : {
+                inlineSize: entry.contentRect.width,
+                blockSize: entry.contentRect.height,
+            };
             setAppContext({
-                appWidth: entry.borderBoxSize[0].inlineSize,
-                appHeight: entry.borderBoxSize[0].blockSize,
-                isMobile: entry.borderBoxSize[0].blockSize < heightThreshold
-                    || entry.borderBoxSize[0].inlineSize < widthThreshold,
+                appWidth: boxSize.inlineSize,
+                appHeight: boxSize.blockSize,
+                isMobile: boxSize.blockSize < heightThreshold || boxSize.inlineSize < widthThreshold,
             });
         });
 

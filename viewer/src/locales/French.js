@@ -248,4 +248,14 @@ export default {
         null,
     "Close":
         null,
+    "View mode":
+        null,
+    "Scale":
+        null,
+    "Rotation":
+        null,
+    "Cursor mode":
+        null,
+    "Full page mode":
+        null,
 };

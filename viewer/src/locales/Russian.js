@@ -261,4 +261,14 @@ export default {
         "Печать",
     "Close":
         "Закрыть",
+    "View mode":
+        "Режим просмотра",
+    "Scale":
+        "Масштаб",
+    "Rotation":
+        "Поворот",
+    "Cursor mode":
+        "Курсор",
+    "Full page mode":
+        "Полностраничный режим",
 };
