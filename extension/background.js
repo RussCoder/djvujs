@@ -6,6 +6,7 @@ chrome.contextMenus.create({
     contexts: ["link"],
     targetUrlPatterns: [
         '*://*/*.djvu',
+        '*://*/*.DJVU',
         '*://*/*.djv',
         '*://*/*.djvu?*',
         '*://*/*.djv?*',
@@ -145,7 +146,9 @@ const enableHttpIntercepting = () => {
     !onBeforeRequest.hasListener(requestInterceptor) && onBeforeRequest.addListener(requestInterceptor, {
         urls: [
             'http://*/*.djvu',
+            'http://*/*.DJVU',
             'http://*/*.djvu?*',
+            'https://*/*.DJVU',
             'https://*/*.djvu',
             'https://*/*.djvu?*',
             'http://*/*.djv',
