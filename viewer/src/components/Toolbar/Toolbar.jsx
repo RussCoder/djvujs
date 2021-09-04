@@ -12,6 +12,7 @@ import MenuButton from "./MenuButton";
 import PinButton from "./PinButton";
 import Menu from "../Menu";
 import { useAppContext } from "../AppContext";
+import HideButton from "./HideButton";
 
 const toolbarHeight = '3em';
 
@@ -81,18 +82,19 @@ const InvisibleLayer = styled.div`
 
 export default () => {
     const [pinned, setPinned] = React.useState(true);
-    const [hidden, setHidden] = React.useState(false);
+    const [autoHidden, setAutoHidden] = React.useState(false);
+    const [manuallyHidden, setManuallyHidden] = React.useState(false);
     const [isMenuOpen, setIsMenuOpen] = React.useState(false);
 
-    const onMouseEnter = React.useCallback(() => setHidden(false), [setHidden]);
-    const onMouseLeave = React.useCallback(() => setHidden(true), [setHidden]);
+    const onMouseEnter = React.useCallback(() => setAutoHidden(false), [setAutoHidden]);
+    const onMouseLeave = React.useCallback(() => setAutoHidden(true), [setAutoHidden]);
     const handlePin = React.useCallback(() => {
         setPinned(!pinned);
     }, [pinned, setPinned]);
 
     const { isMobile } = useAppContext();
     const reallyPinned = isMobile || pinned;
-    const reallyHidden = hidden && !reallyPinned;
+    const reallyHidden = manuallyHidden && isMobile || autoHidden && !reallyPinned;
 
     return (
         <>
@@ -102,7 +104,6 @@ export default () => {
             />}
             <Root
                 $hidden={reallyHidden}
-                $pinned={reallyPinned}
                 onMouseEnter={reallyPinned ? null : onMouseEnter}
                 onMouseLeave={reallyPinned ? null : onMouseLeave}
                 data-djvujs-id="toolbar"
@@ -117,8 +118,12 @@ export default () => {
                     {isMobile ? null : <RotationControl />}
                 </CentralPanel>
                 <RightPanel>
-                    {isMobile ? null :<PinButton isPinned={pinned} onClick={handlePin} />}
-                    {isMobile ? null :<FullPageViewButton />}
+                    {isMobile ? null : <PinButton isPinned={pinned} onClick={handlePin} />}
+                    {isMobile ? null : <FullPageViewButton />}
+                    {isMobile ? <HideButton
+                        onClick={() => setManuallyHidden(!manuallyHidden)}
+                        isToolbarHidden={reallyHidden}
+                    /> : null}
                     <MenuButton onClick={() => setIsMenuOpen(!isMenuOpen)} />
                 </RightPanel>
                 <Menu isOpened={isMenuOpen && !reallyHidden} onClose={() => setIsMenuOpen(false)} />

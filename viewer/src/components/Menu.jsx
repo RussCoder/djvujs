@@ -28,9 +28,8 @@ const Root = styled.div`
     z-index: 1;
     min-height: min(15em, ${p => p.theme.appHeight * 0.7}px);
     max-height: ${p => p.theme.appHeight * 0.7}px;
-    width: 15em;
 
-    min-width: fit-content;
+    width: fit-content;
     max-width: 90%;
     background: var(--background-color);
     border: 1px solid var(--border-color);

@@ -26,6 +26,7 @@ const style = css`
     overflow: auto;
     box-sizing: border-box;
     touch-action: pan-x pan-y;
+    padding-bottom: 30px;
     ${p => p.$grab ? 'cursor: grab' : ''};
 
     ${grabbingCursor};

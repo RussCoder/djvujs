@@ -6,8 +6,10 @@ import styled from 'styled-components';
 
 const Root = styled.div`
     overflow: auto;
+    padding-bottom: 30px;
     width: 100%;
     height: 100%;
+    box-sizing: border-box;
     transform: translateZ(0); // removes lags when the page is changed while scrolling
 
     & > div {
