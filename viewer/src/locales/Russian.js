@@ -271,4 +271,6 @@ export default {
         "Курсор",
     "Full page mode":
         "Полностраничный режим",
+    "Fullscreen mode":
+        "Полноэкранный режим",
 };

@@ -14,9 +14,11 @@ import Menu from "../Menu";
 import { useAppContext } from "../AppContext";
 import HideButton from "./HideButton";
 
-const toolbarHeight = '3em';
+const toolbarHeight = '42px';
 
 const mobileStyle = css`
+    font-size: 16px;
+    
     & > * {
         margin-right: 0;
         margin-left: 0;
@@ -27,8 +29,8 @@ const Root = styled.div`
     position: relative;
     flex: 0 0 auto;
     border: 1px solid var(--border-color);
-    border-radius: 0 0.5em 0 0.5em;
-    padding: 0.5em 0.3em;
+    border-radius: 0 7px 0 7px;
+    padding: 7px 4px;
     display: flex;
     flex-wrap: nowrap;
     justify-content: space-between;

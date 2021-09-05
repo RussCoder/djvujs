@@ -258,4 +258,6 @@ export default {
         null,
     "Full page mode":
         null,
+    "Fullscreen mode":
+        null,
 };

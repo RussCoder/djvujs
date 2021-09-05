@@ -258,4 +258,6 @@ export default {
         "Cursor mode",
     "Full page mode":
         "Full page mode",
+    "Fullscreen mode":
+        "Fullscreen mode",
 };

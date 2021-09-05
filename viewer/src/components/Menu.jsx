@@ -18,6 +18,8 @@ import RotationControl from "./Toolbar/RotationControl";
 import ViewModeButtons from "./Toolbar/ViewModeButtons";
 import CursorModeButtonGroup from "./Toolbar/CursorModeButtonGroup";
 import FullPageViewButton from "./misc/FullPageViewButton";
+import { IoDesktopOutline } from "react-icons/all";
+import { iconButton } from "./cssMixins";
 
 const Root = styled.div`
     font-size: 16px;
@@ -137,12 +139,19 @@ const Content = styled.div`
     overflow: auto;
 `;
 
+const FullscreenButton = styled(IoDesktopOutline)`
+    ${iconButton};
+    font-size: 1.2em;
+
+    color: ${p => p.$active ? 'var(--highlight-color)' : 'inherit'};
+`;
+
 export default ({ isOpened, onClose }) => {
     const dispatch = useDispatch();
     const t = useTranslation();
     const fileName = useSelector(get.fileName);
     const { hideOpenAndCloseButtons, hidePrintButton, hideSaveButton } = useSelector(get.uiOptions);
-    const { isMobile } = useAppContext();
+    const { isMobile, isFullscreen, toggleFullscreen } = useAppContext();
 
     const closeHandler = onClose;
 
@@ -205,9 +214,16 @@ export default ({ isOpened, onClose }) => {
                 </DocumentWrapper>
 
                 <MenuWrapper>
-                    {isMobile ? <MobileControl>
+                    <MobileControl>
                         <span>{t('Full page mode')}:</span>
                         <FullPageViewButton />
+                    </MobileControl>
+                    {(document.fullscreenEnabled || document.webkitFullscreenEnabled) ? <MobileControl>
+                        <span>{t('Fullscreen mode')}:</span>
+                        <FullscreenButton
+                            $active={isFullscreen}
+                            onClick={toggleFullscreen}
+                        />
                     </MobileControl> : null}
                     <OptionsButton onClick={closeHandler} withLabel={true} />
                     <HelpButton onClick={closeHandler} withLabel={true} />
