@@ -82,7 +82,10 @@ class ScaleGizmo extends React.Component {
         const t = this.context;
 
         return (
-            <Root title={t("You also can scale the page via Ctrl+MouseWheel")}>
+            <Root
+                title={t("You also can scale the page via Ctrl+MouseWheel")}
+                data-djvujs-id="scale_gizmo"
+            >
                 <FontAwesomeIcon
                     icon={faMinus}
                     onClick={this.decreaseScale}

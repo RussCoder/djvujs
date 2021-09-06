@@ -37,7 +37,11 @@ const Root = styled.div`
 
 export default ({ isToolbarHidden, onClick }) => {
     return (
-        <Root $hidden={isToolbarHidden} onClick={onClick}>
+        <Root
+            $hidden={isToolbarHidden}
+            onClick={onClick}
+            data-djvujs-id="hide_button"
+        >
             <FiChevronsDown />
         </Root>
     );

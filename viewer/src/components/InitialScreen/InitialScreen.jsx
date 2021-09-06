@@ -13,6 +13,7 @@ import OptionsButton from "../misc/OptionsButton";
 import FullPageViewButton from "../misc/FullPageViewButton";
 import { useAppContext } from "../AppContext";
 import LanguageSelector from "../Language/LanguageSelector";
+import FullscreenButton from "../misc/FullscreenButton";
 
 const Root = styled.div`
     font-size: ${p => p.theme.isMobile ? 1.5 : 2}em;
@@ -47,6 +48,12 @@ const Footer = styled.div`
     width: 100%;
     display: flex;
     justify-content: flex-end;
+    padding-bottom: 0.1em;
+    contain: layout;
+
+    & > * {
+        margin-left: 0.5em;
+    }
 `;
 
 export default () => {
@@ -75,7 +82,11 @@ export default () => {
                 {inExtension ? <LinkBlock /> : null}
                 <FileZone />
             </div>
-            <Footer><FullPageViewButton /></Footer>
+            <Footer>
+                {(document.fullscreenEnabled || document.webkitFullscreenEnabled) ?
+                    <FullscreenButton css={`margin-right: 0.5em;`} /> : null}
+                <FullPageViewButton />
+            </Footer>
         </Root>
     );
 };

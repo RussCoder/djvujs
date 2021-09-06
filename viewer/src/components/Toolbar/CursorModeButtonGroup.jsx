@@ -30,7 +30,7 @@ const CursorModeButtonGroup = () => {
     const t = useTranslation();
 
     return (
-        <Root>
+        <Root data-djvujs-id="cursor_mode_buttons">
             <span title={t("Text cursor mode")} className={cursorMode === Constants.TEXT_CURSOR_MODE ? "active" : null}>
                 <ControlButton
                     icon={faICursor}

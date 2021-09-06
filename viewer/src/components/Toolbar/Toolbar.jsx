@@ -119,7 +119,7 @@ export default () => {
                     {isMobile ? null : <ScaleGizmo />}
                     {isMobile ? null : <RotationControl />}
                 </CentralPanel>
-                <RightPanel>
+                <RightPanel data-djvujs-class="right_panel">
                     {isMobile ? null : <PinButton isPinned={pinned} onClick={handlePin} />}
                     {isMobile ? null : <FullPageViewButton />}
                     {isMobile ? <HideButton

@@ -55,7 +55,7 @@ class ViewModeButtons extends React.Component {
         const t = this.context;
 
         return (
-            <Root>
+            <Root data-djvujs-id="view_mode_buttons">
                 {isIndirect ? null :
                     <ControlButton
                         as="span"

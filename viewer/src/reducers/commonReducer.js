@@ -33,11 +33,13 @@ const initialState = Object.freeze({
         hidePrintButton: false,
         hideSaveButton: false,
     },
+    appContext: {},
 });
 
 function getInitialStateWithOptions(state) {
     return {
         ...initialState,
+        appContext: state.appContext,
         isFullPageView: state.isFullPageView,
         options: state.options,
         uiOptions: state.uiOptions,
@@ -107,7 +109,8 @@ export default (state = initialState, action) => {
             return {
                 ...state,
                 contents: action.contents,
-                isContentsOpened: state.uiOptions.showContentsAutomatically && !!action.contents,
+                isContentsOpened: state.uiOptions.showContentsAutomatically && !state.appContext.isMobile
+                    && !!action.contents,
             };
 
         case Constants.SET_USER_SCALE_ACTION:
@@ -137,6 +140,9 @@ export default (state = initialState, action) => {
 
         case ActionTypes.CLOSE_ERROR_WINDOW:
             return { ...state, error: null }
+
+        case ActionTypes.UPDATE_APP_CONTEXT:
+            return { ...state, appContext: payload };
 
         default:
             return state;

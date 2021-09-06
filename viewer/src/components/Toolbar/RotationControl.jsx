@@ -48,7 +48,7 @@ const RotationControl = () => {
     };
 
     return (
-        <Root className="rotation_control" title={t("Rotate the page")}>
+        <Root data-djvujs-id="rotation_control" title={t("Rotate the page")}>
             <FontAwesomeIcon icon={faUndo} onClick={rotateLeft} />
             <span css={`width: 2.5em;`}>{rotation}&deg;</span>
             <FontAwesomeIcon icon={faUndo} onClick={rotateRight} />

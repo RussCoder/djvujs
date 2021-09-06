@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ThemeContext, ThemeProvider } from "styled-components";
+import { useDispatch } from "react-redux";
+import { ActionTypes } from "../constants";
 
 const widthThreshold = 769;
 const heightThreshold = 569;
@@ -86,11 +88,17 @@ export default ({ AppRoot }) => {
     const rootRef = useRef(null);
     const appSize = useAppSize(rootRef);
     const fullscreen = useFullscreen(rootRef);
+    const dispatch = useDispatch();
+    const appContext = { ...appSize, ...fullscreen };
+
+    useEffect(() => {
+        dispatch({ type: ActionTypes.UPDATE_APP_CONTEXT, payload: appContext })
+    }, [dispatch, appContext]);
 
     const app = useMemo(() => <AppRoot ref={rootRef} />, [rootRef]);
 
     return (
-        <ThemeProvider theme={{ ...appSize, ...fullscreen }}>
+        <ThemeProvider theme={appContext}>
             {app}
         </ThemeProvider>
     );

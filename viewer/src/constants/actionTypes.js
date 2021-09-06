@@ -27,4 +27,5 @@ export const ActionTypes = constant({
     TOGGLE_CONTENTS: null,
     PIN_TOOLBAR: null,
     UNPIN_TOOLBAR: null,
+    UPDATE_APP_CONTEXT: null,
 });
