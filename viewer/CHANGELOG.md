@@ -1,5 +1,11 @@
 # DjVu.js Viewer's Changelog
 
+## v.0.8.0 (06.09.2021)
+
+- Mobile version.
+- Fullscreen mode.
+- Image scaling via pinch zoom.
+
 ## v.0.7.1 (30.08.2021)
 
 - Toolbar can be pinned and unpinned.

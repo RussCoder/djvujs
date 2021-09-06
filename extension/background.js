@@ -9,6 +9,11 @@ chrome.contextMenus.create({
         '*://*/*.djv',
         '*://*/*.djvu?*',
         '*://*/*.djv?*',
+
+        '*://*/*.DJVU',
+        '*://*/*.DJV',
+        '*://*/*.DJVU?*',
+        '*://*/*.DJV?*',
     ]
 });
 
@@ -122,6 +127,11 @@ chrome.webRequest.onBeforeRequest.addListener(details => {
         'file:///*/*.djvu?*',
         'file:///*/*.djv',
         'file:///*/*.djv?*',
+
+        'file:///*/*.DJVU',
+        'file:///*/*.DJVU?*',
+        'file:///*/*.DJV',
+        'file:///*/*.DJV?*',
     ],
     types: ['main_frame']
 },
@@ -133,7 +143,7 @@ chrome.webRequest.onBeforeRequest.addListener(details => {
 const requestInterceptor = details => {
     // http://*/*.djvu also corresponds to "http://localhost/page.php?file=doc.djvu"
     // so we have to add this additional check, because it's not a link to a file.
-    if (/\.djvu?$/.test(new URL(details.url).pathname)) {
+    if (/\.djvu?$/i.test(new URL(details.url).pathname)) {
         return { redirectUrl: getViewerUrl(details.url) };
     }
 }
@@ -152,6 +162,15 @@ const enableHttpIntercepting = () => {
             'http://*/*.djv?*',
             'https://*/*.djv',
             'https://*/*.djv?*',
+
+            'http://*/*.DJVU',
+            'http://*/*.DJVU?*',
+            'https://*/*.DJVU',
+            'https://*/*.DJVU?*',
+            'http://*/*.DJV',
+            'http://*/*.DJV?*',
+            'https://*/*.DJV',
+            'https://*/*.DJV?*',
         ],
         types: ['main_frame', 'sub_frame'],
     },
