@@ -239,25 +239,25 @@ export default {
 
     // Menu
     "Menu":
-        null,
+        "Menu",
     "Document":
-        null,
+        "Documento",
     "About":
-        null,
+        "Info",
     "Print":
-        null,
+        "Stampa",
     "Close":
-        null,
+        "Chiudi",
     "View mode":
-        null,
+        "Modalità vista",
     "Scale":
-        null,
+        "Scala",
     "Rotation":
-        null,
+        "Ruota",
     "Cursor mode":
-        null,
+        "Moldalità cursore",
     "Full page mode":
-        null,
+        "Modalità a piena pagina",
     "Fullscreen mode":
-        null,
+        "Modalità a pieno schermo",
 };
