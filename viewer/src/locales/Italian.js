@@ -185,11 +185,11 @@ export default {
     "Grab cursor mode":
         "Modalità trascinamento pagina",
     "Table of contents":
-        null,
+        "Indice dei contenuti",
     "Toolbar is always shown":
-        null,
+        "Toolbar sempre visibile",
     "Toolbar automatically hides":
-        null,
+        "Toolbar nascosta automaticamente",
 
     // Contents
     "Contents":
