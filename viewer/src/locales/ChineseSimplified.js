@@ -185,11 +185,11 @@ export default {
     "Grab cursor mode":
         "拖拽模式",
     "Table of contents":
-        null,
+        "目录",
     "Toolbar is always shown":
-        null,
+        "工具栏常显示",
     "Toolbar automatically hides":
-        null,
+        "工具栏自动隐藏",
 
     // Contents
     "Contents":
@@ -239,25 +239,25 @@ export default {
 
     // Menu
     "Menu":
-        null,
+        "菜单",
     "Document":
-        null,
+        "文档",
     "About":
-        null,
+        "关于",
     "Print":
-        null,
+        "打印",
     "Close":
-        null,
+        "关闭",
     "View mode":
-        null,
+        "显示模式",
     "Scale":
-        null,
+        "缩放",
     "Rotation":
-        null,
+        "旋转",
     "Cursor mode":
-        null,
+        "光标模式",
     "Full page mode":
-        null,
+        "整页模式",
     "Fullscreen mode":
-        null,
+        "全屏模式",
 };
