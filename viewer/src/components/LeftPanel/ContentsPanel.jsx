@@ -6,6 +6,9 @@ import Actions from '../../actions/actions';
 import TreeItem from './TreeItem';
 import { TranslationContext } from "../Translation";
 import styled from 'styled-components';
+import CloseButton from "../misc/CloseButton";
+import { ActionTypes } from "../../constants";
+import { withAppContext } from "../AppContext";
 
 const Root = styled.div`
     padding: 0.5em;
@@ -19,19 +22,20 @@ const Header = styled.div`
     border-bottom: 1px solid var(--border-color);
     margin-bottom: 0.5em;
     padding-bottom: 0.2em;
+    display: flex;
+    justify-content: space-between;
 `;
 
 class ContentsPanel extends React.Component {
 
     static propTypes = {
-        contents: PropTypes.array,
-        setPageByUrl: PropTypes.func.isRequired
+        contents: PropTypes.array
     };
 
     static contextType = TranslationContext;
 
     onTreeItemClick = (url) => {
-        this.props.setPageByUrl(url);
+        this.props.dispatch(Actions.setPageByUrlAction(url, this.props.appContext.isMobile));
     };
 
     convertBookmarkArrayToTreeItemDataArray(bookmarkArray) {
@@ -48,12 +52,17 @@ class ContentsPanel extends React.Component {
     }
 
     render() {
-        const contents = this.props.contents;
+        const { contents, dispatch } = this.props;
         const t = this.context;
 
         return (
             <Root>
-                <Header>{t("Contents")}</Header>
+                <Header>
+                    <span css={`margin-right: 0.5em;`}>{t("Contents")}</span>
+                    <CloseButton
+                        onClick={() => dispatch({ type: ActionTypes.CLOSE_CONTENTS })}
+                    />
+                </Header>
                 {contents && contents.map((bookmark, i) => {
                     return <TreeItem key={i} {...this.makeTreeItemDataByBookmark(bookmark)} />
                 })}
@@ -65,6 +74,4 @@ class ContentsPanel extends React.Component {
     }
 }
 
-export default connect(null, {
-    setPageByUrl: Actions.setPageByUrlAction
-})(ContentsPanel);
+export default connect()(withAppContext(ContentsPanel));

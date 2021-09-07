@@ -197,6 +197,12 @@ export default {
         "Курсор для выделения текста",
     "Grab cursor mode":
         "Режим перетаскивания",
+    "Table of contents":
+        "Оглавление",
+    "Toolbar is always shown":
+        "Панель инструментов всегда отображается",
+    "Toolbar automatically hides":
+        "Панель инструментов автоматически скрывается",
 
     // Contents
     "Contents":
@@ -243,4 +249,28 @@ export default {
         "Подготовить страницы к печати",
     "Preparing pages for printing":
         "Подготавливаем страницы к печати",
+
+    // Menu
+    "Menu":
+        "Меню",
+    "Document":
+        "Документ",
+    "About":
+        "О приложении",
+    "Print":
+        "Печать",
+    "Close":
+        "Закрыть",
+    "View mode":
+        "Режим просмотра",
+    "Scale":
+        "Масштаб",
+    "Rotation":
+        "Поворот",
+    "Cursor mode":
+        "Курсор",
+    "Full page mode":
+        "Полностраничный режим",
+    "Fullscreen mode":
+        "Полноэкранный режим",
 };

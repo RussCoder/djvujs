@@ -1,9 +1,15 @@
 # DjVu.js Library's Changelog
 
+## v.0.5.3 (18.02.2021)
+
+- Error handlers for unhandled promise rejections and errors in the worker.
+- Object URL to the whole library code is created only once to avoid memory
+  leaks.
+
 ## v.0.5.2 (18.02.2021)
 
-- Use DIRM registry to get a page number by its id. 
-  This approach works the same for bundled and indirect documents.
+- Use DIRM registry to get a page number by its id. This approach works the same
+  for bundled and indirect documents.
 
 ## v.0.5.1 (09.01.2021)
 

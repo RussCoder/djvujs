@@ -8,22 +8,26 @@ import { get } from '../../reducers';
 import { useTranslation } from "../Translation";
 import styled from 'styled-components';
 
-const Root = styled.div`
-    display: flex;
+const Root = styled.span`
+    display: inline-flex;
     align-items: center;
     cursor: pointer;
     margin: 0 0.5em;
+    text-align: center;
+
+    svg {
+        font-size: calc(var(--button-basic-size) * 0.7);
+    }
 
     svg:first-child {
-        font-size: 1.2em;
         &:hover {
             transform: scale(1.1);
         }
     }
 
     svg:last-child {
-        font-size: 1.2em;
         transform: scale(-1, 1);
+
         &:hover {
             transform: scale(-1.1, 1.1);
         }
@@ -44,7 +48,7 @@ const RotationControl = () => {
     };
 
     return (
-        <Root className="rotation_control" title={t("Rotate the page")}>
+        <Root data-djvujs-id="rotation_control" title={t("Rotate the page")}>
             <FontAwesomeIcon icon={faUndo} onClick={rotateLeft} />
             <span css={`width: 2.5em;`}>{rotation}&deg;</span>
             <FontAwesomeIcon icon={faUndo} onClick={rotateRight} />

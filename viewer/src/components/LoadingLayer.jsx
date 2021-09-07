@@ -1,7 +1,6 @@
 import React from 'react';
-import { TranslationContext } from "./Translation";
 import styled from 'styled-components';
-import LoadingPhrase from './LoadingPhrase';
+import LoadingPhrase from './misc/LoadingPhrase';
 
 const DarkLayer = styled.div`
     position: absolute;
@@ -19,16 +18,15 @@ const MessageWrapper = styled.div`
     left: 50%;
     transform: translate(-50%, -50%);
     opacity: 0.8;
-    font-size: 5em;
+    font-size: 3em;
     flex: 1 1 auto;
     display: flex;
     justify-content: center;
     align-items: center;
+    white-space: nowrap;
 `;
 
 export default class LoadingLayer extends React.Component {
-    static contextType = TranslationContext;
-
     constructor(props) {
         super(props);
         this.showTimeout = null;
@@ -47,8 +45,6 @@ export default class LoadingLayer extends React.Component {
     }
 
     render() {
-        const t = this.context;
-
         return (
             <div
                 style={{ display: 'none' }}

@@ -8,15 +8,18 @@ import { useTranslation } from '../Translation';
 import { ControlButton } from '../StyledPrimitives';
 
 const FullPageViewButton = () => {
+    const { hideFullPageSwitch } = useSelector(get.uiOptions);
     const isFullPageView = useSelector(get.isFullPageView);
     const dispatch = useDispatch();
     const t = useTranslation();
+
+    if (hideFullPageSwitch) return null;
 
     return (
         <div title={t("Switch full page mode")} data-djvujs-class="full_page_button">
             <ControlButton
                 icon={isFullPageView ? faCompress : faExpand}
-                onClick={() => dispatch(Actions.toggleFullPageViewAction(!isFullPageView))}
+                onClick={() => console.log('toggle Fullscreen clicked') || dispatch(Actions.toggleFullPageViewAction(!isFullPageView))}
             />
         </div>
     );

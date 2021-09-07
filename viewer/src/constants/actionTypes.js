@@ -23,4 +23,9 @@ export const ActionTypes = constant({
     PREPARE_PAGES_FOR_PRINTING: null,
     START_PRINTING: null,
     UPDATE_PRINT_PROGRESS: null,
+    CLOSE_CONTENTS: null,
+    TOGGLE_CONTENTS: null,
+    PIN_TOOLBAR: null,
+    UNPIN_TOOLBAR: null,
+    UPDATE_APP_CONTEXT: null,
 });

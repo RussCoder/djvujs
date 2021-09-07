@@ -6,7 +6,6 @@ import { get } from '../reducers';
 import Toolbar from "./Toolbar/Toolbar";
 import InitialScreen from './InitialScreen/InitialScreen';
 import FileLoadingScreen from './FileLoadingScreen';
-import Footer from './Footer/Footer';
 import ErrorWindow from './ModalWindows/ErrorWindow';
 import HelpWindow from './ModalWindows/HelpWindow';
 import { TranslationProvider } from './Translation';
@@ -14,6 +13,7 @@ import Main from './Main';
 import SaveDialog from "./ModalWindows/SaveDialog";
 import OptionsWindow from "./ModalWindows/OptionsWindow";
 import PrintDialog from "./ModalWindows/PrintDialog";
+import AppContextProvider from "./AppContext";
 
 const GlobalStyle = createGlobalStyle`
     html.disable_scroll_djvujs,
@@ -48,7 +48,7 @@ const darkTheme = css`
 
 const style = css`
     font-family: Arial, Helvetica, sans-serif;
-    font-size: 14px;
+    font-size: ${p => p.theme.isMobile ? 10 : 14}px;
     overflow: hidden;
     position: relative;
     box-sizing: border-box;
@@ -57,6 +57,10 @@ const style = css`
     flex-direction: column;
     align-items: center;
     line-height: initial;
+    writing-mode: horizontal-tb;
+    
+    --app-padding: 5px;
+    padding: var(--app-padding);
 
     background: var(--background-color);
     color: var(--color);
@@ -87,7 +91,7 @@ const fullPageStyle = css`
     z-index: 100;
 `;
 
-export default () => {
+const AppRoot = React.forwardRef((props, ref) => {
     const isFileLoaded = useSelector(get.isDocumentLoaded);
     const isFileLoading = useSelector(get.isFileLoading);
     const isFullPageView = useSelector(get.isFullPageView);
@@ -104,6 +108,7 @@ export default () => {
                     ${isFullPageView ? fullPageStyle : ''};
                 `}
                 data-djvujs-id="root"
+                ref={ref}
             >
                 {isFileLoading ?
                     <FileLoadingScreen /> :
@@ -114,7 +119,7 @@ export default () => {
                             <Toolbar />
                         </React.Fragment>
                 }
-                {isFileLoading ? null : <Footer />}
+                {/*{isFileLoading ? null : <Footer />}*/}
 
                 <ErrorWindow />
                 <HelpWindow />
@@ -124,5 +129,11 @@ export default () => {
                 <div id="djvujs-modal-windows-container" />
             </div>
         </TranslationProvider>
+    );
+});
+
+export default () => {
+    return (
+        <AppContextProvider AppRoot={AppRoot} />
     );
 }

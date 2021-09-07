@@ -17,7 +17,7 @@ rerunButton.onclick = rerun;
 document.querySelector('#redraw').onclick = redrawPage;
 
 var pageNumber = 1;
-var djvuUrl = 'assets/DjVu3Spec_indirect/index.djvu';
+var djvuUrl = 'assets/DjVu3Spec_5-10.djvu';
 // var djvuUrl = 'assets/carte.djvu';
 var baseUrl = 'assets/DjVu3Spec_indirect/';
 
@@ -67,9 +67,9 @@ function rerun() {
     Globals.init();
     Globals.clearCanvas();
 
-    setTimeout(() => {
+    setTimeout(async () => {
         var start = performance.now();
-        readDjvu(djvuArrayBuffer);
+        await readDjvu(djvuArrayBuffer);
         var time = performance.now() - start;
         timeOutput.innerText = Math.round(time);
     }, 0);
@@ -134,7 +134,10 @@ function readPicture(buffer) {
     });
 }
 
+const sleep = (timeout = 0) => new Promise(resolve => setTimeout(resolve, timeout));
+
 async function readDjvu(buf) {
+    console.log('redraw');
     var link = document.querySelector('#dochref');
     var time = performance.now();
     console.log("Buffer length = " + buf.byteLength);
@@ -197,6 +200,55 @@ async function redrawPage() {
     //     console.log('**** ***** **** ****');
     // }, 50);
 
+}
+
+function prepareIframe() {
+    const iframe = document.createElement('iframe');
+    iframe.style.cssText = `
+        width: 0;
+        height: 0;
+        position: absolute;
+        left: 0;
+        top: 0;
+        opacity: 0;
+    `;
+    document.body.appendChild(iframe);
+    return iframe;
+}
+
+document.querySelector(('#print_button')).onclick = async () => {
+    const iframe = prepareIframe();
+
+    // await sleep(1);
+
+    console.log(iframe.contentWindow);
+    const promises = [];
+    for (let i = 1; i <= 2; i++) {
+        const page = await djvuDocument.getPage(i);
+        const image = await page.createPngObjectUrl();
+
+        const img = iframe.contentWindow.document.createElement('img');
+        promises.push(new Promise(resolve => img.onload = resolve));
+        img.style.display = 'block';
+        img.style.breakAfter = 'page';
+        img.style.breakInside = 'avoid';
+        img.style.margin = '0 auto';
+        img.src = image.url;
+        img.width = image.width;
+        img.height = image.height;
+        img.style.width = (image.width / image.dpi) + 'in';
+        img.style.height = (image.height / image.dpi) + 'in';
+        iframe.contentWindow.document.body.appendChild(img);
+    }
+
+    window.w = iframe.contentWindow;
+
+    if (/Firefox/.test(navigator.userAgent)) {
+        iframe.contentWindow.print();
+    } else {
+        await Promise.all(promises);
+        iframe.contentWindow.print();
+    }
 }
 
 function splitDjvu(buf) {

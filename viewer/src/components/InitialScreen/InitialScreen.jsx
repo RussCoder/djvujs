@@ -1,6 +1,6 @@
 import React from 'react';
 
-import HelpButton from '../Footer/HelpButton';
+import HelpButton from '../misc/HelpButton';
 import FileZone from './FileZone';
 import DjVu from '../../DjVu';
 import { inExtension } from '../../utils';
@@ -9,10 +9,14 @@ import { useTranslation } from '../Translation';
 import { LanguagePanel } from "../Language/LanguagePanel";
 import styled from 'styled-components';
 import ThemeSwitcher from './ThemeSwitcher';
-import OptionsButton from "../Footer/OptionsButton";
+import OptionsButton from "../misc/OptionsButton";
+import FullPageViewButton from "../misc/FullPageViewButton";
+import { useAppContext } from "../AppContext";
+import LanguageSelector from "../Language/LanguageSelector";
+import FullscreenButton from "../misc/FullscreenButton";
 
 const Root = styled.div`
-    font-size: 2em;
+    font-size: ${p => p.theme.isMobile ? 1.5 : 2}em;
     text-align: center;
     flex: 1 1 auto;
     width: 100%;
@@ -40,14 +44,27 @@ const InfoBlock = styled.div`
     }
 `;
 
+const Footer = styled.div`
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    padding-bottom: 0.1em;
+    contain: layout;
+
+    & > * {
+        margin-left: 0.5em;
+    }
+`;
+
 export default () => {
     const t = useTranslation();
+    const { isMobile } = useAppContext();
 
     return (
         <Root>
-            <LanguagePanel />
+            {isMobile ? <LanguageSelector /> : <LanguagePanel />}
             <ThemeSwitcher />
-            <div css={`max-height: 100%; margin: auto;`}>
+            <div css={`margin: auto;`}>
 
                 <div css={`text-align: center; font-size: 2em`}>
                     {`DjVu.js Viewer v.${DjVu.Viewer.VERSION}`}
@@ -65,6 +82,11 @@ export default () => {
                 {inExtension ? <LinkBlock /> : null}
                 <FileZone />
             </div>
+            <Footer>
+                {(document.fullscreenEnabled || document.webkitFullscreenEnabled) ?
+                    <FullscreenButton css={`margin-right: 0.5em;`} /> : null}
+                <FullPageViewButton />
+            </Footer>
         </Root>
     );
 };

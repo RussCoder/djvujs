@@ -10,11 +10,11 @@ import TextBlock from './TextBlock';
 import ErrorPage from './ErrorPage';
 
 const Root = styled.div`
+    position: relative;
     flex: 1 1 auto;
     width: 100%;
     height: 100%;
     display: flex;
-    padding: 0.5em;
     box-sizing: border-box;
     overflow: hidden;
 `;

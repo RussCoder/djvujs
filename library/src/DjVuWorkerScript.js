@@ -12,6 +12,16 @@ export default function initWorker() {
     /** @type {IWImageWriter} */
     var iwiw; // объект записи документов
 
+    addEventListener("error", e => {
+        console.error(e);
+        postMessage("error");
+    });
+
+    addEventListener("unhandledrejection", e => {
+        console.error(e);
+        postMessage("unhandledrejection");
+    });
+
     // обработчик приема событий
     onmessage = async function ({ data: obj }) {
         if (obj.action) return handlers[obj.action](obj); // action that doesn't require response
@@ -39,6 +49,7 @@ export default function initWorker() {
             postMessage({
                 command: 'Error',
                 error: errorObj,
+                a: () => {},
                 ...(obj.sendBackData ? { sendBackData: obj.sendBackData } : null),
             });
         }
@@ -68,7 +79,7 @@ export default function initWorker() {
         // we should not change the initial array,
         // cause it is sent back in case of error, and a function cannot be sent
         return args.map(arg => {
-            if (typeof arg === 'object' && arg.hyperCallback) {
+            if (arg && (typeof arg === 'object') && arg.hyperCallback) {
                 return (...params) => postMessage({
                     action: 'hyperCallback',
                     id: arg.id,

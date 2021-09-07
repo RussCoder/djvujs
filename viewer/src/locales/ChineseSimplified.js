@@ -184,6 +184,12 @@ export default {
         "文本选择模式",
     "Grab cursor mode":
         "拖拽模式",
+    "Table of contents":
+        null,
+    "Toolbar is always shown":
+        null,
+    "Toolbar automatically hides":
+        null,
 
     // Contents
     "Contents":
@@ -230,4 +236,28 @@ export default {
         "准备页面以打印",
     "Preparing pages for printing":
         "准备页面中",
+
+    // Menu
+    "Menu":
+        null,
+    "Document":
+        null,
+    "About":
+        null,
+    "Print":
+        null,
+    "Close":
+        null,
+    "View mode":
+        null,
+    "Scale":
+        null,
+    "Rotation":
+        null,
+    "Cursor mode":
+        null,
+    "Full page mode":
+        null,
+    "Fullscreen mode":
+        null,
 };

@@ -1,7 +1,7 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSpinner } from '@fortawesome/free-solid-svg-icons';
-import { useTranslation } from './Translation';
+import { useTranslation } from '../Translation';
 
 export default ({ style, className }) => {
     const t = useTranslation();

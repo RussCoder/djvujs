@@ -1,5 +1,36 @@
 # DjVu.js Viewer's Changelog
 
+## v.0.8.0 (06.09.2021)
+
+- Mobile version.
+- Fullscreen mode.
+- Image scaling via pinch zoom.
+
+## v.0.7.1 (30.08.2021)
+
+- Toolbar can be pinned and unpinned.
+- Minor fixes and improvements.
+
+## v.0.7.0 (20.08.2021)
+
+- Removed footer, added menu in order to use less space for controls.
+- Contents panel is animated and can be closed completely.
+- Continuous scroll mode performance improvement.
+
+## v.0.6.2 (06.04.2021)
+
+- Spanish and Portuguese translations.
+- French translation update.
+
+## v.0.6.1 (14.03.2021)
+
+- Fixed print CSS to avoid printing empty pages in Safari.
+
+## v.0.6.0 (10.03.2021)
+
+- Print function.
+- New UI options to hide open, close, print and save buttons.
+
 ## v.0.5.6 (21.02.2021)
 
 - Simplified Chinese translation.

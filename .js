@@ -26,7 +26,7 @@ function copyFile(source, target) {
 }
 
 const buildFolder = 'build/';
-const extensionFolder = 'extension/'
+const extensionFolder = 'extension/dist/'
 if (!fs.existsSync(buildFolder)) {
     fs.mkdirSync(buildFolder);
 }

@@ -6,10 +6,13 @@ import styled from 'styled-components';
 
 const Root = styled.div`
     overflow: auto;
+    padding-bottom: 30px;
     width: 100%;
     height: 100%;
+    box-sizing: border-box;
+    transform: translateZ(0); // removes lags when the page is changed while scrolling
 
-    &>div {
+    & > div {
         min-width: 100%;
         position: relative;
     }
@@ -26,7 +29,7 @@ export default class VirtualList extends React.PureComponent {
         renderingRadius: PropTypes.number,
         outerRef: PropTypes.func,
         className: PropTypes.string,
-        data: PropTypes.any,
+        //data: PropTypes.any,
         resizeKey: PropTypes.any,
     }
 
@@ -45,7 +48,12 @@ export default class VirtualList extends React.PureComponent {
     }
 
     componentDidMount() {
+        this.topNode.addEventListener('scroll', this.onScroll, { passive: true });
         this.updateRenderedItems();
+    }
+
+    componentWillUnmount() {
+        this.topNode.removeEventListener('scroll', this.onScroll, { passive: true });
     }
 
     _prepareSpacialDataAndStyles = memoize(itemSizes => {
@@ -100,12 +108,11 @@ export default class VirtualList extends React.PureComponent {
     }
 
     updateRenderedItems = (viewportHeight = this.viewportHeight) => {
-        this._firstScrollTimestamp = null;
         const scrollTop = this.topNode.scrollTop;
         const startIndex = this.findItemIndexByScrollTop(scrollTop - this.props.renderingRadius * viewportHeight);
 
         let stopIndex = startIndex;
-        const stopThreshold = scrollTop + this.props.renderingRadius * viewportHeight;
+        const stopThreshold = scrollTop + (this.props.renderingRadius + 1) * viewportHeight;
         const maxIndex = this.itemTops.length - 1;
         for (; stopIndex < maxIndex; stopIndex++) {
             if (this.itemTops[stopIndex] >= stopThreshold) {
@@ -116,7 +123,7 @@ export default class VirtualList extends React.PureComponent {
         this.setState({ startIndex, stopIndex });
     }
 
-    onScroll = createDeferredHandler(() => this.updateRenderedItems());
+    onScroll = createDeferredHandler(() => this.updateRenderedItems(), 300, 600);
 
     renderItems() {
         const { startIndex, stopIndex } = this.state;
@@ -124,10 +131,10 @@ export default class VirtualList extends React.PureComponent {
         const Item = this.props.itemRenderer;
 
         for (let i = startIndex; i <= stopIndex; i++) {
-            items[i] = <Item
+            items[i - startIndex] = <Item
                 index={i}
                 style={this.itemStyles[i]}
-                data={this.props.data ? this.props.data[i] : null}
+                //data={this.props.data ? this.props.data[i] : null}
                 key={i}
             />;
         }
@@ -167,17 +174,18 @@ export default class VirtualList extends React.PureComponent {
         this.topNode.scrollTop = this.itemTops[index];
     }
 
+    getHeightStyle = memoize(contentHeight => ({ height: contentHeight + 'px' }));
+
     render() {
-        const itemList = this.props.data;
+        const itemSizes = this.props.itemSizes;
 
         return (
             <Root
                 ref={this.ref}
                 className={this.props.className}
-                onScroll={this.onScroll}
             >
-                {itemList && itemList.length ?
-                    <div style={{ height: this.contentHeight + 'px' }}>
+                {itemSizes && itemSizes.length ?
+                    <div style={this.getHeightStyle(this.contentHeight)}>
                         {this.renderItems()}
                     </div>
                     : null

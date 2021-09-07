@@ -5,7 +5,7 @@ import CanvasImage from './CanvasImage';
 import TextLayer from './TextLayer';
 import Constants from '../../constants';
 import styled from 'styled-components';
-import LoadingPhrase from '../LoadingPhrase';
+import LoadingPhrase from '../misc/LoadingPhrase';
 
 const Root = styled.div`
     position: relative;

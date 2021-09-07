@@ -17,6 +17,7 @@ const initialState = Object.freeze({
     isOptionsWindowOpened: false,
     isContinuousScrollMode: false,
     isIndirect: false,
+    isContentsOpened: false,
     options: { // all these options are saved in localStorage
         interceptHttpRequests: true, // this value MUST BE DUPLICATED in the extension code
         analyzeHeaders: false, // this value MUST BE DUPLICATED in the extension code
@@ -28,12 +29,17 @@ const initialState = Object.freeze({
         hideFullPageSwitch: false,
         changePageOnScroll: true,
         showContentsAutomatically: true,
+        hideOpenAndCloseButtons: false,
+        hidePrintButton: false,
+        hideSaveButton: false,
     },
+    appContext: {},
 });
 
 function getInitialStateWithOptions(state) {
     return {
         ...initialState,
+        appContext: state.appContext,
         isFullPageView: state.isFullPageView,
         options: state.options,
         uiOptions: state.uiOptions,
@@ -102,7 +108,9 @@ export default (state = initialState, action) => {
         case Constants.CONTENTS_IS_GOTTEN_ACTION:
             return {
                 ...state,
-                contents: action.contents
+                contents: action.contents,
+                isContentsOpened: state.uiOptions.showContentsAutomatically && !state.appContext.isMobile
+                    && !!action.contents,
             };
 
         case Constants.SET_USER_SCALE_ACTION:
@@ -117,6 +125,12 @@ export default (state = initialState, action) => {
                 isFullPageView: action.isFullPageView
             }
 
+        case ActionTypes.CLOSE_CONTENTS:
+            return { ...state, isContentsOpened: false };
+
+        case ActionTypes.TOGGLE_CONTENTS:
+            return { ...state, isContentsOpened: !state.isContentsOpened };
+
         case ActionTypes.ERROR:
             return {
                 ...state,
@@ -127,12 +141,16 @@ export default (state = initialState, action) => {
         case ActionTypes.CLOSE_ERROR_WINDOW:
             return { ...state, error: null }
 
+        case ActionTypes.UPDATE_APP_CONTEXT:
+            return { ...state, appContext: payload };
+
         default:
             return state;
     }
 }
 
 export const get = {
+    isContentsOpened: state => state.isContentsOpened,
     dictionary: state => dictionaries[get.options(state).locale] || dictionaries.en,
     isOptionsWindowOpened: state => state.isOptionsWindowOpened,
     uiOptions: state => state.uiOptions,
@@ -148,7 +166,7 @@ export const get = {
     options: state => state.options,
     isFullPageView: state => state.isFullPageView,
     isLoading: state => state.isLoading,
-    isDocumentLoaded: state => !!state.fileName,
+    isDocumentLoaded: state => !!state.pagesQuantity,
     viewMode: state => {
         if (!state.isIndirect && state.isContinuousScrollMode) {
             return Constants.CONTINUOUS_SCROLL_MODE;

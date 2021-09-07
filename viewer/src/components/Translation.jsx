@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 import { get } from "../reducers";
 import dictionaries from '../locales';
 
-export const TranslationContext = React.createContext(text => text);
+export const TranslationContext = React.createContext((text, insertions = null) => text);
 
 export const TranslationProvider = ({ children }) => {
     const dict = useSelector(get.dictionary);
@@ -21,13 +21,21 @@ export const useTranslation = () => {
 
 const escapingRegex = /[.*+\-?^${}()|[\]\\]/g;
 const escapeRegExp = (string) => string.replace(escapingRegex, '\\$&');
+const untranslatedPhrases = {};
+let warningTimeout = 0;
 
 export function createTranslator(dict) {
     return (text, insertions = null) => {
         const translatedText = dict[text] || dictionaries.en[text] || text;
 
         if (!dictionaries.en[text]) {
-            console.warn(`The phrase \n-------------\n ${text} \n-------------\n isn't added to the English dictionary!`);
+            untranslatedPhrases[text] = "";
+            clearTimeout(warningTimeout);
+            warningTimeout = setTimeout(() => {
+                console.warn(`\nThere are untranslated phrases (missing from the English dictionary):`);
+                console.warn('\n' + JSON.stringify(untranslatedPhrases, null, 2)
+                    .replaceAll('""', '\n      ""'));
+            }, 1000); // timeout to collect many phrases to show them as JSON
         }
 
         if (!insertions) return translatedText;

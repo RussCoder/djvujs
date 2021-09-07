@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
+import { connect, useSelector } from 'react-redux';
 import memoize from 'memoize-one';
 
 import Actions from '../../actions/actions';
@@ -25,6 +25,8 @@ const style = css`
     height: 100%;
     overflow: auto;
     box-sizing: border-box;
+    touch-action: pan-x pan-y;
+    padding-bottom: 30px;
     ${p => p.$grab ? 'cursor: grab' : ''};
 
     ${grabbingCursor};
@@ -37,6 +39,11 @@ const ContinuousScrollItem = styled.div`
     transform: translate3d(0, 0, 0); // just for performance optimization when continuos mode is enabled
 `;
 
+function resetEventListener(node, event, handler, options = undefined) {
+    node.removeEventListener(event, handler, options);
+    node.addEventListener(event, handler, options);
+}
+
 /**
  * CanvasImage wrapper. Handles user scaling of the image and grabbing.
  */
@@ -47,6 +54,10 @@ class ImageBlock extends React.Component {
         imageDpi: PropTypes.number,
         userScale: PropTypes.number
     };
+
+    initialGrabbingState = null;
+    pointerEventCache = {};
+    lastPointerDiff = -1;
 
     getSnapshotBeforeUpdate() {
         if (!this.wrapper) {
@@ -65,9 +76,11 @@ class ImageBlock extends React.Component {
         return { horizontalRatio, verticalRatio };
     }
 
-    scrollCurrentPageIntoViewIfRequired() {
+    scrollCurrentPageIntoViewIfRequired(prevProps) {
         if (this.props.viewMode === Constants.CONTINUOUS_SCROLL_MODE
             && this.props.shouldScrollToPage
+            && (prevProps.currentPageNumber !== this.props.currentPageNumber
+                || prevProps.viewMode !== Constants.CONTINUOUS_SCROLL_MODE)
             && this.virtualList
             && !this.virtualList.isItemVisible(this.props.currentPageNumber - 1)) {
             this.virtualList.scrollToItem(this.props.currentPageNumber - 1);
@@ -101,18 +114,40 @@ class ImageBlock extends React.Component {
         this.complexImage && (this.complexImage.style.opacity = 1); // show the content after the scroll bars were adjusted
     }
 
+    enableScaleHandler = e => {
+        if (this.isScaleHandlerEnabled || e.key !== 'Control' || !this.wrapper) return;
+        this.wrapper.addEventListener('wheel', this.wheelScaleHandler);
+        this.isScaleHandlerEnabled = true;
+    }
+
+    disableScaleHandler = e => {
+        if (!this.isScaleHandlerEnabled || e.key !== 'Control') return;
+        this.wrapper.removeEventListener('wheel', this.wheelScaleHandler);
+        this.isScaleHandlerEnabled = false;
+    }
+
     componentDidMount() {
+        window.addEventListener('keydown', this.enableScaleHandler);
+        window.addEventListener('keyup', this.disableScaleHandler);
+
         this.componentDidUpdate({}, {}, {});
     }
 
-    onWheel = (e) => {
-        if (e.ctrlKey) {
-            e.preventDefault();
-            const scaleDelta = 0.05 * (-Math.sign(e.deltaY));
-            const newScale = this.props.userScale + scaleDelta;
-            this.props.dispatch(Actions.setUserScaleAction(newScale));
-            return;
-        }
+    componentWillUnmount() {
+        window.removeEventListener('keydown', this.enableScaleHandler);
+        window.removeEventListener('keyup', this.disableScaleHandler);
+    }
+
+    wheelScaleHandler = e => {
+        if (!e.ctrlKey) return;
+        e.preventDefault();
+        const scaleDelta = 0.05 * (-Math.sign(e.deltaY));
+        const newScale = this.props.userScale + scaleDelta;
+        this.props.dispatch(Actions.setUserScaleAction(newScale));
+    }
+
+    singlePageWheelHandler = (e) => {
+        if (e.ctrlKey) return;
 
         if (!this.props.changePageOnScroll) return;
 
@@ -166,7 +201,6 @@ class ImageBlock extends React.Component {
             scrollTop: this.wrapper.scrollTop
         };
         this.wrapper.classList.add('djvujs_grabbing');
-        this.wrapper.addEventListener('mousemove', this.handleMoving);
     };
 
     finishMoving = (e) => {
@@ -176,26 +210,72 @@ class ImageBlock extends React.Component {
         e.preventDefault();
         this.initialGrabbingState = null;
         this.wrapper.classList.remove('djvujs_grabbing');
-        this.wrapper.removeEventListener('mousemove', this.handleMoving);
     };
+
+    onPointerDown = (e) => {
+        this.wrapper.addEventListener('pointermove', this.onPointerMove);
+
+        if (e.pointerType === 'mouse') {
+            return this.startMoving(e);
+        }
+
+        this.pointerEventCache[e.pointerId] = e;
+    };
+
+    onPointerMove = (e) => {
+        if (e.pointerType === 'mouse') {
+            return this.handleMoving(e);
+        }
+
+        this.pointerEventCache[e.pointerId] = e;
+
+        const events = Object.values(this.pointerEventCache);
+        if (events.length === 2) {
+            e.preventDefault();
+            e.stopPropagation(); // isn't needed for mobile chrome, but maybe for other browsers
+
+            const pointerDiff = Math.hypot(events[0].clientX - events[1].clientX, events[0].clientY - events[1].clientY);
+            if (this.lastPointerDiff > 0) {
+                const blockSize = Math.hypot(this.wrapper.offsetWidth, this.wrapper.offsetHeight);
+                this.props.dispatch(Actions.setUserScaleAction(
+                    this.props.userScale + (pointerDiff - this.lastPointerDiff) / blockSize
+                ));
+            }
+
+            this.lastPointerDiff = pointerDiff;
+        }
+    }
+
+    onPointerUp = (e) => {
+        if (e.pointerType === 'mouse') {
+            this.finishMoving(e);
+        }
+
+        delete this.pointerEventCache[e.pointerId];
+        const events = Object.values(this.pointerEventCache);
+        if (events.length < 2) {
+            this.lastPointerDiff = -1;
+        }
+
+        if (events.length === 0) {
+            this.wrapper.removeEventListener('pointermove', this.onPointerMove);
+        }
+    }
+
 
     wrapperRef = (node) => {
         this.wrapper = node;
-        if (node) {
-            node.removeEventListener('mousedown', this.startMoving);
-            node.removeEventListener('mouseup', this.finishMoving);
-            node.removeEventListener('mouseleave', this.finishMoving);
+        if (!node) return;
 
-            node.addEventListener('mousedown', this.startMoving);
-            node.addEventListener('mouseup', this.finishMoving);
-            node.addEventListener('mouseleave', this.finishMoving);
-            node.removeEventListener('wheel', this.onWheel);
-            node.addEventListener('wheel', this.onWheel);
+        resetEventListener(node, 'pointerdown', this.onPointerDown);
+        resetEventListener(node, 'pointerup', this.onPointerUp);
+        resetEventListener(node, 'pointerleave', this.onPointerUp);
+        resetEventListener(node, 'pointercancel', this.onPointerUp);
 
-            if (this.props.viewMode === Constants.CONTINUOUS_SCROLL_MODE) {
-                node.removeEventListener('scroll', this.onScroll);
-                node.addEventListener('scroll', this.onScroll);
-            }
+        if (this.props.viewMode === Constants.CONTINUOUS_SCROLL_MODE) {
+            resetEventListener(node, 'scroll', this.onScroll, { passive: true });
+        } else {
+            resetEventListener(node, 'wheel', this.singlePageWheelHandler);
         }
     }
 
@@ -217,7 +297,7 @@ class ImageBlock extends React.Component {
 
     getItemSizes = memoize((pageList, userScale, rotation) => {
         const isRotated = rotation === 90 || rotation === 270;
-        return this.props.pageList.map(page => {
+        return pageList.map(page => {
             const scaleFactor = Constants.DEFAULT_DPI / page.dpi * userScale;
             return Math.floor((isRotated ? page.width : page.height) * scaleFactor) + 6; // 2px for top and bottom image borders, 4px for vertical paddings of the wrapper element
         })
@@ -225,7 +305,9 @@ class ImageBlock extends React.Component {
 
     virtualListRef = component => this.virtualList = component;
 
-    itemRenderer = React.memo(({ index, style, data: pageData }) => {
+    itemRenderer = React.memo(({ index, style }) => {
+        const pageData = useSelector(state => get.pageList(state)[index]);
+
         return (
             <ContinuousScrollItem style={style} key={index}>
                 <ComplexImage
@@ -243,19 +325,19 @@ class ImageBlock extends React.Component {
 
     render() {
         const isGrabMode = this.props.cursorMode === Constants.GRAB_CURSOR_MODE;
+        const { documentId, pageSizeList, userScale, rotation, viewMode, imageData } = this.props;
 
-        const { documentId, pageSizeList, pageList, userScale, rotation } = this.props;
-        return this.props.viewMode === Constants.CONTINUOUS_SCROLL_MODE ?
+        return (viewMode === Constants.CONTINUOUS_SCROLL_MODE && pageSizeList.length) ?
             <VirtualList
                 ref={this.virtualListRef}
                 outerRef={this.wrapperRef}
                 css={`${grabbingCursor}; ${isGrabMode ? 'cursor: grab;' : ''}`}
                 itemSizes={this.getItemSizes(pageSizeList, userScale, rotation)}
-                data={pageList}
+                //data={pageList}
                 itemRenderer={this.itemRenderer}
                 key={documentId}
             />
-            : this.props.imageData ?
+            : imageData ?
                 <div
                     css={style}
                     $grab={isGrabMode}
@@ -278,7 +360,7 @@ export default connect(
         currentPageNumber: get.currentPageNumber(state),
         shouldScrollToPage: get.shouldScrollToPage(state),
         viewMode: get.viewMode(state),
-        pageList: get.pageList(state),
+        //pageList: get.pageList(state),
         pageSizeList: get.pageSizeList(state),
         imageData: get.imageData(state),
         imageDpi: get.imageDpi(state),

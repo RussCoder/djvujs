@@ -1,13 +1,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTimesCircle } from '@fortawesome/free-regular-svg-icons';
 import styled, { css } from 'styled-components';
-import { iconButton } from '../cssMixins';
+import CloseButton from "../misc/CloseButton";
 
 const style = css`
-    z-index: 0; // to make windows with their dark layers lie one on top of another when they are created in sequence 
+    z-index: 4; // 0 was used to just make windows with their dark layers lie one on top of another when they are created in sequence 
     position: absolute;
     top: 0;
     left: 0;
@@ -25,8 +23,8 @@ const ModalWindowRoot = styled.div`
     top: 50%;
     left: 50%;
     transform: translateX(-50%) translateY(-50%);
-    max-width: 80%;
-    max-height: 80%;
+    max-width: 90%;
+    max-height: 90%;
     width: max-content;
     height: max-content;
     z-index: 2;
@@ -37,8 +35,8 @@ const ModalWindowRoot = styled.div`
     --closeButtonBlockHeight: 28px;
 
     ${p => p.$fixedSize ? `
-        height: 80%;
-        width: 80%;
+        height: ${p.theme.isMobile ? 90 : 80}%;
+        width: ${p.theme.isMobile ? 90 : 80}%;
     ` : ''};
 
     ${p => p.$error ? `
@@ -47,21 +45,12 @@ const ModalWindowRoot = styled.div`
     ` : ''};
 `;
 
-const closeButtonStyle = css`
-    ${iconButton};
-    font-size: 24px;
-    display: block;
-    height: var(--closeButtonBlockHeight);
-    padding-right: 2px;
-    margin-left: auto;
-`;
-
 const ContentWrapper = styled.div`
     overflow: auto;
     padding-bottom: var(--closeButtonBlockHeight);
 `
 
-const DarkLayer = styled.div`
+export const DarkLayer = styled.div`
     position: absolute;
     top: 0;
     left: 0;
@@ -93,11 +82,13 @@ export default class ModalWindow extends React.Component {
                     $error={isError}
                     $fixedSize={isFixedSize}
                 >
-                    <FontAwesomeIcon
-                        css={closeButtonStyle}
-                        icon={faTimesCircle}
+                    <CloseButton
                         onClick={onClose}
-                        data-djvujs-class="close_button"
+                        css={`
+                            height: var(--closeButtonBlockHeight);
+                            margin-left: auto;
+                            margin-right: 0.25em;
+                        `}
                     />
                     <ContentWrapper>
                         {this.props.children}

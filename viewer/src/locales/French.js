@@ -35,9 +35,9 @@ export default {
 
     // Initial screen
     "#helpButton - learn more about the app":
-        null,
+        "#helpButton - à propos",
     "#optionsButton - see the available options":
-        null,
+        "#helpButton - options disponibles",
     "powered with":
         "basé sur",
     "Drag & Drop a file here or click to choose manually":
@@ -47,7 +47,7 @@ export default {
     "Open URL":
         "Ouvrir le lien",
     'Enter a valid URL (it should start with "http(s)://")': // an alert shown when you try to open an empty URL
-        null,
+        'Insérer une URL valide (doit commencer par "http(s)://")',
 
     // Errors. Usually there is a header and a message for each error type.
     // For the web request error there are different types of messages depending on the HTTP status.
@@ -58,58 +58,58 @@ export default {
     "Error on page":
         "Erreur dans la page", // Open 'library/assets/czech_indirect/index.djvu
     "Network error":
-        null, // Disable internet connection and try to load something by URL
+        "Erreur de réseau", // Disable internet connection and try to load something by URL
     "Check your network connection":
-        null,
+        "Vérifier votre connexion internet",
     // Load any URL to a nonexistent page on the Internet,
     // e.g. https://djvu.js.org/nonexistentpage
     "Web request error":
-        null,
+        "Erreur de requête web",
     "404 Document not found":
-        null,
+        "404 Dcument non trouvé",
     "403 Access forbidden":
-        null,
+        "403 Accès interdit",
     "500 Internal server error":
-        null,
+        "500 Erreur interne du serveur",
     "The request failed with HTTP status #status":
-        null,
+        "La requête a échouée avec le statut HTTP #status",
     "DjVu file is corrupted": // Open "/library/assets/czech_indirect/dict0085.iff"
-        null,
+        "Le fichier DjVu est corrompu",
     "The file doesn't comply with the DjVu format specification or it's not a whole DjVu document":
-        null,
+        "Le fichier ne respecte pas la spécification du format DjVu ou il s'agit d'un document DjVu incomplet",
     "Incorrect file format": // Open a not-djvu file.
-        null,
+        "Format de fichier incorrect",
     "The provided file is not a DjVu document":
-        null,
+        "Le fichier fourni n'est pas un document DjVu",
     // Load a URL to a DjVu file with "#page=100500" at the end (both in continuous scroll and single-page view modes)
     // e.g. https://djvu.js.org/assets/djvu_examples/DjVu3Spec.djvu#page=100500
     "Incorrect page number":
-        null,
+        "Numéro de page incorrect",
     "There is no page with the number #pageNumber":
-        null,
+        "Il n'existe pas de page avec le numéro #pageNumber",
     // "baseURL" is a URL to a document directory,
     // all links inside the document index.djvu are considered relative to this URL.
     // The term "base URL" can be translated as "a URL to the document's folder".
     "No base URL for an indirect DjVu document":  // Open "/library/assets/czech_indirect/index.djvu"
-        null,
+        "URL de base manquante du document DjVu indirect (multi-fichier)",
     "You probably opened an indirect (multi-file) DjVu document manually.":
-        null,
+        "Vous avez probablement ouvert manuellement un document DjVu indirect (multi-fichier).",
     "But such multi-file documents can be only loaded by URL.":
-        null,
+        "Mais de tels documents multi-fichier ne peuvent être ouvert que par URL",
     "Unexpected error": // Of course there is no standard way to produce this kind of error
-        null,
+        "Erreur inconnue",
     "Cannot print the error, look in the console":
-        null,
+        "Impossible de rapporter l'erreur, regarder dans la console.",
 
     // Options and its tooltips
     "Options":
-        null,
+        "Options",
     "Show options window":
-        null,
+        "Afficher la fenêtre d'option",
     "Color theme":
-        null,
+        "Changer de thème",
     "Extension options":
-        null, // the options of the browser extension
+        "Options de l'extension", // the options of the browser extension
     "Open all links with .djvu at the end via the viewer":
         "Ouvrir tous les liеns .djvu avec l'extension",
     "All links to .djvu files will be opened by the viewer via a simple click on a link":
@@ -117,7 +117,7 @@ export default {
     "Detect .djvu files by means of http headers":
         "Identifier les fichiers .djvu par leur en-tête http",
     "Analyze headers of every new tab in order to process even links which do not end with the .djvu extension":
-        "Analysez les en-têtes de chaque nouvel onglet pour identifier les fichiers même sans l'extension .djvu en fin de lien",
+        "Analyser les en-têtes de chaque nouvel onglet pour identifier les fichiers même sans l'extension .djvu en fin de lien",
 
     // Footer: status bar
     "Ready":
@@ -145,7 +145,7 @@ export default {
 
     // Help window
     "The application for viewing .djvu files in the browser.":
-        "L'application pour afficher des fichiers .djvu dans le naviguateur.",
+        "Une application pour afficher des fichiers .djvu dans le naviguateur.",
     "If something doesn't work properly, feel free to write about the problem at #email.":
         "Si quelque chose ne fonctionne pas correctement, vous pouvez écrire à #email.",
     "The official website is #website.":
@@ -184,6 +184,12 @@ export default {
         "Curseur pour mettre le texte en surbrillance",
     "Grab cursor mode":
         "Défilement glisser-déposer",
+    "Table of contents":
+        null,
+    "Toolbar is always shown":
+        null,
+    "Toolbar automatically hides":
+        null,
 
     // Contents
     "Contents":
@@ -193,7 +199,7 @@ export default {
     // A rare case. Open /library/assets/links.djvu in the viewer on https://djvu.js.org/ (not in the extension!)
     // and click the "Absolute Link" in the contents
     "The link points to another document. Do you want to proceed?":
-        null,
+        "Le lien redirige vers un autre document. Voulez-vous continuer ?",
 
     // Text Block (shown in the text view mode)
     "No text on this page":
@@ -215,19 +221,43 @@ export default {
 
     // Printing
     "Print document":
-        null,
+        "Imprimer le document",
     "Pages must be rendered before printing.":
-        null,
+        "Les pages doivent être rendues avant impression",
     "It may take a while.":
-        null,
+        "Cela peut prendre un moment",
     "Select the pages you want to print.":
-        null,
+        "Sélectionner la page à imprimer",
     "From":
-        null,
+        "De",
     "to":
-        null,
+        "à",
     "Prepare pages for printing":
-        null,
+        "Préparer les pages pour l'impression",
     "Preparing pages for printing":
+        "Préparation des pages pour l'impression",
+
+    // Menu
+    "Menu":
+        null,
+    "Document":
+        null,
+    "About":
+        null,
+    "Print":
+        null,
+    "Close":
+        null,
+    "View mode":
+        null,
+    "Scale":
+        null,
+    "Rotation":
+        null,
+    "Cursor mode":
+        null,
+    "Full page mode":
+        null,
+    "Fullscreen mode":
         null,
 };

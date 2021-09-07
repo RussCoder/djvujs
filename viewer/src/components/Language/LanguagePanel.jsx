@@ -9,9 +9,11 @@ import AddLanguageButton from "./AddLanguageButton";
 
 const LanguagePanelRoot = styled.div`
     display: flex;
-    font-size: 0.8em;
+    font-size: 20px;
     margin-top: 0.5em;
     align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
 `;
 
 const selectedLanguageItem = css`
@@ -23,7 +25,8 @@ const selectedLanguageItem = css`
 const LanguageItem = styled.div`
     margin-left: 0.5em;
     cursor: pointer;
-    
+    white-space: nowrap;
+
     ${p => p.$selected ? selectedLanguageItem : `
         :hover {
             border-bottom: 1px solid var(--color);
@@ -39,19 +42,18 @@ export const LanguagePanel = () => {
         <LanguagePanelRoot>
             {Object.entries(dictionaries).map(([code, dict]) => {
                 return (
-                    <React.Fragment key={code}>
-                        <LanguageItem
-                            $selected={locale === code}
-                            data-djvujs-class={'language_name ' + (locale === code ? 'selected' : '')}
-                            onClick={() => dispatch({
-                                type: ActionTypes.UPDATE_OPTIONS,
-                                payload: { locale: code },
-                            })}
-                        >
-                            {dict.nativeName}
-                            <LanguageWarningSign languageCode={code} />
-                        </LanguageItem>
-                    </React.Fragment>
+                    <LanguageItem
+                        key={code}
+                        $selected={locale === code}
+                        data-djvujs-class={'language_name ' + (locale === code ? 'selected' : '')}
+                        onClick={() => dispatch({
+                            type: ActionTypes.UPDATE_OPTIONS,
+                            payload: { locale: code },
+                        })}
+                    >
+                        {dict.nativeName}
+                        <LanguageWarningSign languageCode={code} />
+                    </LanguageItem>
                 );
             })}
             <AddLanguageButton css={`font-size: 1.5em;`} />

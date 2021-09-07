@@ -10,7 +10,7 @@ import styled from 'styled-components';
 
 const FileIcon = styled(FontAwesomeIcon)`
     flex: 0 0 auto;
-    font-size: 1.5em;
+    //font-size: var(--button-basic-size, 1.5em);
 `;
 
 const FileName = styled.span`
@@ -31,7 +31,6 @@ const Root = styled.div`
     justify-content: flex-start;
     white-space: nowrap;
     overflow: hidden;
-    padding: 0.15em;
 
     &:hover {
         ${FileIcon} {
@@ -76,7 +75,7 @@ class FileBlock extends React.Component {
                 title={t("Open another .djvu file")}
             >
                 <FileIcon icon={faUpload} />
-                <FileName>{this.props.fileName || t("Choose a file")}</FileName>
+                <FileName>{this.props.fileName == null ? t("Choose a file") : (this.props.fileName || '')}</FileName>
                 <input
                     style={{ display: 'none' }}
                     type="file"

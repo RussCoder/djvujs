@@ -1,3 +1,5 @@
+'use strict';
+
 const cleanup = require('rollup-plugin-cleanup');
 const resolve = require('rollup-plugin-node-resolve');
 const commonjs = require('rollup-plugin-commonjs');
@@ -14,7 +16,7 @@ module.exports = {
     output: [
         Object.assign({ file: 'dist/djvu.js' }, outputTemplate),
         Object.assign({ file: '../viewer/public/tmp/djvu.js' }, outputTemplate),
-        Object.assign({ file: '../extension/djvu.js' }, outputTemplate)
+        Object.assign({ file: '../extension/dist/djvu.js' }, outputTemplate)
     ],
     plugins: [
         resolve(),

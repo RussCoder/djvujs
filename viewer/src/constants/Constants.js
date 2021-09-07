@@ -39,6 +39,11 @@ const Constants = {
     SET_API_CALLBACK_ACTION: null, // A special action for interaction with sagas. Used for program API of the viewer, look at the DjVuViewer.js
 };
 
+/**
+ * @template T
+ * @param {T} obj
+ * @returns {Readonly<{[prop in keyof T]: string|number}>}
+ */
 export function constant(obj) {
     for (const key in obj) {
         if (obj[key] === null) {

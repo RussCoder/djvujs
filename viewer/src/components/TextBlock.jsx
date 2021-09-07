@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import LoadingPhrase from './LoadingPhrase';
+import LoadingPhrase from './misc/LoadingPhrase';
 import { useTranslation } from './Translation';
 
 const Root = styled.div`

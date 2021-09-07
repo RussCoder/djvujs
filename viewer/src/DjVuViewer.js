@@ -17,7 +17,7 @@ const Events = constant({
 
 export default class DjVuViewer extends EventEmitter {
 
-    static VERSION = '0.5.6';
+    static VERSION = '0.8.0';
 
     static Events = Events;
 
@@ -33,6 +33,14 @@ export default class DjVuViewer extends EventEmitter {
         super();
         this.store = configureStore(this.eventMiddleware);
         config && this.configure(config);
+
+        if (process.env.NODE_ENV === 'development') { // because CRA's Fast Refresh works bad
+            if (module.hot) {
+                module.hot.accept('./components/App', () => {
+                    this.render(this.htmlElement);
+                });
+            }
+        }
     }
 
     eventMiddleware = store => next => action => {
@@ -110,6 +118,9 @@ export default class DjVuViewer extends EventEmitter {
           hideFullPageSwitch: boolean,
           changePageOnScroll: boolean,
           showContentsAutomatically: boolean,
+          hideOpenAndCloseButtons: boolean,
+          hidePrintButton: boolean,
+          hideSaveButton: boolean,
        }} uiOptions
      * @returns {DjVuViewer}
      */

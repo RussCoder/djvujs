@@ -32,6 +32,15 @@ app.get('/file_without_extension', (req, res) => {
     });
 });
 
+app.get('/get_embed_djvu_html', (req, res) => {
+    res.send(`
+<!DOCTYPE html>
+<html lang="en">
+   <body><embed type="image/x-djvu" src="${req.query.file}" width="600"></body>     
+</html>
+`);
+});
+
 app.use((req, res) => {
     res.status(404).end('No such a page! 404 error!');
 });

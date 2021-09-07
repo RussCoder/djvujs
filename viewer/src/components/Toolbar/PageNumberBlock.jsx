@@ -20,7 +20,7 @@ const Root = styled.div`
 `;
 
 const navButtonStyle = css`
-    font-size: 2em;
+    font-size: var(--button-basic-size);
     margin: 0 0.1em;
     border-radius: 100%;
     cursor: pointer;
@@ -69,7 +69,10 @@ class PageNumberBlock extends React.Component {
         const t = this.context;
 
         return (
-            <Root title={t("Click on the number to enter it manually")}>
+            <Root
+                title={t("Click on the number to enter it manually")}
+                data-djvujs-id="page_number_block"
+            >
                 <FontAwesomeIcon
                     icon={faArrowAltCircleLeft}
                     onClick={this.goToPrevPage}

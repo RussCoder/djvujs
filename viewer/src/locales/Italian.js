@@ -184,6 +184,12 @@ export default {
         "Modalità selezione testo",
     "Grab cursor mode":
         "Modalità trascinamento pagina",
+    "Table of contents":
+        null,
+    "Toolbar is always shown":
+        null,
+    "Toolbar automatically hides":
+        null,
 
     // Contents
     "Contents":
@@ -215,19 +221,43 @@ export default {
 
     // Printing
     "Print document":
-      "Stampa documento",
+        "Stampa documento",
     "Pages must be rendered before printing.":
-        "Le pagine devono essere processate prima della stampa",
+        "Le pagine devono essere processate prima della stampa.",
     "It may take a while.":
-        "Potrebbe richiedere del tempo",
+        "Potrebbe richiedere tempo",
     "Select the pages you want to print.":
-        "Seleziona le oagine da stampare",
+        "Seleziona le pagine da stampare",
     "From":
         "Da",
     "to":
         "a",
     "Prepare pages for printing":
-        "Avvia il processo di stampa",
+        "Avvia processo di stampa",
     "Preparing pages for printing":
         "Sto preparando le pagine per la stampa",
+
+    // Menu
+    "Menu":
+        null,
+    "Document":
+        null,
+    "About":
+        null,
+    "Print":
+        null,
+    "Close":
+        null,
+    "View mode":
+        null,
+    "Scale":
+        null,
+    "Rotation":
+        null,
+    "Cursor mode":
+        null,
+    "Full page mode":
+        null,
+    "Fullscreen mode":
+        null,
 };

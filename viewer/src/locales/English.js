@@ -184,6 +184,12 @@ export default {
         "Text cursor mode",
     "Grab cursor mode":
         "Grab cursor mode",
+    "Table of contents":
+        "Table of contents",
+    "Toolbar is always shown":
+        "Toolbar is always shown",
+    "Toolbar automatically hides":
+        "Toolbar automatically hides",
 
     // Contents
     "Contents":
@@ -230,4 +236,28 @@ export default {
         "Prepare pages for printing",
     "Preparing pages for printing":
         "Preparing pages for printing",
+
+    // Menu
+    "Menu":
+        "Menu",
+    "Document":
+        "Document",
+    "About":
+        "About",
+    "Print":
+        "Print",
+    "Close":
+        "Close",
+    "View mode":
+        "View mode",
+    "Scale":
+        "Scale",
+    "Rotation":
+        "Rotation",
+    "Cursor mode":
+        "Cursor mode",
+    "Full page mode":
+        "Full page mode",
+    "Fullscreen mode":
+        "Fullscreen mode",
 };

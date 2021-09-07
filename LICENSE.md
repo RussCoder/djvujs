@@ -3,11 +3,11 @@ to, and may be distributed under,
 the [GNU General Public License, Version 2](GNU_GPL_v2).
 
 Everything else in this repository (including the DjVu.js Viewer and the browser
-extension) is distributed under the terms of [The Unlicense](UNLICENSE).
+extension) is distributed under the terms of [The Unlicense](THE_UNLICENSE).
 
-The usage of GNU GPL v2 for the library was conditioned by the fact DjVu.js
-contains some fragments of code, which were copied from DjVuLibre or Java DjVu
-libraries, which are distributed under this very license.
+The choice of GNU GPL v2 for the library is conditioned by the fact DjVu.js
+contains some code fragments copied from DjVuLibre or Java DjVu libraries, which
+are distributed under this very license.
 
 The DjVu.js Library isn't a port of DjVuLibre or Java DjVu, but the published
 specification of the DjVu format refers to DjVuLibre as the de facto standard of

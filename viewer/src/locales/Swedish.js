@@ -184,6 +184,12 @@ export default {
         "Visningsläge med textmarkör",
     "Grab cursor mode":
         "Visningsläge med greppbart markörläge",
+    "Table of contents":
+        null,
+    "Toolbar is always shown":
+        null,
+    "Toolbar automatically hides":
+        null,
 
     // Contents
     "Contents":
@@ -215,19 +221,43 @@ export default {
 
     // Printing
     "Print document":
-        null,
+        "Skriv ut",
     "Pages must be rendered before printing.":
-        null,
+        "Sidorna måste renderas före utskrift.",
     "It may take a while.":
-        null,
+        "Det kan ta en stund.",
     "Select the pages you want to print.":
-        null,
+        "Välj de sidor du vill skriva ut.",
     "From":
-        null,
+        "Från",
     "to":
-        null,
+        "till",
     "Prepare pages for printing":
-        null,
+        "Förbered sidor för utskrift",
     "Preparing pages for printing":
+        "Förbereder sidor för utskrift",
+
+    // Menu
+    "Menu":
+        null,
+    "Document":
+        null,
+    "About":
+        null,
+    "Print":
+        null,
+    "Close":
+        null,
+    "View mode":
+        null,
+    "Scale":
+        null,
+    "Rotation":
+        null,
+    "Cursor mode":
+        null,
+    "Full page mode":
+        null,
+    "Fullscreen mode":
         null,
 };
