@@ -1,6 +1,6 @@
-<script src="<%= library_link %>"></script>
-<script src="<%= viewer_js_link %>"></script>
-<script>
+script(src=globalData.library_link)
+script(src=globalData.viewer_js_link)
+script.
     window.addEventListener("load", () => {
         var ViewerInstance = new DjVu.Viewer();
         ViewerInstance.render(document.querySelector("#for_viewer"));
@@ -12,4 +12,3 @@
             };
         })
     });
-</script>

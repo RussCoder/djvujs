@@ -1,0 +1,18 @@
+extends _includes/_layout
+
+block content
+    h1 Downloads
+
+    p Here you can download the library and the viewer .js and .css files.
+
+    p: a(href=globalData.library_link download="djvu.js") Download DjVu.js library (version #{globalData.library_version})
+
+    p: a(href=globalData.viewer_js_link download="djvu_viewer.js") Download DjVu.js Viewer (version #{globalData.viewer_version})
+
+    p Note that since the version 0.5.0 all viewer's CSS is inside the js file. So no separate djvu_viewer.css is provided.
+
+    p
+        | You can download
+        em: a(href="https://github.com/RussCoder/djvujs/releases") the previous versions here.
+
+    include:markdown-it _includes/_how_to_use.md

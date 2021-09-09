@@ -1,0 +1,20 @@
+-const title = "DjVu.js - Открытие и просмотр файлов DjVu онлайн!";
+doctype
+html
+    head
+        include head
+    body
+        header
+            include lang_block
+            a(href='/ru'): div.site_name Библиотека DjVu.js
+        nav
+            a(href='/ru') Viewer
+            a(href='/ru/docs') Документация
+            a(href='/ru/downloads') Загрузки
+            a(href='/ru/about') О проекте
+            a(href='/ru/extension') Расширение
+        div.main
+            block content
+                !=content
+        footer
+            | DjVu.js 2016 - !{'<script>document.write(new Date().getFullYear())</script>'} | Возможно, все права защищены.

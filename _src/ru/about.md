@@ -1,3 +1,6 @@
+---
+layout: _ru_layout.pug
+---
 # О проекте DjVu.js
 
 DjVu.js - это программная библиотека написанная на JavaScript и предназначенная

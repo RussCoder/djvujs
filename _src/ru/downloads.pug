@@ -1,0 +1,18 @@
+extends ../_includes/_ru_layout
+
+block content
+    h1 Загрузки
+
+    p Здесь Вы можете скачать последнюю версию библиотеки и программы-просмотрщика - .js и .css файлы.
+
+    p: a(href=globalData.library_link download="djvu.js") Скачать библиотеку DjVu.js (version #{globalData.library_version})
+
+    p: a(href=globalData.viewer_js_link download="djvu_viewer.js") Скачать DjVu.js Viewer (version #{globalData.viewer_version})
+
+    p Начиная с версии 0.5.0 все стили для DjVu.js Viewer встроен в js файл. Поэтому отдельного css файла больше нет.
+
+    p.
+        Также Вы можете ознакомиться с кратким руководством, как подключить DjVu.js Viewer к html странице.
+        Руководство пока что на английском языке <a href="/downloads">на странице загрузок</a>.
+
+    p Также можно скачать <em><a href="https://github.com/RussCoder/djvujs/releases"> предыдущие версии здесь</a>.</em>

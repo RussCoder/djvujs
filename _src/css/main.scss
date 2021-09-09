@@ -1,7 +1,7 @@
 $lineColor: #CCC;
 body {
     font-size: 14px;
-    font-family: "Helvetica";
+    font-family: "Helvetica", sans-serif;
     text-align: justify;
     max-width: 65em;
     margin: 1em auto;
@@ -124,20 +124,22 @@ footer {
 
 .main > a, .main > :not(#for_viewer) a {
     text-decoration: none;
-    color: darkblue;
     font-size: 0.8em;
-    border: 1px solid darkblue;
+    color: black;
     padding: 0.2em;
     border-radius: 3px;
     margin: 0.5em;
     display: inline-block;
+    background: #bcdeff;
+    padding-left: 1em;
+    clip-path: polygon(0 50%, 1em 0, 100% 0, 100% 100%, 0 100%);
 
     &:hover {
-        box-shadow: 0 2px 1px darkblue;
+        transform: translateY(-0.1em);
     }
 
     &:active {
-        text-shadow: 0 0 0.5px darkblue;
+        text-shadow: 0 0 0.5px black;
     }
 }
 

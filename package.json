@@ -1,13 +1,19 @@
 {
   "name": "djvu.js_website",
   "scripts": {
-    "start": "harp server _src --port 9000",
+    "start": "npx @11ty/eleventy --serve --port 9000",
+    "css": "sass --no-source-map --watch _src/css/main.scss _src/css/main.css",
+    "build:css": "sass --no-source-map _src/css/main.scss _src/css/main.css",
+    "build": "npm run build:css && npx @11ty/eleventy",
+    "startOld": "harp ./_src --port 9000",
     "compile": "harp compile _src ./compile && npm run copy",
     "copy": "node .js",
-    "static": "harp server ./ --port 9000"
+    "static": "npx serve docs -l 9000"
   },
   "devDependencies": {
-    "fs-extra": "^9.0.0",
-    "harp": "^0.32.0"
+    "@11ty/eleventy": "^0.12.1",
+    "jstransformer-markdown-it": "^2.1.0",
+    "sass": "^1.39.0",
+    "fs-extra": "^10.0.0"
   }
 }
