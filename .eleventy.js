@@ -1,16 +1,18 @@
 'use strict';
 
 module.exports = function (eleventyConfig) {
-    eleventyConfig.addPassthroughCopy("_src/img");
-    eleventyConfig.addPassthroughCopy("_src/js");
-    eleventyConfig.addPassthroughCopy("_src/assets");
-    eleventyConfig.addPassthroughCopy("_src/css/main.css");
+    // 11ty doesn't copy assets by the default
+    eleventyConfig.addPassthroughCopy("src/img");
+    eleventyConfig.addPassthroughCopy("src/js");
+    eleventyConfig.addPassthroughCopy("src/assets");
+    eleventyConfig.addPassthroughCopy("src/css/main.css");
 
+    // without the option, pug template do not react to the permalink option in the computedData
     eleventyConfig.setDynamicPermalinks(false);
 
     return {
         dir: {
-            input: '_src',
+            input: 'src',
             output: 'docs',
         }
     };

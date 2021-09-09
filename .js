@@ -1,12 +1,24 @@
+'use strict';
+
 const fs = require('fs-extra');
+const command = process.argv[2];
 
-if (fs.existsSync('build/')) {
-    fs.removeSync('docs/assets/dist/');
-    fs.copySync('build/', 'docs/assets/dist/');
-    fs.copySync('assets/', '_src/assets/');
-}
+switch (command) {
+    case 'copy': {
+        if (fs.existsSync('build/')) {
+            fs.copySync('build/', 'src/assets/dist/');
+        }
+        break;
+    }
 
-if (fs.existsSync('compile/')) {
-    fs.copySync('compile/', './');
-    fs.removeSync('compile/');
+    case 'delete':
+        fs.removeSync('docs');
+        break;
+
+    case 'cname':
+        fs.copySync('CNAME', 'docs/CNAME');
+        break;
+
+    default:
+        console.warn('\n *** Unknown command *** \n');
 }

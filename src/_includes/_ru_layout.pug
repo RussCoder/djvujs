@@ -1,4 +1,4 @@
--const title = "DjVu.js - Открытие и просмотр файлов DjVu онлайн!";
+-const title = "DjVu.js - Открытие и просмотр файлов DjVu онлайн";
 doctype
 html
     head
@@ -15,6 +15,7 @@ html
             a(href='/ru/extension') Расширение
         div.main
             block content
-                !=content
+                //- content is a special 11ty variable to designate the place where a template is built into the layout.
+                != content
         footer
             | DjVu.js 2016 - !{'<script>document.write(new Date().getFullYear())</script>'} | Возможно, все права защищены.
