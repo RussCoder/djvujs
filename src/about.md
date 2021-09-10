@@ -15,7 +15,7 @@ to any web page.
 
 If you have any questions, feel free to create an issue
 on [GitHub](https://github.com/RussCoder/djvujs/issues), or write me at the
-email: djvujs@yandex.ru
+email: `djvujs@yandex.ru`
 
 If you have a djvu document that can't be rendered by the DjVu.js Viewer, please
 send it to me. It's very important, since the djvu format is quite complicated,

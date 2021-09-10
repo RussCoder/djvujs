@@ -1,6 +1,6 @@
 -const title = "DjVu.js - Open and view DjVu online";
 doctype
-html
+html(lang="en")
     head
         include head
     body
@@ -18,4 +18,5 @@ html
                 //- content is a special 11ty variable to designate the place where a template is built into the layout.
                 != content
         footer
-            | DjVu.js 2016 - !{'<script>document.write(new Date().getFullYear())</script>'} | Perhaps, all rights reserved.
+            include year
+            |  | Perhaps, all rights reserved.

@@ -1,10 +1,24 @@
+html {
+  font-size: 10px;
+  height: 100%;
+  box-sizing: border-box;
+}
+@media (max-width: 800px) {
+  html {
+    font-size: 7px;
+  }
+}
+
 body {
-  font-size: 14px;
+  box-sizing: border-box;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  font-size: 1.4rem;
   font-family: "Helvetica", sans-serif;
   text-align: justify;
   max-width: 65em;
-  margin: 1em auto;
-  display: block;
+  margin: 0 auto;
   color: #444;
 }
 
@@ -17,7 +31,7 @@ header {
   text-align: center;
 }
 header .site_name {
-  font-size: 5.5em;
+  font-size: 5rem;
   color: inherit;
 }
 header a {
@@ -47,7 +61,7 @@ header .lang_block a img {
 }
 
 nav {
-  font-size: 21px;
+  font-size: 1.5em;
   display: flex;
   margin: 1em;
   justify-content: space-around;
@@ -70,8 +84,14 @@ nav a:hover, nav a.active {
 }
 
 .main {
-  font-size: 20px;
-  padding: 0 2em;
+  font-size: 1.5em;
+  padding: 0 2rem;
+  margin-bottom: 0.5em;
+}
+.main img[src$=".svg"] {
+  width: 1em;
+  margin: 0 0.5em;
+  transform: translateY(15%);
 }
 .main .djvu_examples {
   margin: 1em;
@@ -89,24 +109,25 @@ nav a:hover, nav a.active {
 }
 
 h1 {
-  font-size: 2em;
+  font-size: 3.5rem;
   border-bottom: #CCC solid 1px;
   padding: 0.3em 0;
 }
 
 h2 {
-  font-size: 1.8em;
+  font-size: 2.8rem;
 }
 
 h3 {
-  font-size: 1.5em;
+  font-size: 2.2rem;
 }
 
 footer {
-  margin-top: 1em;
+  margin-top: auto;
   text-align: center;
   border-top: 1px solid #CCC;
-  padding: 1em 0;
+  padding: 0.5em 0;
+  box-sizing: border-box;
 }
 
 .main > a, .main > :not(#for_viewer) a {
