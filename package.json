@@ -1,19 +1,26 @@
 {
   "name": "djvu.js_website",
   "scripts": {
-    "start": "npx @11ty/eleventy --serve --port 9000",
-    "css": "sass --no-source-map --watch src/css/main.scss src/css/main.css",
-    "build:css": "sass --no-source-map src/css/main.scss src/css/main.css",
-    "build:html": "npx @11ty/eleventy",
-    "build": "node .js delete && npm run build:css && npm run build:html && node .js cname",
+    "start": "run-p html:watch css:watch assets:watch server",
+    "html": "pug src --out docs --obj src/_data/globalData.json",
+    "css": "sass --no-source-map src/css/main.scss docs/css/main.css",
+    "assets": "cpx \"src/{js,assets,img}/**/*\" docs",
+    "html:watch": "npm run html -- --watch",
+    "css:watch": "npm run css -- --watch",
+    "assets:watch": "npm run assets -- --watch",
+    "server": "browser-sync docs --server --port 9000 -w --extensions html",
+    "build": "node .js delete && run-s html css assets && node .js cname",
     "copy": "node .js copy",
     "make": "npm i && npm run copy && npm run build",
     "static": "npx serve docs -l 9000"
   },
   "devDependencies": {
-    "@11ty/eleventy": "^0.12.1",
+    "browser-sync": "^2.27.5",
+    "cpx": "^1.5.0",
+    "fs-extra": "^10.0.0",
     "jstransformer-markdown-it": "^2.1.0",
-    "sass": "^1.39.0",
-    "fs-extra": "^10.0.0"
+    "npm-run-all": "^4.1.5",
+    "pug-cli": "github:pugjs/pug-cli#0eb8d37",
+    "sass": "^1.39.0"
   }
 }

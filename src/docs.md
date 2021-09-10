@@ -1,6 +1,3 @@
----
-layout: _layout.pug
----
 # Documentation
 
 - [Library's API](https://github.com/RussCoder/djvujs/blob/master/library/API.md)

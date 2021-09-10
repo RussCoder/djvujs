@@ -1,6 +1,3 @@
----
-layout: _layout.pug 
----
 # About DjVu.js
 
 DjVu.js is a program library for working with djvu online. It's written in

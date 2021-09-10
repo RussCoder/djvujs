@@ -1,6 +1,8 @@
 {
-  "library_version": "0.5.3",
-  "viewer_version": "0.8.0",
-  "viewer_js_link": "/assets/dist/djvu_viewer.js",
-  "library_link": "/assets/dist/djvu.js"
+  "globalData": {
+    "library_version": "0.5.3",
+    "viewer_version": "0.8.0",
+    "viewer_js_link": "/assets/dist/djvu_viewer.js",
+    "library_link": "/assets/dist/djvu.js"
+  }
 }

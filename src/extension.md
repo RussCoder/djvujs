@@ -1,6 +1,3 @@
----
-layout: _layout.pug
----
 # DjVu.js Viewer browser extension
 
 There is a browser extension, which is a copy of DjVu.js viewer. It allows
