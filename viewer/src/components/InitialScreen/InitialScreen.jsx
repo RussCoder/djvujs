@@ -48,7 +48,6 @@ const Footer = styled.div`
     width: 100%;
     display: flex;
     justify-content: flex-end;
-    padding-bottom: 0.1em;
     contain: layout;
 
     & > * {

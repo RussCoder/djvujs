@@ -1,7 +1,6 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faExpand, faCompress } from '@fortawesome/free-solid-svg-icons';
+import { FaExpand, FaCompress } from "react-icons/all";
 
 import ModalWindow from './ModalWindow';
 import Actions from '../../actions/actions';
@@ -76,8 +75,8 @@ export default () => {
                         <Header>{t('Controls')}</Header>
                         <div>
                             {t("#expandIcon and #collapseIcon are to switch the viewer to the full page mode and back.", {
-                                "#expandIcon": <FontAwesomeIcon icon={faExpand} />,
-                                "#collapseIcon": <FontAwesomeIcon icon={faCompress} />,
+                                "#expandIcon": <FaExpand />,
+                                "#collapseIcon": <FaCompress />,
                             })}
                             {' ' + t("If you work with the browser extension, these buttons will cause no effect, since the viewer takes the whole page by default.")}
                         </div>

@@ -1,11 +1,11 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { faExpand, faCompress } from '@fortawesome/free-solid-svg-icons';
+import { FaExpand, FaCompress } from "react-icons/all";
 
 import Actions from '../../actions/actions';
 import { get } from '../../reducers';
 import { useTranslation } from '../Translation';
-import { ControlButton } from '../StyledPrimitives';
+import { ControlButton } from "../StyledPrimitives";
 
 const FullPageViewButton = () => {
     const { hideFullPageSwitch } = useSelector(get.uiOptions);
@@ -18,7 +18,7 @@ const FullPageViewButton = () => {
     return (
         <div title={t("Switch full page mode")} data-djvujs-class="full_page_button">
             <ControlButton
-                icon={isFullPageView ? faCompress : faExpand}
+                as={isFullPageView ? FaCompress : FaExpand}
                 onClick={() => console.log('toggle Fullscreen clicked') || dispatch(Actions.toggleFullPageViewAction(!isFullPageView))}
             />
         </div>

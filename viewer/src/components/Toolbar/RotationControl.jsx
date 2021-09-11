@@ -1,7 +1,6 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUndo } from '@fortawesome/free-solid-svg-icons';
+import { FaUndo } from "react-icons/all";
 
 import Actions from '../../actions/actions';
 import { get } from '../../reducers';
@@ -49,9 +48,9 @@ const RotationControl = () => {
 
     return (
         <Root data-djvujs-id="rotation_control" title={t("Rotate the page")}>
-            <FontAwesomeIcon icon={faUndo} onClick={rotateLeft} />
+            <FaUndo onClick={rotateLeft} />
             <span css={`width: 2.5em;`}>{rotation}&deg;</span>
-            <FontAwesomeIcon icon={faUndo} onClick={rotateRight} />
+            <FaUndo onClick={rotateRight} />
         </Root>
     );
 };

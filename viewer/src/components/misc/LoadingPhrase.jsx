@@ -1,18 +1,24 @@
 import React from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from '../Translation';
+import { Spinner } from "../StyledPrimitives";
+import styled from "styled-components";
+
+const Root = styled.div`
+    display: flex;
+    align-items: center;
+
+    span {
+        margin-left: 0.5em;
+    }
+`;
 
 export default ({ style, className }) => {
     const t = useTranslation();
 
     return (
-        <span style={style} className={className}>
-            <FontAwesomeIcon
-                icon={faSpinner}
-                pulse={true}
-            />
-            <span style={{marginLeft: '0.5em'}}>{t('Loading')}...</span>
-        </span>
+        <Root style={style} className={className}>
+            <Spinner />
+            <span>{t('Loading')}...</span>
+        </Root>
     );
 };

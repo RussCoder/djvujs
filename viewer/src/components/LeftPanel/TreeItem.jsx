@@ -1,8 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMinusSquare, faPlusSquare } from '@fortawesome/free-regular-svg-icons';
-import { faCircle } from '@fortawesome/free-solid-svg-icons';
+import { FaRegPlusSquare, FaRegMinusSquare, FaCircle } from "react-icons/all";
 import styled from 'styled-components';
 
 const Name = styled.div`
@@ -20,6 +18,7 @@ const Root = styled.div`
     flex-wrap: nowrap;
     
     & > svg {
+        flex: 0 0 auto;
         font-size: 20px;
     }
 `;
@@ -60,13 +59,13 @@ export default class TreeItem extends React.Component {
     };
 
     render() {
+        const Icon = this.state.isCollapsed ? FaRegPlusSquare : FaRegMinusSquare
         return (
             <Root>
                 {this.props.children ?
-                    <FontAwesomeIcon
-                        icon={this.state.isCollapsed ? faPlusSquare : faMinusSquare}
+                    <Icon
                         onClick={this.toggleItem}
-                    /> : <FontAwesomeIcon icon={faCircle} transform="shrink-8" />
+                    /> : <FaCircle css={`transform: scale(0.5)`} />
                 }
                 <div>
                     <Name className="name" onClick={this.onClick}>{this.props.name}</Name>

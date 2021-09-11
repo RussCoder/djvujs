@@ -1,14 +1,13 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { faHandPaper } from '@fortawesome/free-regular-svg-icons';
-import { faICursor } from '@fortawesome/free-solid-svg-icons';
+import { FaRegHandPaper, FaICursor } from "react-icons/all";
 
 import { get } from '../../reducers';
 import Constants from '../../constants';
 import Actions from '../../actions/actions';
 import { useTranslation } from "../Translation";
-import { ControlButton } from '../StyledPrimitives';
 import styled from "styled-components";
+import { controlButton } from "../cssMixins";
 
 const Root = styled.div`
     white-space: nowrap;
@@ -32,14 +31,14 @@ const CursorModeButtonGroup = () => {
     return (
         <Root data-djvujs-id="cursor_mode_buttons">
             <span title={t("Text cursor mode")} className={cursorMode === Constants.TEXT_CURSOR_MODE ? "active" : null}>
-                <ControlButton
-                    icon={faICursor}
+                <FaICursor
+                    css={controlButton}
                     onClick={() => dispatch(Actions.setCursorModeAction(Constants.TEXT_CURSOR_MODE))}
                 />
             </span>
             <span title={t("Grab cursor mode")} className={cursorMode === Constants.GRAB_CURSOR_MODE ? "active" : null}>
-                <ControlButton
-                    icon={faHandPaper}
+                <FaRegHandPaper
+                    css={controlButton}
                     onClick={() => dispatch(Actions.setCursorModeAction(Constants.GRAB_CURSOR_MODE))}
                 />
             </span>

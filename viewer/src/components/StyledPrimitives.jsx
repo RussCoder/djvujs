@@ -1,10 +1,9 @@
-import styled from 'styled-components';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { iconButton } from './cssMixins';
+import styled, { keyframes } from 'styled-components';
+import { controlButton } from './cssMixins';
+import { FaSpinner } from "react-icons/all";
 
-export const ControlButton = styled(FontAwesomeIcon)`
-    ${iconButton};
-    margin: 0 0.5em;
+export const ControlButton = styled.span`
+    ${controlButton};
 `;
 
 export const ControlButtonWrapper = styled.span`
@@ -32,4 +31,13 @@ export const TextButton = styled.button`
     &:focus {
         outline: none;
     }
+`;
+
+const rotateDiscrete = keyframes`
+    0% { transform: rotate(0turn); }
+    100% { transform: rotate(1turn); }
+`;
+
+export const Spinner = styled(FaSpinner)`
+    animation: ${rotateDiscrete} 1s infinite steps(9, end);
 `;

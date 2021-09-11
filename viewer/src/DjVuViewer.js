@@ -37,7 +37,7 @@ export default class DjVuViewer extends EventEmitter {
         if (process.env.NODE_ENV === 'development') { // because CRA's Fast Refresh works bad
             if (module.hot) {
                 module.hot.accept('./components/App', () => {
-                    this.render(this.htmlElement);
+                    this._render(this.htmlElement);
                 });
             }
         }
@@ -86,15 +86,21 @@ export default class DjVuViewer extends EventEmitter {
         return get.fileName(this.store.getState());
     }
 
-    render(element) {
-        this.unmount();
-        this.htmlElement = element;
+    _render(element) {
         ReactDOM.render(
             <Provider store={this.store}>
-                <App />
+                <App shadowRoot={element} />
             </Provider>
             , element
         );
+    }
+
+    render(element) {
+        this.unmount();
+        this.htmlElement = element;
+        //this.shadow = element.attachShadow({ mode: 'open' });
+
+        this._render(this.htmlElement);
     }
 
     unmount() {

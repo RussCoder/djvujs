@@ -1,14 +1,14 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowAltCircleRight, faArrowAltCircleLeft } from '@fortawesome/free-regular-svg-icons';
+import { FaRegArrowAltCircleLeft, FaRegArrowAltCircleRight } from "react-icons/all";
 
 import Actions from '../../actions/actions';
 import PageNumberElement from './PageNumber';
 import { get } from '../../reducers';
 import { TranslationContext } from "../Translation";
 import styled, { css } from 'styled-components';
+import { controlButton } from "../cssMixins";
 
 const Root = styled.div`
     margin: 0 0.5em;
@@ -20,7 +20,7 @@ const Root = styled.div`
 `;
 
 const navButtonStyle = css`
-    font-size: var(--button-basic-size);
+    ${controlButton};
     margin: 0 0.1em;
     border-radius: 100%;
     cursor: pointer;
@@ -73,16 +73,14 @@ class PageNumberBlock extends React.Component {
                 title={t("Click on the number to enter it manually")}
                 data-djvujs-id="page_number_block"
             >
-                <FontAwesomeIcon
-                    icon={faArrowAltCircleLeft}
+                <FaRegArrowAltCircleLeft
                     onClick={this.goToPrevPage}
                     css={navButtonStyle}
                 />
 
                 <PageNumberElement {...this.props} />
 
-                <FontAwesomeIcon
-                    icon={faArrowAltCircleRight}
+                <FaRegArrowAltCircleRight
                     onClick={this.goToNextPage}
                     css={navButtonStyle}
                 />

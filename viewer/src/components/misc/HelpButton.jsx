@@ -1,10 +1,11 @@
 import React from 'react';
 import { useDispatch } from 'react-redux';
-import { faQuestionCircle } from '@fortawesome/free-regular-svg-icons';
+import { FaRegQuestionCircle } from "react-icons/all";
 
 import Actions from '../../actions/actions';
 import { useTranslation } from "../Translation";
-import { ControlButton, ControlButtonWrapper } from '../StyledPrimitives';
+import { controlButton } from "../cssMixins";
+import { ControlButtonWrapper } from '../StyledPrimitives';
 
 const HelpButton = ({ withLabel = null, onClick = () => {} }) => {
     const dispatch = useDispatch();
@@ -19,7 +20,7 @@ const HelpButton = ({ withLabel = null, onClick = () => {} }) => {
                 onClick();
             }}
         >
-            <ControlButton icon={faQuestionCircle} />
+            <FaRegQuestionCircle css={controlButton} />
             {withLabel ? <span>{t('About')}</span> : null}
         </ControlButtonWrapper>
     );

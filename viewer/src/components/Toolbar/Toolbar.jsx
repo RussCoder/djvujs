@@ -5,7 +5,6 @@ import ViewModeButtons from './ViewModeButtons';
 import CursorModeButtonGroup from './CursorModeButtonGroup';
 import RotationControl from './RotationControl';
 import styled, { css } from 'styled-components';
-import { ControlButton } from '../StyledPrimitives';
 import ContentsButton from "./ContentsButton";
 import FullPageViewButton from "../misc/FullPageViewButton";
 import MenuButton from "./MenuButton";
@@ -43,10 +42,6 @@ const Root = styled.div`
 
     font-size: 14px;
     --button-basic-size: 1.5em;
-
-    ${ControlButton} {
-        font-size: var(--button-basic-size);
-    }
 
     margin-bottom: 0;
     transition: margin-bottom 0.5s;

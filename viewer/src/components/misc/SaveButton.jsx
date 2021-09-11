@@ -1,6 +1,6 @@
 import React from "react";
 import { ControlButton, ControlButtonWrapper } from "../StyledPrimitives";
-import { faDownload } from "@fortawesome/free-solid-svg-icons";
+import { FaDownload } from "react-icons/all";
 import SaveNotification from "./SaveNotification";
 import { useDispatch, useSelector } from "react-redux";
 import { get } from "../../reducers";
@@ -27,7 +27,7 @@ export default ({ withLabel = false, onClick = () => {} }) => {
                     onClick();
                 }}
             >
-                <ControlButton icon={faDownload} />
+                <ControlButton as={FaDownload} />
                 {withLabel ? <span>{t('Save')}</span> : null}
             </ControlButtonWrapper>
             {isNotificationShown ?

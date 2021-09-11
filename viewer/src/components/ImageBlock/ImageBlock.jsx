@@ -213,13 +213,15 @@ class ImageBlock extends React.Component {
     };
 
     onPointerDown = (e) => {
-        this.wrapper.addEventListener('pointermove', this.onPointerMove);
-
         if (e.pointerType === 'mouse') {
-            return this.startMoving(e);
+            if (this.isGrabMode()) {
+                this.wrapper.addEventListener('pointermove', this.onPointerMove);
+                this.startMoving(e);
+            }
+        } else {
+            this.wrapper.addEventListener('pointermove', this.onPointerMove)
+            this.pointerEventCache[e.pointerId] = e;
         }
-
-        this.pointerEventCache[e.pointerId] = e;
     };
 
     onPointerMove = (e) => {

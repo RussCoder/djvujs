@@ -7,7 +7,7 @@ import FileBlock from "./FileBlock";
 import OptionsButton from "./misc/OptionsButton";
 import HelpButton from "./misc/HelpButton";
 import { ControlButton } from "./StyledPrimitives";
-import { faPrint } from "@fortawesome/free-solid-svg-icons";
+import { FaPrint } from "react-icons/all";
 import { ActionTypes } from "../constants";
 import { useTranslation } from "./Translation";
 import SaveButton from "./misc/SaveButton";
@@ -19,6 +19,7 @@ import ViewModeButtons from "./Toolbar/ViewModeButtons";
 import CursorModeButtonGroup from "./Toolbar/CursorModeButtonGroup";
 import FullPageViewButton from "./misc/FullPageViewButton";
 import FullscreenButton from "./misc/FullscreenButton";
+import { controlButton } from "./cssMixins";
 
 const Root = styled.div`
     font-size: 16px;
@@ -118,6 +119,8 @@ const DocumentControl = styled.div`
     ${MenuItemStyle};
     margin-right: 1.5em;
     white-space: nowrap;
+    display: flex;
+    align-items: center;
 
     ${ControlButton} {
         margin-left: 0;
@@ -169,7 +172,7 @@ export default ({ isOpened, onClose }) => {
                                 }}
                                 title={t('Print document')}
                             >
-                                <ControlButton icon={faPrint} />
+                                <FaPrint css={controlButton} />
                                 <span>{t('Print')}</span>
                             </DocumentControl>}
 

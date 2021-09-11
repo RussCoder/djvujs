@@ -1,6 +1,6 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
-import { createGlobalStyle, css } from 'styled-components';
+import { createGlobalStyle, css, /* StyleSheetManager */ } from 'styled-components';
 
 import { get } from '../reducers';
 import Toolbar from "./Toolbar/Toolbar";
@@ -91,7 +91,7 @@ const fullPageStyle = css`
     z-index: 100;
 `;
 
-const AppRoot = React.forwardRef((props, ref) => {
+const AppRoot = React.forwardRef(({ shadowRoot }, ref) => {
     const isFileLoaded = useSelector(get.isDocumentLoaded);
     const isFileLoading = useSelector(get.isFileLoading);
     const isFullPageView = useSelector(get.isFullPageView);
@@ -132,8 +132,10 @@ const AppRoot = React.forwardRef((props, ref) => {
     );
 });
 
-export default () => {
+export default ({ shadowRoot }) => {
     return (
-        <AppContextProvider AppRoot={AppRoot} />
+        //<StyleSheetManager target={shadowRoot}>
+        <AppContextProvider AppRoot={AppRoot} shadowRoot={shadowRoot} />
+        //</StyleSheetManager>
     );
 }

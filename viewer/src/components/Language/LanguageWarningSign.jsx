@@ -1,6 +1,5 @@
 import React from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons";
+import { FaExclamationTriangle } from "react-icons/all";
 import styled from "styled-components";
 import IncompleteTranslationWindow from "./IncompleteTranslationWindow";
 import dictionaries from '../../locales';
@@ -9,9 +8,16 @@ const Warning = styled.span`
     color: var(--color);
     cursor: pointer;
     margin-right: 0.5em;
+    display: inline-flex;
+    align-items: center;
 
     :hover {
         color: var(--highlight-color);
+    }
+    
+    svg {
+        margin-left: 0.5em;
+        font-size: 0.8em;
     }
 `;
 
@@ -30,7 +36,7 @@ export default ({ languageCode }) => {
                 e.stopPropagation();
                 toggleWindow(true);
             }}>
-                <FontAwesomeIcon icon={faExclamationTriangle} transform={'shrink-4'} />
+                <FaExclamationTriangle />
             </Warning>
             {isWindowOpened ? <IncompleteTranslationWindow
                 missedPhrases={notTranslatedPhrases}

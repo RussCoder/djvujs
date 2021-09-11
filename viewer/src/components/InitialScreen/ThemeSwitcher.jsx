@@ -2,8 +2,7 @@ import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import styled, { css } from 'styled-components';
 import { get } from '../../reducers';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSun, faMoon } from '@fortawesome/free-regular-svg-icons';
+import { FaRegSun, FaRegMoon } from "react-icons/all";
 import { ActionTypes } from '../../constants/index';
 
 const Root = styled.span`
@@ -27,15 +26,13 @@ export default () => {
 
     return (
         <Root>
-            <FontAwesomeIcon
-                icon={faSun}
+            <FaRegSun
                 css={theme === 'light' ? activeStyle : null}
                 onClick={createClickHandler('light')}
                 data-djvujs-id={'light_theme_button'}
                 data-djvujs-class={theme === 'light' ? 'active' : null}
             />
-            <FontAwesomeIcon
-                icon={faMoon}
+            <FaRegMoon
                 css={theme === 'dark' ? activeStyle : null}
                 onClick={createClickHandler('dark')}
                 data-djvujs-id={'dark_theme_button'}

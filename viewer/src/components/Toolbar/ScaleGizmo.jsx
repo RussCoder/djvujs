@@ -2,8 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import Actions from '../../actions/actions';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faMinus } from '@fortawesome/free-solid-svg-icons';
+import { FaPlus, FaMinus } from "react-icons/all";
 import { get } from '../../reducers';
 import { TranslationContext } from "../Translation";
 import styled from 'styled-components';
@@ -86,10 +85,7 @@ class ScaleGizmo extends React.Component {
                 title={t("You also can scale the page via Ctrl+MouseWheel")}
                 data-djvujs-id="scale_gizmo"
             >
-                <FontAwesomeIcon
-                    icon={faMinus}
-                    onClick={this.decreaseScale}
-                />
+                <FaMinus onClick={this.decreaseScale} />
                 <input
                     onFocus={this.startEditing}
                     onKeyPress={this.onKeyPress}
@@ -98,10 +94,7 @@ class ScaleGizmo extends React.Component {
                     value={this.state.tempValue === null ? currentValue + '%' : this.state.tempValue}
                     onChange={this.onChange}
                 />
-                <FontAwesomeIcon
-                    icon={faPlus}
-                    onClick={this.increaseScale}
-                />
+                <FaPlus onClick={this.increaseScale} />
             </Root>
         );
     }

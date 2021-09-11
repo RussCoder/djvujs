@@ -1,14 +1,13 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUpload } from '@fortawesome/free-solid-svg-icons';
+import { FaUpload } from "react-icons/all";
 
 import Actions from '../actions/actions';
 import { TranslationContext } from './Translation';
 import styled from 'styled-components';
 
-const FileIcon = styled(FontAwesomeIcon)`
+const FileIcon = styled(FaUpload)`
     flex: 0 0 auto;
     //font-size: var(--button-basic-size, 1.5em);
 `;
@@ -74,7 +73,7 @@ class FileBlock extends React.Component {
                 onClick={this.onClick}
                 title={t("Open another .djvu file")}
             >
-                <FileIcon icon={faUpload} />
+                <FileIcon />
                 <FileName>{this.props.fileName == null ? t("Choose a file") : (this.props.fileName || '')}</FileName>
                 <input
                     style={{ display: 'none' }}

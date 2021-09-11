@@ -8,6 +8,12 @@ export const iconButton = css`
     }
 `;
 
+export const controlButton = css`
+    ${iconButton};
+    font-size: var(--button-basic-size);
+    margin: 0 0.5em;
+`;
+
 export const styledInput = css`
     background: var(--background-color);
     border: 1px solid var(--border-color);

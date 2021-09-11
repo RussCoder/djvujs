@@ -1,6 +1,6 @@
 import React from 'react';
 import { useDispatch } from 'react-redux';
-import { faCog } from '@fortawesome/free-solid-svg-icons';
+import { FaCog } from "react-icons/all";
 
 import { useTranslation } from "../Translation";
 import { ControlButton, ControlButtonWrapper } from '../StyledPrimitives';
@@ -19,7 +19,7 @@ const OptionsButton = ({ withLabel = false, onClick = () => {} }) => {
                 onClick();
             }}
         >
-            <ControlButton icon={faCog} />
+            <ControlButton as={FaCog} />
             {withLabel ? <span>{t('Options')}</span> : null}
         </ControlButtonWrapper>
     );
