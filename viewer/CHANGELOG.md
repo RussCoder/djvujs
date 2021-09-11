@@ -1,5 +1,10 @@
 # DjVu.js Viewer's Changelog
 
+## v.0.8.1 (11.09.2021)
+
+- Fixed a bug from the previous release (the text layer couldn't be selected).
+- Updated Italian and Chinese translations.
+
 ## v.0.8.0 (06.09.2021)
 
 - Mobile version.
