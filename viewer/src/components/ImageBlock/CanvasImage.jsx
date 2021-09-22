@@ -5,7 +5,9 @@ import Constants from '../../constants';
 
 /**
  * A component containing logic of rendering ImageData on canvas element.
- * Scales itself via css and via logarithmic scale method. 
+ * Scales itself via css and via logarithmic scale method.
+ *
+ * Must be used with a unique key for each page.
  */
 export default class CanvasImage extends React.Component {
 
@@ -20,13 +22,11 @@ export default class CanvasImage extends React.Component {
         this.tmpCanvas = document.createElement('canvas');
         this.tmpCanvasCtx = this.tmpCanvas.getContext('2d');
         this.lastUserScale = null;
+        this.redrawImageTimeout = -1;
     }
 
-    UNSAFE_componentWillReceiveProps(nextProps) {
-        if (this.props.imageData !== nextProps.imageData) {
-            this.lastUserScale = null;
-            clearTimeout(this.redrawImageTimeout);
-        }
+    componentWillUnmount() {
+        clearTimeout(this.redrawImageTimeout);
     }
 
     componentDidUpdate() {
@@ -50,27 +50,25 @@ export default class CanvasImage extends React.Component {
     }
 
     updateImageIfRequired() {
-        if (!(this.canvas && this.props.imageData)) {
+        if (!this.canvas) {
             return;
         }
-        if (this.props.imageData && this.lastUserScale !== this.props.userScale) {
+        if (this.lastUserScale !== this.props.userScale) {
             if (this.lastUserScale === null) { // if there is no image at all
                 this.drawImageOnCanvas();
             }
             clearTimeout(this.redrawImageTimeout);
             this.redrawImageTimeout = setTimeout(() => {
                 this.drawImageOnCanvas();
-            }, 200);
+            }, 300);
         }
     }
 
     logarithmicScale() {
-        const { imageData, imageDpi, userScale } = this.props;
+        const image = this.props.imageData;
         var tmpH, tmpW, tmpH2, tmpW2;
 
-        var image = imageData;
-        var scale = imageDpi ? imageDpi / Constants.DEFAULT_DPI : 1;
-        scale /= userScale; // current scale factor compared with the initial size of the image
+        let scale = this.getScaleFactor();
 
         if (scale <= 1) {
             return image; // when it's scaled up, it will be just scaled with css

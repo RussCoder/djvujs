@@ -1,5 +1,4 @@
-import React from 'react';
-import PropTypes from 'prop-types';
+import React, { useEffect, useRef } from 'react';
 import Constants from '../../constants';
 import styled from 'styled-components';
 
@@ -19,65 +18,72 @@ const Root = styled.div`
 const TextZone = styled.div`
     line-height: initial;
     color: rgba(0, 0, 0, 0);
-    white-space: nowrap;
     text-align-last: justify;
     text-align: justify;
     position: absolute;
     box-sizing: border-box;
-    font-family: 'Times New Roman', Times, serif;
+    font-family: 'Times New Roman', Garamond, Times, serif;
+
+    span {
+        white-space: pre;
+    }
 `;
 
-class TextLayer extends React.Component {
+const TextLayer = ({ textZones, imageHeight, imageWidth, userScale, imageDpi }) => {
+    const wrapper = useRef(null);
 
-    static propTypes = {
-        zone: PropTypes.object,
-        imageHeight: PropTypes.number,
-        imageWidth: PropTypes.number
-    };
+    useEffect(() => {
+        if (!wrapper.current) return;
 
-    render() {
-        const { textZones, imageHeight, imageWidth } = this.props;
-        if (!textZones) {
-            return null;
+        for (const textZone of wrapper.current.children) {
+            const span = textZone.firstChild;
+            if (span.offsetWidth < textZone.offsetWidth) {
+                const letterSpacing = (textZone.offsetWidth - span.offsetWidth) / span.innerText.length;
+                span.style.letterSpacing = letterSpacing + 'px';
+            }
         }
-        const scaleFactor = Constants.DEFAULT_DPI / this.props.imageDpi * this.props.userScale;
-        const scaledWidth = Math.floor(imageWidth * scaleFactor);
-        const scaledHeight = Math.floor(imageHeight * scaleFactor);
+    }, [textZones, wrapper.current]);
 
-        return (
-            <Root
+    if (!textZones) return null;
+
+    const scaleFactor = Constants.DEFAULT_DPI / imageDpi * userScale;
+    const scaledWidth = Math.floor(imageWidth * scaleFactor);
+    const scaledHeight = Math.floor(imageHeight * scaleFactor);
+
+    return (
+        <Root
+            style={{
+                width: scaledWidth + 'px',
+                height: scaledHeight + 'px'
+            }}
+        >
+            <div
                 style={{
-                    width: scaledWidth + 'px',
-                    height: scaledHeight + 'px'
+                    left: (-(imageWidth - scaledWidth) / 2) + 'px',
+                    top: (-(imageHeight - scaledHeight) / 2) + 'px',
+                    width: imageWidth + 'px',
+                    height: imageHeight + 'px',
+                    transform: `scale(${scaleFactor})`
                 }}
+                ref={wrapper}
             >
-                <div
-                    style={{
-                        left: (-(imageWidth - scaledWidth) / 2) + 'px',
-                        top: (-(imageHeight - scaledHeight) / 2) + 'px',
-                        width: imageWidth + 'px',
-                        height: imageHeight + 'px',
-                        transform: `scale(${scaleFactor})`
-                    }}
-                >
-                    {textZones.map((zone, i) => (
-                        <TextZone
-                            key={i}
-                            style={{
-                                left: zone.x + 'px',
-                                bottom: zone.y + 'px',
-                                width: zone.width + 'px',
-                                height: zone.height + 'px',
-                                fontSize: zone.height * 0.9 + 'px'
-                            }}
-                        >
-                            {zone.text}
-                        </TextZone>
-                    ))}
-                </div>
-            </Root>
-        );
-    }
+                {textZones.map((zone, i) => (
+                    <TextZone
+                        key={i}
+                        style={{
+                            left: zone.x + 'px',
+                            bottom: zone.y + 'px',
+                            width: zone.width + 'px',
+                            height: zone.height + 'px',
+                            fontSize: zone.height * 0.9 + 'px'
+                        }}
+                    >
+                        <span>{zone.text}</span>
+                    </TextZone>
+                ))}
+            </div>
+        </Root>
+    );
 }
 
 export default TextLayer;
