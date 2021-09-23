@@ -15,7 +15,7 @@ body {
   display: flex;
   flex-direction: column;
   font-size: 1.4rem;
-  font-family: "Helvetica", sans-serif;
+  font-family: Arial, "Helvetica", sans-serif;
   text-align: justify;
   max-width: 65em;
   margin: 0 auto;
@@ -87,6 +87,7 @@ nav a:hover, nav a.active {
   font-size: 1.5em;
   padding: 0 2rem;
   margin-bottom: 0.5em;
+  --code-background: rgba(175, 184, 193, 0.4);
 }
 .main img[src$=".svg"] {
   width: 1em;
@@ -100,12 +101,20 @@ nav a:hover, nav a.active {
   margin: 0 0.5em;
 }
 .main pre {
-  background-color: #EEE;
+  background-color: var(--code-background);
   padding: 0.5em;
 }
 .main code {
   color: black;
   font-family: "Consolas", monospace;
+}
+.main code:not(pre code) {
+  display: inline-block;
+  background: var(--code-background);
+  padding: 0.1em 0.4em;
+  margin: 0.1em 0;
+  font-size: 85%;
+  border-radius: 6px;
 }
 
 h1 {

@@ -64,18 +64,26 @@ in order to start the local server (you may change the port as you wish). Then j
 
 Furthermore, the viewer has an API, which allows to open djvu files programmatically:
 
-- `loadDocument(buffer, name = "***", config = null)` - accepts the `ArrayBuffer` and a name of a document which should be shown at footer (it's optional).
-- `async loadDocumentByUrl(url, config = null)` - loads the documents as an `ArrayBuffer` and then invokes the previous method.
-- `configure(config)` - just sets the options. Note, that when a document is loaded some option are reset to the initial ones, so you have to call the method again or use the last parameter of the two previous methods.
+- `loadDocument(buffer, name = "***", config = null)` - accepts
+  the `ArrayBuffer` and a name of a document which should be shown at footer
+  (it's optional).
+- `async loadDocumentByUrl(url, config = null)` - loads the documents as
+  an `ArrayBuffer` and then invokes the previous method.
+- `configure(config)` - just sets the options. **Note, that when a document is
+  loaded some options are reset to the initial ones**, so you have to call the
+  method again or use the last parameter of the two previous methods.
 - `getPageNumber()` - returns the current page number.
 - `on(eventName, handler)` - to add an event handler.
 - `off(eventName)` - to remove an event handler.
 
-The `config` is an object containing options for the viewer. It's an optional parameter. It has the following shape:
-```json5
+The `config` is an object containing options for the viewer. It's an optional
+parameter. It has the following shape:
+
+```js
 // any of the parameters may be omitted, use only those you need
-{
+viewer.configure({
   name: "MyDjVuDocument.djvu",
+  viewMode: 'continuous',
   pageNumber: 10,
   pageRotation: 90,
   pageScale: 2,
@@ -99,11 +107,13 @@ The `config` is an object containing options for the viewer. It's an optional pa
     hidePrintButton: true,
     hideSaveButton: false,
   },
-}
+})
 ```
 
 - `name` - the visible name of the opened document. It is also used when the
   document is saved.
+- `viewMode` - the view mode. The possible values are `text`, `single`
+  and `continuous`.
 - `pageNumber` - the number of the currently opened page. Greater than or equal
   to 1. If it's less than 1, 1 will be used, if it's greater than the total
   number of pages in a document, then the last page number will be used.
@@ -150,27 +160,44 @@ The `config` is an object containing options for the viewer. It's an optional pa
 There are several static methods and properties:
 
 - `DjVu.Viewer.VERSION` - the current version of the viewer.
-- `DjVu.Viewer.getAvailableLanguages()` - a method to get the list of languages added to the viewer.
-- `DjVu.Viewer.Events` - an object containing events which are fired by the viewer (see further examples):
-  - `PAGE_NUMBER_CHANGED` - fired when the number of a currently opened page is changed. The event handler receives no arguments.
+- `DjVu.Viewer.getAvailableLanguages()` - a method to get the list of languages
+  added to the viewer.
+- `DjVu.Viewer.Events` - an object containing events which are fired by the
+  viewer (see further examples):
+  - `PAGE_NUMBER_CHANGED` - fired when the number of a currently opened page is
+    changed. The event handler receives no arguments.
+
+### Escape hatch API
+
+Also, there is a so-called "escape hatch" API, namely:
+
+`DjVu.Viewer.Constants`, `DjVu.Viewer.ActionTypes`, `DjVu.Viewer.get` (all Redux
+selectors), and `viewerInstance.store` - Redux store with `getState()`
+and `dispatch()` methods. These values are exposed to allow quick temporary
+solutions, if the stable programmatic API isn't enough. If you know Redux
+architecture and have studied the source code, you will be able to call any
+action programmatically without changing the source code. However, it's strongly
+recommended creating a feature request if the current API isn't enough,
+because "escape hatch" API changes often during the development.
 
 ## More examples
 
-If you want to load file, select the page number and keep track of what page is currently open, you can do the following:
+If you want to load file, select the page number and keep track of what page is
+currently open, you can do the following:
 
 ```js
 async function loadDocument() {
-    const viewer = new DjVu.Viewer();
-    viewer.render(document.getElementById('for_viewer'));
-    await viewer.loadDocumentByUrl('assets/my-djvu-file.djvu');
+  const viewer = new DjVu.Viewer();
+  viewer.render(document.getElementById('for_viewer'));
+  await viewer.loadDocumentByUrl('assets/my-djvu-file.djvu');
 
-    viewer.configure({ // you also can pass the same object as a second parameter to .loadDocumentByUrl()
-        pageNumber: 10,
-    });
+  viewer.configure({ // you also can pass the same object as a second parameter to .loadDocumentByUrl()
+    pageNumber: 10,
+  });
 
-    viewer.on(Djvu.Viewer.Events.PAGE_NUMBER_CHANGED, () => { // no args are passed here
-        console.log('Page number changed to', viewer.getPageNumber());
-    })
+  viewer.on(Djvu.Viewer.Events.PAGE_NUMBER_CHANGED, () => { // no args are passed here
+    console.log('Page number changed to', viewer.getPageNumber());
+  })
 }
 ```
 
