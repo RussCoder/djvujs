@@ -8,14 +8,13 @@ const initialState = Object.freeze({
     userScale: 1,
     pageRotation: 0,
     isLoading: false,
-    isTextMode: false,
+    viewMode: Constants.SINGLE_PAGE_MODE,
     pagesQuantity: null,
     isFullPageView: false,
     error: null,
     contents: null,
     isHelpWindowShown: false,
     isOptionsWindowOpened: false,
-    isContinuousScrollMode: false,
     isIndirect: false,
     isContentsOpened: false,
     options: { // all these options are saved in localStorage
@@ -56,14 +55,12 @@ export default (state = initialState, action) => {
         case ActionTypes.UPDATE_OPTIONS:
             return { ...state, options: { ...state.options, ...payload } };
 
-        case Constants.ENABLE_CONTINUOUS_SCROLL_MODE_ACTION:
-            return { ...state, isContinuousScrollMode: true, isTextMode: false };
-
-        case Constants.ENABLE_SINGLE_PAGE_MODE_ACTION:
-            return { ...state, isContinuousScrollMode: false, isTextMode: false };
-
-        case Constants.ENABLE_TEXT_MODE_ACTION:
-            return { ...state, isContinuousScrollMode: false, isTextMode: true, isLoading: false };
+        case ActionTypes.SET_VIEW_MODE:
+            return {
+                ...state,
+                viewMode: payload,
+                isLoading: payload === Constants.TEXT_MODE ? false : state.isLoading
+            };
 
         case Constants.SET_PAGE_ROTATION_ACTION:
             return {
@@ -96,7 +93,7 @@ export default (state = initialState, action) => {
                 ...getInitialStateWithOptions(state),
                 documentId: state.documentId + 1,
                 isLoading: true,
-                isContinuousScrollMode: state.options.preferContinuousScroll ? true : state.isContinuousScrollMode,
+                viewMode: state.options.preferContinuousScroll ? Constants.CONTINUOUS_SCROLL_MODE : initialState.viewMode,
                 pagesQuantity: action.pagesQuantity,
                 fileName: action.fileName,
                 isIndirect: action.isIndirect,
@@ -168,12 +165,9 @@ export const get = {
     isLoading: state => state.isLoading,
     isDocumentLoaded: state => !!state.pagesQuantity,
     viewMode: state => {
-        if (!state.isIndirect && state.isContinuousScrollMode) {
-            return Constants.CONTINUOUS_SCROLL_MODE;
+        if (state.isIndirect && state.viewMode === Constants.CONTINUOUS_SCROLL_MODE) {
+            return Constants.SINGLE_PAGE_MODE;
         }
-        if (state.isTextMode) {
-            return Constants.TEXT_MODE;
-        }
-        return Constants.SINGLE_PAGE_MODE;
+        return state.viewMode;
     }
 };

@@ -64,7 +64,10 @@ class RootSaga {
         const state = yield select();
         const viewMode = get.viewMode(state);
 
-        if (viewMode === Constants.CONTINUOUS_SCROLL_MODE) {
+        // when an outer config is provided, and the continuous scroll isn't default,
+        // the page reset can start this saga before the manager has been crated.
+        // Must be fixed at the architectural level, maybe the manager should be created lazily.
+        if (viewMode === Constants.CONTINUOUS_SCROLL_MODE && this.continuousScrollManager) {
             yield* this.continuousScrollManager.startDataFetching();
         } else {
             const pageNumber = get.currentPageNumber(state);
@@ -116,7 +119,8 @@ class RootSaga {
         yield put(Actions.pagesSizesAreGottenAction(pagesSizes));
     }
 
-    * configure({ pageNumber, pageRotation, pageScale, language, theme, uiOptions }) {
+    * configure({ pageNumber, pageRotation, viewMode, pageScale, language, theme, uiOptions }) {
+        if (viewMode) yield put({ type: ActionTypes.SET_VIEW_MODE, payload: viewMode, notSave: true });
         if (pageNumber) yield put(Actions.setNewPageNumberAction(pageNumber, true));
         if (pageRotation) yield put(Actions.setPageRotationAction(pageRotation));
         if (pageScale) yield put(Actions.setUserScaleAction(pageScale));
@@ -173,27 +177,32 @@ class RootSaga {
             isIndirect: !isBundled,
         });
 
-        // perhaps it's better to configure the viewer before DOCUMENT_CREATED_ACTION 
-        // (since the promise of the viewer.loadDocument is resolved on this action)
-        // But currently DOCUMENT_CREATED_ACTION reset the state of the viewer, so the configuration is done after it.
-        // The optimal variant is to resolve the promise on another action, but I'm not sure is it needed to anybody at all.
-        if (config) {
-            yield* this.configure(config);
-        }
+        yield* this.loadContents();
 
         const state = yield select();
-        this.continuousScrollManager = null; // we don't have to reset it, since the worker was recreated and all memory was release in any case
         if (get.viewMode(state) === Constants.CONTINUOUS_SCROLL_MODE) {
             yield* this.prepareForContinuousMode();
         }
 
+        // perhaps it's better to configure the viewer before DOCUMENT_CREATED_ACTION 
+        // (since the promise of the viewer.loadDocument is resolved on this action)
+        // But currently DOCUMENT_CREATED_ACTION reset the state of the viewer, so the configuration is done after it.
+        // The optimal variant is to resolve the promise on another action, but I'm not sure is it needed to anybody at all.
+        // Also, configuration can start some heavy sagas (e.g. viewMode or pageNumber change) which cancel all worker tasks.
+        // Thus, it's done after all other tasks (including loading of the contents) are done.
+        if (config) {
+            yield* this.configure(config);
+        }
+
+        yield* this.resetCurrentPageNumber();
+    }
+
+    * loadContents() {
         const contents = yield this.djvuWorker.doc.getContents().run();
         yield put({
             type: Constants.CONTENTS_IS_GOTTEN_ACTION,
             contents: contents
         });
-
-        yield* this.resetCurrentPageNumber();
     }
 
     * resetCurrentPageNumber() {
@@ -269,6 +278,8 @@ class RootSaga {
         this.pageStorage.reset();
         this.pagesCache.resetPagesCache();
         this.djvuWorker.reset();
+        // we don't have to reset it, since the worker was recreated and all memory was released in any case
+        this.continuousScrollManager = null;
         this.isBundling = false;
         this.documentContructorData = null;
     }
@@ -277,23 +288,23 @@ class RootSaga {
         this.callbacks[action.callbackName] = action.callback;
     }
 
-    * switchToContinuousScrollMode() {
+    * switchToContinuousScrollMode(notSave = false) {
         this.djvuWorker.cancelAllTasks();
         if (!this.continuousScrollManager) {
             yield* this.prepareForContinuousMode();
         }
         this.pagesCache.resetPagesCache();
         yield* this.resetCurrentPageNumber();
-        yield put({ type: ActionTypes.UPDATE_OPTIONS, payload: { preferContinuousScroll: true } });
+        if (!notSave) yield put({ type: ActionTypes.UPDATE_OPTIONS, payload: { preferContinuousScroll: true } });
     }
 
-    * switchToSinglePageMode() {
+    * switchToSinglePageMode(notSave = false) {
         this.djvuWorker.cancelAllTasks();
         if (this.continuousScrollManager) {
             yield* this.continuousScrollManager.reset();
         }
         yield* this.resetCurrentPageNumber();
-        yield put({ type: ActionTypes.UPDATE_OPTIONS, payload: { preferContinuousScroll: false } });
+        if (!notSave) yield put({ type: ActionTypes.UPDATE_OPTIONS, payload: { preferContinuousScroll: false } });
     }
 
     * switchToTextMode() {
@@ -302,6 +313,23 @@ class RootSaga {
             yield* this.continuousScrollManager.reset();
         }
         yield* this.fetchPageTextIfRequired();
+    }
+
+    * handleViewModeSwitch({ notSave = false } = {}) {
+        const isLoaded = yield select(get.isDocumentLoaded);
+        const viewMode = yield select(get.viewMode);
+        if (!isLoaded) return;
+
+        switch (viewMode) {
+            case Constants.CONTINUOUS_SCROLL_MODE:
+                return yield* this.switchToContinuousScrollMode(notSave);
+            case Constants.SINGLE_PAGE_MODE:
+                return yield* this.switchToSinglePageMode(notSave);
+            case Constants.TEXT_MODE:
+                return yield* this.switchToTextMode();
+            default:
+                throw new Error('Invalid view mode: ' + payload);
+        }
     }
 
     * updateOptions(action) {
@@ -464,9 +492,7 @@ class RootSaga {
         yield takeLatest(ActionTypes.SAVE_DOCUMENT, this.withErrorHandler(this.saveDocument));
         yield takeLatest(Constants.CLOSE_DOCUMENT_ACTION, this.withErrorHandler(this.resetWorkerAndStorages));
         yield takeLatest(Constants.SET_API_CALLBACK_ACTION, this.withErrorHandler(this.setCallback));
-        yield takeLatest(Constants.ENABLE_CONTINUOUS_SCROLL_MODE_ACTION, this.withErrorHandler(this.switchToContinuousScrollMode));
-        yield takeLatest(Constants.ENABLE_SINGLE_PAGE_MODE_ACTION, this.withErrorHandler(this.switchToSinglePageMode));
-        yield takeLatest(Constants.ENABLE_TEXT_MODE_ACTION, this.withErrorHandler(this.switchToTextMode));
+        yield takeLatest(ActionTypes.SET_VIEW_MODE, this.withErrorHandler(this.handleViewModeSwitch));
         yield takeLatest(ActionTypes.UPDATE_OPTIONS, this.withErrorHandler(this.updateOptions));
         yield takeLatest(ActionTypes.CONFIGURE, this.withErrorHandler(this.configure));
         yield takeLatest(ActionTypes.LOAD_DOCUMENT_BY_URL, this.loadDocumentByUrl.bind(this));

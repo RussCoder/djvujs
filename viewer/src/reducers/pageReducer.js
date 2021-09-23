@@ -83,6 +83,12 @@ export default function pageReducer(state = initialState, action) {
                 currentPageNumber: action.pageNumber
             };
 
+        case ActionTypes.SET_VIEW_MODE:
+            if (payload === Constants.CONTINUOUS_SCROLL_MODE) {
+                return { ...state, ...singlePageInitialState };
+            }
+            break;
+
         case Constants.PAGE_TEXT_FETCHED_ACTION:
             return {
                 ...state,
@@ -95,10 +101,9 @@ export default function pageReducer(state = initialState, action) {
 
         case ActionTypes.SET_TEXT_PAGE_ERROR:
             return { ...state, textPageError: payload };
-
-        default:
-            return state;
     }
+
+    return state;
 }
 
 /** @returns {function} */

@@ -24,7 +24,7 @@ if (process.env.NODE_ENV !== 'production') {
         window.DjVuViewerInstance.render(document.getElementById('root'));
 
         window.DjVuViewerInstance.loadDocumentByUrl("/DjVu3Spec.djvu");
-        //window.DjVuViewerInstance.loadDocumentByUrl("/DjVu3Spec_indirect/index.djvu");
+        //window.DjVuViewerInstance.loadDocumentByUrl("/DjVu3Spec_indirect/index.djvu", { viewMode: 'continuous' });
 
         //window.DjVuViewerInstance.loadDocumentByUrl("/czech_indirect/index.djvu", { pageRotation: 0, djvuOptions: {baseUrl: '/czech_indirect/'} });
         //window.DjVuViewerInstance.loadDocumentByUrl("/tmp/DjVu3Spec.djvu").then(() => window.DjVuViewerInstance.configure({pageRotation: 270}));

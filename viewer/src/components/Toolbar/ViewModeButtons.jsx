@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import { FaRegFileAlt, FaRegFileImage } from "react-icons/all";
 
 import { get } from '../../reducers';
-import Constants from '../../constants';
+import Constants, { ActionTypes } from '../../constants';
 import { TranslationContext } from '../Translation';
 import styled from 'styled-components';
 import { controlButton } from "../cssMixins";
@@ -44,15 +44,15 @@ class ViewModeButtons extends React.Component {
     static contextType = TranslationContext;
 
     enableContinuousScrollMode = () => {
-        this.props.dispatch({ type: Constants.ENABLE_CONTINUOUS_SCROLL_MODE_ACTION });
+        this.props.dispatch({ type: ActionTypes.SET_VIEW_MODE, payload: Constants.CONTINUOUS_SCROLL_MODE });
     };
 
     enableSinglePageMode = () => {
-        this.props.dispatch({ type: Constants.ENABLE_SINGLE_PAGE_MODE_ACTION });
+        this.props.dispatch({ type: ActionTypes.SET_VIEW_MODE, payload: Constants.SINGLE_PAGE_MODE });
     };
 
     enableTextMode = () => {
-        this.props.dispatch({ type: Constants.ENABLE_TEXT_MODE_ACTION });
+        this.props.dispatch({ type: ActionTypes.SET_VIEW_MODE, payload: Constants.TEXT_MODE });
     };
 
     render() {

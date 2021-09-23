@@ -1,5 +1,15 @@
 # DjVu.js Viewer's Changelog
 
+## v.0.8.2 (23.09.2021)
+
+- Support for big images (up to 20K * 20K pixels) in the single page view mode.
+- Dynamic letter spacing in the text layer to make text fully fill its zone.
+- API to change view mode programmatically.
+- Fixed: a previous page was shown for a short while when one switched from
+  continuous scroll to single page view mode.
+- Getters, constants and action types are exposed as an escape hatch API for
+  temporary solutions.
+
 ## v.0.8.1 (11.09.2021)
 
 - Fixed a bug from the previous release (the text layer couldn't be selected).

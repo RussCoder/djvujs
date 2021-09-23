@@ -28,4 +28,5 @@ export const ActionTypes = constant({
     PIN_TOOLBAR: null,
     UNPIN_TOOLBAR: null,
     UPDATE_APP_CONTEXT: null,
+    SET_VIEW_MODE: null,
 });

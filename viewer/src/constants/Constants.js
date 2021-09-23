@@ -4,9 +4,9 @@ const Constants = {
     TEXT_CURSOR_MODE: null,
     GRAB_CURSOR_MODE: null,
 
-    TEXT_MODE: null,
-    CONTINUOUS_SCROLL_MODE: null,
-    SINGLE_PAGE_MODE: null,
+    TEXT_MODE: 'text',
+    CONTINUOUS_SCROLL_MODE: 'continuous',
+    SINGLE_PAGE_MODE: 'single',
 
     SET_CURSOR_MODE_ACTION: null,
     ERROR_ACTION: null,
@@ -32,9 +32,6 @@ const Constants = {
     PAGES_SIZES_ARE_GOTTEN: null,
     DROP_PAGE_ACTION: null,
     DROP_ALL_PAGES_ACTION: null,
-    ENABLE_CONTINUOUS_SCROLL_MODE_ACTION: null,
-    ENABLE_SINGLE_PAGE_MODE_ACTION: null,
-    ENABLE_TEXT_MODE_ACTION: null,
 
     SET_API_CALLBACK_ACTION: null, // A special action for interaction with sagas. Used for program API of the viewer, look at the DjVuViewer.js
 };
