@@ -37,7 +37,7 @@ export default {
     "#helpButton - learn more about the app":
         "#helpButton - à propos",
     "#optionsButton - see the available options":
-        "#helpButton - options disponibles",
+        "#optionsButton - options disponibles",
     "powered with":
         "basé sur",
     "Drag & Drop a file here or click to choose manually":
@@ -66,7 +66,7 @@ export default {
     "Web request error":
         "Erreur de requête web",
     "404 Document not found":
-        "404 Dcument non trouvé",
+        "404 Document non trouvé",
     "403 Access forbidden":
         "403 Accès interdit",
     "500 Internal server error":
@@ -251,13 +251,13 @@ export default {
     "View mode":
         null,
     "Scale":
-        null,
+        "Taille",
     "Rotation":
-        null,
+        "Rotation",
     "Cursor mode":
         null,
     "Full page mode":
         null,
     "Fullscreen mode":
-        null,
+        "Plein écran",
 };
