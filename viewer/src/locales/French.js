@@ -185,11 +185,11 @@ export default {
     "Grab cursor mode":
         "Défilement glisser-déposer",
     "Table of contents":
-        null,
+        "Table des matières",
     "Toolbar is always shown":
-        null,
+        "Les contrôles sont toujours affichés",
     "Toolbar automatically hides":
-        null,
+        "Les contrôles se masquent automatiquement",
 
     // Contents
     "Contents":
@@ -239,25 +239,25 @@ export default {
 
     // Menu
     "Menu":
-        null,
+        "Menu",
     "Document":
-        null,
+        "Document"
     "About":
-        null,
+        "À propos",
     "Print":
-        null,
+        "Imprimer",
     "Close":
-        null,
+        "Fermer,
     "View mode":
-        null,
+        "Mode de vue",
     "Scale":
         "Taille",
     "Rotation":
         "Rotation",
     "Cursor mode":
-        null,
+        "Mode de curseur",
     "Full page mode":
-        null,
+        "Page entier",
     "Fullscreen mode":
         "Plein écran",
 };
