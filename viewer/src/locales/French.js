@@ -247,7 +247,7 @@ export default {
     "Print":
         "Imprimer",
     "Close":
-        "Fermer,
+        "Fermer",
     "View mode":
         "Mode de vue",
     "Scale":
