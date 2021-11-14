@@ -37,7 +37,7 @@ export default {
     "#helpButton - learn more about the app":
         "#helpButton - à propos",
     "#optionsButton - see the available options":
-        "#helpButton - options disponibles",
+        "#optionsButton - options disponibles",
     "powered with":
         "basé sur",
     "Drag & Drop a file here or click to choose manually":
@@ -66,7 +66,7 @@ export default {
     "Web request error":
         "Erreur de requête web",
     "404 Document not found":
-        "404 Dcument non trouvé",
+        "404 Document non trouvé",
     "403 Access forbidden":
         "403 Accès interdit",
     "500 Internal server error":
@@ -185,11 +185,11 @@ export default {
     "Grab cursor mode":
         "Défilement glisser-déposer",
     "Table of contents":
-        null,
+        "Table des matières",
     "Toolbar is always shown":
-        null,
+        "Les contrôles sont toujours affichés",
     "Toolbar automatically hides":
-        null,
+        "Les contrôles se masquent automatiquement",
 
     // Contents
     "Contents":
@@ -239,25 +239,25 @@ export default {
 
     // Menu
     "Menu":
-        null,
+        "Menu",
     "Document":
-        null,
+        "Document"
     "About":
-        null,
+        "À propos",
     "Print":
-        null,
+        "Imprimer",
     "Close":
-        null,
+        "Fermer",
     "View mode":
-        null,
+        "Mode de vue",
     "Scale":
-        null,
+        "Taille",
     "Rotation":
-        null,
+        "Rotation",
     "Cursor mode":
-        null,
+        "Mode de curseur",
     "Full page mode":
-        null,
+        "Page entier",
     "Fullscreen mode":
-        null,
+        "Plein écran",
 };
