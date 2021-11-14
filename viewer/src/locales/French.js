@@ -241,7 +241,7 @@ export default {
     "Menu":
         "Menu",
     "Document":
-        "Document"
+        "Document",
     "About":
         "À propos",
     "Print":

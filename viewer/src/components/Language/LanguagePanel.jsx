@@ -11,25 +11,31 @@ const LanguagePanelRoot = styled.div`
     display: flex;
     font-size: 20px;
     margin-top: 0.5em;
-    align-items: center;
+    align-items: flex-end;
     justify-content: center;
     flex-wrap: wrap;
+    padding: 0 0.5em;
 `;
 
 const selectedLanguageItem = css`
     border-bottom: 3px solid var(--highlight-color);
     color: var(--highlight-color);
     cursor: default;
+    padding-top: 0;
 `;
 
 const LanguageItem = styled.div`
     margin-left: 0.5em;
+    margin-bottom: 0.2em;
     cursor: pointer;
     white-space: nowrap;
+    padding-top: 2px;
+    border-bottom: 1px solid transparent;
+    vertical-align: top;
 
     ${p => p.$selected ? selectedLanguageItem : `
         :hover {
-            border-bottom: 1px solid var(--color);
+            border-color: var(--color);
         }
     `};
 `;
@@ -56,7 +62,7 @@ export const LanguagePanel = () => {
                     </LanguageItem>
                 );
             })}
-            <AddLanguageButton css={`font-size: 1.5em;`} />
+            <AddLanguageButton css={`font-size: 1.5em; align-self: center;`} />
         </LanguagePanelRoot>
     );
 };

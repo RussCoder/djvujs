@@ -1,5 +1,10 @@
 # DjVu.js Viewer's Changelog
 
+## v.0.8.3 (14.11.2021)
+
+- French translation update.
+- Minor style fixes.
+
 ## v.0.8.2 (23.09.2021)
 
 - Support for big images (up to 20K * 20K pixels) in the single page view mode.

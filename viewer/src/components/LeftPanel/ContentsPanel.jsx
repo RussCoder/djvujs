@@ -24,6 +24,12 @@ const Header = styled.div`
     padding-bottom: 0.2em;
     display: flex;
     justify-content: space-between;
+
+    span:first-child {
+        margin-right: 0.5em;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
 `;
 
 class ContentsPanel extends React.Component {
@@ -58,7 +64,7 @@ class ContentsPanel extends React.Component {
         return (
             <Root>
                 <Header>
-                    <span css={`margin-right: 0.5em;`}>{t("Contents")}</span>
+                    <span>{t("Contents")}</span>
                     <CloseButton
                         onClick={() => dispatch({ type: ActionTypes.CLOSE_CONTENTS })}
                     />

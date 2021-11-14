@@ -2,6 +2,7 @@ import { css } from "styled-components";
 
 export const iconButton = css`
     cursor: pointer;
+    flex: 0 0 auto;
 
     &:hover {
         transform: scale(1.1);
