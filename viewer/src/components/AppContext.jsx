@@ -3,7 +3,7 @@ import { ThemeContext, ThemeProvider } from "styled-components";
 import { useDispatch } from "react-redux";
 import { ActionTypes } from "../constants";
 
-const widthThreshold = 769;
+const widthThreshold = 890;
 const heightThreshold = 569;
 const defaultValue = { appWidth: widthThreshold, appHeight: heightThreshold, isMobile: false };
 export const AppContext = ThemeContext;

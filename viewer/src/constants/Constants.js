@@ -3,6 +3,7 @@ const Constants = {
     DEFAULT_DPI: 100,
     TEXT_CURSOR_MODE: null,
     GRAB_CURSOR_MODE: null,
+    MAX_PAGE_COUNT_IN_ROW: 5,
 
     TEXT_MODE: 'text',
     CONTINUOUS_SCROLL_MODE: 'continuous',

@@ -17,6 +17,14 @@ const grabbingCursor = css`
     }
 `;
 
+const grabCursor = css`
+    cursor: grab;
+
+    * {
+        user-select: none;
+    }
+`;
+
 const style = css`
     flex: 1 1 auto;
     display: flex;
@@ -27,7 +35,7 @@ const style = css`
     box-sizing: border-box;
     touch-action: pan-x pan-y;
     padding-bottom: 30px;
-    ${p => p.$grab ? 'cursor: grab' : ''};
+    ${p => p.$grab ? grabCursor : ''};
 
     ${grabbingCursor};
 `;
@@ -36,7 +44,9 @@ const ContinuousScrollItem = styled.div`
     box-sizing: border-box;
     min-width: 100%;
     padding: 2px 0;
-    transform: translate3d(0, 0, 0); // just for performance optimization when continuos mode is enabled
+    transform: translate3d(0, 0, 0); // just for performance optimization when continuous mode is enabled
+    display: flex;
+    justify-content: center;
 `;
 
 function resetEventListener(node, event, handler, options = undefined) {
@@ -77,13 +87,21 @@ class ImageBlock extends React.Component {
     }
 
     scrollCurrentPageIntoViewIfRequired(prevProps) {
-        if (this.props.viewMode === Constants.CONTINUOUS_SCROLL_MODE
+        if (
+            this.props.viewMode === Constants.CONTINUOUS_SCROLL_MODE
             && this.props.shouldScrollToPage
-            && (prevProps.currentPageNumber !== this.props.currentPageNumber
-                || prevProps.viewMode !== Constants.CONTINUOUS_SCROLL_MODE)
+            && (prevProps.currentPageNumber !== this.props.currentPageNumber || prevProps.viewMode !== Constants.CONTINUOUS_SCROLL_MODE)
             && this.virtualList
-            && !this.virtualList.isItemVisible(this.props.currentPageNumber - 1)) {
-            this.virtualList.scrollToItem(this.props.currentPageNumber - 1);
+        ) {
+
+            const { pageCountInRow, firstRowPageCount, currentPageNumber } = this.props;
+            const index = Math.max(0,
+                Math.ceil((currentPageNumber - firstRowPageCount) / pageCountInRow)
+                + (currentPageNumber > firstRowPageCount ? 1 : 0) - 1,
+            );
+
+            if (this.virtualList.isItemVisible(index)) return;
+            this.virtualList.scrollToItem(index);
         }
     }
 
@@ -294,47 +312,90 @@ class ImageBlock extends React.Component {
     }
 
     onScroll = createDeferredHandler(() => {
-        this.setNewPageNumber(this.virtualList.getCurrentVisibleItemIndex() + 1);
+        const { pageCountInRow, firstRowPageCount, currentPageNumber } = this.props;
+        const index = this.virtualList.getCurrentVisibleItemIndex();
+        const pageNumber = index * pageCountInRow + (index ? -pageCountInRow + firstRowPageCount : 0) + 1;
+        if (!(
+            currentPageNumber >= pageNumber
+            && currentPageNumber < pageNumber + (pageNumber === 1 ? firstRowPageCount : pageCountInRow)
+        )) {
+            this.setNewPageNumber(pageNumber);
+        }
     });
 
-    getItemSizes = memoize((pageList, userScale, rotation) => {
+    getItemSizes = memoize((pageList, userScale, rotation, pageCountInRow, firstRowPageCount) => {
+        const sizes = [];
         const isRotated = rotation === 90 || rotation === 270;
-        return pageList.map(page => {
-            const scaleFactor = Constants.DEFAULT_DPI / page.dpi * userScale;
-            return Math.floor((isRotated ? page.width : page.height) * scaleFactor) + 6; // 2px for top and bottom image borders, 4px for vertical paddings of the wrapper element
-        })
+
+        const processPageRow = (from, to) => {
+            let max = 0;
+            for (let i = from; i < to; i++) {
+                const page = pageList[i];
+                const scaleFactor = Constants.DEFAULT_DPI / page.dpi * userScale;
+                const size = Math.floor((isRotated ? page.width : page.height) * scaleFactor) + 6;
+                if (size > max) max = size;
+            }
+            return max;
+        };
+
+        sizes.push(processPageRow(0, Math.min(pageCountInRow, pageList.length)));
+        for (let i = Math.min(firstRowPageCount, pageList.length); i < pageList.length; i += pageCountInRow) {
+            sizes.push(processPageRow(i, Math.min(i + pageCountInRow, pageList.length)));
+        }
+
+        return sizes;
     });
 
     virtualListRef = component => this.virtualList = component;
 
     itemRenderer = React.memo(({ index, style }) => {
-        const pageData = useSelector(state => get.pageList(state)[index]);
+        const pageCountInRow = useSelector(get.pageCountInRow);
+        const firstRowPageCount = useSelector(get.firstRowPageCount);
+
+        const pages = useSelector(state => {
+            const pageList = get.pageList(state);
+            const from = index * pageCountInRow + (index ? -pageCountInRow + firstRowPageCount : 0);
+            const to = from + (index === 0 ? firstRowPageCount : pageCountInRow)
+            return pageList.slice(from, to);
+        });
 
         return (
             <ContinuousScrollItem style={style} key={index}>
-                <ComplexImage
-                    imageUrl={pageData.url}
-                    imageDpi={pageData.dpi}
-                    imageWidth={pageData.width}
-                    imageHeight={pageData.height}
-                    userScale={this.props.userScale}
-                    rotation={this.props.rotation}
-                    textZones={pageData.textZones}
-                />
+                {pages.map((pageData, i) => (
+                    <ComplexImage
+                        key={i}
+                        imageUrl={pageData.url}
+                        imageDpi={pageData.dpi}
+                        imageWidth={pageData.width}
+                        imageHeight={pageData.height}
+                        userScale={this.props.userScale}
+                        rotation={this.props.rotation}
+                        textZones={pageData.textZones}
+                    />
+                ))}
             </ContinuousScrollItem>
         )
     });
 
     render() {
         const isGrabMode = this.props.cursorMode === Constants.GRAB_CURSOR_MODE;
-        const { documentId, pageSizeList, userScale, rotation, viewMode, imageData } = this.props;
+        const {
+            documentId,
+            pageSizeList,
+            userScale,
+            rotation,
+            viewMode,
+            imageData,
+            pageCountInRow,
+            firstRowPageCount
+        } = this.props;
 
         return (viewMode === Constants.CONTINUOUS_SCROLL_MODE && pageSizeList.length) ?
             <VirtualList
                 ref={this.virtualListRef}
                 outerRef={this.wrapperRef}
-                css={`${grabbingCursor}; ${isGrabMode ? 'cursor: grab;' : ''}`}
-                itemSizes={this.getItemSizes(pageSizeList, userScale, rotation)}
+                css={`${grabbingCursor}; ${isGrabMode ? grabCursor : ''}`}
+                itemSizes={this.getItemSizes(pageSizeList, userScale, rotation, pageCountInRow, firstRowPageCount)}
                 //data={pageList}
                 itemRenderer={this.itemRenderer}
                 key={documentId}
@@ -362,6 +423,8 @@ export default connect(
         currentPageNumber: get.currentPageNumber(state),
         shouldScrollToPage: get.shouldScrollToPage(state),
         viewMode: get.viewMode(state),
+        pageCountInRow: get.pageCountInRow(state),
+        firstRowPageCount: get.firstRowPageCount(state),
         //pageList: get.pageList(state),
         pageSizeList: get.pageSizeList(state),
         imageData: get.imageData(state),

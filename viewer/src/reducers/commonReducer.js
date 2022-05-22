@@ -23,6 +23,8 @@ const initialState = Object.freeze({
         locale: 'en',
         theme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
         preferContinuousScroll: false,
+        pageCountInRow: 1,
+        firstRowPageCount: 1,
     },
     uiOptions: { // aren't saved, should be set programmatically, if required
         hideFullPageSwitch: false,
@@ -147,6 +149,12 @@ export default (state = initialState, action) => {
 }
 
 export const get = {
+    pageCountInRow: state => {
+        return Math.max(1, Math.min(state.options.pageCountInRow, state.pagesQuantity, Constants.MAX_PAGE_COUNT_IN_ROW));
+    },
+    firstRowPageCount: state => {
+        return Math.max(1, Math.min(state.options.firstRowPageCount, get.pageCountInRow(state)));
+    },
     isContentsOpened: state => state.isContentsOpened,
     dictionary: state => dictionaries[get.options(state).locale] || dictionaries.en,
     isOptionsWindowOpened: state => state.isOptionsWindowOpened,

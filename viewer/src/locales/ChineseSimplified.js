@@ -170,6 +170,10 @@ export default {
     // Toolbar tooltips
     "Continuous scroll view mode":
         "连续滚动模式",
+    "Number of pages in a row":
+        null,
+    "Number of pages in the first row":
+        null,
     "Single page view mode":
         "单页模式",
     "Text view mode":

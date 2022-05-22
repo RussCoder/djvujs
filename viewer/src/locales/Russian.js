@@ -183,6 +183,10 @@ export default {
     // Toolbar tooltips
     "Continuous scroll view mode":
         "Режим непрерывной прокрутки",
+    "Number of pages in a row":
+        "Число страниц в строке",
+    "Number of pages in the first row":
+        "Число страниц в первой строке",
     "Single page view mode":
         "Одностраничный режим",
     "Text view mode":

@@ -12,7 +12,14 @@ const Root = styled.div`
     position: relative;
     border: 1px solid darkgray;
     overflow: hidden;
-    margin: 0 auto;
+    
+    &:first-child {
+        margin-left: auto;
+    }
+    
+    &:last-child {
+        margin-right: auto;
+    }
 
     & > div:first-child {
         position: absolute;

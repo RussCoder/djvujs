@@ -170,6 +170,10 @@ export default {
     // Toolbar tooltips
     "Continuous scroll view mode":
         "Visningsläge med kontinuerlig scrolling",
+    "Number of pages in a row":
+        null,
+    "Number of pages in the first row":
+        null,
     "Single page view mode":
         "Visningsläge med en sida",
     "Text view mode":

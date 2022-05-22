@@ -12,7 +12,7 @@ import Actions from "../actions/actions";
 import { get } from '../reducers';
 import Constants from '../constants';
 
-const radius = 15;
+const radius = 20;
 
 export default class ContinuousScrollManager {
     constructor(djvuWorker, pagesCount, pageStorage) {

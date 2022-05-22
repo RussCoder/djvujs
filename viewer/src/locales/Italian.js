@@ -170,6 +170,10 @@ export default {
     // Toolbar tooltips
     "Continuous scroll view mode":
         "Vista a pagina continua",
+    "Number of pages in a row":
+        null,
+    "Number of pages in the first row":
+        null,
     "Single page view mode":
         "Vista a pagina singola",
     "Text view mode":

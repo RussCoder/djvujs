@@ -170,6 +170,10 @@ export default {
     // Toolbar tooltips
     "Continuous scroll view mode":
         "Continuous scroll view mode",
+    "Number of pages in a row":
+        "Number of pages in a row",
+    "Number of pages in the first row":
+        "Number of pages in the first row",
     "Single page view mode":
         "Single page view mode",
     "Text view mode":
