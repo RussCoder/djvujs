@@ -1,14 +1,14 @@
 import React from 'react';
-import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
+import { connect, useDispatch, useSelector } from 'react-redux';
 import { FaRegFileAlt, FaRegFileImage, FaCaretLeft, FaCaretRight } from "react-icons/all";
 
 import { get } from '../../reducers';
 import Constants, { ActionTypes } from '../../constants';
-import { TranslationContext } from '../Translation';
+import { useTranslation } from '../Translation';
 import styled from 'styled-components';
 import { controlButton } from "../cssMixins";
 import { ControlButton } from "../StyledPrimitives";
+import { useAppContext } from '../AppContext.jsx';
 
 const ContinuousScrollButton = styled.span`
     ${controlButton};
@@ -73,62 +73,59 @@ const PageCount = ({ value, max, onChange, title, style }) => {
     );
 }
 
-class ViewModeButtons extends React.Component {
+const ViewModeButtons = () => {
+    const dispatch = useDispatch();
+    const viewMode = useSelector(get.viewMode);
+    const isIndirect = useSelector(get.isIndirect);
+    const pageCountInRow = useSelector(get.pageCountInRow);
+    const firstRowPageCount = useSelector(get.firstRowPageCount);
+    const isContScroll = viewMode === Constants.CONTINUOUS_SCROLL_MODE;
+    const t = useTranslation();
+    const { isMobile } = useAppContext();
 
-    static propTypes = {
-        viewMode: PropTypes.string.isRequired,
-        isIndirect: PropTypes.bool.isRequired,
+    const enableContinuousScrollMode = () => {
+        dispatch({ type: ActionTypes.SET_VIEW_MODE, payload: Constants.CONTINUOUS_SCROLL_MODE });
     };
 
-    static contextType = TranslationContext;
-
-    enableContinuousScrollMode = () => {
-        this.props.dispatch({ type: ActionTypes.SET_VIEW_MODE, payload: Constants.CONTINUOUS_SCROLL_MODE });
+    const enableSinglePageMode = () => {
+        dispatch({ type: ActionTypes.SET_VIEW_MODE, payload: Constants.SINGLE_PAGE_MODE });
     };
 
-    enableSinglePageMode = () => {
-        this.props.dispatch({ type: ActionTypes.SET_VIEW_MODE, payload: Constants.SINGLE_PAGE_MODE });
+    const enableTextMode = () => {
+        dispatch({ type: ActionTypes.SET_VIEW_MODE, payload: Constants.TEXT_MODE });
     };
 
-    enableTextMode = () => {
-        this.props.dispatch({ type: ActionTypes.SET_VIEW_MODE, payload: Constants.TEXT_MODE });
-    };
-
-    render() {
-        const { viewMode, isIndirect, pageCountInRow, firstRowPageCount, dispatch } = this.props;
-        const isContScroll = viewMode === Constants.CONTINUOUS_SCROLL_MODE;
-        const t = this.context;
-
-        return (
-            <Root data-djvujs-id="view_mode_buttons">
+    return (
+        <Root data-djvujs-id="view_mode_buttons">
                 <span
                     title={t("Text view mode")}
                     style={viewMode === Constants.TEXT_MODE ? { opacity: 1 } : null}
                 >
                     <ControlButton
                         as={FaRegFileAlt}
-                        onClick={this.enableTextMode}
+                        onClick={enableTextMode}
                     />
                 </span>
-                <span
-                    title={t("Single page view mode")}
-                    style={viewMode === Constants.SINGLE_PAGE_MODE ? { opacity: 1 } : null}
-                >
+            <span
+                title={t("Single page view mode")}
+                style={viewMode === Constants.SINGLE_PAGE_MODE ? { opacity: 1 } : null}
+            >
                     <ControlButton
                         as={FaRegFileImage}
-                        onClick={this.enableSinglePageMode}
+                        onClick={enableSinglePageMode}
                     />
                 </span>
-                {isIndirect ? null :
-                    <ContinuousScrollButtonWrapper>
-                        <ContinuousScrollButton
-                            style={isContScroll ? { opacity: 1 } : null}
-                            title={t("Continuous scroll view mode")}
-                            onClick={this.enableContinuousScrollMode}
-                        >
-                            <FaRegFileImage />
-                            <FaRegFileImage />
-                        </ContinuousScrollButton>
+            {isIndirect ? null :
+                <ContinuousScrollButtonWrapper>
+                    <ContinuousScrollButton
+                        style={isContScroll ? { opacity: 1 } : null}
+                        title={t("Continuous scroll view mode")}
+                        onClick={enableContinuousScrollMode}
+                    >
+                        <FaRegFileImage />
+                        <FaRegFileImage />
+                    </ContinuousScrollButton>
+                    {isMobile ? null : <>
                         <PageCount
                             style={!isContScroll ? { visibility: 'hidden' } : null}
                             title={t("Number of pages in a row")}
@@ -157,12 +154,12 @@ class ViewModeButtons extends React.Component {
                                 }
                             })}
                         />
-                    </ContinuousScrollButtonWrapper>
-                }
-            </Root>
-        );
-    }
-}
+                    </>}
+                </ContinuousScrollButtonWrapper>
+            }
+        </Root>
+    );
+};
 
 export default connect(state => ({
     viewMode: get.viewMode(state),

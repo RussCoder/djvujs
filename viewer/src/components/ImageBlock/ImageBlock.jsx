@@ -25,7 +25,13 @@ const grabCursor = css`
     }
 `;
 
-const style = css`
+const sharedStyle = css`
+    touch-action: pan-x pan-y;
+    ${p => p.$grab ? grabCursor : ''};
+    ${grabbingCursor};
+`;
+
+const SinglePageModeRoot = styled.div`
     flex: 1 1 auto;
     display: flex;
     flex-direction: column;
@@ -33,11 +39,8 @@ const style = css`
     height: 100%;
     overflow: auto;
     box-sizing: border-box;
-    touch-action: pan-x pan-y;
     padding-bottom: 30px;
-    ${p => p.$grab ? grabCursor : ''};
-
-    ${grabbingCursor};
+    ${sharedStyle};
 `;
 
 const ContinuousScrollItem = styled.div`
@@ -394,15 +397,15 @@ class ImageBlock extends React.Component {
             <VirtualList
                 ref={this.virtualListRef}
                 outerRef={this.wrapperRef}
-                css={`${grabbingCursor}; ${isGrabMode ? grabCursor : ''}`}
+                $grab={isGrabMode}
+                css={sharedStyle}
                 itemSizes={this.getItemSizes(pageSizeList, userScale, rotation, pageCountInRow, firstRowPageCount)}
                 //data={pageList}
                 itemRenderer={this.itemRenderer}
                 key={documentId}
             />
             : imageData ?
-                <div
-                    css={style}
+                <SinglePageModeRoot
                     $grab={isGrabMode}
                     ref={this.wrapperRef}
                 >
@@ -413,7 +416,7 @@ class ImageBlock extends React.Component {
                     >
                         <ComplexImage {...this.props} />
                     </div>
-                </div> : null;
+                </SinglePageModeRoot> : null;
     }
 }
 

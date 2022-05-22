@@ -150,9 +150,11 @@ export default (state = initialState, action) => {
 
 export const get = {
     pageCountInRow: state => {
+        if (state.appContext.isMobile) return 1;
         return Math.max(1, Math.min(state.options.pageCountInRow, state.pagesQuantity, Constants.MAX_PAGE_COUNT_IN_ROW));
     },
     firstRowPageCount: state => {
+        if (state.appContext.isMobile) return 1;
         return Math.max(1, Math.min(state.options.firstRowPageCount, get.pageCountInRow(state)));
     },
     isContentsOpened: state => state.isContentsOpened,

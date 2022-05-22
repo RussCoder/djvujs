@@ -19,7 +19,6 @@ import ViewModeButtons from "./Toolbar/ViewModeButtons";
 import CursorModeButtonGroup from "./Toolbar/CursorModeButtonGroup";
 import FullPageViewButton from "./misc/FullPageViewButton";
 import FullscreenButton from "./misc/FullscreenButton";
-import { controlButton } from "./cssMixins";
 
 const Root = styled.div`
     font-size: 16px;
@@ -132,7 +131,7 @@ const MobileControl = styled.div`
     align-items: center;
     margin-bottom: 1em;
 
-    span:first-child {
+    & > span:first-child {
         margin-right: 1em;
     }
 `;
@@ -172,7 +171,7 @@ export default ({ isOpened, onClose }) => {
                                 }}
                                 title={t('Print document')}
                             >
-                                <FaPrint css={controlButton} />
+                                <ControlButton as={FaPrint} />
                                 <span>{t('Print')}</span>
                             </DocumentControl>}
 
