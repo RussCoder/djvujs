@@ -1,5 +1,5 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux'
 import App from './components/App.jsx';
 import Actions from './actions/actions';
@@ -40,7 +40,7 @@ export default class DjVuViewer extends EventEmitter {
         if (process.env.NODE_ENV === 'development') { // because CRA's Fast Refresh works bad
             if (module.hot) {
                 module.hot.accept('./components/App', () => {
-                    this._render(this.htmlElement);
+                    this._render();
                 });
             }
         }
@@ -89,25 +89,26 @@ export default class DjVuViewer extends EventEmitter {
         return get.fileName(this.store.getState());
     }
 
-    _render(element) {
-        ReactDOM.render(
+    _render() {
+        this.reactRoot.render(
             <Provider store={this.store}>
-                <App shadowRoot={element} />
+                <App shadowRoot={this.htmlElement} />
             </Provider>
-            , element
         );
     }
 
     render(element) {
         this.unmount();
         this.htmlElement = element;
+        this.reactRoot = createRoot(element);
         //this.shadow = element.attachShadow({ mode: 'open' });
 
-        this._render(this.htmlElement);
+        this._render();
     }
 
     unmount() {
-        this.htmlElement && ReactDOM.unmountComponentAtNode(this.htmlElement);
+        this.reactRoot && this.reactRoot.unmount();
+        this.reactRoot = null;
         this.htmlElement = null;
     }
 

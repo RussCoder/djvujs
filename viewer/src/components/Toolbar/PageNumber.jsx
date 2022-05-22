@@ -1,19 +1,36 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import styled, { css } from 'styled-components';
+import styled from 'styled-components';
 import { styledInput } from '../cssMixins';
 
-const style = css`
-    flex: 1 1 auto;
-    min-width: 1em;
+const Root = styled.span`
+    flex: 0 0 auto;
+    min-width: 4em;
     max-width: 8em;
+    height: 90%;
+    line-height: normal;
+    box-sizing: border-box;
     white-space: nowrap;
-`;
+    position: relative;
+    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 
-const Input = styled.input`
-    ${style};
-    ${styledInput};
-    max-width: 4em;
+    & > * {
+        text-align: center;
+        box-sizing: border-box;
+    }
+
+    & > input {
+        ${styledInput};
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+    }
 `;
 
 export default class PageNumber extends React.Component {
@@ -74,7 +91,7 @@ export default class PageNumber extends React.Component {
 
     };
 
-    onKeyPress = (e) => {
+    onKeyDown = (e) => {
         if (e.key === 'Enter') {
             this.finishPageNumberEditing(e);
         }
@@ -89,27 +106,25 @@ export default class PageNumber extends React.Component {
     }
 
     render() {
-        if (this.state.isEditing) {
-            return (
-                <Input
-                    onKeyPress={this.onKeyPress}
-                    onBlur={this.finishPageNumberEditing}
-                    type="number"
-                    onChange={this.onChange}
-                    value={this.state.tempValue === null ? this.props.pageNumber : this.state.tempValue}
-                    ref={this.inputRef}
-                />
-            );
-        } else {
-            var st = this.props.pagesQuantity ? " / " + this.props.pagesQuantity : "";
-            return (
+        return (
+            <Root>
+                {this.state.isEditing ?
+                    <input
+                        onKeyDown={this.onKeyDown}
+                        onBlur={this.finishPageNumberEditing}
+                        type="number"
+                        min="1"
+                        onChange={this.onChange}
+                        value={this.state.tempValue === null ? this.props.pageNumber : this.state.tempValue}
+                        ref={this.inputRef}
+                    /> : null}
                 <span
                     onClick={this.startPageNumberEditing}
-                    css={style}
+                    style={this.state.isEditing ? { visibility: 'hidden', zIndex: -1 } : null}
                 >
-                    {this.props.pageNumber + st}
+                    {this.props.pageNumber + (this.props.pagesQuantity ? " / " + this.props.pagesQuantity : "")}
                 </span>
-            );
-        }
+            </Root>
+        )
     }
 }

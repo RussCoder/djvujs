@@ -17,6 +17,7 @@ const Root = styled.div`
     flex-wrap: nowrap;
     justify-content: center;
     align-items: center;
+    height: 100%;
 `;
 
 const navButtonStyle = css`
