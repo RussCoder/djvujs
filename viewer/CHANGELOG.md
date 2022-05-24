@@ -1,5 +1,11 @@
 # DjVu.js Viewer's Changelog
 
+## v.0.9.0 (24.05.2022)
+
+- Feature: several pages in a row in the continuous scroll mode.
+- Fix: pinch-zoom works on mobile devices in the continuous scroll mode. 
+- Style improvements. 
+
 ## v.0.8.3 (14.11.2021)
 
 - French translation update.
