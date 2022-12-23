@@ -171,9 +171,9 @@ export default {
     "Continuous scroll view mode":
         "Modo de scroll continuo",
     "Number of pages in a row":
-        null,
+        "Número de páginas por fila",
     "Number of pages in the first row":
-        null,
+        "Número de páginas en la primer fila",
     "Single page view mode":
         "Modo de vista de una sola página",
     "Text view mode":
@@ -189,11 +189,11 @@ export default {
     "Grab cursor mode":
         "Modo cursor de agarre",
     "Table of contents":
-        null,
+        "Tabla de contenidos",
     "Toolbar is always shown":
-        null,
+        "La barra de herramientas siempre se muestra",
     "Toolbar automatically hides":
-        null,
+        "La barra de herramientas si oculta automáticamente",
 
     // Contents
     "Contents":
@@ -243,25 +243,25 @@ export default {
 
     // Menu
     "Menu":
-        null,
+        "Menú",
     "Document":
-        null,
+        "Documento",
     "About":
-        null,
+        "Acerca",
     "Print":
-        null,
+        "Imprimir",
     "Close":
-        null,
+        "Cerrar",
     "View mode":
-        null,
+        "Modo de visualización",
     "Scale":
-        null,
+        "Escala",
     "Rotation":
-        null,
+        "Rotación",
     "Cursor mode":
-        null,
+        "Modo del cursor",
     "Full page mode":
-        null,
+        "Modo de página completa",
     "Fullscreen mode":
-        null,
+        "Modo de oantalla completa",
 };
