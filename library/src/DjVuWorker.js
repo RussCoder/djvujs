@@ -1,4 +1,11 @@
 /**
+ * @typedef {{
+ *      command: string,
+ *      data?: {funcs: string[], args: any[][]}[]
+ *  } & Partial<Record<string, any>>} CommandObject
+ */
+
+/**
  * DjVuScript is a function containing the whole library.
  * It's a wrapper added in the build process. Look at the build config file.
  */
@@ -85,8 +92,8 @@ export default class DjVuWorker {
     }
 
     /**
-     * @param {Array<Transferable>} transferList - the list of objects to transfer
-     * ownership of the the Web Worker (like ArrayBuffer).
+     * @param {CommandObject} commandObj
+     * @param {Array<Transferable>} transferList
      */
     createNewPromise(commandObj, transferList = undefined) {
         var callbacks;
@@ -98,6 +105,12 @@ export default class DjVuWorker {
         return promise;
     }
 
+    /**
+     * Replaces functions with special "hyper callback" objects - it allows invoking callbacks from the web worker
+     * (asynchronously of course, but it's mostly used to track progress)
+     * @param {CommandObject} commandObj
+     * @returns {CommandObject}
+     */
     prepareCommandObject(commandObj) {
         if (!(commandObj.data instanceof Array)) return commandObj;
 
@@ -238,7 +251,7 @@ export default class DjVuWorker {
         return value;
     }
 
-    /** @param {Array<DjVuWorkerTask} tasks */
+    /** @param {DjVuWorkerTask} tasks */
     run(...tasks) {
         const data = tasks.map(task => task._);
         return this.createNewPromise({
@@ -308,9 +321,14 @@ export default class DjVuWorker {
 }
 
 class DjVuWorkerTask {
+    /**
+     * @property {{funcs: string[], args: any[][]}} _
+     */
 
     /**
      * @param {DjVuWorker} worker
+     * @param {string[]} funcs
+     * @param {any[][]} args
      */
     static instance(worker, funcs = [], args = []) {
         var proxy = new Proxy(DjVuWorkerTask.emptyFunc, {

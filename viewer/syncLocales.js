@@ -1,6 +1,6 @@
 /**
  * A script for automatic synchronization of the Russian dictionary with others.
- * It automatically generate English.js from Russian.js, adds missing phrases with null values
+ * It automatically generates English.js from Russian.js, adds missing phrases with null values
  * to other dictionaries, and also can generate a template file for a new translation
  * if the name of a new language is provided as the first command-line argument.
  */

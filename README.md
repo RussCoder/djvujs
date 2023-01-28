@@ -3,18 +3,18 @@
 ## About / О проекте
 
 **DjVu.js** is a program library for working with `.djvu` online. It's written
-in JavaScript and can be run in the web browsers without any connection with the
+in JavaScript and can be run in a web browser without any connection with a
 server. DjVu.js can be used for splitting (and concatenation) of `.djvu` files,
 rendering pages of a `.djvu` document, converting (and compressing) images
 into `.djvu` documents and for analyzing of metadata of `.djvu` documents.
 
-**DjVu.js Viewer** is an app which uses DjVu.js in order to render DjVu
+**DjVu.js Viewer** is an app which uses DjVu.js to render DjVu
 documents. The app may be easily included into any html page. You can look at it
 and try it out on the official website (the link is below).
 
-**DjVu.js Viewer browser extension**. By and large it's a copy of the viewer,
+**DjVu.js Viewer browser extension**. By and large, it's a copy of the viewer,
 but also it allows opening links to `.djvu` files right in the browser without
-explicit downloading of a file. The links to the extension are below.
+downloading them explicitly. The links to the extension are below.
 
 <hr>
 
@@ -32,7 +32,7 @@ html-страницу. Данное приложение служит для п�
 
 **Расширение для браузера DjVu.js Viewer**. По большей части это копия
 приложения DjVu.js Viewer, однако также расширение позволяет открывать ссылки
-на `.djvu` файлы прямо в браузере, не скачивая файл явно. Ссылки на расширение
+на `.djvu` файлы прямо в браузере, не скачивая их явно. Ссылки на расширение
 доступны ниже.
 
 ## Translation (localization)
@@ -42,8 +42,8 @@ how to do it.
 
 ## How to build it
 
-If you have Node.js (10.x or higher) installed, after you cloned the repository,
-run
+You need to have Node.js 16+ and npm 8+ installed.
+Clone the repo and run:
 
 ```
 npm run install
@@ -51,23 +51,23 @@ npm run build
 ```` 
 
 in the root folder of the repository. The command will install all dependencies
-and create bundles of the library and of the viewer (the build folder should
+and create bundles of the library and viewer (the `build` folder should
 appear).
 
-Also there is another way to do the same operations:
+Also, there is another way to do the same operations:
 
 ```
 npm run make
 ```
 
 The command will clean all git-ignored files, install all the dependencies and
-build the library and the viewer. However, you should have `git` installed of
-course and the repository should have the `.git` folder (there is no one in the
+build the library and viewer. However, you should have `git` installed 
+and the repository should have the `.git` folder (there is no one in the
 source code uploaded to the browser extensions websites).
 
 ## How to start the viewer in the dev mode
 
-You have to build the library once. You can archive it via `npm run make`. Then
+You have to build the library once. You can achieve it via `npm run make`. Then
 you can start the viewer:
 
 ```
@@ -96,7 +96,7 @@ web-ext build
 and the packed version of the extension will appear in the extension folder.
 
 If you have some problems, read the technical documentation or create an issue.
-Also you can download the library from the official website. (All links are
+Also, you can download the library from the official website. (All links are
 below).
 
 ## Links

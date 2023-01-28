@@ -263,5 +263,5 @@ export default {
     "Full page mode":
         "Modo de página completa",
     "Fullscreen mode":
-        "Modo de oantalla completa",
+        "Modo de pantalla completa",
 };

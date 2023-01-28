@@ -49,7 +49,6 @@ export default function initWorker() {
             postMessage({
                 command: 'Error',
                 error: errorObj,
-                a: () => {},
                 ...(obj.sendBackData ? { sendBackData: obj.sendBackData } : null),
             });
         }
