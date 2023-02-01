@@ -1,5 +1,10 @@
 # DjVu.js Viewer's Changelog
 
+## v.0.9.1 (01.02.2023)
+
+- Spanish translation update.
+- DjVu.js v.0.5.4: error messages are displayed again.
+
 ## v.0.9.0 (24.05.2022)
 
 - Feature: several pages in a row in the continuous scroll mode.

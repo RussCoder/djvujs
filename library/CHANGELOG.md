@@ -1,5 +1,9 @@
 # DjVu.js Library's Changelog
 
+## v.0.5.4 (01.02.2023)
+
+- Fix: error messages are sent from the worker again.
+
 ## v.0.5.3 (18.02.2021)
 
 - Error handlers for unhandled promise rejections and errors in the worker.
