@@ -5,7 +5,7 @@ var DjVu = (function () {
     'use strict';
 
     var DjVu = {
-        VERSION: '0.5.3',
+        VERSION: '0.5.4',
         IS_DEBUG: false,
         setDebugMode: (flag) => DjVu.IS_DEBUG = flag
     };
@@ -15422,7 +15422,6 @@ var DjVu = (function () {
                 postMessage({
                     command: 'Error',
                     error: errorObj,
-                    a: () => {},
                     ...(obj.sendBackData ? { sendBackData: obj.sendBackData } : null),
                 });
             }
