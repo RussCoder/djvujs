@@ -46,8 +46,8 @@ export default {
         "在此处粘贴djvu文件的地址",
     "Open URL":
         "打开地址",
-    'Enter a valid URL (it should start with "http(s)://")': // an alert shown when you try to open an empty URL
-        '输入一个有效的地址 (应当以 "http(s)://" 开头)',
+    'Enter a valid URL (it should start with "http(s)://" | "data:")': // an alert shown when you try to open an empty URL
+        '输入一个有效的地址 (应当以 "http(s)://" | "data:" 开头)',
 
     // Errors. Usually there is a header and a message for each error type.
     // For the web request error there are different types of messages depending on the HTTP status.

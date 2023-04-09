@@ -59,8 +59,8 @@ export default {
         "Вставьте ссылку на .djvu файл",
     "Open URL":
         "Открыть ссылку",
-    'Enter a valid URL (it should start with "http(s)://")': // an alert shown when you try to open an empty URL
-        'Введите корректную ссылку (она должна начинаться с "http(s)://")',
+    'Enter a valid URL (it should start with "http(s)://" | "data:")': // an alert shown when you try to open an empty URL
+        'Введите корректную ссылку (она должна начинаться с "http(s)://" | "data:")',
 
     // Errors. Usually there is a header and a message for each error type.
     // For the web request error there are different types of messages depending on the HTTP status.

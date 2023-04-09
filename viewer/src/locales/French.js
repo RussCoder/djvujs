@@ -46,8 +46,8 @@ export default {
         "Copier un lien vers un fichier .djvu",
     "Open URL":
         "Ouvrir le lien",
-    'Enter a valid URL (it should start with "http(s)://")': // an alert shown when you try to open an empty URL
-        'Insérer une URL valide (doit commencer par "http(s)://")',
+    'Enter a valid URL (it should start with "http(s)://" | "data:")': // an alert shown when you try to open an empty URL
+        'Insérer une URL valide (doit commencer par "http(s)://" | "data:")',
 
     // Errors. Usually there is a header and a message for each error type.
     // For the web request error there are different types of messages depending on the HTTP status.

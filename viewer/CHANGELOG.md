@@ -1,5 +1,9 @@
 # DjVu.js Viewer's Changelog
 
+## v.0.9.2 (09.04.2023)
+
+- Support for "data:" URLs
+
 ## v.0.9.1 (01.02.2023)
 
 - Spanish translation update.

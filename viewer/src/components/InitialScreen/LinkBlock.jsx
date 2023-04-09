@@ -41,13 +41,14 @@ const LinkBlock = () => {
     return (
         <LinkBlockRoot onSubmit={(e) => {
             e.preventDefault();
-            if (/^https?:\/\/.+/.test(url.trim())) {
+            const trimmedUrl = url.trim();
+            if (/((^https?:\/\/)|(^data:)).+/.test(trimmedUrl)) {
                 dispatch({
                     type: ActionTypes.LOAD_DOCUMENT_BY_URL,
-                    url: url,
+                    url: trimmedUrl,
                 });
             } else {
-                alert(t('Enter a valid URL (it should start with "http(s)://")'));
+                alert(t('Enter a valid URL (it should start with "http(s)://" | "data:")'));
             }
         }}>
             <input

@@ -414,7 +414,7 @@ class RootSaga {
             }
 
             // responseUrl is the URL after all redirects
-            config.djvuOptions = { baseUrl: new URL('./', responseURL).href };
+            config.djvuOptions = { baseUrl: url.startsWith('data:') ? null : new URL('./', responseURL).href };
             yield* this.createDocumentFromArrayBuffer({
                 arrayBuffer: buffer,
                 fileName: config.name === undefined ? getFileNameFromUrl(url) : config.name,

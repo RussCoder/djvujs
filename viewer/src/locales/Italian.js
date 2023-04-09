@@ -46,8 +46,8 @@ export default {
         "Incolla qui l'URL al file DjVu",
     "Open URL":
         "Apri URL",
-    'Enter a valid URL (it should start with "http(s)://")': // an alert shown when you try to open an empty URL
-        'Inserire un URL valido (deve iniziare con "http(s)://")',
+    'Enter a valid URL (it should start with "http(s)://" | "data:")': // an alert shown when you try to open an empty URL
+        'Inserire un URL valido (deve iniziare con "http(s)://" | "data:")',
 
     // Errors. Usually there is a header and a message for each error type.
     // For the web request error there are different types of messages depending on the HTTP status.
