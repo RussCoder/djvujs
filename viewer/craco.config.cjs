@@ -7,7 +7,7 @@
 'use strict';
 
 const resolve = require('path').resolve;
-const contentDisposition = require('content-disposition');
+const contentDisposition = require('content-disposition-header');
 
 module.exports = {
     // See https://webpack.js.org/configuration/dev-server/ how to configure;
@@ -36,7 +36,7 @@ module.exports = {
             app.get('/djvufile', function (req, res) {
                 const contentDispositionType = req.query.cd || 'inline';
                 let filename = req.query.fname || 'TheMap.djvu';
-                const cdHeader = contentDisposition(filename, { type: contentDispositionType });
+                const cdHeader = contentDisposition.create(filename, { type: contentDispositionType });
                 res.setHeader('Content-Disposition', cdHeader);
 
                 res.sendFile(resolve('../library/assets/carte.djvu'));

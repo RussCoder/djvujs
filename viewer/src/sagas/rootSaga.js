@@ -1,7 +1,7 @@
 /**
  * All side-effect logic is here (all logic which isn't related directly to the UI)
  */
-import contentDisposition from 'content-disposition';
+import { parse as parseContentDisposition } from 'content-disposition-header';
 import { put, select, takeLatest, take, cancel, fork } from 'redux-saga/effects';
 import { get } from '../reducers';
 // import { delay } from 'redux-saga';
@@ -407,7 +407,7 @@ class RootSaga {
             // Try to get file name from Content-Disposition header if it's there
             const cdHeader = xhr.getResponseHeader('Content-Disposition');
             if (cdHeader) {
-                const parsedCd = contentDisposition.parse(cdHeader);
+                const parsedCd = parseContentDisposition(cdHeader);
                 if (parsedCd.parameters.filename) {
                     config.name = parsedCd.parameters.filename;
                 }

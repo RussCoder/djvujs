@@ -11,7 +11,7 @@
         "react-scripts": "^4.0.3"
     },
     "dependencies": {
-        "content-disposition": "^0.5.3",
+        "content-disposition-header": "0.6.0",
         "eventemitter3": "^4.0.7",
         "memoize-one": "^5.2.1",
         "prop-types": "^15.7.2",
@@ -30,7 +30,7 @@
         "test": "cypress run",
         "test:visual": "cypress run --headed",
         "syncLocales": "node syncLocales.js",
-        "start": "craco start",
+        "start": "craco --openssl-legacy-provider start",
         "build": "craco build",
         "eject": "craco eject"
     },
