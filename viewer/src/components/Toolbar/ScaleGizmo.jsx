@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import Actions from '../../actions/actions';
-import { FaPlus, FaMinus } from "react-icons/all";
+import { FaPlus, FaMinus } from "react-icons/fa";
 import { get } from '../../reducers';
 import { TranslationContext } from "../Translation";
 import styled from 'styled-components';

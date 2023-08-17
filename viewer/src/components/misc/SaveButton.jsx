@@ -1,6 +1,6 @@
 import React from "react";
 import { ControlButton, ControlButtonWrapper } from "../StyledPrimitives";
-import { FaDownload } from "react-icons/all";
+import { FaDownload } from "react-icons/fa";
 import SaveNotification from "./SaveNotification";
 import { useDispatch, useSelector } from "react-redux";
 import { get } from "../../reducers";

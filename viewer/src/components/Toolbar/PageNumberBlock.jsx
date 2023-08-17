@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { FaRegArrowAltCircleLeft, FaRegArrowAltCircleRight } from "react-icons/all";
+import { FaRegArrowAltCircleLeft, FaRegArrowAltCircleRight } from "react-icons/fa";
 
 import Actions from '../../actions/actions';
 import PageNumberElement from './PageNumber';

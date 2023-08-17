@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect, useDispatch, useSelector } from 'react-redux';
-import { FaRegFileAlt, FaRegFileImage, FaCaretLeft, FaCaretRight } from "react-icons/all";
+import { FaRegFileAlt, FaRegFileImage, FaCaretLeft, FaCaretRight } from "react-icons/fa";
 
 import { get } from '../../reducers';
 import Constants, { ActionTypes } from '../../constants';

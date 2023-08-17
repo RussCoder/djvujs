@@ -1,6 +1,6 @@
 import React from 'react';
 import { useDispatch } from 'react-redux';
-import { FaRegQuestionCircle } from "react-icons/all";
+import { FaRegQuestionCircle } from "react-icons/fa";
 
 import Actions from '../../actions/actions';
 import { useTranslation } from "../Translation";

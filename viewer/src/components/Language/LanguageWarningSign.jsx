@@ -1,5 +1,5 @@
 import React from "react";
-import { FaExclamationTriangle } from "react-icons/all";
+import { FaExclamationTriangle } from "react-icons/fa";
 import styled from "styled-components";
 import IncompleteTranslationWindow from "./IncompleteTranslationWindow";
 import dictionaries from '../../locales';

@@ -2,7 +2,7 @@ import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import styled, { css } from 'styled-components';
 import { get } from '../../reducers';
-import { FaRegSun, FaRegMoon } from "react-icons/all";
+import { FaRegSun, FaRegMoon } from "react-icons/fa";
 import { ActionTypes } from '../../constants/index';
 
 const Root = styled.span`

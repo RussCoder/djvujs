@@ -1,6 +1,6 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { FaRegHandPaper, FaICursor } from "react-icons/all";
+import { FaRegHandPaper, FaICursor } from "react-icons/fa";
 
 import { get } from '../../reducers';
 import Constants from '../../constants';

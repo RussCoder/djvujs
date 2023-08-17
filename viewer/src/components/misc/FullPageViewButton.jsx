@@ -1,6 +1,6 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { FaExpand, FaCompress } from "react-icons/all";
+import { FaExpand, FaCompress } from "react-icons/fa";
 
 import Actions from '../../actions/actions';
 import { get } from '../../reducers';

@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { FaRegPlusSquare, FaRegMinusSquare, FaCircle } from "react-icons/all";
+import { FaRegPlusSquare, FaRegMinusSquare, FaCircle } from "react-icons/fa";
 import styled from 'styled-components';
 
 const Name = styled.div`

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useDispatch } from 'react-redux';
-import { FaCog } from "react-icons/all";
+import { FaCog } from "react-icons/fa";
 
 import { useTranslation } from "../Translation";
 import { ControlButton, ControlButtonWrapper } from '../StyledPrimitives';

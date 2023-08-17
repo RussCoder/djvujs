@@ -1,6 +1,6 @@
 import React from "react";
 import { iconButton } from "../cssMixins";
-import { FaRegTimesCircle } from "react-icons/all";
+import { FaRegTimesCircle } from "react-icons/fa";
 
 export default ({ onClick, className = null }) => {
     return (

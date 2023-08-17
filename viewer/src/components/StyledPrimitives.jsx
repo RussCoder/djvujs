@@ -1,6 +1,6 @@
 import styled, { keyframes } from 'styled-components';
 import { controlButton } from './cssMixins';
-import { FaSpinner } from "react-icons/all";
+import { FaSpinner } from "react-icons/fa";
 
 export const ControlButton = styled.span`
     ${controlButton};

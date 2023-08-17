@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { FaUpload } from "react-icons/all";
+import { FaUpload } from "react-icons/fa";
 import { TranslationContext } from '../Translation';
 import Actions from '../../actions/actions';
 import styled, { css, keyframes } from 'styled-components';

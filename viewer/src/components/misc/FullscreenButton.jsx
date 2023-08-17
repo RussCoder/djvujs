@@ -1,6 +1,6 @@
 import React from "react";
 import styled from "styled-components";
-import { IoDesktopOutline } from "react-icons/all";
+import { IoDesktopOutline } from "react-icons/io5";
 import { iconButton } from "../cssMixins";
 import { useAppContext } from "../AppContext";
 import { useTranslation } from "../Translation";

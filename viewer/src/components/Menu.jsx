@@ -7,7 +7,7 @@ import FileBlock from "./FileBlock";
 import OptionsButton from "./misc/OptionsButton";
 import HelpButton from "./misc/HelpButton";
 import { ControlButton } from "./StyledPrimitives";
-import { FaPrint } from "react-icons/all";
+import { FaPrint } from "react-icons/fa";
 import { ActionTypes } from "../constants";
 import { useTranslation } from "./Translation";
 import SaveButton from "./misc/SaveButton";
