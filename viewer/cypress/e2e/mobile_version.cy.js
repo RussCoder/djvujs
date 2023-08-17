@@ -1,12 +1,11 @@
 import { customClass, customId, loadDocument, renderViewer } from "../utils";
 
 describe('Adaptive layout', () => {
-    before(() => {
+    beforeEach(() => {
         cy.visit('/');
         renderViewer();
+        loadDocument();
     });
-
-    beforeEach(loadDocument);
 
     it('Dynamic layout change', () => {
 
@@ -39,12 +38,11 @@ describe('Mobile version', {
     viewportWidth: 700,
     viewportHeight: 800,
 }, () => {
-    before(() => {
+    beforeEach(() => {
         cy.visit('/');
         renderViewer();
+        loadDocument();
     });
-
-    beforeEach(loadDocument);
 
     it('Hide button', () => {
         cy.get(customId('toolbar')).should('be.visible');

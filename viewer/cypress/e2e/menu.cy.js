@@ -4,12 +4,11 @@ import { helpWindowShouldBeOpen, initialScreenShouldBeVisible, optionsWindowShou
 const menuShouldNotBeVisible = () => cy.get(customId('menu')).should('not.be.visible');
 
 describe('Document menu opens and closes', () => {
-    before(() => {
+    beforeEach(() => {
         cy.visit('/');
         renderViewer();
+        loadDocument();
     });
-
-    beforeEach(loadDocument);
 
     it('Menu opens and closes via menu button', () => {
         cy.contains("Menu").should('not.be.visible');
@@ -28,12 +27,9 @@ describe('Document menu opens and closes', () => {
 });
 
 describe('Document menu controls', () => {
-    before(() => {
+    beforeEach(() => {
         cy.visit('/');
         renderViewer();
-    });
-
-    beforeEach(() => {
         loadDocument();
         cy.get(customId('menu_button')).click().wait(500);
     });

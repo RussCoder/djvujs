@@ -2,8 +2,10 @@ import { customClass, customId, renderViewer } from "../utils";
 import { closeModalWindow, helpWindowShouldBeOpen, optionsWindowShouldBeOpen } from "../shared";
 
 describe('Modal windows', () => {
-    before(() => cy.visit('/'));
-    beforeEach(renderViewer);
+    beforeEach(() => {
+        cy.visit('/');
+        renderViewer();
+    });
 
     it('A click on the dark layer closes the modal window', () => {
         cy.get(customClass('help_button')).click();

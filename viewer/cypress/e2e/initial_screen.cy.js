@@ -2,9 +2,10 @@ import { getByCustomId, haveCustomClass, hexToRGB, notHaveCustomClass, renderVie
 import { initialScreenShouldBeVisible } from "../shared";
 
 describe.only('Initial screen', () => {
-    before(() => cy.visit('/'));
-
-    beforeEach(renderViewer);
+    beforeEach(() => {
+        cy.visit('/');
+        renderViewer();
+    });
 
     it('Initial screen is visible', () => {
         initialScreenShouldBeVisible();

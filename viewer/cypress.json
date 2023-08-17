@@ -1,9 +1,0 @@
-{
-  "baseUrl": "http://localhost:3000/?tests=1",
-  "viewportWidth": 1200,
-  "viewportHeight": 900,
-  "video": false,
-  "pluginsFile": false,
-  "supportFile": false,
-  "fixturesFolder": false
-}

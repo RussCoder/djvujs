@@ -1,12 +1,11 @@
 import {  customId, loadDocument, renderViewer } from "../utils";
 
 describe('Toolbar controls', () => {
-    before(() => {
+    beforeEach(() => {
         cy.visit('/');
         renderViewer();
+        loadDocument();
     });
-
-    beforeEach(loadDocument);
 
     it('Pin/Unpin toolbar', () => {
         cy.get(customId('toolbar')).should('be.visible');
@@ -29,10 +28,16 @@ describe('Toolbar controls', () => {
     });
 
     it('Go to the next/previous page', () => {
-        cy.contains('1 / 71').next('svg').click();
-        cy.contains('2 / 71').prev('svg').click();
-        cy.contains('1 / 71').prev('svg').click();
-        cy.contains('71 / 71').next('svg').click();
-        cy.contains('1 / 71');
+        cy.get(customId('page_number_block')).find('svg:first-of-type').as('prev');
+        cy.get(customId('page_number_block')).find('svg:last-of-type').as('next');
+        cy.contains('1 / 71').should('be.visible');
+        cy.get('@next').click();
+        cy.contains('2 / 71').should('be.visible');
+        cy.get('@prev').click();
+        cy.contains('1 / 71').should('be.visible');
+        cy.get('@prev').click();
+        cy.contains('71 / 71').should('be.visible');
+        cy.get('@next').click();
+        cy.contains('1 / 71').should('be.visible');
     });
 });

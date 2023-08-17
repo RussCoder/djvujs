@@ -1,8 +1,10 @@
 import { customId, customClass, renderViewer, loadDocument } from "../utils";
 
 describe('Full page mode', () => {
-    before(() => cy.visit('/'));
-    beforeEach(renderViewer);
+    beforeEach(() => {
+        cy.visit('/');
+        renderViewer();
+    });
 
     it('Full page mode button works', () => {
         cy.window().then(win => {
@@ -23,7 +25,7 @@ describe('Full page mode', () => {
 
 // Doesn't work in Cypress's Electron, only in Firefox
 describe.skip('Fullscreen mode unavailable', () => {
-    before(() => {
+    beforeEach(() => {
         cy.visit('/');
         renderViewer();
     });
@@ -43,7 +45,7 @@ describe.skip('Fullscreen mode unavailable', () => {
 });
 
 describe('Fullscreen mode', () => {
-    before(() => {
+    beforeEach(() => {
         cy.visit('/');
         cy.window().then(win => {
             win.parent.document
