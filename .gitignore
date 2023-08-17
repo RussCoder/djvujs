@@ -3,5 +3,5 @@
 node_modules
 _src
 build
-extension/dist
+dist
 extension/web-ext-artifacts

@@ -36,14 +36,6 @@ export default class DjVuViewer extends EventEmitter {
         super();
         this.store = configureStore(this.eventMiddleware);
         config && this.configure(config);
-
-        if (process.env.NODE_ENV === 'development') { // because CRA's Fast Refresh works bad
-            if (module.hot) {
-                module.hot.accept('./components/App', () => {
-                    this._render();
-                });
-            }
-        }
     }
 
     eventMiddleware = store => next => action => {
@@ -155,7 +147,7 @@ export default class DjVuViewer extends EventEmitter {
     loadDocument(buffer, name = "***", config = {}) {
         return new Promise(resolve => {
             this.once(Events.DOCUMENT_CHANGED, () => resolve());
-            // the buffer is transferred to the worker, so we copy it 
+            // the buffer is transferred to the worker, so we copy it
             this.store.dispatch(Actions.createDocumentFromArrayBufferAction(buffer.slice(0), name, config));
         });
     }

@@ -4,11 +4,12 @@
     "type": "module",
     "cracoConfig": "craco.config.cjs",
     "devDependencies": {
-        "@craco/craco": "^6.3.0",
+        "@vitejs/plugin-react": "^4.0.4",
         "babel-plugin-styled-components": "^2.0.7",
         "cypress": "^8.3.1",
         "npm-run-all": "^4.1.5",
-        "react-scripts": "^4.0.3"
+        "serve-static": "^1.15.0",
+        "vite": "^4.4.9"
     },
     "dependencies": {
         "content-disposition-header": "0.6.0",
@@ -26,13 +27,12 @@
         "styled-components": "^5.3.5"
     },
     "scripts": {
+        "start": "vite --open",
+        "build": "vite build",
         "test:open": "cypress open",
         "test": "cypress run",
         "test:visual": "cypress run --headed",
-        "syncLocales": "node syncLocales.js",
-        "start": "craco --openssl-legacy-provider start",
-        "build": "craco build",
-        "eject": "craco eject"
+        "syncLocales": "node syncLocales.js"
     },
     "browserslist": [
         "Firefox >= 66",

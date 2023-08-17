@@ -1,4 +1,5 @@
-const util = require('util');
+'use strict';
+
 const child_process = require('child_process');
 const fs = require('fs');
 const path = require('path');
@@ -47,7 +48,6 @@ function decorate(string) {
 }
 
 async function main() {
-    const viewerBuildDir = 'viewer/build/static/';
     // const time = Date.now();
 
     // console.log("The build process is running... Wait for a while, please.");
@@ -69,11 +69,11 @@ async function main() {
 
     await Promise.all([
         //processFile(viewerBuildDir + 'css/', 'djvu_viewer.css'),
-        processFile(viewerBuildDir + 'js/', 'djvu_viewer.js'),
+        processFile('viewer/dist/', 'djvu_viewer.js'),
         processFile('library/dist/', 'djvu.js'),
     ]);
     console.log('All files are copied to the ./build/ directory!');
     //console.log('It has taken ', (Date.now() - time) / 1000, ' seconds.');
 }
 
-main();
+void main();
