@@ -116,7 +116,7 @@ class ImageBlock extends React.Component {
         if (widthDiff > 0) {
             this.wrapper.scrollLeft = snapshot.horizontalRatio ? (snapshot.horizontalRatio * this.wrapper.scrollWidth - this.wrapper.clientWidth / 2) : (widthDiff / 2);
         }
-        if (prevProps.imageData !== this.props.imageData) { // when a page was changed     
+        if (prevProps.imageData !== this.props.imageData) { // when a page was changed
             if (this.scrollToBottomOnUpdate) {
                 this.wrapper.scrollTop = this.wrapper.scrollHeight;
                 this.scrollToBottomOnUpdate = false;
@@ -354,17 +354,14 @@ class ImageBlock extends React.Component {
     itemRenderer = React.memo(({ index, style }) => {
         const pageCountInRow = useSelector(get.pageCountInRow);
         const firstRowPageCount = useSelector(get.firstRowPageCount);
-
-        const pages = useSelector(state => {
-            const pageList = get.pageList(state);
-            const from = index * pageCountInRow + (index ? -pageCountInRow + firstRowPageCount : 0);
-            const to = from + (index === 0 ? firstRowPageCount : pageCountInRow)
-            return pageList.slice(from, to);
-        });
+        const from = index * pageCountInRow + (index ? -pageCountInRow + firstRowPageCount : 0);
+        const to = from + (index === 0 ? firstRowPageCount : pageCountInRow);
+        const allPages = useSelector(get.pageList);
+        const pagesInCurrentRow = allPages.slice(from, to);
 
         return (
             <ContinuousScrollItem style={style} key={index}>
-                {pages.map((pageData, i) => (
+                {pagesInCurrentRow.map((pageData, i) => (
                     <ComplexImage
                         key={i}
                         imageUrl={pageData.url}

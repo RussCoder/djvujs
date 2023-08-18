@@ -55,7 +55,7 @@ export default class CanvasImage extends React.Component {
         }
         if (this.lastUserScale !== this.props.userScale) {
             if (this.lastUserScale === null) { // if there is no image at all
-                this.drawImageOnCanvas();
+                return this.drawImageOnCanvas();
             }
             clearTimeout(this.redrawImageTimeout);
             this.redrawImageTimeout = setTimeout(() => {
@@ -120,12 +120,10 @@ export default class CanvasImage extends React.Component {
 
     render() {
         return (
-            // <div className="canvas_image" style={{ width: this.getScaledImageWidth(), height: this.getScaledImageHeight() }}>
             <canvas
                 style={{ width: this.getScaledImageWidth(), height: this.getScaledImageHeight() }}
                 ref={this.canvasRef}
             />
-            // </div>
         );
     }
 }

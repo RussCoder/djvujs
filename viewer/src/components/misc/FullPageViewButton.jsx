@@ -19,7 +19,7 @@ const FullPageViewButton = () => {
         <div title={t("Switch full page mode")} data-djvujs-class="full_page_button">
             <ControlButton
                 as={isFullPageView ? FaCompress : FaExpand}
-                onClick={() => console.log('toggle Fullscreen clicked') || dispatch(Actions.toggleFullPageViewAction(!isFullPageView))}
+                onClick={() => dispatch(Actions.toggleFullPageViewAction(!isFullPageView))}
             />
         </div>
     );
