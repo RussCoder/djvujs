@@ -40,9 +40,37 @@ html-страницу. Данное приложение служит для п�
 If you want to add a new translation to the viewer [read here](TRANSLATION.md)
 how to do it.
 
+## Tools and supported browsers
+
+You need to have Node.js 18+ (although older versions should work too)
+and npm 9+ installed to work with the project.
+
+The viewer and the library are supposed to run in a browser. Technically,
+it should not be difficult to update the library so that it could be used
+in Node.js projects - the main code is pure JS and doesn't rely on
+browser specific APIs.
+
+Currently, the following browsers are supported:
+
+```
+Chrome >= 87
+Firefox >= 78
+Safari >= 14
+Edge >= 88
+```
+
+The list above it defined by the default 
+[Vite settings.](https://vitejs.dev/guide/build.html#browser-compatibility)
+
+However, in terms of browser APIs that are used by this project, 
+it may work in older browsers:
+```
+Firefox >= 66
+Chrome >= 69
+```
+
 ## How to build it
 
-You need to have Node.js 16+ and npm 8+ installed.
 Clone the repo and run:
 
 ```
@@ -61,21 +89,31 @@ npm run make
 ```
 
 The command will clean all git-ignored files, install all the dependencies and
-build the library and viewer. However, you should have `git` installed 
+build the library and viewer. However, you should have `git` installed
 and the repository should have the `.git` folder (there is no one in the
 source code uploaded to the browser extensions websites).
 
-## How to start the viewer in the dev mode
+## How to run it locally
 
-You have to build the library once. You can achieve it via `npm run make`. Then
-you can start the viewer:
+If you want to work with the library you should read [the library's README](./library/README.md).
 
-```
+As for the viewer, you have to build the library once and start the dev server.
+It can be achieved with the following commands:
+
+```sh
+npm run make # run it only once
 cd viewer
 npm start
 ```
 
-### How to pack the extension
+A page with the viewer will open automatically.
+
+### Tests
+
+Once the dev server has been started, you can run E2E tests via `test*` npm scripts that you can find in
+the `viewer/package.json` file.
+
+## How to pack the extension
 
 After the two commands above are executed (`install` and `build`), the extension
 folder will contain all the necessary files, that is to say, the folder is an
