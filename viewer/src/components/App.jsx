@@ -22,6 +22,36 @@ const GlobalStyle = createGlobalStyle`
         height: 100% !important;
         overflow: hidden !important;
     }
+
+    /*
+     Reset styles to get rid of default global styles provided by some frameworks, 
+     e.g. https://tailwindcss.com/docs/preflight that adds "svg {display: block}".
+     The specificity is (0, 0, 2) for tags and (0, 1, 1) for pseudo elements to both override the default styles,
+     but not override class-based styles from styled-components. 
+     :not(span) and :not(html) are added to increased the specificity.
+     
+     We cannot use "all: revert" for svg and its children, because it will override all svg attributes, 
+     including "d" prop of <path>, which will make all icons invisible. 
+     */
+    :where(.djvujs-viewer-root) *:not(svg *):not(svg),
+    div:not(span):where(.djvujs-viewer-root),
+    :where(.djvujs-viewer-root, .djvujs-viewer-root *):not(html)::before,
+    :where(.djvujs-viewer-root, .djvujs-viewer-root *):not(html)::after {
+        all: revert;
+    }
+
+    :where(.djvujs-viewer-root) :is(svg:not(span), svg *) {
+        display: revert;
+        position: revert;
+        vertical-align: revert;
+        border: revert;
+        box-sizing: revert;
+        background: revert;
+        margin: revert;
+        padding: revert;
+    }
+
+    // -------------------------- end of styles reset --------------------------
 `;
 
 const lightTheme = css`
@@ -107,7 +137,8 @@ const AppRoot = React.forwardRef(({ shadowRoot }, ref) => {
                     ${style};
                     ${isFullPageView ? fullPageStyle : ''};
                 `}
-                data-djvujs-id="root"
+                data-djvujs-id="root" // used in E2E tests
+                className="djvujs-viewer-root" // used to reset styles
                 ref={ref}
             >
                 {isFileLoading ?

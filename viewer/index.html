@@ -35,6 +35,17 @@
             background: #b0c093;
             /*writing-mode: horizontal-tb;*/
         }
+
+        /* used to check that such "default" styles are overridden for the viewer */
+        :where(#root) *, :where(#root) ::before, :where(#root) ::after {
+            background: red;
+            padding: 100em;
+            margin: 100em;
+            border: 100px solid red;
+            display: block;
+            position: absolute;
+        }
+
     </style>
     <script id="djvu_js_lib" src="/tmp/djvu.js"></script>
     <script src="./src/index.js" type="module"></script>
