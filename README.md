@@ -53,21 +53,14 @@ browser specific APIs.
 Currently, the following browsers are supported:
 
 ```
-Chrome >= 87
+Chrome >= 88
 Firefox >= 78
 Safari >= 14
 Edge >= 88
 ```
 
-The list above it defined by the default 
-[Vite settings.](https://vitejs.dev/guide/build.html#browser-compatibility)
-
-However, in terms of browser APIs that are used by this project, 
-it may work in older browsers:
-```
-Firefox >= 66
-Chrome >= 69
-```
+The list above is conditioned by the [default Vite settings](https://vitejs.dev/guide/build.html#browser-compatibility)
+and the support of the [`:where` CSS pseudo class](https://caniuse.com/mdn-css_selectors_where).
 
 ## How to build it
 
