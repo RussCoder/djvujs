@@ -1,5 +1,12 @@
 # DjVu.js Viewer's Changelog
 
+## v.0.10.0 (26.12.2023)
+
+- Fix: reset global styles provided by some CSS frameworks.
+- New translation: Ukrainian.
+- Chinese translation update.
+- Inner changes: dependency updates, E2E test fixes, new build and dev tools.
+
 ## v.0.9.2 (09.04.2023)
 
 - Support for "data:" URLs
