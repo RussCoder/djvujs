@@ -15532,4 +15532,4 @@ var DjVu = (function () {
     }
     return Object.assign(DjVuScript(), {DjVuScript});
 
-}());
+})();
