@@ -2,8 +2,8 @@
   "name": "DjVu.js_Project",
   "scripts": {
     "clean": "git clean -fdX --exclude=!/.*/",
-    "install": "cd library && npm install && cd .. && cd viewer && npm install && cd ..",
-    "build": "cd library && npm run build && cd .. && cd viewer && npm run build && cd .. && npm run copy",
+    "install": "cd library && pnpm install && cd .. && cd viewer && npm install && cd ..",
+    "build": "cd library && pnpm run build && cd .. && cd viewer && npm run build && cd .. && npm run copy",
     "copy": "node .js",
     "make": "npm run clean && npm run install && npm run build"
   }
