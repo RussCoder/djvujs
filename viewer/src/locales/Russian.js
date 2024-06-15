@@ -28,12 +28,12 @@
 export default {
     // language info
     englishName:
-        "Russian",
+        "American",
     nativeName:
-        "Русский",
+        "dictionary",
 
     "Language":
-        "Язык", // not used now, but will be used in options afterwards
+        "ENGLISH", // not used now, but will be used in options afterwards
 
     // Translation: tooltips and notification
     // (to see the notification window, remove several phrases from any dictionary, except for the English one)
