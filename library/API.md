@@ -34,7 +34,7 @@ Arguments:
   an indirect djvu. If the total size of downloaded pages exceeds this limit,
   the library removes some of them before downloading new pages. 
 
-And example for a bundled (one file) djvu document:
+And example for a bundled (one file) djvu document: 
 
 ```js
 const bundledDjVuArrayBuffer = await fetch('/bundled.djvu').then(r => r.arrayBuffer());
