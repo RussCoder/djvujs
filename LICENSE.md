@@ -1,6 +1,7 @@
 The DjVu.js Library (everything that is in `library/src` directory) is subject
 to, and may be distributed under,
-the [GNU General Public License, Version 2](GNU_GPL_v2).
+the [GNU General Public License, either Version 2 of the license](GNU_GPL_v2), 
+or (at your option) any later version.
 
 Everything else in this repository (including the DjVu.js Viewer and the browser
 extension) is distributed under the terms of [The Unlicense](THE_UNLICENSE).
