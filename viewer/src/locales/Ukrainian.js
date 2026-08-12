@@ -27,7 +27,7 @@ export default {
     "Add more":
         "Додати ще",
     "The translation isn't complete.":
-        "Переклад неповний.",
+        "Цей переклад неповний.",
     "The following phrases are not translated:":
         "Наступні фрази не перекладені:",
     "You can improve the translation here":
@@ -35,19 +35,19 @@ export default {
 
     // Initial screen
     "#helpButton - learn more about the app":
-        "#helpButton - дізнатися більше про застосунок",
+        "#helpButton - дізнатися більше про додаток",
     "#optionsButton - see the available options":
         "#optionsButton - переглянути налаштування",
     "powered with":
         "працює на базі",
     "Drag & Drop a file here or click to choose manually":
-        "Перетягніть сюди файл або клацніть та оберіть ручним способом",
+        "Перетягніть файл сюди, або клацніть та оберіть його вручну",
     "Paste a URL to a djvu file here":
-        "Вставте URL до djvu-файла тут",
+        "Вставте сюди посилання на файл .djvu",
     "Open URL":
-        "Відкрити URL",
+        "Відкрити",
     'Enter a valid URL (it should start with "http(s)://" | "data:")': // an alert shown when you try to open an empty URL
-        'Укажіть правильний URL (мусить починатися з "http(s)://" або "data:")',
+        'Укажіть вірне посилання (мусить починатися з "http(s)://" або "data:")',
 
     // Errors. Usually there is a header and a message for each error type.
     // For the web request error there are different types of messages depending on the HTTP status.
@@ -64,7 +64,7 @@ export default {
     // Load any URL to a nonexistent page on the Internet,
     // e.g. https://djvu.js.org/nonexistentpage
     "Web request error":
-        "Помилка веб запиту",
+        "Помилка веб-запиту",
     "404 Document not found":
         "404 Документ не знайдено",
     "403 Access forbidden":
@@ -74,9 +74,9 @@ export default {
     "The request failed with HTTP status #status":
         "Запит не вдався з HTTP-статусом #status",
     "DjVu file is corrupted": // Open "/library/assets/czech_indirect/dict0085.iff"
-        "DjVu-файл пошкоджено",
+        "Цей файл DjVu пошкоджено",
     "The file doesn't comply with the DjVu format specification or it's not a whole DjVu document":
-        "Файл не відповідає специфікації формату DjVu або не є цілим DjVu-документом",
+        "Файл не відповідає специфікації формату DjVu, або не є повним DjVu-документом",
     "Incorrect file format": // Open a not-djvu file.
         "Неправильний формат файлу",
     "The provided file is not a DjVu document":
@@ -91,15 +91,15 @@ export default {
     // all links inside the document index.djvu are considered relative to this URL.
     // The term "base URL" can be translated as "a URL to the document's folder".
     "No base URL for an indirect DjVu document":  // Open "/library/assets/czech_indirect/index.djvu"
-        "Немає ланки до кореневої теки документа",
+        "Немає посилання до кореневої теки документа",
     "You probably opened an indirect (multi-file) DjVu document manually.":
         "Імовірно, ви відкрили багатофайловий (indirect) DjVu-документ уручну.",
     "But such multi-file documents can be only loaded by URL.":
-        "Проте, такі багатофайлові документи можна завантажити лише за URL.",
+        "Проте, такі документи можна завантажити лише за посиланням.",
     "Unexpected error": // Of course there is no standard way to produce this kind of error
         "Неочікувана помилка",
     "Cannot print the error, look in the console":
-        "Не вдається видрукувати помилку, подивіться в консоль",
+        "Не вдається відобразити помилку, перевірте консоль",
 
     // Options and its tooltips
     "Options":
@@ -109,21 +109,21 @@ export default {
     "Color theme":
         "Колірна схема",
     "Extension options":
-        "Налаштування додатка", // the options of the browser extension
+        "Налаштування додатку", // the options of the browser extension
     "Open all links with .djvu at the end via the viewer":
-        "Відкривати всі ланки з .djvu на кінці в переглядачі",
+        "Відкривати усі посилання з розширенням .djvu у переглядачі",
     "All links to .djvu files will be opened by the viewer via a simple click on a link":
-        "Усі ланки до .djvu файлів відкриватимуться в переглядачі простим клацом по ланці",
+        "Усі посилання на файли .djvu відкриватимуться у переглядачі одним кліком",
     "Detect .djvu files by means of http headers":
-        "Виявляти .djvu файли за http заголовками",
+        "Виявляти файли .djvu за допомогою HTTP-заголовка",
     "Analyze headers of every new tab in order to process even links which do not end with the .djvu extension":
-        "Аналізувати заголовки кожної нової вкладки, щоби опрацьовувати навіть ланки без розширення .djvu",
+        "Аналізувати заголовки кожної нової вкладки, щоб опрацьовувати посилання навіть без розширення .djvu",
 
     // Footer: status bar
     "Ready":
         "Готово",
     "Loading":
-        "Завантажування",
+        "Завантаження",
 
     // Footer: buttons' tooltips
     "Show help window":
@@ -145,9 +145,9 @@ export default {
 
     // Help window
     "The application for viewing .djvu files in the browser.":
-        "Застосунок для перегляду файлів .djvu в браузері.",
+        "Додаток для перегляду файлів .djvu в браузері.",
     "If something doesn't work properly, feel free to write about the problem at #email.":
-        "Коли щось не працює, пишіть на #email.",
+        "Якщо щось не працює належним чином, пишіть на #email.",
     "The official website is #website.":
         "Офіційний вебсайт #website.",
     "The source code is available on #link.":
@@ -165,15 +165,15 @@ export default {
     "#expandIcon and #collapseIcon are to switch the viewer to the full page mode and back.":
         "#expandIcon та #collapseIcon перемикають переглядач у повносторінковий режим і назад.",
     "If you work with the browser extension, these buttons will cause no effect, since the viewer takes the whole page by default.":
-        "Якщо ви використовуєте додаток до браузера, ці кнопки не працюватимуть, оскільки переглядач займає всю сторінку позавказом.",
+        "Якщо ви використовуєте додаток до браузера, ці кнопки не працюватимуть, оскільки за замовчуванням переглядач займає всю сторінку.",
 
     // Toolbar tooltips
     "Continuous scroll view mode":
-        "Режим неперервної прокрутки",
+        "Режим безперервної прокрутки",
     "Number of pages in a row":
         "Число сторінок у рядку",
     "Number of pages in the first row":
-        "Число сторінок у першім рядку",
+        "Число сторінок у першому рядку",
     "Single page view mode":
         "Односторінковий режим",
     "Text view mode":
@@ -183,7 +183,7 @@ export default {
     "Rotate the page":
         "Повернути сторінку",
     "You also can scale the page via Ctrl+MouseWheel":
-        "Ви також можете масштабувати сторінку через Ctrl+КоліщаткоМиші",
+        "Ви також можете масштабувати сторінку натиснув Ctrl та обернув колесо миші до себе або від себе",
     "Text cursor mode":
         "Курсор для виділення тексту",
     "Grab cursor mode":
@@ -203,7 +203,7 @@ export default {
     // A rare case. Open /library/assets/links.djvu in the viewer on https://djvu.js.org/ (not in the extension!)
     // and click the "Absolute Link" in the contents
     "The link points to another document. Do you want to proceed?":
-        "Ланка вказує на інший документ. Чи ви бажаєте продовжити?",
+        "Посилання вказує на інший документ. Чи бажаєте ви перейти за цим посиланням?",
 
     // Text Block (shown in the text view mode)
     "No text on this page":
@@ -217,21 +217,21 @@ export default {
     "Save only index file":
         "Зберегти тільки кореневий файл",
     "Download, bundle and save the whole document as one file":
-        "Завантажити, об'єднати й зберегти ввесь документ одним файлом",
+        "Завантажити документ, об'єднати його та зберегти до файлу",
     "Downloading and bundling the document":
         "Завантажування та об'єднування документа",
     "The document has been downloaded and bundled into one file successfully":
-        "Документ успішно завантажено й об'єднано в єдиний файл",
+        "Документ успішно завантажено, об'єднано та збережено до файлу",
 
     // Printing
     "Print document":
-        "Видрукувати документ",
+        "Роздрукувати документ",
     "Pages must be rendered before printing.":
-        "Сторінки мусять бути прорисовані перед друком.",
+        "Перед друком сторінки мусять бути відображені.",
     "It may take a while.":
         "Це може зайняти певний час.",
     "Select the pages you want to print.":
-        "Виберіть ті сторінки, котрі волієте видрукувати.",
+        "Виберіть ті сторінки, котрі бажаєте роздрукувати.",
     "From":
         "З",
     "to":
@@ -247,7 +247,7 @@ export default {
     "Document":
         "Документ",
     "About":
-        "Про застосунок",
+        "Про додаток",
     "Print":
         "Друк",
     "Close":
@@ -257,7 +257,7 @@ export default {
     "Scale":
         "Масштаб",
     "Rotation":
-        "Поворіт",
+        "Поворот",
     "Cursor mode":
         "Курсор",
     "Full page mode":
