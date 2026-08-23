@@ -11,6 +11,13 @@ function isManifestV3() {
 const extensionUrl = chrome.runtime.getURL('viewer.html');
 const httpRedirectRuleId = 1;
 const fileRedirectRuleId = 2;
+const wikiPageAllowRuleId = 3;
+const optOutAllowRuleId = 4;
+
+// Append ?djvu-js=off (or &djvu-js=off) to any URL to make the extension ignore it,
+// so that the browser opens it as a usual page. See getOptOutUrl() and initializer.js
+const optOutParamName = 'djvu-js';
+const optOutParamValue = 'off';
 
 function updateContextMenu() {
     chrome.contextMenus.removeAll();
@@ -134,11 +141,65 @@ function enableFileOpeningInterception() {
     }
 }
 
+const isOptedOut = url => {
+    try {
+        return new URL(url).searchParams.get(optOutParamName) === optOutParamValue;
+    } catch (e) {
+        return false;
+    }
+};
+
+/*
+ * MediaWiki serves HTML pages *about* a file at URLs which end with the file name,
+ * e.g. https://commons.wikimedia.org/wiki/File:Foo.djvu or
+ * https://en.wikisource.org/wiki/Index:Foo.djvu - these are not DjVu files at all.
+ * The actual files live on upload.wikimedia.org under /wikipedia/... , which doesn't
+ * match the /wiki/ prefix below, so real files are still intercepted as usual.
+ * See https://github.com/RussCoder/djvujs/issues/103
+ */
+const wikiDomains = [
+    'wikipedia.org',
+    'wikisource.org',
+    'wikimedia.org',
+    'wikibooks.org',
+    'wikiquote.org',
+    'wikinews.org',
+    'wikiversity.org',
+    'wikivoyage.org',
+    'wiktionary.org',
+    'wikidata.org',
+    'wikifunctions.org',
+    'mediawiki.org',
+    'wikimediafoundation.org',
+];
+
+// /wiki/<Page> and /w/index.php?title=<Page> are the two ways to address a wiki page
+const wikiPagePathRegex = /^\/(?:wiki\/|w\/index\.php)/;
+
+const isWikiPageUrl = url => {
+    try {
+        const { hostname, pathname } = new URL(url);
+        if (hostname === 'upload.wikimedia.org') return false; // that's where the real files are
+        if (!wikiDomains.some(domain => hostname === domain || hostname.endsWith('.' + domain))) return false;
+        return wikiPagePathRegex.test(pathname);
+    } catch (e) {
+        return false;
+    }
+};
+
 // it shouldn't be the same function as the file opening interceptor,
 // since this event listener can be removed independently of the file opening interceptor
 const requestInterceptor = details => {
     // http://*/*.djvu also corresponds to "http://localhost/page.php?file=doc.djvu"
     // so we have to add this additional check, because it's not a link to a file.
+    if (isOptedOut(details.url)) {
+        return; // the user explicitly asked to not intercept this URL
+    }
+
+    if (isWikiPageUrl(details.url)) {
+        return; // it's an HTML page about a file, not a file
+    }
+
     if (/\.djvu?$/i.test(new URL(details.url).pathname)) {
         return { redirectUrl: getViewerUrl(details.url) };
     }
@@ -152,16 +213,39 @@ const onHeadersReceived = chrome.webRequest?.onHeadersReceived;
 const enableHttpIntercepting = () => {
     if (isManifestV3()) {
         chrome.declarativeNetRequest.updateDynamicRules({
-            removeRuleIds: [httpRedirectRuleId],
+            removeRuleIds: [httpRedirectRuleId, wikiPageAllowRuleId, optOutAllowRuleId],
             addRules: [{
                 id: httpRedirectRuleId,
+                priority: 1,
                 action: {
                     type: 'redirect',
                     redirect: { regexSubstitution: `${extensionUrl}?url=\\0` },
                 },
                 condition: {
                     isUrlFilterCaseSensitive: false,
-                    regexFilter: '^https?://[^?]+\\.djvu?(\\?.*)?',
+                    regexFilter: '^https?://[^?]+\\.djvu?(\\?.*)?$',
+                    resourceTypes: ['main_frame', 'sub_frame'],
+                },
+            }, {
+                // an explicit opt-out marker in the URL - the manual escape hatch
+                id: optOutAllowRuleId,
+                priority: 3,
+                action: { type: 'allow' },
+                condition: {
+                    isUrlFilterCaseSensitive: false,
+                    regexFilter: `[?&]${optOutParamName}=${optOutParamValue}(&|$)`,
+                    resourceTypes: ['main_frame', 'sub_frame'],
+                },
+            }, {
+                // a higher priority "allow" rule wins over the redirect one above
+                id: wikiPageAllowRuleId,
+                priority: 2,
+                action: { type: 'allow' },
+                condition: {
+                    isUrlFilterCaseSensitive: false,
+                    regexFilter: '^https?://[^/]+/(wiki/|w/index\\.php)',
+                    requestDomains: wikiDomains,
+                    excludedRequestDomains: ['upload.wikimedia.org'],
                     resourceTypes: ['main_frame', 'sub_frame'],
                 },
             }],
@@ -196,7 +280,7 @@ const enableHttpIntercepting = () => {
 
 const disableHttpIntercepting = () => {
     if (isManifestV3()) {
-        chrome.declarativeNetRequest.updateDynamicRules({ removeRuleIds: [httpRedirectRuleId] });
+        chrome.declarativeNetRequest.updateDynamicRules({ removeRuleIds: [httpRedirectRuleId, wikiPageAllowRuleId, optOutAllowRuleId] });
     } else {
         onBeforeRequest.hasListener(requestInterceptor) && onBeforeRequest.removeListener(requestInterceptor);
     }
